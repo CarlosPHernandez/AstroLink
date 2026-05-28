@@ -241,3 +241,11 @@ body {
     typeWriter 1.5s steps(30, end) forwards,
     blinkCaret .75s step-end infinite;
 }
+
+@utility scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
