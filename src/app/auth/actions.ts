@@ -1,6 +1,6 @@
 'use server';
 
-import { createSession, deleteSession } from '@/lib/session';
+import { createSession, deleteSession, getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
@@ -14,6 +14,12 @@ const RegisterSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
   role: z.enum(['mentee', 'mentor', 'admin']),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+});
+
+const OnboardSchema = z.object({
+  employer: z.string().min(2, { message: 'Employer name must be at least 2 characters' }),
+  expertise: z.string().min(2, { message: 'Please specify expertise fields' }),
+  bio: z.string().min(10, { message: 'Bio must be at least 10 characters' }),
 });
 
 export type ActionState = {
@@ -53,6 +59,11 @@ export async function loginAction(
   let userId = 'usr-' + Math.random().toString(36).substring(2, 9);
 
   // Check presets
+  const isPreset = 
+    email.toLowerCase() === PRESETS.mentor.email.toLowerCase() ||
+    email.toLowerCase() === PRESETS.mentee.email.toLowerCase() ||
+    email.toLowerCase() === PRESETS.admin.email.toLowerCase();
+
   if (email.toLowerCase() === PRESETS.mentor.email.toLowerCase()) {
     role = PRESETS.mentor.role;
     fullName = PRESETS.mentor.fullName;
@@ -80,17 +91,23 @@ export async function loginAction(
     }
   }
 
+  const isMentor = role === 'mentor';
+  const hasOnboarded = isPreset || !isMentor;
+
   // 2. Start Session
   await createSession({
     userId,
     email,
     role,
     fullName,
+    onboarded: hasOnboarded,
   });
 
   // 3. Redirect
-  const dashboard = role === 'admin' ? '/dashboard/admin' : role === 'mentor' ? '/dashboard/mentor' : '/dashboard/mentee';
-  redirect(dashboard);
+  const target = hasOnboarded 
+    ? (role === 'admin' ? '/dashboard/admin' : role === 'mentor' ? '/dashboard/mentor' : '/dashboard/mentee')
+    : '/onboard';
+  redirect(target);
 
   return { success: true };
 }
@@ -115,6 +132,7 @@ export async function registerAction(
 
   const { fullName, email, role } = result.data;
   const userId = 'usr-' + Math.random().toString(36).substring(2, 9);
+  const isMentor = role === 'mentor';
 
   // Start Session
   await createSession({
@@ -122,11 +140,68 @@ export async function registerAction(
     email,
     role,
     fullName,
+    onboarded: !isMentor,
   });
 
   // Redirect
-  const dashboard = role === 'admin' ? '/dashboard/admin' : role === 'mentor' ? '/dashboard/mentor' : '/dashboard/mentee';
-  redirect(dashboard);
+  const target = isMentor ? '/onboard' : (role === 'admin' ? '/dashboard/admin' : '/dashboard/mentee');
+  redirect(target);
+
+  return { success: true };
+}
+
+export async function onboardMentorAction(
+  prevState: ActionState | undefined,
+  formData: FormData
+): Promise<ActionState> {
+  const isCivilServant = formData.get('isCivilServant') === 'on' || formData.get('isCivilServant') === 'true';
+
+  const result = OnboardSchema.safeParse({
+    employer: formData.get('employer'),
+    expertise: formData.get('expertise'),
+    bio: formData.get('bio'),
+  });
+
+  if (!result.success) {
+    return {
+      errors: result.error.flatten().fieldErrors,
+      success: false,
+    };
+  }
+
+  // Validate PDF file if civil servant
+  if (isCivilServant) {
+    const file = formData.get('file') as File | null;
+    if (!file || file.size === 0 || !file.name.toLowerCase().endsWith('.pdf')) {
+      return {
+        errors: {
+          file: ['A valid NASA Form NF-1860 PDF scan is required for federal civil servants.'],
+        },
+        success: false,
+      };
+    }
+  }
+
+  // Retrieve current session
+  const session = await getSession();
+  if (!session) {
+    return {
+      message: 'Active session not found. Please log in again.',
+      success: false,
+    };
+  }
+
+  // Update session to set onboarded: true
+  await createSession({
+    userId: session.userId,
+    email: session.email,
+    role: session.role,
+    fullName: session.fullName,
+    onboarded: true,
+  });
+
+  // Redirect to Stripe simulated onboarding success screen
+  redirect('/onboard/stripe-success');
 
   return { success: true };
 }

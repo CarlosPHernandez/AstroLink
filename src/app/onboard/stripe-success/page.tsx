@@ -1,30 +1,36 @@
+import React from 'react';
 import Link from 'next/link';
 
 export default function StripeSuccessPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center py-12 px-6">
-      <div className="w-full max-w-md border border-slate-900 bg-slate-950/80 p-8 rounded-2xl shadow-xl text-center backdrop-blur-md relative">
-        <div className="absolute -top-12 -left-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl -z-10" />
+    <div className="min-h-screen bg-surface-container-lowest text-on-surface flex flex-col justify-center items-center p-4 sm:p-gutter relative font-sans selection:bg-primary-container selection:text-on-primary-container">
+      
+      {/* Outer Card Wrapper */}
+      <div className="w-full max-w-md border border-outline-variant bg-surface-container-lowest p-8 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.015)] text-center relative animate-reveal-up delay-100">
         
-        <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-3xl flex items-center justify-center mx-auto mb-6">
+        {/* Soft Ambient Glow */}
+        <div className="absolute -top-12 -left-12 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl -z-10 pointer-events-none" />
+        
+        {/* Success Icon Badge */}
+        <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-250 text-emerald-600 text-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
           ✓
         </div>
         
-        <h2 className="text-2xl font-bold tracking-tight text-white mb-2">Stripe Onboarding Complete</h2>
-        <p className="text-slate-400 text-sm mb-8">
-          Your Stripe Connect Express account has been set up. ComplianceAgent (APX-04) is reviewing your application details.
+        <h2 className="text-lg font-bold uppercase tracking-wider text-on-surface mb-2">Stripe Onboarding Complete</h2>
+        <p className="text-on-surface-variant text-xs leading-relaxed mb-8 font-light">
+          Your Stripe Connect Express payout account has been initialized. ComplianceAgent (APX-04) is reviewing your aerospace credentials.
         </p>
 
         <div className="space-y-3">
           <Link
             href="/dashboard/mentor"
-            className="block w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-semibold text-sm transition-all duration-200"
+            className="block w-full py-3 rounded-lg bg-primary hover:bg-primary-container text-white font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-sm text-center cursor-pointer"
           >
             Go to Mentor Dashboard
           </Link>
           <Link
             href="/"
-            className="block w-full py-3 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900/50 hover:bg-slate-900 text-slate-300 hover:text-white font-semibold text-sm transition-all duration-200"
+            className="block w-full py-3 rounded-lg border border-outline-variant hover:border-outline bg-white text-on-surface-variant hover:text-on-surface font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-sm text-center cursor-pointer"
           >
             Back to Home
           </Link>

@@ -8,6 +8,7 @@ export interface SessionData {
   role: 'mentor' | 'mentee' | 'admin';
   fullName: string;
   expiresAt: string;
+  onboarded?: boolean;
 }
 
 export async function createSession(data: Omit<SessionData, 'expiresAt'>) {
