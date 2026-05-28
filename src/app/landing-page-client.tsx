@@ -499,7 +499,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
         </section>
 
         {/* Directory Filters & Expert Grid */}
-        <section id="directory" className="border-t border-outline-variant/30 bg-surface-container-low py-20 px-6 scroll-mt-20 overflow-hidden">
+        <section id="directory" className="border-t border-outline-variant/30 bg-surface-container-low py-20 px-0 md:px-6 scroll-mt-20 overflow-hidden">
           <div className="max-w-[1200px] mx-auto px-lg relative">
             
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -550,12 +550,12 @@ export default function LandingPageClient({ session }: { session: SessionData | 
             <div 
               ref={scrollContainerRef}
               onScroll={handleScroll}
-              className="flex flex-row overflow-x-auto snap-x snap-mandatory scrollbar-none gap-6 pb-6 w-full -mx-12 px-12 sm:mx-0 sm:px-0 scroll-smooth md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:overflow-x-visible md:pb-0 md:px-0 md:mx-0"
+              className="flex flex-row overflow-x-auto snap-x snap-mandatory scrollbar-none gap-6 pb-6 w-full -mx-6 px-6 scroll-smooth md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:overflow-x-visible md:pb-0 md:px-0 md:mx-0"
             >
               {filteredExperts.map((expert) => (
                 <div 
                   key={expert.id} 
-                  className="w-[82vw] xs:w-[320px] sm:w-[360px] md:w-full flex-shrink-0 md:flex-shrink snap-start p-6 border border-outline-variant bg-surface-container-lowest hover:border-outline hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 flex flex-col justify-between rounded-md group"
+                  className="w-[84vw] xs:w-[320px] sm:w-[360px] md:w-full flex-shrink-0 md:flex-shrink snap-start p-6 border border-outline-variant bg-surface-container-lowest hover:border-outline hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 flex flex-col justify-between rounded-md group"
                 >
                   <div>
                     <div className="flex gap-4 items-start mb-4">
@@ -635,6 +635,8 @@ export default function LandingPageClient({ session }: { session: SessionData | 
                   </div>
                 </div>
               ))}
+              {/* Spacer to prevent clipping on the right edge of scroll container on mobile */}
+              <div className="w-1 flex-shrink-0 md:hidden" />
             </div>
 
             {/* Scroll Progress Bar & Swipe Indicator */}
