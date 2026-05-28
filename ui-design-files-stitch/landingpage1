@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AstralLink | Expert Connections</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-secondary": "#ffffff",
+                "inverse-primary": "#adc6ff",
+                "secondary-container": "#6664e4",
+                "on-primary": "#ffffff",
+                "tertiary-fixed": "#dae2ff",
+                "surface-container-highest": "#e3e2e7",
+                "on-tertiary-fixed-variant": "#0040a1",
+                "on-tertiary-fixed": "#001848",
+                "inverse-on-surface": "#f1f0f5",
+                "surface-container-high": "#e9e7ed",
+                "surface-bright": "#faf9fe",
+                "on-tertiary-container": "#fefcff",
+                "tertiary-fixed-dim": "#b2c5ff",
+                "surface-tint": "#005bc1",
+                "outline-variant": "#c1c6d7",
+                "primary": "#0058bc",
+                "on-surface": "#1a1b1f",
+                "on-primary-container": "#fefcff",
+                "on-secondary-fixed-variant": "#3631b4",
+                "primary-fixed": "#d8e2ff",
+                "on-error": "#ffffff",
+                "on-secondary-fixed": "#0c006a",
+                "on-surface-variant": "#414755",
+                "tertiary-container": "#4670d2",
+                "error-container": "#ffdad6",
+                "on-primary-fixed-variant": "#004493",
+                "surface-container-lowest": "#ffffff",
+                "secondary-fixed-dim": "#c2c1ff",
+                "on-error-container": "#93000a",
+                "primary-fixed-dim": "#adc6ff",
+                "on-primary-fixed": "#001a41",
+                "surface-container-low": "#f4f3f8",
+                "on-tertiary": "#ffffff",
+                "on-secondary-container": "#fffbff",
+                "surface-dim": "#dad9df",
+                "inverse-surface": "#2f3034",
+                "error": "#ba1a1a",
+                "primary-container": "#0070eb",
+                "outline": "#717786",
+                "surface-variant": "#e3e2e7",
+                "on-background": "#1a1b1f",
+                "tertiary": "#2957b7",
+                "secondary": "#4c4aca",
+                "secondary-fixed": "#e2dfff",
+                "surface": "#ffffff",
+                "background": "#ffffff",
+                "surface-container": "#eeedf3"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "12px",
+                "xl": "16px",
+                "full": "9999px"
+            },
+            "spacing": {
+                "gutter": "24px",
+                "xl": "32px",
+                "container-max": "1200px",
+                "sm": "12px",
+                "base": "4px",
+                "xs": "8px",
+                "md": "16px",
+                "lg": "24px",
+                "xxl": "64px"
+            },
+            "fontFamily": {
+                "label-sm": ["Inter"],
+                "display": ["Inter"],
+                "label-md": ["Inter"],
+                "body-md": ["Inter"],
+                "headline-md": ["Inter"],
+                "body-lg": ["Inter"],
+                "headline-lg": ["Inter"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        
+        .transition-stage {
+            perspective: 1000px;
+        }
+
+        .cycle-card {
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .fade-slide-up {
+            animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .active-indicator {
+            width: 4px;
+            height: 100%;
+            position: absolute;
+            left: -12px;
+            background-color: #0070eb;
+            border-radius: 99px;
+            transition: all 0.4s ease;
+        }
+    </style>
+</head>
+<body class="bg-white text-on-surface">
+<!-- TopNavBar -->
+<header class="docked full-width top-0 sticky z-50 bg-white/80 backdrop-blur-lg border-b border-outline-variant">
+<div class="max-w-[1200px] mx-auto px-lg flex justify-between items-center h-20 w-full">
+<div class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight">AstralLink</div>
+<nav class="hidden md:flex items-center gap-xl">
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#">Mission</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#">Experts</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#">Intelligence</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#">Network</a>
+</nav>
+<button class="bg-primary-container text-on-primary-container px-lg py-sm rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-95 transition-all">
+                Launch Mission
+            </button>
+</div>
+</header>
+<main>
+<!-- Hero Section -->
+<section class="max-w-[1200px] mx-auto px-lg py-xxl">
+<div class="flex flex-col gap-md mb-xxl text-center md:text-left mt-8">
+<h1 class="font-display text-[56px] leading-[1.1] md:text-[72px] lg:text-[88px] font-bold text-on-surface max-w-4xl tracking-tighter mb-2">
+                    Three ways to connect. Zero gatekeepers.
+                </h1>
+<p class="font-body-lg text-xl md:text-2xl text-on-surface-variant max-w-2xl tracking-tight">
+                    You set the budget. You choose the format. You only pay when they respond.
+                </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-xxl items-center mt-12">
+<!-- Left Column: Dynamic Stage -->
+<div class="md:col-span-7 transition-stage relative h-[480px] w-full flex items-center justify-center">
+<!-- Background Glow -->
+<div class="absolute inset-0 bg-primary-container/5 blur-[120px] rounded-full"></div>
+<!-- Content Card Container -->
+<div class="relative z-10 w-full max-w-[440px] aspect-[4/5] bg-white border border-outline-variant rounded-xl p-lg flex flex-col shadow-sm transition-all duration-500" id="cycle-container">
+<!-- State 1: Text a Question -->
+<div class="flex flex-col h-full fade-slide-up" id="state-text">
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-primary-container text-[32px]">chat_bubble</span>
+<span class="font-headline-md text-headline-md font-semibold tracking-tight">Text a Question</span>
+</div>
+<div class="flex-grow flex flex-col gap-md justify-end">
+<div class="bg-surface-container-low p-md rounded-lg self-start max-w-[80%]">
+<p class="font-body-md text-body-md text-on-surface">How do I optimize my model architecture for low-latency inference?</p>
+</div>
+<div class="bg-primary-container text-white p-md rounded-lg self-end max-w-[80%]">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+<div class="h-1 flex-grow bg-white/30 rounded-full relative overflow-hidden">
+<div class="absolute top-0 left-0 h-full w-2/3 bg-white"></div>
+</div>
+<span class="font-label-sm text-label-sm">0:45</span>
+</div>
+</div>
+</div>
+</div>
+<!-- State 2: Request Video (Hidden initially) -->
+<div class="hidden flex flex-col h-full" id="state-video">
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-primary-container text-[32px]">videocam</span>
+<span class="font-headline-md text-headline-md font-semibold tracking-tight">Request a Video</span>
+</div>
+<div class="flex-grow rounded-xl overflow-hidden relative border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional woman in her early 40s wearing a modern blazer, recording a high-quality video response in a well-lit, minimalist home office. The lighting is soft and flattering, typical of a professional studio setup. The background is clean with subtle architectural details, reflecting a premium corporate aesthetic with soft blue accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQBeyB27LOq4BBkkSrxaJ4zsyYj1UKEVyRw0X5J3UVu7KUyYRBMDz8isBQhYb_HxqMrcXeKHaBMVmMcawfq0pxJ4c3empUkl9kvTZN1IozJQPTzvzb4bFdA1HKPz04RkKqIGp6CbOYk7RAscSRmphB1SDtPl2bMW5SaoIaoqb41D8MadiP3fx1w4UHW62u3bzGnHAbvLsHsp7GNX29dBmXu1N82MUaGPpAWAG4r35ETCFfEVvAcAnA_arfrdTmKJVk_q6IfFeXIok"/>
+<div class="absolute bottom-md left-md right-md bg-white/80 backdrop-blur-md p-sm rounded-lg flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface">Video Response Ready</span>
+<span class="material-symbols-outlined text-primary-container">play_arrow</span>
+</div>
+</div>
+</div>
+<!-- State 3: Live 1:1 Calls (Hidden initially) -->
+<div class="hidden flex flex-col h-full" id="state-call">
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-primary-container text-[32px]">call</span>
+<span class="font-headline-md text-headline-md font-semibold tracking-tight">Live 1:1 Calls</span>
+</div>
+<div class="flex-grow flex flex-col items-center justify-center gap-xl text-center">
+<div class="relative">
+<div class="w-32 h-32 rounded-full border-4 border-primary-container/20 flex items-center justify-center animate-pulse">
+<div class="w-24 h-24 rounded-full bg-primary-container/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container text-[48px]">person</span>
+</div>
+</div>
+<div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-primary-container text-white px-md py-xs rounded-full font-label-sm text-label-sm">
+                                        $4.50/min
+                                    </div>
+</div>
+<div class="flex flex-col gap-xs">
+<p class="font-headline-md text-headline-md font-semibold tracking-tight">Connecting to Expert...</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Secure, encrypted connection</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Value Propositions -->
+<div class="md:col-span-5 flex flex-col gap-xxl">
+<div class="space-y-xl">
+<!-- Prop 1 -->
+<div class="relative pl-lg cursor-pointer transition-opacity" id="trigger-text">
+<div class="active-indicator" id="indicator-text"></div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs font-semibold tracking-tight">Text a Question</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Send a direct DM. Get a real audio or text response back.</p>
+</div>
+<!-- Prop 2 -->
+<div class="relative pl-lg cursor-pointer opacity-40 hover:opacity-100 transition-opacity" id="trigger-video">
+<div class="active-indicator hidden" id="indicator-video"></div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs font-semibold tracking-tight">Request a Video</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Drop a question or a custom prompt. Get a recorded video reply.</p>
+</div>
+<!-- Prop 3 -->
+<div class="relative pl-lg cursor-pointer opacity-40 hover:opacity-100 transition-opacity" id="trigger-call">
+<div class="active-indicator hidden" id="indicator-call"></div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs font-semibold tracking-tight">Live 1:1 Calls</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Book direct, face-to-face time and pay strictly by the minute.</p>
+</div>
+</div>
+<div class="pt-xl">
+<button class="bg-primary-container text-white px-xxl py-md rounded-lg font-headline-md text-headline-md hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary-container/20">
+                            Start Exploration
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Secondary Content Block (Minimalist Grid) -->
+<section class="bg-white py-xxl border-t border-outline-variant/30">
+<div class="max-w-[1200px] mx-auto px-lg">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-xl">
+<div class="pl-md md:border-l border-outline-variant/30 transition-colors">
+<h4 class="font-label-md text-sm font-semibold text-on-surface mb-2 uppercase tracking-widest">Secure Escrow</h4>
+<p class="font-body-md text-on-surface-variant leading-relaxed">Funds are only released when you are satisfied with the response.</p>
+</div>
+<div class="pl-md md:border-l border-outline-variant/30 transition-colors">
+<h4 class="font-label-md text-sm font-semibold text-on-surface mb-2 uppercase tracking-widest">Fast Response</h4>
+<p class="font-body-md text-on-surface-variant leading-relaxed">90% of requests are answered within 24 hours by verified experts.</p>
+</div>
+<div class="pl-md md:border-l border-outline-variant/30 transition-colors">
+<h4 class="font-label-md text-sm font-semibold text-on-surface mb-2 uppercase tracking-widest">Verified Pedigree</h4>
+<p class="font-body-md text-on-surface-variant leading-relaxed">Every consultant undergoes a rigorous multi-stage credential audit.</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="full-width bottom-0 border-t border-outline-variant bg-white">
+<div class="max-w-[1200px] mx-auto py-xxl px-lg flex flex-col md:flex-row justify-between items-center gap-md">
+<div class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight">AstralLink</div>
+<div class="flex gap-lg">
+<a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors" href="#">Terms of Service</a>
+<span class="text-on-surface-variant font-label-sm text-label-sm flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    System Status: Operational
+                </span>
+</div>
+<div class="text-on-surface-variant font-body-md text-body-md">
+                © 2024 AstralLink. All rights reserved.
+            </div>
+</div>
+</footer>
+<script>
+        const states = ['text', 'video', 'call'];
+        let currentIndex = 0;
+
+        const container = document.getElementById('cycle-container');
+        const elements = {
+            text: document.getElementById('state-text'),
+            video: document.getElementById('state-video'),
+            call: document.getElementById('state-call')
+        };
+        const triggers = {
+            text: document.getElementById('trigger-text'),
+            video: document.getElementById('trigger-video'),
+            call: document.getElementById('trigger-call')
+        };
+        const indicators = {
+            text: document.getElementById('indicator-text'),
+            video: document.getElementById('indicator-video'),
+            call: document.getElementById('indicator-call')
+        };
+
+        function updateStage(index) {
+            const prevState = states[currentIndex];
+            const newState = states[index];
+
+            // Hide all states
+            Object.values(elements).forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('fade-slide-up');
+            });
+
+            // Show active state
+            elements[newState].classList.remove('hidden');
+            elements[newState].classList.add('fade-slide-up');
+
+            // Update triggers
+            Object.entries(triggers).forEach(([key, el]) => {
+                if (key === newState) {
+                    el.classList.remove('opacity-40');
+                    el.classList.add('opacity-100');
+                    indicators[key].classList.remove('hidden');
+                } else {
+                    el.classList.add('opacity-40');
+                    el.classList.remove('opacity-100');
+                    indicators[key].classList.add('hidden');
+                }
+            });
+
+            currentIndex = index;
+        }
+
+        // Auto-cycle logic
+        let autoCycle = setInterval(() => {
+            let next = (currentIndex + 1) % states.length;
+            updateStage(next);
+        }, 5000);
+
+        // Click interaction
+        Object.entries(triggers).forEach(([key, el], idx) => {
+            el.addEventListener('click', () => {
+                clearInterval(autoCycle);
+                updateStage(idx);
+            });
+        });
+    </script>
+</body></html>
