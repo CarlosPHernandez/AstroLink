@@ -346,7 +346,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
 
                     <div className="mt-auto pt-4 border-t border-outline-variant flex justify-between items-center text-label-sm text-on-surface-variant font-mono uppercase tracking-wider">
                       <span>VERIFIED INSTRUCTOR</span>
-                      <span className="text-emerald-600 font-bold">● PEGGY WHITSON ACTIVE</span>
+                      <span className="text-emerald-600 font-bold">● KARSEN KITCHEN ACTIVE</span>
                     </div>
                   </div>
                 )}
@@ -550,7 +550,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
             <div 
               ref={scrollContainerRef}
               onScroll={handleScroll}
-              className="flex flex-row overflow-x-auto snap-x snap-mandatory scrollbar-none gap-6 pb-6 w-full -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:overflow-x-visible md:pb-0 md:px-0 md:mx-0"
+              className="flex flex-row overflow-x-auto snap-x snap-mandatory scrollbar-none gap-6 pb-6 w-full -mx-12 px-12 sm:mx-0 sm:px-0 scroll-smooth md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:overflow-x-visible md:pb-0 md:px-0 md:mx-0"
             >
               {filteredExperts.map((expert) => (
                 <div 
@@ -567,7 +567,6 @@ export default function LandingPageClient({ session }: { session: SessionData | 
                           fill
                           className="object-cover transition-transform duration-500 group-hover:scale-105"
                           sizes="56px"
-                          priority
                         />
                       </div>
                       

@@ -195,7 +195,7 @@
 body {
   background-color: var(--color-background);
   color: var(--color-on-background);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-inter), 'Inter', sans-serif;
 }
 
 .transition-stage {
