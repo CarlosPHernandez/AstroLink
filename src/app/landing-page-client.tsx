@@ -177,7 +177,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
   };
 
   return (
-    <div className="min-h-screen bg-background text-on-surface font-sans selection:bg-zinc-800 selection:text-white">
+    <div className="min-h-screen bg-background text-on-surface font-sans selection:bg-zinc-800 selection:text-white overflow-x-hidden">
       
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-outline-variant">
