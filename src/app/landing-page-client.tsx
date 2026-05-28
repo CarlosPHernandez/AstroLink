@@ -181,7 +181,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
       
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-outline-variant">
-        <div className="max-w-[1200px] mx-auto px-lg h-20 flex justify-between items-center w-full">
+        <div className="max-w-[1200px] mx-auto px-md sm:px-lg h-20 flex justify-between items-center w-full">
           <div className="flex items-center gap-3">
             {/* Minimal Brand Emblem */}
             <div className="w-8 h-8 bg-primary flex items-center justify-center font-bold text-sm text-white rounded-md shadow-sm">
@@ -190,7 +190,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
             <span className="font-bold text-lg text-on-surface tracking-tight">AstralLink</span>
           </div>
 
-          <div className="flex items-center gap-lg">
+          <div className="flex items-center gap-sm sm:gap-lg">
             {session ? (
               <>
                 <span className="text-sm text-on-surface-variant font-medium hidden sm:inline">
@@ -198,7 +198,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
                 </span>
                 <button
                   onClick={() => logoutAction()}
-                  className="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors cursor-pointer"
+                  className="text-on-surface-variant font-label-md text-xs sm:text-label-md hover:text-primary transition-colors cursor-pointer"
                 >
                   Sign Out
                 </button>
@@ -210,22 +210,22 @@ export default function LandingPageClient({ session }: { session: SessionData | 
                       ? '/dashboard/mentor'
                       : '/dashboard/mentee'
                   }
-                  className="bg-primary text-on-primary px-lg py-sm rounded-md font-label-md text-label-md hover:bg-primary-container active:scale-95 transition-all shadow-sm"
+                  className="bg-primary text-on-primary px-3 py-2 sm:px-lg sm:py-sm rounded-md font-label-md text-xs sm:text-label-md hover:bg-primary-container active:scale-95 transition-all shadow-sm"
                 >
-                  Go to Dashboard
+                  Dashboard
                 </Link>
               </>
             ) : (
               <>
                 <Link
                   href="/auth"
-                  className="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors"
+                  className="text-on-surface-variant font-label-md text-xs sm:text-label-md hover:text-primary transition-colors"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/auth"
-                  className="bg-primary text-on-primary px-lg py-sm rounded-md font-label-md text-label-md hover:bg-primary-container active:scale-95 transition-all shadow-sm"
+                  className="bg-primary text-on-primary px-3.5 py-2 sm:px-lg sm:py-sm rounded-md font-label-md text-xs sm:text-label-md hover:bg-primary-container active:scale-95 transition-all shadow-sm"
                 >
                   Launch Mission
                 </Link>
@@ -237,16 +237,16 @@ export default function LandingPageClient({ session }: { session: SessionData | 
 
       <main>
         {/* Hero Section */}
-        <section className="max-w-[1200px] mx-auto px-lg py-xxl mt-12 mb-24 relative">
+        <section className="max-w-[1200px] mx-auto px-md py-xl sm:px-lg sm:py-xxl mt-6 mb-12 sm:mt-12 sm:mb-24 relative">
           {/* Ambient Glows */}
           <div className="absolute top-10 left-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-primary-container/5 via-secondary-container/5 to-tertiary-container/5 blur-[130px] rounded-full -z-10 pointer-events-none" />
           <div className="absolute bottom-10 right-1/4 w-[350px] h-[350px] bg-gradient-to-br from-secondary-container/5 to-tertiary-container/5 blur-[100px] rounded-full -z-10 pointer-events-none" />
 
-          <div className="flex flex-col gap-md mb-xxl text-center items-center">
-            <h1 className="font-display text-[64px] leading-[1.1] md:text-[80px] lg:text-[96px] font-bold text-on-surface max-w-5xl tracking-tighter mb-4">
+          <div className="flex flex-col gap-sm mb-lg sm:mb-xxl text-center items-center">
+            <h1 className="font-display text-[36px] xs:text-[44px] sm:text-[64px] md:text-[80px] lg:text-[96px] leading-[1.1] font-bold text-on-surface max-w-5xl tracking-tighter mb-4">
               Three ways to connect.<br/>Zero gatekeepers.
             </h1>
-            <p className="font-body-lg text-xl md:text-2xl text-on-surface-variant max-w-3xl tracking-tight font-light">
+            <p className="font-body-lg text-base sm:text-xl md:text-2xl text-on-surface-variant max-w-3xl tracking-tight font-light">
               You set the budget. You choose the format. You only pay when they respond.
             </p>
           </div>
@@ -254,10 +254,28 @@ export default function LandingPageClient({ session }: { session: SessionData | 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-xxl items-center mt-24">
             
             {/* Left Column: Dynamic State Display */}
-            <div className="md:col-span-7 transition-stage relative min-h-[600px] w-full flex items-center justify-center">
+            <div className="md:col-span-7 transition-stage relative min-h-[420px] sm:min-h-[600px] w-full flex flex-col items-center justify-center">
               
+              {/* Mobile State Selector Switcher - Visible only on mobile */}
+              <div className="flex justify-center gap-2 mb-6 md:hidden w-full max-w-[480px]">
+                {(['text', 'video', 'call'] as const).map((state) => (
+                  <button
+                    key={state}
+                    type="button"
+                    onClick={() => handleStateTrigger(state)}
+                    className={`flex-1 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg border transition-all cursor-pointer ${
+                      heroState === state
+                        ? 'bg-primary text-white border-primary shadow-sm'
+                        : 'border-outline-variant bg-surface-container-lowest text-on-surface-variant'
+                    }`}
+                  >
+                    {state === 'text' ? 'Text' : state === 'video' ? 'Video' : 'Live Call'}
+                  </button>
+                ))}
+              </div>
+
               {/* Dynamic Content Card Container */}
-              <div className="relative z-10 w-full max-w-[480px] aspect-[4/5] bg-surface-container-lowest rounded-2xl p-xl flex flex-col floating-card-shadow transition-all duration-800">
+              <div className="relative z-10 w-full max-w-[480px] aspect-[4/5] bg-surface-container-lowest rounded-2xl p-5 sm:p-xl flex flex-col floating-card-shadow transition-all duration-800">
                 
                 {/* State 1: Text a Question */}
                 {heroState === 'text' && (
@@ -372,10 +390,20 @@ export default function LandingPageClient({ session }: { session: SessionData | 
                 )}
 
               </div>
+
+              {/* Mobile Call To Action - Visible only on mobile */}
+              <div className="mt-8 md:hidden w-full max-w-[480px]">
+                <Link
+                  href="/auth"
+                  className="block w-full bg-primary text-on-primary py-3.5 rounded-xl font-headline-md text-sm font-semibold hover:bg-primary-container active:scale-95 transition-all shadow-sm uppercase tracking-wider text-center cursor-pointer"
+                >
+                  Start Exploration
+                </Link>
+              </div>
             </div>
 
             {/* Right Column: Interactive Value Propositions */}
-            <div className="md:col-span-5 flex flex-col justify-between h-full gap-8 pl-4">
+            <div className="hidden md:flex md:col-span-5 flex-col justify-between h-full gap-8 pl-4">
               <div className="space-y-xl">
                 
                 {/* Prop 1 */}
@@ -425,7 +453,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
               <div className="pt-xl mt-4">
                 <Link
                   href="/auth"
-                  className="inline-block bg-primary-container text-white px-xxl py-md rounded-xl font-headline-md text-lg hover:opacity-90 active:scale-95 transition-all shadow-sm"
+                  className="inline-block bg-primary text-on-primary px-xxl py-md rounded-xl font-headline-md text-base font-semibold hover:bg-primary-container active:scale-95 transition-all shadow-sm uppercase tracking-wider cursor-pointer"
                 >
                   Start Exploration
                 </Link>

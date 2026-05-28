@@ -173,62 +173,62 @@ export default function MentorDashboardClient({ session }: { session: SessionDat
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* STICKY SIDEBAR NAVIGATION */}
-          <aside className="lg:col-span-3 bg-surface border border-outline-variant rounded-md p-4 shadow-sm sticky top-24">
-            <div className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest px-3 mb-4">
+          <aside className="lg:col-span-3 bg-surface border border-outline-variant rounded-xl p-4 shadow-sm sticky top-20 lg:top-24 w-full">
+            <div className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest px-3 mb-4 hidden lg:block">
               Dashboard Navigation
             </div>
             
-            <nav className="space-y-1">
+            <nav className="flex flex-row overflow-x-auto lg:flex-col gap-2 lg:gap-1 lg:overflow-x-visible pb-2 lg:pb-0 scrollbar-none">
               <button
                 onClick={() => setActiveTab('consultations')}
-                className={`w-full text-left px-3 py-2.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-between cursor-pointer ${
+                className={`px-3 py-2 lg:py-2.5 rounded-lg text-[10px] lg:text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-between gap-3 cursor-pointer whitespace-nowrap flex-shrink-0 ${
                   activeTab === 'consultations'
-                    ? 'bg-surface-container text-on-surface border-l-4 border-primary pl-2'
-                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low'
+                    ? 'bg-surface-container text-on-surface border-b-2 lg:border-b-0 lg:border-l-4 border-primary pl-3 lg:pl-2'
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low border-b-2 lg:border-b-0 lg:border-l-4 border-transparent pl-3 lg:pl-2'
                 }`}
               >
                 <span>Consultations</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                <span className="hidden lg:inline-block w-1.5 h-1.5 rounded-full bg-primary" />
               </button>
 
               <button
                 onClick={() => setActiveTab('payouts')}
-                className={`w-full text-left px-3 py-2.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-between cursor-pointer ${
+                className={`px-3 py-2 lg:py-2.5 rounded-lg text-[10px] lg:text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-between gap-3 cursor-pointer whitespace-nowrap flex-shrink-0 ${
                   activeTab === 'payouts'
-                    ? 'bg-surface-container text-on-surface border-l-4 border-primary pl-2'
-                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low'
+                    ? 'bg-surface-container text-on-surface border-b-2 lg:border-b-0 lg:border-l-4 border-primary pl-3 lg:pl-2'
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low border-b-2 lg:border-b-0 lg:border-l-4 border-transparent pl-3 lg:pl-2'
                 }`}
               >
                 <span>Payouts & Bank</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                <span className="hidden lg:inline-block w-1.5 h-1.5 rounded-full bg-secondary" />
               </button>
 
               <button
                 onClick={() => setActiveTab('profile')}
-                className={`w-full text-left px-3 py-2.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-between cursor-pointer ${
+                className={`px-3 py-2 lg:py-2.5 rounded-lg text-[10px] lg:text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-between gap-3 cursor-pointer whitespace-nowrap flex-shrink-0 ${
                   activeTab === 'profile'
-                    ? 'bg-surface-container text-on-surface border-l-4 border-primary pl-2'
-                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low'
+                    ? 'bg-surface-container text-on-surface border-b-2 lg:border-b-0 lg:border-l-4 border-primary pl-3 lg:pl-2'
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low border-b-2 lg:border-b-0 lg:border-l-4 border-transparent pl-3 lg:pl-2'
                 }`}
               >
                 <span>Profile Settings</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-tertiary" />
+                <span className="hidden lg:inline-block w-1.5 h-1.5 rounded-full bg-tertiary" />
               </button>
 
               <button
                 onClick={() => setActiveTab('reports')}
-                className={`w-full text-left px-3 py-2.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-between cursor-pointer ${
+                className={`px-3 py-2 lg:py-2.5 rounded-lg text-[10px] lg:text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-between gap-3 cursor-pointer whitespace-nowrap flex-shrink-0 ${
                   activeTab === 'reports'
-                    ? 'bg-surface-container text-on-surface border-l-4 border-primary pl-2'
-                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low'
+                    ? 'bg-surface-container text-on-surface border-b-2 lg:border-b-0 lg:border-l-4 border-primary pl-3 lg:pl-2'
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low border-b-2 lg:border-b-0 lg:border-l-4 border-transparent pl-3 lg:pl-2'
                 }`}
               >
                 <span>Reports & Telemetry</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="hidden lg:inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
               </button>
             </nav>
 
-            <div className="mt-8 pt-6 border-t border-outline-variant/30 px-3">
+            <div className="mt-8 pt-6 border-t border-outline-variant/30 px-3 hidden lg:block">
               <span className="block text-[9px] font-mono text-on-surface-variant uppercase tracking-widest">
                 Stripe Express
               </span>
