@@ -279,10 +279,10 @@ export default function LandingPageClient({ session }: { session: SessionData | 
 
           <div className="flex flex-col gap-sm mb-lg sm:mb-xxl text-center items-center">
             <h1 className="font-display text-[36px] xs:text-[44px] sm:text-[64px] md:text-[80px] lg:text-[96px] leading-[1.1] font-bold text-on-surface max-w-5xl tracking-tighter mb-4">
-              Three ways to connect.<br/>Zero gatekeepers.
+              Direct access to world-class space experts<br/>Right on your phone.
             </h1>
             <p className="font-body-lg text-base sm:text-xl md:text-2xl text-on-surface-variant max-w-3xl tracking-tight font-light">
-              You set the budget. You choose the format. You only pay when they respond.
+              Text or video real experts, connect 1-on-1 for career advice, project guidance, and insider insights.
             </p>
           </div>
 
