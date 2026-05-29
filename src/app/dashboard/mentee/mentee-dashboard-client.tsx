@@ -16,11 +16,11 @@ export default function MenteeDashboardClient({ session }: { session: SessionDat
   const mockBookings = [
     {
       id: 'book-001',
-      mentorName: 'Dr. Peggy Whitson',
+      mentorName: 'Chris Sembroski  ',
       serviceType: 'session_1on1',
       scheduledAt: '2026-05-30T15:00:00Z',
       status: 'confirmed',
-      matchReason: 'Dr. Peggy Whitson has significant NASA leadership experience aligned with your goals to work in astronaut operations.',
+      matchReason: 'Chris Sembroski has significant leadership experience aligned with your goals to work in commercial space. His experience on the Inspiration4 mission provides unique insights into private astronaut operations and the burgeoning commercial space industry.',
       briefing: {
         objectives: ['Review aerospace career development paths', 'Discuss operations protocols', 'Formulate a 12-month development checklist'],
         agenda: 'Minutes 0-5: Framing | Minutes 5-20: Operations Deep Dive | Minutes 20-30: Roadmap',
@@ -28,11 +28,15 @@ export default function MenteeDashboardClient({ session }: { session: SessionDat
     },
     {
       id: 'book-002',
-      mentorName: 'Gwynne Shotwell',
-      serviceType: 'resume_review',
+      mentorName: 'Bill Nye',
+      serviceType: 'session_1on1',
       scheduledAt: '2026-06-05T10:00:00Z',
       status: 'confirmed',
-      matchReason: 'Gwynne Shotwell possesses premier executive insight into commercial aerospace recruitment and resume benchmarks.',
+      matchReason: 'Bill Nye has inspired millions to pursue careers in science and engineering. His work in popularizing space exploration and science education makes him a valuable resource for those looking to pursue a career in space-related fields.  ',
+      briefing: {
+        objectives: ['Review aerospace career development paths', 'Discuss operations protocols', 'Formulate a 12-month development checklist'],
+        agenda: 'Minutes 0-5: Framing | Minutes 5-20: Operations Deep Dive | Minutes 20-30: Roadmap',
+      },
     },
   ];
 

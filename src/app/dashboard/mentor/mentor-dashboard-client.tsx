@@ -12,7 +12,7 @@ interface SessionData {
 }
 
 export default function MentorDashboardClient({ session }: { session: SessionData }) {
-  const isPeggy = session.email === 'peggy@astrolink.ai';
+  const isChris = session.email.toLowerCase() === 'chris@astrolink.ai' || session.email.toLowerCase() === 'chris@astralink.ai';
 
   // Active Tab state: consultations | payouts | profile | reports
   const [activeTab, setActiveTab] = useState<'consultations' | 'payouts' | 'profile' | 'reports'>('consultations');
@@ -21,17 +21,17 @@ export default function MentorDashboardClient({ session }: { session: SessionDat
   const [profile, setProfile] = useState({
     fullName: session.fullName,
     email: session.email,
-    employer: isPeggy ? 'NASA / Axiom Space' : 'Aerospace Institute',
-    complianceStatus: isPeggy ? 'approved' : 'stripe_incomplete', // approved | stripe_incomplete | awaiting_human_approval | document_required
-    stripeOnboardingCompleted: isPeggy,
+    employer: isChris ? 'Inspiration 4 / Lockheed Martin / Starfish Space' : 'Aerospace Institute',
+    complianceStatus: isChris ? 'approved' : 'stripe_incomplete', // approved | stripe_incomplete | awaiting_human_approval | document_required
+    stripeOnboardingCompleted: isChris,
     isCivilServant: false,
-    bio: isPeggy 
-      ? 'Commanded the International Space Station twice. Expert in orbital workflow, astronaut operations, and life support systems engineering.' 
+    bio: isChris 
+      ? 'Commercial astronaut who flew on Inspiration 4, the historic all-civilian orbital mission. Expert in payload integration and flight mechanics.' 
       : 'Consultant and engineer with a passion for aerospace.',
-    expertise: isPeggy 
-      ? 'Orbital Operations, EVA Protocols, Spacecraft Habitation' 
+    expertise: isChris 
+      ? 'Commercial Spaceflight, Payload Integration, Flight Mechanics' 
       : 'Avionics, Systems Engineering',
-    rate: isPeggy ? 300 : 250,
+    rate: isChris ? 320 : 250,
   });
 
   const [saving, setSaving] = useState(false);
