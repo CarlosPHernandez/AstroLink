@@ -282,7 +282,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
               Direct access to world-class space experts<br/>Right on your phone.
             </h1>
             <p className="font-body-lg text-base sm:text-xl md:text-2xl text-on-surface-variant max-w-3xl tracking-tight font-light">
-              Text or video real experts, connect 1-on-1 for career advice, project guidance, and insider insights.
+              Book 1:1 calls, request video responses, or text verified astronauts and flight controllers. Real-world mentorship on your schedule.
             </p>
           </div>
 
