@@ -11,7 +11,14 @@ export type ComplianceStatus =
   | 'approved'
   | 'rejected';
 
-export type ServiceType = 'session_1on1' | 'resume_review' | 'mock_interview';
+export type ServiceType = 'session_1on1' | 'pre_call_brief' | 'extended_session';
+
+/** User-facing labels for booking UI (expert-network sessions, not recruiting). */
+export const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
+  session_1on1: 'Expert session (30 min)',
+  pre_call_brief: 'Pre-call brief package',
+  extended_session: 'Deep-dive expert session (60 min)',
+};
 
 export type BookingStatus =
   | 'pending_payment'
@@ -136,15 +143,18 @@ export interface MentorBriefingOutput {
   suggested_resources: string[];
 }
 
-export interface GapAnalysisOutput {
-  candidate_strengths: string[]; // Max 2
-  critical_gaps: {
-    gap: string;
-    jd_requirement: string;
+/** APX-02 output for pre_call_brief — structures buyer context for an expert call, not resume/JD scoring. */
+export interface PreCallBriefOutput {
+  buyer_context_summary: string;
+  buyer_strengths: string[]; // Max 2 — what the buyer brings to the conversation
+  focus_areas: {
+    topic: string;
+    why_for_expert: string;
     severity: 'high' | 'medium';
-    suggested_fix: string;
-  }[]; // Exactly 3 critical items
-  overall_fit_score: number; // Float 0.0 - 1.0
+    suggested_angle: string;
+  }[]; // Exactly 3 topics to explore with the expert
+  proposed_questions: string[]; // Max 5 questions to ask the expert
+  session_readiness_score: number; // Float 0.0 - 1.0 — readiness to use expert time well
   one_line_summary: string;
 }
 

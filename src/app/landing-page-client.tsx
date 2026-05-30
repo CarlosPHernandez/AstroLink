@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { logoutAction } from '@/app/auth/actions';
@@ -146,6 +146,8 @@ interface SessionData {
   fullName: string;
 }
 
+const HERO_MODALITIES = ['text', 'video', 'call'] as const;
+
 export default function LandingPageClient({ session }: { session: SessionData | null }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [heroState, setHeroState] = useState<'text' | 'video' | 'call'>('text');
@@ -158,25 +160,32 @@ export default function LandingPageClient({ session }: { session: SessionData | 
     ? EXPERTS 
     : EXPERTS.filter(e => e.category === selectedCategory);
 
-  // States cycling logic
-  useEffect(() => {
-    const states: ('text' | 'video' | 'call')[] = ['text', 'video', 'call'];
-    
+  const startHeroCycle = useCallback(() => {
+    if (autoCycleRef.current) clearInterval(autoCycleRef.current);
     autoCycleRef.current = setInterval(() => {
       setHeroState((current) => {
-        const nextIndex = (states.indexOf(current) + 1) % states.length;
-        return states[nextIndex];
+        const nextIndex =
+          (HERO_MODALITIES.indexOf(current) + 1) % HERO_MODALITIES.length;
+        return HERO_MODALITIES[nextIndex];
       });
     }, 5000);
+  }, []);
 
+  const pauseHeroCycle = useCallback(() => {
+    if (autoCycleRef.current) clearInterval(autoCycleRef.current);
+    autoCycleRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    startHeroCycle();
     return () => {
       if (autoCycleRef.current) clearInterval(autoCycleRef.current);
     };
-  }, []);
+  }, [startHeroCycle]);
 
   const handleStateTrigger = (state: 'text' | 'video' | 'call') => {
-    if (autoCycleRef.current) clearInterval(autoCycleRef.current);
     setHeroState(state);
+    startHeroCycle();
   };
 
   // Scroll tracking and category reset
@@ -272,28 +281,30 @@ export default function LandingPageClient({ session }: { session: SessionData | 
 
       <main>
         {/* Hero Section */}
-        <section className="max-w-[1200px] mx-auto px-md py-xl sm:px-lg sm:py-xxl mt-6 mb-12 sm:mt-12 sm:mb-24 relative">
+        <section className="max-w-[1200px] mx-auto px-md py-8 sm:px-lg sm:py-12 lg:py-14 mt-4 mb-12 sm:mb-20 relative">
           {/* Ambient Glows */}
           <div className="absolute top-10 left-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-primary-container/5 via-secondary-container/5 to-tertiary-container/5 blur-[130px] rounded-full -z-10 pointer-events-none" />
           <div className="absolute bottom-10 right-1/4 w-[350px] h-[350px] bg-gradient-to-br from-secondary-container/5 to-tertiary-container/5 blur-[100px] rounded-full -z-10 pointer-events-none" />
 
-          <div className="flex flex-col gap-sm mb-lg sm:mb-xxl text-center items-center">
-            <h1 className="font-display text-[36px] xs:text-[44px] sm:text-[64px] md:text-[80px] lg:text-[96px] leading-[1.1] font-bold text-on-surface max-w-5xl tracking-tighter mb-4">
-              Direct access to world-class space experts<br/>Right on your phone.
+          <div className="flex flex-col gap-sm mb-8 sm:mb-12 text-center items-center">
+            <h1 className="font-display text-[40px] xs:text-[48px] sm:text-[56px] md:text-[64px] lg:text-[72px] leading-[1.08] font-bold text-on-surface max-w-3xl tracking-tighter">
+              Book verified space experts
             </h1>
-            <p className="font-body-lg text-base sm:text-xl md:text-2xl text-on-surface-variant max-w-3xl tracking-tight font-light">
-              Book 1:1 calls, request video responses, or text verified astronauts and flight controllers. Real-world mentorship on your schedule.
+            <p className="font-body-lg text-base sm:text-lg md:text-xl text-on-surface-variant max-w-3xl leading-snug tracking-tight font-light px-2">
+              Live 1:1 calls, custom video replies, or paid text—with astronauts, flight controllers, and operators. Clear pricing before you book.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-xxl items-center mt-24">
-            
-            {/* Left Column: Dynamic State Display */}
-            <div className="md:col-span-7 transition-stage relative min-h-[420px] sm:min-h-[600px] w-full flex flex-col items-center justify-center">
-              
-              {/* Mobile State Selector Switcher - Visible only on mobile */}
-              <div className="flex justify-center gap-2 mb-6 md:hidden w-full max-w-[480px]">
-                {(['text', 'video', 'call'] as const).map((state) => (
+          <div
+            className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10 lg:gap-12 items-center mt-6 md:mt-8"
+            onMouseEnter={pauseHeroCycle}
+            onMouseLeave={startHeroCycle}
+          >
+            {/* Demo card */}
+            <div className="md:col-span-7 transition-stage relative h-auto md:h-[520px] w-full flex flex-col items-center justify-center">
+              {/* Mobile modality tabs */}
+              <div className="flex justify-center gap-2 mb-4 md:hidden w-full max-w-[480px]">
+                {HERO_MODALITIES.map((state) => (
                   <button
                     key={state}
                     type="button"
@@ -309,9 +320,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
                 ))}
               </div>
 
-              {/* Dynamic Content Card Container */}
-              <div className="relative z-10 w-full max-w-[480px] aspect-[4/5] bg-surface-container-lowest rounded-2xl p-5 sm:p-xl flex flex-col floating-card-shadow transition-all duration-800">
-                
+              <div className="relative z-10 w-full max-w-[480px] aspect-[4/5] max-h-[min(70vh,520px)] md:max-h-none bg-surface-container-lowest rounded-2xl p-5 sm:p-xl flex flex-col floating-card-shadow">
                 {/* State 1: Text a Question */}
                 {heroState === 'text' && (
                   <div className="flex flex-col h-full animate-fade-in justify-between">
@@ -344,7 +353,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
                       </div>
                     </div>
 
-                    <div className="mt-auto pt-4 border-t border-outline-variant flex justify-between items-center text-label-sm text-on-surface-variant font-mono uppercase tracking-wider">
+                    <div className="mt-auto pt-4 border-t border-outline-variant flex flex-col xs:flex-row xs:justify-between xs:items-center gap-1 text-label-sm text-on-surface-variant font-mono uppercase tracking-wider">
                       <span>VERIFIED INSTRUCTOR</span>
                       <span className="text-emerald-600 font-bold">● KARSEN KITCHEN ACTIVE</span>
                     </div>
@@ -383,7 +392,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
                       </div>
                     </div>
 
-                    <div className="mt-auto pt-4 border-t border-outline-variant flex justify-between items-center text-label-sm text-on-surface-variant font-mono uppercase tracking-wider">
+                    <div className="mt-auto pt-4 border-t border-outline-variant flex flex-col xs:flex-row xs:justify-between xs:items-center gap-1 text-label-sm text-on-surface-variant font-mono uppercase tracking-wider">
                       <span className="font-mono text-on-surface-variant">Response format: VIDEO</span>
                       <span className="font-bold text-on-surface">CHRIS SEMBROSKI</span>
                     </div>
@@ -417,17 +426,15 @@ export default function LandingPageClient({ session }: { session: SessionData | 
                       </div>
                     </div>
 
-                    <div className="mt-auto pt-4 border-t border-outline-variant flex justify-between items-center text-label-sm text-on-surface-variant font-mono uppercase tracking-wider">
+                    <div className="mt-auto pt-4 border-t border-outline-variant flex flex-col xs:flex-row xs:justify-between xs:items-center gap-1 text-label-sm text-on-surface-variant font-mono uppercase tracking-wider">
                       <span>ROUTE ID: MED-OPX</span>
                       <span className="text-on-surface font-bold">DR. EIMAN JAHANGIR</span>
                     </div>
                   </div>
                 )}
-
               </div>
 
-              {/* Mobile Call To Action - Visible only on mobile */}
-              <div className="mt-8 md:hidden w-full max-w-[480px]">
+              <div className="mt-6 md:hidden w-full max-w-[480px]">
                 <Link
                   href="/auth"
                   className="block w-full bg-primary text-on-primary py-3.5 rounded-xl font-headline-md text-sm font-semibold hover:bg-primary-container active:scale-95 transition-all shadow-sm uppercase tracking-wider text-center cursor-pointer"
@@ -437,55 +444,39 @@ export default function LandingPageClient({ session }: { session: SessionData | 
               </div>
             </div>
 
-            {/* Right Column: Interactive Value Propositions */}
-            <div className="hidden md:flex md:col-span-5 flex-col justify-between h-full gap-8 pl-4">
+            {/* Modality list + CTA (desktop) */}
+            <div className="hidden md:flex md:col-span-5 flex-col justify-between gap-8 pl-2 lg:pl-4 min-h-[520px]">
               <div className="space-y-xl">
-                
-                {/* Prop 1 */}
-                <div 
-                  onClick={() => handleStateTrigger('text')}
-                  className={`relative pl-lg cursor-pointer transition-opacity duration-700 ${
-                    heroState === 'text'
-                      ? 'opacity-100'
-                      : 'opacity-30 hover:opacity-70'
-                  }`}
-                >
-                  {heroState === 'text' && <div className="active-indicator" />}
-                  <h3 className="font-headline-md text-headline-md text-on-surface mb-sm font-medium tracking-tight">Text a Question</h3>
-                  <p className="font-body-md text-body-md text-on-surface-variant font-light leading-relaxed">Send a direct DM. Get a real audio or text response back.</p>
-                </div>
-                
-                {/* Prop 2 */}
-                <div 
-                  onClick={() => handleStateTrigger('video')}
-                  className={`relative pl-lg cursor-pointer transition-opacity duration-700 ${
-                    heroState === 'video'
-                      ? 'opacity-100'
-                      : 'opacity-30 hover:opacity-70'
-                  }`}
-                >
-                  {heroState === 'video' && <div className="active-indicator" />}
-                  <h3 className="font-headline-md text-headline-md text-on-surface mb-sm font-medium tracking-tight">Request a Video</h3>
-                  <p className="font-body-md text-body-md text-on-surface-variant font-light leading-relaxed">Drop a question or a custom prompt. Get a recorded video reply.</p>
-                </div>
-                
-                {/* Prop 3 */}
-                <div 
-                  onClick={() => handleStateTrigger('call')}
-                  className={`relative pl-lg cursor-pointer transition-opacity duration-700 ${
-                    heroState === 'call'
-                      ? 'opacity-100'
-                      : 'opacity-30 hover:opacity-70'
-                  }`}
-                >
-                  {heroState === 'call' && <div className="active-indicator" />}
-                  <h3 className="font-headline-md text-headline-md text-on-surface mb-sm font-medium tracking-tight">Live 1:1 Calls</h3>
-                  <p className="font-body-md text-body-md text-on-surface-variant font-light leading-relaxed">Book direct, face-to-face time and pay strictly by the minute.</p>
-                </div>
-
+                {HERO_MODALITIES.map((state) => (
+                  <div
+                    key={state}
+                    onClick={() => handleStateTrigger(state)}
+                    className={`relative pl-lg cursor-pointer transition-opacity duration-500 ${
+                      heroState === state
+                        ? 'opacity-100'
+                        : 'opacity-30 hover:opacity-70'
+                    }`}
+                  >
+                    {heroState === state && <div className="active-indicator" />}
+                    <h3 className="font-headline-md text-headline-md text-on-surface mb-sm font-medium tracking-tight">
+                      {state === 'text'
+                        ? 'Text a Question'
+                        : state === 'video'
+                        ? 'Request a Video'
+                        : 'Live 1:1 Calls'}
+                    </h3>
+                    <p className="font-body-md text-body-md text-on-surface-variant font-light leading-relaxed">
+                      {state === 'text'
+                        ? 'Send a direct DM. Get a real audio or text response back.'
+                        : state === 'video'
+                        ? 'Drop a question or a custom prompt. Get a recorded video reply.'
+                        : 'Book direct, face-to-face time and pay strictly by the minute.'}
+                    </p>
+                  </div>
+                ))}
               </div>
 
-              <div className="pt-xl mt-4">
+              <div className="pt-4">
                 <Link
                   href="/auth"
                   className="inline-block bg-primary text-on-primary px-xxl py-md rounded-xl font-headline-md text-base font-semibold hover:bg-primary-container active:scale-95 transition-all shadow-sm uppercase tracking-wider cursor-pointer"
@@ -494,7 +485,6 @@ export default function LandingPageClient({ session }: { session: SessionData | 
                 </Link>
               </div>
             </div>
-
           </div>
         </section>
 

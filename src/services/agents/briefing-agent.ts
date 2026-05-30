@@ -1,17 +1,16 @@
 import { ai, callGeminiWithBackoff } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
-import { GapAnalysisOutput, MentorBriefingOutput } from '@/lib/types';
+import { MentorBriefingOutput, PreCallBriefOutput } from '@/lib/types';
 
 export class BriefingAgent {
   private agentId = 'APX-02';
 
   /**
-   * Prepares briefings or gap analysis depending on the booking's service type.
+   * Prepares session briefings or a pre-call brief package depending on service type.
    */
   async prepareBriefing(bookingId: string) {
     await this.logAudit('BRIEFING_START', bookingId, {});
 
-    // Fetch booking details including mentee and mentor details
     const { data: booking, error: bookingErr } = await supabaseAdmin
       .from('bookings')
       .select('*, users(*), mentors(*)')
@@ -24,53 +23,55 @@ export class BriefingAgent {
 
     const { service_type } = booking;
 
-    if (service_type === 'session_1on1' || service_type === 'mock_interview') {
+    if (service_type === 'session_1on1' || service_type === 'extended_session') {
       const briefing = await this.generateSessionBriefing({
-        menteeName: booking.users.full_name,
-        menteeGoals: booking.match_reason || '',
-        mentorName: booking.mentors.full_name,
-        mentorExpertise: booking.mentors.expertise.join(', '),
+        buyerName: booking.users.full_name,
+        buyerGoals: booking.match_reason || '',
+        expertName: booking.mentors.full_name,
+        expertExpertise: booking.mentors.expertise.join(', '),
       });
 
       // TODO: Save briefing results to a custom table or JSON column on bookings
       await this.logAudit('BRIEFING_GENERATED', bookingId, { briefing });
       return briefing;
-    } else if (service_type === 'resume_review') {
-      // In a real flow, you would pull the mentee's resume plaintext from bucket/db
-      const resumeText = 'Plaintext parsed resume content...';
-      const targetJobDesc = 'Target aerospace systems engineering job description...';
+    }
 
-      const gapAnalysis = await this.generateResumeGapAnalysis({
-        resumeText,
-        jobDescription: targetJobDesc,
-        mentorExpertise: booking.mentors.expertise.join(', '),
+    if (service_type === 'pre_call_brief') {
+      const preCallBrief = await this.generatePreCallBrief({
+        buyerGoals: booking.match_reason || '',
+        buyerBackground: '', // TODO: load from booking intake fields when persisted
+        expertExpertise: booking.mentors.expertise.join(', '),
+        expertName: booking.mentors.full_name,
       });
 
-      await this.logAudit('GAP_ANALYSIS_GENERATED', bookingId, { gapAnalysis });
-      return gapAnalysis;
+      await this.logAudit('PRE_CALL_BRIEF_GENERATED', bookingId, { preCallBrief });
+      return preCallBrief;
     }
+
+    throw new Error(`Unsupported service_type for briefing: ${service_type}`);
   }
 
   /**
-   * Workflow A: Generate Pre-Session Briefing Packet (using Gemini Pro / Flash fallback)
+   * Pre-session briefing for the expert before a live call.
    */
   private async generateSessionBriefing(input: {
-    menteeName: string;
-    menteeGoals: string;
-    mentorName: string;
-    mentorExpertise: string;
+    buyerName: string;
+    buyerGoals: string;
+    expertName: string;
+    expertExpertise: string;
   }): Promise<MentorBriefingOutput> {
     const systemInstruction = `
-      You are AstraLink's session preparation engine. Your objective is to formulate a structured pre-session briefing for an aerospace mentor.
-      Analyze the mentee’s career objectives and prepare a highly actionable, high-density agenda.
+      You are AstroLink's expert-session preparation engine (comparable to GLG/Minnect-style paid expert calls).
+      Prepare a structured pre-session briefing so the aerospace expert can deliver a high-value live session.
+      Focus on the buyer's questions, context, and agenda — not job applications, resume scoring, or employer shortlists.
       Return valid JSON only.
     `;
 
     const prompt = `
-      Mentee: ${input.menteeName}
-      Mentee Goals: ${input.menteeGoals}
-      Mentor: ${input.mentorName}
-      Mentor Expertise: ${input.mentorExpertise}
+      Buyer: ${input.buyerName}
+      Buyer goals & questions: ${input.buyerGoals}
+      Expert: ${input.expertName}
+      Expert expertise: ${input.expertExpertise}
     `;
 
     const runCall = async () => {
@@ -115,23 +116,26 @@ export class BriefingAgent {
   }
 
   /**
-   * Workflow B: Technical Resume Gap Analysis
+   * Async pre-call brief: structures buyer context and questions before the expert session.
    */
-  private async generateResumeGapAnalysis(input: {
-    resumeText: string;
-    jobDescription: string;
-    mentorExpertise: string;
-  }): Promise<GapAnalysisOutput> {
+  private async generatePreCallBrief(input: {
+    buyerGoals: string;
+    buyerBackground: string;
+    expertExpertise: string;
+    expertName: string;
+  }): Promise<PreCallBriefOutput> {
     const systemInstruction = `
-      You are AstraLink's Aerospace Technical Recruiting Engine. Review the candidate's plaintext resume against the target job description.
-      Identify exactly three technical or credential gaps.
-      Be brutally honest, constructive, and highly technical. Return valid JSON only.
+      You are AstroLink's pre-call brief engine for paid expert sessions in aerospace and space.
+      Given the buyer's goals and background, produce a concise brief they can use to maximize time with the expert.
+      Do NOT compare resumes to job descriptions, score hiring fit, or act as a recruiting tool.
+      Return valid JSON only.
     `;
 
     const prompt = `
-      Candidate Resume: ${input.resumeText}
-      Target Job Description: ${input.jobDescription}
-      Mentor Expertise: ${input.mentorExpertise}
+      Buyer goals: ${input.buyerGoals}
+      Buyer background: ${input.buyerBackground}
+      Expert: ${input.expertName}
+      Expert expertise: ${input.expertExpertise}
     `;
 
     const runCall = async () => {
@@ -144,32 +148,44 @@ export class BriefingAgent {
           responseSchema: {
             type: 'OBJECT',
             properties: {
-              candidate_strengths: {
+              buyer_context_summary: { type: 'STRING' },
+              buyer_strengths: {
                 type: 'ARRAY',
                 items: { type: 'STRING' },
               },
-              critical_gaps: {
+              focus_areas: {
                 type: 'ARRAY',
                 items: {
                   type: 'OBJECT',
                   properties: {
-                    gap: { type: 'STRING' },
-                    jd_requirement: { type: 'STRING' },
+                    topic: { type: 'STRING' },
+                    why_for_expert: { type: 'STRING' },
                     severity: { type: 'STRING', enum: ['high', 'medium'] },
-                    suggested_fix: { type: 'STRING' },
+                    suggested_angle: { type: 'STRING' },
                   },
-                  required: ['gap', 'jd_requirement', 'severity', 'suggested_fix'],
+                  required: ['topic', 'why_for_expert', 'severity', 'suggested_angle'],
                 },
               },
-              overall_fit_score: { type: 'NUMBER' },
+              proposed_questions: {
+                type: 'ARRAY',
+                items: { type: 'STRING' },
+              },
+              session_readiness_score: { type: 'NUMBER' },
               one_line_summary: { type: 'STRING' },
             },
-            required: ['candidate_strengths', 'critical_gaps', 'overall_fit_score', 'one_line_summary'],
+            required: [
+              'buyer_context_summary',
+              'buyer_strengths',
+              'focus_areas',
+              'proposed_questions',
+              'session_readiness_score',
+              'one_line_summary',
+            ],
           },
         },
       });
 
-      return JSON.parse(response.text || '{}') as GapAnalysisOutput;
+      return JSON.parse(response.text || '{}') as PreCallBriefOutput;
     };
 
     return callGeminiWithBackoff(runCall);

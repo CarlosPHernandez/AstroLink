@@ -119,19 +119,19 @@ export class BookingAgent {
     }
 
     const matchingSystemInstruction = `
-      You are AstraLink's aerospace mentor matching engine. Analyze the mentee's background, goals, and service type against the available mentor pool.
-      Identify the single best matching mentor.
+      You are AstroLink's expert-matching engine for paid aerospace expert sessions (GLG/Minnect-style, not job placement).
+      Match the buyer's goals and background to the single best expert in the pool for their booked session type.
       Strict constraints:
       - Return valid JSON matching the schema precisely.
-      - Base your choice on matching aerospace disciplines and relevance of the mentor's bio to the mentee's goals.
+      - Optimize for topical fit, credibility, and session value — not hiring fit or resume screening.
     `;
 
     const prompt = `
-      Mentee Goals: ${input.menteeGoals}
-      Mentee Background: ${input.menteeBackground}
-      Service Type: ${input.serviceType}
-      
-      Mentor Pool:
+      Buyer goals: ${input.menteeGoals}
+      Buyer background: ${input.menteeBackground}
+      Session type: ${input.serviceType}
+
+      Expert pool:
       ${JSON.stringify(mentors, null, 2)}
     `;
 

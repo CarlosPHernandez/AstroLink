@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { logoutAction } from '@/app/auth/actions';
+import { SERVICE_TYPE_LABELS, type ServiceType } from '@/lib/types';
 
 interface SessionData {
   userId: string;
@@ -49,14 +50,14 @@ export default function MenteeDashboardClient({ session }: { session: SessionDat
           <div>
             <div className="flex items-center gap-3 mb-1">
               <span className="px-2 py-0.5 text-[9px] font-mono bg-primary text-white rounded uppercase tracking-widest font-semibold">
-                Mentee Command Center
+                Your sessions
               </span>
               <span className="text-on-surface-variant text-xs font-mono">// Session Active</span>
             </div>
             <h1 className="text-2xl font-bold text-on-surface tracking-tight">
               Hello, <span className="font-light italic bg-gradient-to-r from-black via-zinc-800 to-zinc-600 bg-clip-text text-transparent">{session.fullName}</span>
             </h1>
-            <p className="text-on-surface-variant text-xs mt-1">Monitor your upcoming calls, review briefs, and join video rooms.</p>
+            <p className="text-on-surface-variant text-xs mt-1">Upcoming expert calls, pre-session briefs, and video rooms.</p>
           </div>
           
           <div className="flex items-center gap-4">
@@ -88,7 +89,8 @@ export default function MenteeDashboardClient({ session }: { session: SessionDat
                 <div>
                   <h3 className="text-lg font-bold text-on-surface mb-1">{booking.mentorName}</h3>
                   <p className="text-xs text-on-surface-variant uppercase tracking-wide">
-                    {booking.serviceType.replace('_', ' ')} • {new Date(booking.scheduledAt).toLocaleString()}
+                    {SERVICE_TYPE_LABELS[booking.serviceType as ServiceType] ?? booking.serviceType} •{' '}
+                    {new Date(booking.scheduledAt).toLocaleString()}
                   </p>
                 </div>
                 <div className="flex gap-3">
@@ -128,7 +130,9 @@ export default function MenteeDashboardClient({ session }: { session: SessionDat
                 </div>
               ) : (
                 <div className="border-t border-surface-container pt-6">
-                  <span className="text-xs text-on-surface-variant italic">Resume review briefing is generated asynchronously once resume files are parsed.</span>
+                  <span className="text-xs text-on-surface-variant italic">
+                    Pre-session brief is generating — you will see objectives and agenda here shortly.
+                  </span>
                 </div>
               )}
             </div>
