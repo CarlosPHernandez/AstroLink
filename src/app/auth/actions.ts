@@ -29,10 +29,26 @@ export type ActionState = {
 };
 
 // Preset credentials for easy testing
+/** Match `supabase/migrations/20260531140100_seed_d1_dev.sql` until Supabase Auth ships */
 const PRESETS = {
-  mentor: { email: 'peggy@astrolink.ai', fullName: 'Dr. Peggy Whitson', role: 'mentor' as const },
-  mentee: { email: 'carlos@astrolink.ai', fullName: 'Carlos Hernandez', role: 'mentee' as const },
-  admin: { email: 'admin@astrolink.ai', fullName: 'Flight Command', role: 'admin' as const },
+  mentor: {
+    email: 'chris@astrolink.ai',
+    fullName: 'Chris Sembroski',
+    role: 'mentor' as const,
+    userId: 'a0000002-0000-4000-8000-000000000002',
+  },
+  mentee: {
+    email: 'carlos@astrolink.ai',
+    fullName: 'Carlos Hernandez',
+    role: 'mentee' as const,
+    userId: 'a0000001-0000-4000-8000-000000000001',
+  },
+  admin: {
+    email: 'admin@astrolink.ai',
+    fullName: 'Flight Command',
+    role: 'admin' as const,
+    userId: 'a0000003-0000-4000-8000-000000000003',
+  },
 };
 
 export async function loginAction(
@@ -67,15 +83,15 @@ export async function loginAction(
   if (email.toLowerCase() === PRESETS.mentor.email.toLowerCase()) {
     role = PRESETS.mentor.role;
     fullName = PRESETS.mentor.fullName;
-    userId = 'mentor-123';
+    userId = PRESETS.mentor.userId;
   } else if (email.toLowerCase() === PRESETS.mentee.email.toLowerCase()) {
     role = PRESETS.mentee.role;
     fullName = PRESETS.mentee.fullName;
-    userId = 'mentee-456';
+    userId = PRESETS.mentee.userId;
   } else if (email.toLowerCase() === PRESETS.admin.email.toLowerCase()) {
     role = PRESETS.admin.role;
     fullName = PRESETS.admin.fullName;
-    userId = 'admin-789';
+    userId = PRESETS.admin.userId;
   } else {
     // Generate name from email prefix
     const prefix = email.split('@')[0];

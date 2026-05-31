@@ -1,10 +1,11 @@
+import type { Json } from '@/lib/database.types';
 import { ai, callGeminiWithBackoff } from '@/lib/gemini';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 import { ComplianceReviewOutput } from '@/lib/types';
 
 export class ComplianceAgent {
-  private agentId = 'APX-04';
+  private agentId = 'APX-04' as const;
 
   /**
    * Scans profile and sets up Stripe Connect Express onboarding.
@@ -40,7 +41,7 @@ export class ComplianceAgent {
           is_civil_servant: true,
           bio_risk_rating: bioCheck.risk_rating,
           bio_analysis_reasoning: bioCheck.reasoning,
-          nf1860_extracted_data: docAnalysis,
+          nf1860_extracted_data: docAnalysis as unknown as Json,
         });
 
         await this.logAudit('NF1860_PARSED', mentorDbId, { docAnalysis });
@@ -218,12 +219,12 @@ export class ComplianceAgent {
     return callGeminiWithBackoff(runCall);
   }
 
-  private async logAudit(event: string, refId: string | null, payload: object) {
+  private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {
     await supabaseAdmin.from('audit_log').insert({
       agent_id: this.agentId,
       event,
       ref_id: refId,
-      payload,
+      payload: payload as Json,
     });
   }
 }

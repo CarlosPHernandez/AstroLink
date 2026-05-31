@@ -1,0 +1,64 @@
+import 'server-only';
+
+import { createDailyRoomForBooking } from '@/lib/daily';
+import { supabaseAdmin } from '@/lib/supabase';
+import { BriefingAgent } from '@/services/agents/briefing-agent';
+import { PaymentAgent } from '@/services/agents/payment-agent';
+
+/**
+ * Idempotent D1 fulfillment after Stripe authorizes payment (manual capture / escrow).
+ */
+export async function fulfillBookingAfterPayment(params: {
+  stripeEventId: string;
+  paymentIntentId: string;
+  grossAmountCents: number;
+  platformFeeCents: number;
+  destinationStripeAccount: string;
+  mentorId: string;
+  menteeId: string;
+}) {
+  const { data: booking, error } = await supabaseAdmin
+    .from('bookings')
+    .select('id, status, daily_room_url')
+    .eq('stripe_payment_intent_id', params.paymentIntentId)
+    .single();
+
+  if (error || !booking) {
+    throw new Error(`No booking for payment intent ${params.paymentIntentId}`);
+  }
+
+  if (booking.status === 'confirmed' || booking.status === 'completed') {
+    return { bookingId: booking.id, alreadyProcessed: true };
+  }
+
+  const paymentAgent = new PaymentAgent();
+  await paymentAgent.handlePaymentSucceeded({
+    stripeEventId: params.stripeEventId,
+    paymentIntentId: params.paymentIntentId,
+    grossAmountCents: params.grossAmountCents,
+    platformFeeCents: params.platformFeeCents,
+    destinationStripeAccount: params.destinationStripeAccount,
+    metadata: {
+      booking_id: booking.id,
+      mentor_id: params.mentorId,
+      mentee_id: params.menteeId,
+    },
+  });
+
+  const briefingAgent = new BriefingAgent();
+  await briefingAgent.prepareBriefing(booking.id);
+
+  if (!booking.daily_room_url) {
+    const daily = await createDailyRoomForBooking(booking.id);
+    await supabaseAdmin
+      .from('bookings')
+      .update({
+        daily_room_url: daily.roomUrl,
+        mentee_token: daily.menteeToken,
+        mentor_token: daily.mentorToken,
+      })
+      .eq('id', booking.id);
+  }
+
+  return { bookingId: booking.id, alreadyProcessed: false };
+}

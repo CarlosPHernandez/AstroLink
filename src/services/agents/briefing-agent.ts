@@ -1,9 +1,10 @@
+import type { Json } from '@/lib/database.types';
 import { ai, callGeminiWithBackoff } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { MentorBriefingOutput, PreCallBriefOutput } from '@/lib/types';
 
 export class BriefingAgent {
-  private agentId = 'APX-02';
+  private agentId = 'APX-02' as const;
 
   /**
    * Prepares session briefings or a pre-call brief package depending on service type.
@@ -31,7 +32,11 @@ export class BriefingAgent {
         expertExpertise: booking.mentors.expertise.join(', '),
       });
 
-      // TODO: Save briefing results to a custom table or JSON column on bookings
+      await supabaseAdmin
+        .from('bookings')
+        .update({ briefing_json: briefing as unknown as Json })
+        .eq('id', bookingId);
+
       await this.logAudit('BRIEFING_GENERATED', bookingId, { briefing });
       return briefing;
     }
@@ -43,6 +48,11 @@ export class BriefingAgent {
         expertExpertise: booking.mentors.expertise.join(', '),
         expertName: booking.mentors.full_name,
       });
+
+      await supabaseAdmin
+        .from('bookings')
+        .update({ briefing_json: preCallBrief as unknown as Json })
+        .eq('id', bookingId);
 
       await this.logAudit('PRE_CALL_BRIEF_GENERATED', bookingId, { preCallBrief });
       return preCallBrief;
@@ -191,12 +201,12 @@ export class BriefingAgent {
     return callGeminiWithBackoff(runCall);
   }
 
-  private async logAudit(event: string, refId: string | null, payload: object) {
+  private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {
     await supabaseAdmin.from('audit_log').insert({
       agent_id: this.agentId,
       event,
       ref_id: refId,
-      payload,
+      payload: payload as Json,
     });
   }
 }

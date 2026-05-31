@@ -1,14 +1,25 @@
 import { GoogleGenAI } from '@google/genai';
 
-const apiKey = process.env.GEMINI_API_KEY;
+let genaiClient: GoogleGenAI | null = null;
 
-if (!apiKey) {
-  console.warn('Warning: GEMINI_API_KEY is not set.');
+function getGenAI(): GoogleGenAI {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not set');
+  }
+  if (!genaiClient) {
+    genaiClient = new GoogleGenAI({ apiKey });
+  }
+  return genaiClient;
 }
 
-// Initialize the Google Gen AI client
-export const ai = new GoogleGenAI({
-  apiKey: apiKey || '',
+/** Lazy Gemini client — avoids build-time failures when env is absent. */
+export const ai: GoogleGenAI = new Proxy({} as GoogleGenAI, {
+  get(_target, prop) {
+    const client = getGenAI();
+    const value = Reflect.get(client, prop, client);
+    return typeof value === 'function' ? value.bind(client) : value;
+  },
 });
 
 /**

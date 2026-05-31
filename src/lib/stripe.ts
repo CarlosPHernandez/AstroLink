@@ -1,12 +1,26 @@
 import Stripe from 'stripe';
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+let stripeClient: Stripe | null = null;
 
-if (!stripeSecretKey) {
-  console.warn('Warning: STRIPE_SECRET_KEY is not set.');
+export function getStripe(): Stripe {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeSecretKey) {
+    throw new Error('STRIPE_SECRET_KEY is not set');
+  }
+  if (!stripeClient) {
+    stripeClient = new Stripe(stripeSecretKey, {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pinned API version
+      apiVersion: '2023-10-16' as any,
+    });
+  }
+  return stripeClient;
 }
 
-export const stripe = new Stripe(stripeSecretKey || '', {
-  // Use the API version specified in the design spec or fallback to Stripe SDK defaults
-  apiVersion: '2023-10-16' as any,
+/** Lazy Stripe client — avoids throwing during `next build` when env is absent. */
+export const stripe: Stripe = new Proxy({} as Stripe, {
+  get(_target, prop) {
+    const client = getStripe();
+    const value = Reflect.get(client, prop, client);
+    return typeof value === 'function' ? value.bind(client) : value;
+  },
 });

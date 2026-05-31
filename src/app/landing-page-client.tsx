@@ -4,140 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { logoutAction } from '@/app/auth/actions';
-
-interface Expert {
-  id: string;
-  name: string;
-  role: string;
-  employer: string;
-  rating: number;
-  rate: number;
-  category: 'systems' | 'propulsion' | 'spacecraft' | 'policy';
-  expertise: string[];
-  bio: string;
-  imageUrl: string;
-  availability: 'Available Now' | 'Book Session';
-}
-
-const EXPERTS: Expert[] = [
-  {
-    id: 'exp-1',
-    name: 'Dr. Peggy Whitson',
-    role: 'Former ISS Commander & Astronaut',
-    employer: 'NASA / Axiom Space',
-    rating: 4.9,
-    rate: 300,
-    category: 'spacecraft',
-    expertise: ['Orbital Operations', 'EVA Protocols', 'Spacecraft Habitation'],
-    bio: 'Commanded the International Space Station twice. Expert in orbital workflow, astronaut operations, and life support systems engineering.',
-    imageUrl: '/peggy_whitson.png',
-    availability: 'Available Now',
-  },
-  {
-    id: 'exp-2',
-    name: 'Dr. Marc Rayman',
-    role: 'Chief Engineer for Mission Operations',
-    employer: 'NASA JPL',
-    rating: 5.0,
-    rate: 250,
-    category: 'propulsion',
-    expertise: ['Ion Propulsion', 'Deep Space Navigation', 'Systems Integration'],
-    bio: 'Over 30 years of experience directing planetary flight systems. Led mission design and operations for the Dawn ion-propelled spacecraft.',
-    imageUrl: '/marc_rayman.png',
-    availability: 'Available Now',
-  },
-  {
-    id: 'exp-3',
-    name: 'Gwynne Shotwell',
-    role: 'Launch Operations & Strategy Advisor',
-    employer: 'SpaceX (Board Advisory)',
-    rating: 4.95,
-    rate: 450,
-    category: 'systems',
-    expertise: ['Launch Systems Integration', 'Aerospace Strategy', 'Scalable Operations'],
-    bio: 'Premier authority in launch system commercialization and operations. Led execution and deployment grids for Falcon 9 and Starship.',
-    imageUrl: '/gwynne_shotwell.png',
-    availability: 'Book Session',
-  },
-  {
-    id: 'exp-4',
-    name: 'Robert Lightfoot Jr.',
-    role: 'Former Acting Administrator',
-    employer: 'NASA / Lockheed Martin',
-    rating: 4.85,
-    rate: 280,
-    category: 'policy',
-    expertise: ['NASA NF-1860 Compliance', 'Federal Budgeting', 'Program Management'],
-    bio: 'Direct authority on federal aerospace regulations, compliance, NASA guidelines, and joint military-civil space procurement grids.',
-    imageUrl: '/robert_lightfoot.png',
-    availability: 'Book Session',
-  },
-  {
-    id: 'exp-5',
-    name: 'Andrew Parris (Titan)',
-    role: 'Flight Controller & Suborbital Mission Specialist',
-    employer: 'NASA / The Inspired 24',
-    rating: 4.9,
-    rate: 240,
-    category: 'systems',
-    expertise: ['Flight Control', 'Suborbital Flight Dynamics', 'Titan Mission Ops'],
-    bio: 'Direct flight controller (callsign Titan). Specialist in communications, countdown protocols, and community building.',
-    imageUrl: '/andrew_harris.png',
-    availability: 'Available Now',
-  },
-  {
-    id: 'exp-6',
-    name: 'Chris Sembroski',
-    role: 'Inspiration 4 Astronaut & Aerospace Engineer',
-    employer: 'Inspiration 4 / Lockheed Martin / Starfish Space',
-    rating: 4.95,
-    rate: 320,
-    category: 'spacecraft',
-    expertise: ['Commercial Spaceflight', 'Payload Integration', 'Flight Mechanics'],
-    bio: 'Commercial astronaut who flew on Inspiration 4, the historic all-civilian orbital mission. Expert in payload integration and flight mechanics.',
-    imageUrl: '/chris_sembroski.jpeg',
-    availability: 'Available Now',
-  },
-  {
-    id: 'exp-7',
-    name: 'Dr. Eiman Jahangir',
-    role: 'Commercial Astronaut & Space Medicine Specialist',
-    employer: 'UTHealth / Space Medicine Association',
-    rating: 4.9,
-    rate: 350,
-    category: 'policy',
-    expertise: ['Space Medicine', 'Human Performance', 'Bioastronautics'],
-    bio: 'Commercial spaceflight candidate and medical doctor. Specialist in astronaut health monitoring, hypergravity resilience, and medical compliance.',
-    imageUrl: '/eiman.jpeg',
-    availability: 'Available Now',
-  },
-  {
-    id: 'exp-8',
-    name: 'Karsen Kitchen',
-    role: 'Suborbital System Specialist & Astronaut',
-    employer: 'Blue Origin (Alum)/ NASA',
-    rating: 4.8,
-    rate: 220,
-    category: 'spacecraft',
-    expertise: ['Suborbital Systems', 'Spaceflight Operations', 'Astronaut Prep'],
-    bio: 'Flew to suborbital space as a private participant. Technical consultant on passenger pre-flight training, G-force tolerance, and cabin operations.',
-    imageUrl: '/karsen-kitchen.jpeg',
-    availability: 'Book Session',
-  },
-  {
-    id: 'exp-9',
-    name: 'Robert Fabian',
-    role: 'Principal Avionics Specialist & Systems Engineer',
-    employer: 'Northrop Grumman / SpaceX',
-    rating: 4.85,
-    rate: 270,
-    category: 'propulsion',
-    expertise: ['Avionics Systems', 'Rocket Telemetry', 'Embedded Guidance'],
-    bio: 'Avionics veteran directing complex rocketry computer networks, payload power distribution grids, and embedded flight computer guidance.',
-    imageUrl: '/robert_fabian.png',
-    availability: 'Book Session',
-  },
-];
+import type { ListedExpert } from '@/lib/mentor-directory';
 
 interface SessionData {
   userId: string;
@@ -148,7 +15,13 @@ interface SessionData {
 
 const HERO_MODALITIES = ['text', 'video', 'call'] as const;
 
-export default function LandingPageClient({ session }: { session: SessionData | null }) {
+export default function LandingPageClient({
+  session,
+  experts,
+}: {
+  session: SessionData | null;
+  experts: ListedExpert[];
+}) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [heroState, setHeroState] = useState<'text' | 'video' | 'call'>('text');
   const autoCycleRef = useRef<NodeJS.Timeout | null>(null);
@@ -156,9 +29,10 @@ export default function LandingPageClient({ session }: { session: SessionData | 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  const filteredExperts = selectedCategory === 'all' 
-    ? EXPERTS 
-    : EXPERTS.filter(e => e.category === selectedCategory);
+  const filteredExperts =
+    selectedCategory === 'all'
+      ? experts
+      : experts.filter((e) => e.category === selectedCategory);
 
   const startHeroCycle = useCallback(() => {
     if (autoCycleRef.current) clearInterval(autoCycleRef.current);
@@ -201,12 +75,11 @@ export default function LandingPageClient({ session }: { session: SessionData | 
     }
   };
 
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({ left: 0 });
-    }
+  const handleCategoryChange = (cat: string) => {
+    setSelectedCategory(cat);
     setScrollProgress(0);
-  }, [selectedCategory]);
+    scrollContainerRef.current?.scrollTo({ left: 0 });
+  };
 
   const scrollPrev = () => {
     if (scrollContainerRef.current) {
@@ -327,7 +200,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
                       {/* Message Thread */}
                       <div className="space-y-lg flex flex-col justify-end mt-8">
                         <div className="bg-surface-container-low p-lg rounded-2xl rounded-bl-sm self-start max-w-[85%] text-body-md text-on-surface leading-relaxed">
-                          "How do I optimize flight system models to prevent latency anomalies during suborbital re-entry transitions?"
+                          &ldquo;How do I optimize flight system models to prevent latency anomalies during suborbital re-entry transitions?&rdquo;
                         </div>
                         
                         <div className="flex items-start gap-sm justify-end">
@@ -498,7 +371,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
                   {['all', 'systems', 'propulsion', 'spacecraft', 'policy'].map((cat) => (
                     <button
                       key={cat}
-                      onClick={() => setSelectedCategory(cat)}
+                      onClick={() => handleCategoryChange(cat)}
                       className={`px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border rounded-md transition-all cursor-pointer ${
                         selectedCategory === cat
                           ? 'bg-primary text-white border-primary'
@@ -536,6 +409,11 @@ export default function LandingPageClient({ session }: { session: SessionData | 
               onScroll={handleScroll}
               className="flex flex-row overflow-x-auto snap-x snap-mandatory scrollbar-none gap-6 pb-6 w-full -mx-6 px-6 scroll-smooth md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:overflow-x-visible md:pb-0 md:px-0 md:mx-0"
             >
+              {filteredExperts.length === 0 ? (
+                <p className="text-sm text-on-surface-variant font-light px-2 py-8">
+                  No listed experts right now. Check Supabase seed data and that mentors are approved and listed.
+                </p>
+              ) : null}
               {filteredExperts.map((expert) => (
                 <div 
                   key={expert.id} 
@@ -607,14 +485,18 @@ export default function LandingPageClient({ session }: { session: SessionData | 
                       ${expert.rate}/hr
                     </span>
                     <Link
-                      href="/auth"
+                      href={
+                        session
+                          ? `/booking?mentor=${encodeURIComponent(expert.slug)}`
+                          : '/auth'
+                      }
                       className={`px-3.5 py-2 border text-center text-[10px] font-bold uppercase tracking-wider transition-all duration-150 rounded-md ${
                         expert.availability === 'Available Now'
                           ? 'bg-primary text-white border-primary hover:bg-primary-container'
                           : 'border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary bg-white shadow-sm'
                       }`}
                     >
-                      {expert.availability === 'Available Now' ? 'Consult Now' : 'Schedule'}
+                      {expert.availability === 'Available Now' ? 'Book session' : 'Schedule'}
                     </Link>
                   </div>
                 </div>

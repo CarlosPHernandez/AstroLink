@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/lib/database.types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -9,13 +10,13 @@ if (!supabaseUrl) {
 }
 
 // Public client for frontend components / client-side queries
-export const supabase = createClient(
+export const supabase = createClient<Database>(
   supabaseUrl || '',
   supabaseAnonKey || ''
 );
 
 // Admin client for backend micro-agents to perform privileged read/write database actions
-export const supabaseAdmin = createClient(
+export const supabaseAdmin = createClient<Database>(
   supabaseUrl || '',
   supabaseServiceKey || '',
   {

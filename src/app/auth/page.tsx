@@ -4,7 +4,7 @@ import React, { useState, useActionState, startTransition } from 'react';
 import { loginAction, registerAction } from './actions';
 
 const PRESETS = {
-  mentor: { email: 'peggy@astrolink.ai', fullName: 'Dr. Peggy Whitson', role: 'mentor' as const },
+  mentor: { email: 'chris@astrolink.ai', fullName: 'Chris Sembroski', role: 'mentor' as const },
   mentee: { email: 'carlos@astrolink.ai', fullName: 'Carlos Hernandez', role: 'mentee' as const },
   admin: { email: 'admin@astrolink.ai', fullName: 'Flight Command', role: 'admin' as const },
 };
@@ -319,7 +319,7 @@ export default function AuthPage() {
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mb-1" />
                 <div className="text-[10px] font-bold text-on-surface-variant leading-none mb-1 group-hover:text-primary transition-colors">Mentor</div>
-                <div className="text-[8px] font-mono text-zinc-400 truncate w-full">Dr. Peggy</div>
+                <div className="text-[8px] font-mono text-zinc-400 truncate w-full">Chris S.</div>
               </button>
 
               <button

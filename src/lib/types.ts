@@ -42,13 +42,20 @@ export interface Mentor {
   id: string; // UUID
   email: string;
   full_name: string;
+  slug: string | null;
+  title: string | null;
   employer: string;
   is_civil_servant: boolean;
   expertise: string[];
   bio: string;
+  image_url: string | null;
+  intro_video_url: string | null;
+  live_session_price_cents: number;
   stripe_connect_account_id: string | null;
   stripe_onboarding_completed: boolean;
   compliance_status: ComplianceStatus;
+  /** Shown on public directory when true and compliance_status is approved */
+  is_listed: boolean;
   created_at: string;
 }
 
@@ -67,6 +74,7 @@ export interface Booking {
   mentee_id: string; // UUID
   mentor_id: string; // UUID
   service_type: ServiceType;
+  include_pre_call_brief: boolean;
   status: BookingStatus;
   scheduled_at: string;
   stripe_payment_intent_id: string;
@@ -74,6 +82,7 @@ export interface Booking {
   mentor_token: string | null;
   mentee_token: string | null;
   match_reason: string | null;
+  briefing_json: MentorBriefingOutput | PreCallBriefOutput | null;
   created_at: string;
 }
 

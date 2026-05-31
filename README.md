@@ -1,4 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AstroLink
+
+Paid aerospace expert network (live 1:1 sessions, Stripe, Daily, Gemini agents). Next.js App Router + Supabase.
+
+**D1 engineering status:** [docs/d1-implementation-plan.md](docs/d1-implementation-plan.md)
+
+## Supabase setup
+
+1. Copy env template and fill keys from the [Supabase dashboard](https://supabase.com/dashboard/project/vwoizjesyyygmokfqpyy/settings/api) (publishable/anon + **service role** for server agents):
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+2. Migrations live in `supabase/migrations/` and are applied to project `vwoizjesyyygmokfqpyy`:
+   - `20260531140000_initial_schema.sql` — core tables + RLS (public mentor directory)
+   - `20260531140100_seed_d1_dev.sql` — dev seed (Chris Sembroski, `carlos@astrolink.ai` user)
+
+3. Regenerate DB types after schema changes (requires [Supabase CLI](https://supabase.com/docs/guides/cli)):
+
+   ```bash
+   supabase link --project-ref vwoizjesyyygmokfqpyy
+   supabase gen types typescript --linked -o src/lib/database.types.ts
+   ```
+
+4. **Mock auth IDs** (until Supabase Auth): preset logins in `src/app/auth/actions.ts` should use seed UUIDs — mentee `a0000001-0000-4000-8000-000000000001`, mentor Chris `a0000002-0000-4000-8000-000000000002`.
+
+## D1 local booking flow
+
+1. Set in `.env.local`: Supabase keys, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `GEMINI_API_KEY`, `DAILY_API_KEY`, and `STRIPE_BOOKING_TEST_MODE=true` (Chris has no Stripe Connect account in seed yet).
+2. Run `npm run dev`, sign in as **Carlos** (`carlos@astrolink.ai` preset on `/auth`).
+3. Landing loads Chris from DB → **Book** → `/booking?mentor=chris-sembroski` → pay with Stripe test card `4242…`.
+4. After authorize, either:
+   - Forward webhooks: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`, or
+   - Dev fulfill: `POST /api/book/fulfill` with `{ "bookingId": "<uuid>" }` (development only).
+5. Mentee dashboard shows APX-02 briefing; **Join session** uses the Daily room URL.
 
 ## Getting Started
 

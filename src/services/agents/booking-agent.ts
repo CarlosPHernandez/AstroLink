@@ -1,10 +1,12 @@
+import type { Json } from '@/lib/database.types';
+import { computeBookingTotalCents } from '@/lib/booking-pricing';
 import { ai, callGeminiWithBackoff } from '@/lib/gemini';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 import { MatchingOutput, ServiceType } from '@/lib/types';
 
 export class BookingAgent {
-  private agentId = 'APX-01';
+  private agentId = 'APX-01' as const;
 
   /**
    * Orchestrates the scheduling and initiates manual-capture checkout.
@@ -16,7 +18,7 @@ export class BookingAgent {
     scheduledAt: string;
     menteeGoals: string;
     menteeBackground: string;
-    servicePriceCents: number;
+    includePreCallBrief?: boolean;
   }) {
     // 1. Audit Log: BOOKING_INITIATED
     await this.logAudit('BOOKING_INITIATED', null, { params });
@@ -39,29 +41,49 @@ export class BookingAgent {
       throw new Error('No mentor could be matched for this session.');
     }
 
-    // Retrieve selected mentor's stripe connect account id
     const { data: mentor, error: mentorErr } = await supabaseAdmin
       .from('mentors')
-      .select('stripe_connect_account_id')
+      .select('stripe_connect_account_id, live_session_price_cents, is_listed, compliance_status')
       .eq('id', finalMentorId)
       .single();
 
-    if (mentorErr || !mentor || !mentor.stripe_connect_account_id) {
-      throw new Error(`Mentor lookup failed or mentor does not have a linked Stripe Connect account.`);
+    if (mentorErr || !mentor) {
+      throw new Error('Expert lookup failed.');
     }
 
-    // 3. Create Stripe Escrow (Manual Capture)
-    const platformFee = Math.round(params.servicePriceCents * 0.20); // 20% Platform fee
-    
+    if (mentor.compliance_status !== 'approved' || !mentor.is_listed) {
+      throw new Error('This expert is not available for booking.');
+    }
+
+    const includePreCallBrief = Boolean(params.includePreCallBrief);
+    const servicePriceCents = computeBookingTotalCents({
+      serviceType: params.serviceType,
+      liveSessionPriceCents: mentor.live_session_price_cents,
+      includePreCallBrief,
+    });
+
+    const testMode = process.env.STRIPE_BOOKING_TEST_MODE === 'true';
+    const connectAccountId = mentor.stripe_connect_account_id;
+
+    if (!connectAccountId && !testMode) {
+      throw new Error(
+        'This expert has not finished Stripe payouts setup yet. Set STRIPE_BOOKING_TEST_MODE=true for local checkout without Connect.'
+      );
+    }
+
+    const platformFee = Math.round(servicePriceCents * 0.2);
+
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: params.servicePriceCents,
+      amount: servicePriceCents,
       currency: 'usd',
       payment_method_types: ['card'],
-      capture_method: 'manual', // Holds funds up to 7 days
-      application_fee_amount: platformFee,
-      transfer_data: {
-        destination: mentor.stripe_connect_account_id,
-      },
+      capture_method: 'manual',
+      ...(connectAccountId && !testMode
+        ? {
+            application_fee_amount: platformFee,
+            transfer_data: { destination: connectAccountId },
+          }
+        : {}),
       metadata: {
         mentor_id: finalMentorId,
         mentee_id: params.menteeId,
@@ -69,17 +91,17 @@ export class BookingAgent {
       },
     });
 
-    // 4. Create booking record in database
     const { data: booking, error: bookingErr } = await supabaseAdmin
       .from('bookings')
       .insert({
         mentee_id: params.menteeId,
         mentor_id: finalMentorId,
         service_type: params.serviceType,
+        include_pre_call_brief: includePreCallBrief,
         status: 'pending_payment',
         scheduled_at: params.scheduledAt,
         stripe_payment_intent_id: paymentIntent.id,
-        match_reason: matchReason,
+        match_reason: params.menteeGoals || matchReason,
       })
       .select()
       .single();
@@ -87,6 +109,15 @@ export class BookingAgent {
     if (bookingErr) {
       throw new Error(`Failed to create database booking: ${bookingErr.message}`);
     }
+
+    await stripe.paymentIntents.update(paymentIntent.id, {
+      metadata: {
+        mentor_id: finalMentorId,
+        mentee_id: params.menteeId,
+        service_type: params.serviceType,
+        booking_id: booking.id,
+      },
+    });
 
     await this.logAudit('BOOKING_CREATED', booking.id, {
       booking_id: booking.id,
@@ -96,7 +127,8 @@ export class BookingAgent {
     return {
       bookingId: booking.id,
       stripeClientSecret: paymentIntent.client_secret,
-      matchReason,
+      matchReason: params.menteeGoals || matchReason,
+      amountCents: servicePriceCents,
     };
   }
 
@@ -112,7 +144,8 @@ export class BookingAgent {
     const { data: mentors } = await supabaseAdmin
       .from('mentors')
       .select('id, full_name, employer, expertise, bio')
-      .eq('compliance_status', 'approved');
+      .eq('compliance_status', 'approved')
+      .eq('is_listed', true);
 
     if (!mentors || mentors.length === 0) {
       throw new Error('No approved mentors available in the pool.');
@@ -160,12 +193,12 @@ export class BookingAgent {
     return callGeminiWithBackoff(runMatch);
   }
 
-  private async logAudit(event: string, refId: string | null, payload: object) {
+  private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {
     await supabaseAdmin.from('audit_log').insert({
       agent_id: this.agentId,
       event,
       ref_id: refId,
-      payload,
+      payload: payload as Json,
     });
   }
 }

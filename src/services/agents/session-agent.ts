@@ -1,9 +1,10 @@
+import type { Json } from '@/lib/database.types';
 import { ai, callGeminiWithBackoff } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { PostSessionOutput } from '@/lib/types';
 
 export class SessionAgent {
-  private agentId = 'APX-03';
+  private agentId = 'APX-03' as const;
 
   /**
    * Summarizes the concluded session using transcript text.
@@ -34,7 +35,7 @@ export class SessionAgent {
       booking_id: bookingId,
       duration_seconds: durationMinutes * 60,
       transcript_available: !!transcript,
-      summary_json: synthesis,
+      summary_json: synthesis as unknown as Json,
     });
 
     if (sessionErr) {
@@ -116,12 +117,12 @@ export class SessionAgent {
     return callGeminiWithBackoff(runCall);
   }
 
-  private async logAudit(event: string, refId: string | null, payload: object) {
+  private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {
     await supabaseAdmin.from('audit_log').insert({
       agent_id: this.agentId,
       event,
       ref_id: refId,
-      payload,
+      payload: payload as Json,
     });
   }
 }
