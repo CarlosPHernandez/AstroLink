@@ -226,13 +226,7 @@ export default function LandingPageClient({ session }: { session: SessionData | 
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-outline-variant">
         <div className="max-w-[1200px] mx-auto px-md sm:px-lg h-20 flex justify-between items-center w-full">
-          <div className="flex items-center gap-3">
-            {/* Minimal Brand Emblem */}
-            <div className="w-8 h-8 bg-primary flex items-center justify-center font-bold text-sm text-white rounded-md shadow-sm">
-              A
-            </div>
-            <span className="font-bold text-lg text-on-surface tracking-tight">AstralLink</span>
-          </div>
+          <span className="font-bold text-lg text-on-surface tracking-tight">Astrolink</span>
 
           <div className="flex items-center gap-sm sm:gap-lg">
             {session ? (
