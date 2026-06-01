@@ -27,13 +27,37 @@ Paid aerospace expert network (live 1:1 sessions, Stripe, Daily, Gemini agents).
 
 ## D1 local booking flow
 
-1. Set in `.env.local`: Supabase keys, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `GEMINI_API_KEY`, `DAILY_API_KEY`, and `STRIPE_BOOKING_TEST_MODE=true` (Chris has no Stripe Connect account in seed yet).
+1. Set in `.env.local`: Supabase keys, `OPENAI_API_KEY` (or `GEMINI_API_KEY`), `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `DAILY_API_KEY`, and `SKIP_STRIPE_PAYMENTS=true` for local booking without Stripe.
 2. Run `npm run dev`, sign in as **Carlos** (`carlos@astrolink.ai` preset on `/auth`).
 3. Landing loads Chris from DB → **Book** → `/booking?mentor=chris-sembroski` → pay with Stripe test card `4242…`.
 4. After authorize, either:
    - Forward webhooks: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`, or
    - Dev fulfill: `POST /api/book/fulfill` with `{ "bookingId": "<uuid>" }` (development only).
 5. Mentee dashboard shows APX-02 briefing; **Join session** uses the Daily room URL.
+
+## Tests
+
+```bash
+npm test          # Vitest unit/contract tests
+npm run test:e2e  # Playwright D1 golden path (requires .env.local + Supabase seed)
+```
+
+Vitest covers D1 contract logic: booking pricing, `/api/book` request schema, Daily webhook parsing, LLM rate limits, and dev payment skip helpers.
+
+### E2E (Playwright)
+
+Automates the skip-Stripe D1 golden path: preset login → book Chris → APX-02 briefing → session room.
+
+**Prerequisites:** `.env.local` with Supabase keys, `SESSION_SECRET`, and seed data applied (`20260531140100_seed_d1_dev.sql`). Playwright sets `SKIP_STRIPE_PAYMENTS=true` and `E2E_STUB_LLM=true` on the dev server automatically.
+
+Playwright starts its own Next.js dev server on `127.0.0.1:3000` — stop any other process on that port before running E2E.
+
+```bash
+npm run test:e2e      # headless
+npm run test:e2e:ui   # interactive UI mode
+```
+
+E2E bookings are tagged with goals prefix `E2E:` and cleaned up before/after each golden-path run. Real Stripe checkout E2E is deferred to the real-Stripe feature branch.
 
 ## Getting Started
 
