@@ -18,11 +18,21 @@ export default function AuthPage() {
   const [loginState, loginFormAction, loginPending] = useActionState(loginAction, undefined);
   const [registerState, registerFormAction, registerPending] = useActionState(registerAction, undefined);
 
-  // Fast demo preset trigger
+  // Fast demo preset trigger — submit the login form so server redirect works reliably
   const handlePresetClick = (email: string) => {
+    const emailInput = document.getElementById('email') as HTMLInputElement | null;
+    const passwordInput = document.getElementById('password') as HTMLInputElement | null;
+    const form = emailInput?.closest('form');
+    if (emailInput && passwordInput && form) {
+      emailInput.value = email;
+      passwordInput.value = 'password123';
+      form.requestSubmit();
+      return;
+    }
+
     const formData = new FormData();
     formData.append('email', email);
-    formData.append('password', 'password123'); // Dummy pass for testing bypass
+    formData.append('password', 'password123');
     startTransition(() => {
       loginFormAction(formData);
     });
@@ -303,6 +313,7 @@ export default function AuthPage() {
               <button
                 type="button"
                 disabled={isPending}
+                data-testid="auth-preset-mentee"
                 onClick={() => handlePresetClick(PRESETS.mentee.email)}
                 className="flex flex-col items-center justify-center p-2 border border-outline-variant bg-surface-container-lowest hover:border-primary hover:bg-surface-container-low transition-all rounded-lg group text-center cursor-pointer disabled:opacity-50"
               >
@@ -314,6 +325,7 @@ export default function AuthPage() {
               <button
                 type="button"
                 disabled={isPending}
+                data-testid="auth-preset-mentor"
                 onClick={() => handlePresetClick(PRESETS.mentor.email)}
                 className="flex flex-col items-center justify-center p-2 border border-outline-variant bg-surface-container-lowest hover:border-primary hover:bg-surface-container-low transition-all rounded-lg group text-center cursor-pointer disabled:opacity-50"
               >

@@ -416,7 +416,8 @@ export default function LandingPageClient({
               ) : null}
               {filteredExperts.map((expert) => (
                 <div 
-                  key={expert.id} 
+                  key={expert.id}
+                  data-testid={`expert-card-${expert.slug}`}
                   className="w-[84vw] xs:w-[320px] sm:w-[360px] md:w-full flex-shrink-0 md:flex-shrink snap-start p-6 border border-outline-variant bg-surface-container-lowest hover:border-outline hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 flex flex-col justify-between rounded-md group"
                 >
                   <div>
@@ -490,6 +491,7 @@ export default function LandingPageClient({
                           ? `/booking?mentor=${encodeURIComponent(expert.slug)}`
                           : '/auth'
                       }
+                      data-testid={`expert-book-${expert.slug}`}
                       className={`px-3.5 py-2 border text-center text-[10px] font-bold uppercase tracking-wider transition-all duration-150 rounded-md ${
                         expert.availability === 'Available Now'
                           ? 'bg-primary text-white border-primary hover:bg-primary-container'

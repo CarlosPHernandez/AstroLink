@@ -182,6 +182,46 @@
   100% { transform: scale(2.5); opacity: 0; }
 }
 
+@keyframes aiGlow {
+  0%, 100% { transform: scale(1); opacity: 0.35; }
+  50% { transform: scale(1.15); opacity: 0.65; }
+}
+
+@keyframes aiBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+@keyframes aiPulseSoft {
+  0%, 100% { opacity: 0.4; transform: scale(0.95); }
+  50% { opacity: 0.85; transform: scale(1.05); }
+}
+
+@keyframes aiShimmerBadge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+@utility animate-ai-glow {
+  animation: aiGlow 2.4s ease-in-out infinite;
+}
+
+@utility animate-ai-breathe {
+  animation: aiBreathe 2s ease-in-out infinite;
+}
+
+@utility animate-ai-pulse {
+  animation: aiPulseSoft 1.8s ease-in-out infinite;
+}
+
+@utility animate-ai-shimmer-badge {
+  animation: aiShimmerBadge 1.5s ease-in-out infinite;
+}
+
+@utility animate-ai-text-pulse {
+  animation: aiPulseSoft 2s ease-in-out infinite;
+}
+
 @keyframes typeWriter {
   from { width: 0; }
   to { width: 100%; }

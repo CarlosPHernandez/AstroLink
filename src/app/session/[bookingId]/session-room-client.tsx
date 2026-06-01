@@ -18,11 +18,11 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       <header className="border-b border-slate-900 bg-slate-950 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard/mentee" className="text-slate-400 hover:text-slate-200 text-sm">
+          <Link href="/dashboard/mentee" data-testid="session-exit" className="text-slate-400 hover:text-slate-200 text-sm">
             ← Exit call
           </Link>
           <span className="text-slate-500">|</span>
-          <span className="font-bold text-white tracking-tight">
+          <span data-testid="session-mentor-name" className="font-bold text-white tracking-tight">
             Session with {booking.mentorName}
           </span>
         </div>
@@ -57,7 +57,8 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             <div className="text-center max-w-md p-8 border border-slate-900 rounded-2xl">
               <h3 className="text-xl font-bold text-white mb-2">Session ended</h3>
               <p className="text-slate-400 text-sm mb-6">
-                Post-session synthesis (APX-03) will run when Daily webhooks are wired.
+                Post-session synthesis and payment capture run automatically when the call ends
+                (Daily webhook). Check your dashboard in a minute for the summary.
               </p>
               <Link
                 href="/dashboard/mentee"
