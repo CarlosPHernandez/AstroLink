@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { fulfillBookingAfterPayment } from '@/lib/post-payment';
+import { isDevSkippedPaymentIntent } from '@/lib/booking-payments';
+import { confirmBookingWithoutPayment, fulfillBookingAfterPayment } from '@/lib/post-payment';
 import { getSession } from '@/lib/session';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
@@ -38,6 +39,11 @@ export async function POST(request: Request) {
 
     if (booking.mentee_id !== session.userId && session.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    if (isDevSkippedPaymentIntent(booking.stripe_payment_intent_id)) {
+      const result = await confirmBookingWithoutPayment(bookingId);
+      return NextResponse.json({ success: true, ...result });
     }
 
     const paymentIntent = await stripe.paymentIntents.retrieve(booking.stripe_payment_intent_id);

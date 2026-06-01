@@ -1,5 +1,5 @@
 import type { Json } from '@/lib/database.types';
-import { ai, callGeminiWithBackoff } from '@/lib/gemini';
+import { callLlmWithBackoff, generateStructuredJson, llmFlashModel, llmProModel } from '@/lib/llm';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 import { ComplianceReviewOutput } from '@/lib/types';
@@ -22,7 +22,7 @@ export class ComplianceAgent {
     await this.logAudit('ONBOARDING_INITIATED', mentorDbId, { email: params.email });
 
     // Step 1: Scan biography for government affiliations
-    const bioCheck = await this.scanBioForCivilServantSignal(params.bio);
+    const bioCheck = await this.scanBioForCivilServantSignal(mentorDbId, params.bio);
     const isCivilServant = params.isCivilServantDeclared || bioCheck.is_civil_servant_flag;
 
     let complianceStatus: 'stripe_incomplete' | 'document_required' = 'stripe_incomplete';
@@ -33,7 +33,7 @@ export class ComplianceAgent {
       
       // If PDF document buffer is uploaded, perform multimodal parsing
       if (params.nf1860PdfBuffer) {
-        const docAnalysis = await this.parseNF1860Form(params.nf1860PdfBuffer);
+        const docAnalysis = await this.parseNF1860Form(mentorDbId, params.nf1860PdfBuffer);
         
         // Write compliance review record to database
         await supabaseAdmin.from('compliance_reviews').insert({
@@ -120,9 +120,12 @@ export class ComplianceAgent {
   }
 
   /**
-   * Scans bio text using Gemini for civil-servant triggers.
+   * Scans bio text using the configured LLM for civil-servant triggers.
    */
-  private async scanBioForCivilServantSignal(bio: string): Promise<{
+  private async scanBioForCivilServantSignal(
+    mentorDbId: string,
+    bio: string,
+  ): Promise<{
     is_civil_servant_flag: boolean;
     risk_rating: 'low' | 'medium' | 'high';
     reasoning: string;
@@ -133,35 +136,36 @@ export class ComplianceAgent {
       Flag risk strictly. Return JSON.
     `;
 
-    const runCall = async () => {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: bio,
-        config: {
-          systemInstruction,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: 'OBJECT',
-            properties: {
-              is_civil_servant_flag: { type: 'BOOLEAN' },
-              risk_rating: { type: 'STRING', enum: ['low', 'medium', 'high'] },
-              reasoning: { type: 'STRING' },
-            },
-            required: ['is_civil_servant_flag', 'risk_rating', 'reasoning'],
+    return callLlmWithBackoff(() =>
+      generateStructuredJson<{
+        is_civil_servant_flag: boolean;
+        risk_rating: 'low' | 'medium' | 'high';
+        reasoning: string;
+      }>({
+        model: llmFlashModel,
+        rateLimitKey: mentorDbId,
+        systemInstruction,
+        prompt: bio,
+        schema: {
+          type: 'OBJECT',
+          properties: {
+            is_civil_servant_flag: { type: 'BOOLEAN' },
+            risk_rating: { type: 'STRING', enum: ['low', 'medium', 'high'] },
+            reasoning: { type: 'STRING' },
           },
+          required: ['is_civil_servant_flag', 'risk_rating', 'reasoning'],
         },
-      });
-
-      return JSON.parse(response.text || '{}');
-    };
-
-    return callGeminiWithBackoff(runCall);
+      }),
+    );
   }
 
   /**
-   * Multimodal Form Parsing for NASA Form NF-1860 PDF (using Gemini Pro).
+   * Multimodal Form Parsing for NASA Form NF-1860 PDF.
    */
-  private async parseNF1860Form(pdfBuffer: Buffer): Promise<ComplianceReviewOutput> {
+  private async parseNF1860Form(
+    mentorDbId: string,
+    pdfBuffer: Buffer,
+  ): Promise<ComplianceReviewOutput> {
     const systemInstruction = `
       You are AstraLink's aerospace regulatory compliance officer. Analyze this NASA Form NF-1860 (Outside Employment Approval). Evaluate authenticity and complete details.
       Ensure:
@@ -171,52 +175,40 @@ export class ComplianceAgent {
       Identify any discrepancies, omissions, or anomalies. Return valid JSON only.
     `;
 
-    const runCall = async () => {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-pro',
-        contents: [
-          {
-            inlineData: {
-              data: pdfBuffer.toString('base64'),
-              mimeType: 'application/pdf',
-            },
-          },
+    return callLlmWithBackoff(() =>
+      generateStructuredJson<ComplianceReviewOutput>({
+        model: llmProModel,
+        rateLimitKey: mentorDbId,
+        systemInstruction,
+        prompt:
           'Analyze this NASA Outside Employment approval form for signatures, expirations, and restrictions.',
-        ],
-        config: {
-          systemInstruction,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: 'OBJECT',
-            properties: {
-              supervisor_signature_present: { type: 'BOOLEAN' },
-              center_director_signature_present: { type: 'BOOLEAN' },
-              expiration_date: { type: 'STRING' },
-              is_expired: { type: 'BOOLEAN' },
-              prohibits_nasa_contracts: { type: 'BOOLEAN' },
-              document_appears_complete: { type: 'BOOLEAN' },
-              anomalies: {
-                type: 'ARRAY',
-                items: { type: 'STRING' },
-              },
+        files: [{ mimeType: 'application/pdf', data: pdfBuffer }],
+        schema: {
+          type: 'OBJECT',
+          properties: {
+            supervisor_signature_present: { type: 'BOOLEAN' },
+            center_director_signature_present: { type: 'BOOLEAN' },
+            expiration_date: { type: 'STRING' },
+            is_expired: { type: 'BOOLEAN' },
+            prohibits_nasa_contracts: { type: 'BOOLEAN' },
+            document_appears_complete: { type: 'BOOLEAN' },
+            anomalies: {
+              type: 'ARRAY',
+              items: { type: 'STRING' },
             },
-            required: [
-              'supervisor_signature_present',
-              'center_director_signature_present',
-              'expiration_date',
-              'is_expired',
-              'prohibits_nasa_contracts',
-              'document_appears_complete',
-              'anomalies',
-            ],
           },
+          required: [
+            'supervisor_signature_present',
+            'center_director_signature_present',
+            'expiration_date',
+            'is_expired',
+            'prohibits_nasa_contracts',
+            'document_appears_complete',
+            'anomalies',
+          ],
         },
-      });
-
-      return JSON.parse(response.text || '{}') as ComplianceReviewOutput;
-    };
-
-    return callGeminiWithBackoff(runCall);
+      }),
+    );
   }
 
   private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {

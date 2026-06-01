@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
@@ -11,10 +12,236 @@ import type { SessionData } from '@/lib/session';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
 
+const fieldClass =
+  'w-full py-3 px-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow';
+
+const sectionTitleClass = 'text-label-md font-semibold text-on-surface mb-1';
+const sectionHintClass = 'text-label-sm text-on-surface-variant mb-4';
+
 interface CheckoutState {
   bookingId: string;
   clientSecret: string;
   amountCents: number;
+}
+
+type BookingFormState = {
+  serviceType: 'session_1on1' | 'pre_call_brief';
+  includePreCallBrief: boolean;
+  goals: string;
+  background: string;
+  scheduledAt: string;
+};
+
+function formatMoney(cents: number) {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+function CheckoutProgress({ step, skipPayments }: { step: 1 | 2; skipPayments?: boolean }) {
+  if (skipPayments) {
+    return null;
+  }
+
+  const steps: { label: string; s: 1 | 2 }[] = [
+    { label: 'Details', s: 1 },
+    { label: 'Payment', s: 2 },
+  ];
+  return (
+    <div className="mb-8 flex items-end gap-6 border-b border-outline-variant/50">
+      {steps.map(({ label, s }) => {
+        const active = step === s;
+        const done = step > s;
+        return (
+          <div
+            key={label}
+            className={`pb-3 border-b-2 transition-colors ${
+              active ? 'border-on-surface' : 'border-transparent'
+            }`}
+          >
+            <span
+              className={`text-label-md transition-colors ${
+                active
+                  ? 'font-semibold text-on-surface'
+                  : done
+                    ? 'text-on-surface-variant'
+                    : 'text-outline'
+              }`}
+            >
+              {done ? '✓ ' : ''}
+              {label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const expertAvatarClass =
+  'relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low';
+
+function SessionFormatPicker({
+  value,
+  onChange,
+}: {
+  value: BookingFormState['serviceType'];
+  onChange: (v: BookingFormState['serviceType']) => void;
+}) {
+  const options: {
+    id: BookingFormState['serviceType'];
+    title: string;
+    description: string;
+    icon: string;
+    priceHint: string;
+  }[] = [
+    {
+      id: 'session_1on1',
+      title: 'Live 1:1 session',
+      description: '30-minute video call with your expert.',
+      icon: 'videocam',
+      priceHint: 'Expert rate applies',
+    },
+    {
+      id: 'pre_call_brief',
+      title: 'Pre-call brief only',
+      description: 'Written objectives and context — no live call.',
+      icon: 'description',
+      priceHint: formatMoney(PRE_CALL_BRIEF_ADDON_CENTS),
+    },
+  ];
+
+  return (
+    <div className="grid sm:grid-cols-2 gap-3">
+      {options.map((opt) => {
+        const selected = value === opt.id;
+        return (
+          <button
+            key={opt.id}
+            type="button"
+            onClick={() => onChange(opt.id)}
+            className={`text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${
+              selected
+                ? 'border-primary bg-primary-fixed/30 shadow-[0_0_0_1px_rgba(0,88,188,0.08)]'
+                : 'border-outline-variant bg-surface-container-lowest hover:border-outline hover:bg-surface-container-low'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-2 mb-3">
+              <span
+                className={`material-symbols-outlined text-[22px] ${
+                  selected ? 'text-primary' : 'text-on-surface-variant'
+                }`}
+              >
+                {opt.icon}
+              </span>
+              <span
+                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                  selected ? 'border-primary bg-primary' : 'border-outline-variant'
+                }`}
+              >
+                {selected ? (
+                  <span className="material-symbols-outlined text-on-primary text-[14px]">
+                    check
+                  </span>
+                ) : null}
+              </span>
+            </div>
+            <p className="text-body-md font-semibold text-on-surface">{opt.title}</p>
+            <p className="text-label-md text-on-surface-variant mt-1 leading-snug">
+              {opt.description}
+            </p>
+            <p className="text-label-sm font-mono text-primary mt-3">{opt.priceHint}</p>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function CheckoutSummary({
+  mentor,
+  form,
+  totalCents,
+  step,
+  checkoutAmount,
+}: {
+  mentor: ListedExpert | null;
+  form: BookingFormState;
+  totalCents: number;
+  step: 1 | 2;
+  checkoutAmount?: number;
+}) {
+  const displayTotal = checkoutAmount ?? totalCents;
+  const isLive = form.serviceType === 'session_1on1';
+
+  return (
+    <div className="lg:sticky lg:top-24 space-y-4">
+      <div className="rounded-xl border border-outline-variant bg-surface-container-lowest overflow-hidden">
+        <div className="px-5 py-4 border-b border-outline-variant bg-surface-container-low">
+          <h3 className="text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant">
+            Summary
+          </h3>
+        </div>
+        <div className="p-5 space-y-4">
+          {mentor && isLive ? (
+            <div className="flex gap-3 pb-4 border-b border-outline-variant/60">
+              <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-outline-variant">
+                <Image src={mentor.imageUrl} alt="" fill className="object-cover" sizes="40px" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-label-md font-semibold text-on-surface truncate">{mentor.name}</p>
+                <p className="text-label-sm text-on-surface-variant">Live session · 30 min</p>
+              </div>
+            </div>
+          ) : null}
+
+          <dl className="space-y-2.5 text-label-md">
+            <div className="flex justify-between gap-3">
+              <dt className="text-on-surface-variant">
+                {isLive ? 'Session' : 'Pre-call brief'}
+              </dt>
+              <dd className="font-mono text-on-surface tabular-nums shrink-0">
+                {isLive && mentor ? formatMoney(mentor.liveSessionPriceCents) : formatMoney(PRE_CALL_BRIEF_ADDON_CENTS)}
+              </dd>
+            </div>
+            {isLive && form.includePreCallBrief ? (
+              <div className="flex justify-between gap-3">
+                <dt className="text-on-surface-variant">Brief add-on</dt>
+                <dd className="font-mono text-on-surface tabular-nums shrink-0">
+                  {formatMoney(PRE_CALL_BRIEF_ADDON_CENTS)}
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+
+          <div className="pt-4 border-t border-outline-variant flex justify-between items-baseline">
+            <span className="text-body-md font-semibold text-on-surface">
+              {step === 2 ? 'Due today' : 'Estimated'}
+            </span>
+            <span className="text-headline-md font-bold text-primary tabular-nums">
+              {formatMoney(displayTotal)}
+            </span>
+          </div>
+          <p className="text-label-sm text-on-surface-variant leading-relaxed">
+            {step === 2
+              ? 'Authorization only — charged after your session ends.'
+              : 'Final price confirmed on the next step.'}
+          </p>
+        </div>
+      </div>
+
+      <ul className="space-y-2.5 px-1">
+        {[
+          { icon: 'shield', text: 'Payment held in escrow until the call ends' },
+          { icon: 'auto_awesome', text: 'AI briefing prepared before you join' },
+          { icon: 'lock', text: 'Encrypted Daily video room' },
+        ].map((item) => (
+          <li key={item.text} className="flex items-center gap-2.5 text-label-sm text-on-surface-variant">
+            <span className="material-symbols-outlined text-primary text-[18px]">{item.icon}</span>
+            {item.text}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 function PaymentStep({
@@ -56,27 +283,41 @@ function PaymentStep({
 
   return (
     <div className="space-y-6">
-      <p className="text-slate-400 text-sm">
-        Total authorized: <span className="text-white font-mono">${(checkout.amountCents / 100).toFixed(2)}</span>{' '}
-        (held until after your session)
-      </p>
-      <PaymentElement />
-      {error ? <p className="text-rose-400 text-sm">{error}</p> : null}
-      <div className="flex gap-3">
+      <div className="rounded-lg border border-outline-variant bg-surface-container-low p-4 flex gap-3">
+        <span className="material-symbols-outlined text-primary text-[22px]">account_balance</span>
+        <p className="text-label-md text-on-surface-variant leading-relaxed">
+          Authorize{' '}
+          <strong className="text-on-surface font-mono">{formatMoney(checkout.amountCents)}</strong>.
+          Funds are captured only after your session completes successfully.
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
+        <PaymentElement options={{ layout: 'tabs' }} />
+      </div>
+
+      {error ? (
+        <p className="text-error text-label-md flex items-center gap-2" role="alert">
+          <span className="material-symbols-outlined text-[18px]">error</span>
+          {error}
+        </p>
+      ) : null}
+
+      <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
         <button
           type="button"
           onClick={onBack}
-          className="px-4 py-3 rounded-xl border border-slate-700 text-slate-300 text-sm"
+          className="sm:flex-1 py-3 rounded-lg border border-outline-variant text-label-md font-semibold text-on-surface-variant hover:bg-surface-container-low transition-colors"
         >
-          Back
+          Edit details
         </button>
         <button
           type="button"
           disabled={!stripe || paying}
           onClick={handlePay}
-          className="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-semibold disabled:opacity-50"
+          className="sm:flex-[2] py-3.5 rounded-lg bg-primary text-on-primary text-label-md font-semibold hover:bg-primary-container disabled:opacity-50 transition-all"
         >
-          {paying ? 'Authorizing…' : 'Authorize payment'}
+          {paying ? 'Authorizing…' : `Authorize ${formatMoney(checkout.amountCents)}`}
         </button>
       </div>
     </div>
@@ -86,15 +327,18 @@ function PaymentStep({
 export default function BookingClient({
   session,
   mentor,
+  skipPayments = false,
 }: {
   session: SessionData;
   mentor: ListedExpert | null;
+  skipPayments?: boolean;
 }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    serviceType: 'session_1on1' as 'session_1on1' | 'pre_call_brief',
+  const [form, setForm] = useState<BookingFormState>({
+    serviceType: 'session_1on1',
     includePreCallBrief: false,
     goals: '',
     background: '',
@@ -107,10 +351,11 @@ export default function BookingClient({
       ? PRE_CALL_BRIEF_ADDON_CENTS
       : baseCents + (form.includePreCallBrief ? PRE_CALL_BRIEF_ADDON_CENTS : 0);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const step: 1 | 2 = checkout?.clientSecret ? 2 : 1;
+
+  const submitBooking = async () => {
     if (!mentor && form.serviceType === 'session_1on1') {
-      setError('Choose an expert from the directory first.');
+      setError('Choose an expert from the directory before booking a live session.');
       return;
     }
 
@@ -136,11 +381,18 @@ export default function BookingClient({
         throw new Error(json.error ?? 'Booking failed');
       }
 
+      if (json.data.skipPayment) {
+        router.push(`/dashboard/mentee?booked=${json.data.bookingId}`);
+        router.refresh();
+        return;
+      }
+
       setCheckout({
         bookingId: json.data.bookingId,
         clientSecret: json.data.clientSecret,
         amountCents: json.data.amountCents,
       });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Booking failed');
     } finally {
@@ -148,119 +400,250 @@ export default function BookingClient({
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitBooking();
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center py-12 px-6">
-      <div className="w-full max-w-xl border border-slate-900 bg-slate-950/80 p-8 rounded-2xl shadow-xl backdrop-blur-md relative">
-        <Link href="/" className="text-xs text-slate-500 hover:text-slate-300 mb-4 inline-block">
-          ← Back to directory
-        </Link>
+    <div className="min-h-screen bg-background text-on-surface font-sans">
+      <header className="border-b border-outline-variant/60 bg-surface-container-lowest/90 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <Link href="/" className="font-bold text-on-surface tracking-tight">
+            Astrolink
+          </Link>
+          <div className="flex items-center gap-3 text-label-md">
+            <span className="text-on-surface-variant hidden sm:inline truncate max-w-[180px]">
+              {session.fullName}
+            </span>
+            <span className="text-outline-variant hidden sm:inline">·</span>
+            <Link href="/dashboard/mentee" className="text-primary font-semibold hover:underline">
+              Dashboard
+            </Link>
+          </div>
+        </div>
+      </header>
 
-        <h2 className="text-2xl font-bold tracking-tight text-white mb-2">Book an expert session</h2>
-        <p className="text-slate-400 text-sm mb-2">
-          Signed in as {session.fullName} ({session.email})
-        </p>
-        {mentor ? (
-          <p className="text-cyan-400 text-sm mb-6 font-medium">
-            Expert: {mentor.name} · ${mentor.rate}/session
-          </p>
-        ) : (
-          <p className="text-amber-400/90 text-sm mb-6">
-            No expert selected — APX-01 will match you from the approved roster.
-          </p>
-        )}
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div className="mb-8">
+          <Link
+            href="/#directory"
+            className="inline-flex items-center gap-0.5 text-label-md text-on-surface-variant hover:text-primary mb-5 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+            Directory
+          </Link>
 
-        {checkout?.clientSecret ? (
-          <Elements stripe={stripePromise} options={{ clientSecret: checkout.clientSecret }}>
-            <PaymentStep checkout={checkout} onBack={() => setCheckout(null)} />
-          </Elements>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Session format
-              </label>
-              <select
-                className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-slate-200"
-                value={form.serviceType}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    serviceType: e.target.value as 'session_1on1' | 'pre_call_brief',
-                  })
-                }
-              >
-                <option value="session_1on1">Expert session (30 min)</option>
-                <option value="pre_call_brief">Pre-call brief package only</option>
-              </select>
+          {mentor ? (
+            <>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={expertAvatarClass}>
+                    <Image
+                      src={mentor.imageUrl}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="36px"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-mono uppercase tracking-wider text-on-surface-variant leading-none mb-1">
+                      {step === 1 ? 'Booking a session with' : 'Authorizing payment for'}
+                    </p>
+                    <h1 className="text-headline-lg-mobile sm:text-headline-lg font-bold tracking-tight text-on-surface truncate">
+                      {mentor.name}
+                    </h1>
+                  </div>
+                </div>
+                <Link
+                  href="/#directory"
+                  className="shrink-0 pt-5 text-label-sm text-on-surface-variant hover:text-primary transition-colors hidden sm:block"
+                >
+                  Change expert
+                </Link>
+              </div>
+              <p className="mt-1.5 text-label-md text-on-surface-variant pl-12">
+                {mentor.role}
+                <span className="mx-1.5 text-outline-variant">·</span>
+                {mentor.employer}
+                <span className="mx-2 text-outline-variant">·</span>
+                <span className="font-mono text-on-surface">${mentor.rate}</span>
+                <span className="text-on-surface-variant"> / session</span>
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-headline-lg-mobile sm:text-headline-lg font-bold tracking-tight text-on-surface">
+                Complete your booking
+              </h1>
+              <p className="mt-2 text-label-md text-on-surface-variant">
+                No expert selected.{' '}
+                <Link href="/#directory" className="text-primary hover:underline">
+                  Browse the directory →
+                </Link>
+              </p>
+            </>
+          )}
+        </div>
+
+        <CheckoutProgress step={step} skipPayments={skipPayments} />
+
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_300px] gap-8 lg:gap-10 items-start">
+          <div className="min-w-0">
+            <div className="rounded-xl border border-outline-variant bg-surface-container-lowest shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-5 sm:p-8">
+              {checkout?.clientSecret ? (
+                <Elements stripe={stripePromise} options={{ clientSecret: checkout.clientSecret }}>
+                  <PaymentStep checkout={checkout} onBack={() => setCheckout(null)} />
+                </Elements>
+              ) : (
+                <form onSubmit={handleSubmit} method="post" className="space-y-10">
+                  <section>
+                    <h2 className={sectionTitleClass}>Session type</h2>
+                    <p className={sectionHintClass}>Choose how you want to work with an expert.</p>
+                    <SessionFormatPicker
+                      value={form.serviceType}
+                      onChange={(serviceType) => setForm({ ...form, serviceType })}
+                    />
+                  </section>
+
+                  {form.serviceType === 'session_1on1' ? (
+                    <section>
+                      <div className="flex items-center justify-between gap-4 mb-4">
+                        <div>
+                          <h2 className={sectionTitleClass}>Pre-call brief</h2>
+                          <p className="text-label-sm text-on-surface-variant">
+                            Optional AI-prepared objectives for you and your expert.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={form.includePreCallBrief}
+                          onClick={() =>
+                            setForm({ ...form, includePreCallBrief: !form.includePreCallBrief })
+                          }
+                          className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
+                            form.includePreCallBrief ? 'bg-primary' : 'bg-outline-variant'
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                              form.includePreCallBrief ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                      {form.includePreCallBrief ? (
+                        <p className="text-label-md text-primary font-mono">
+                          +{formatMoney(PRE_CALL_BRIEF_ADDON_CENTS)} added to total
+                        </p>
+                      ) : null}
+                    </section>
+                  ) : null}
+
+                  <section>
+                    <h2 className={sectionTitleClass}>Schedule</h2>
+                    <p className={sectionHintClass}>Pick a time that works in your timezone.</p>
+                    <label htmlFor="scheduledAt" className="sr-only">
+                      Session date and time
+                    </label>
+                    <input
+                      id="scheduledAt"
+                      data-testid="booking-scheduled-at"
+                      type="datetime-local"
+                      required
+                      className={fieldClass}
+                      value={form.scheduledAt}
+                      onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })}
+                    />
+                  </section>
+
+                  <section>
+                    <h2 className={sectionTitleClass}>Session brief</h2>
+                    <p className={sectionHintClass}>
+                      Help your expert prepare — this feeds your automated briefing.
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="goals" className="block text-label-sm text-on-surface mb-2">
+                          Goals & questions
+                        </label>
+                        <textarea
+                          id="goals"
+                          data-testid="booking-goals"
+                          required
+                          rows={5}
+                          placeholder="e.g. Review our comms architecture for a lunar relay mission…"
+                          className={`${fieldClass} resize-none`}
+                          value={form.goals}
+                          onChange={(e) => setForm({ ...form, goals: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="background"
+                          className="block text-label-sm text-on-surface mb-2"
+                        >
+                          Your background
+                        </label>
+                        <textarea
+                          id="background"
+                          data-testid="booking-background"
+                          required
+                          rows={5}
+                          placeholder="Role, organization, and what you have already tried…"
+                          className={`${fieldClass} resize-none`}
+                          value={form.background}
+                          onChange={(e) => setForm({ ...form, background: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </section>
+
+                  {error ? (
+                    <p className="text-error text-label-md flex items-center gap-2" role="alert">
+                      <span className="material-symbols-outlined text-[18px]">error</span>
+                      {error}
+                    </p>
+                  ) : null}
+
+                  <div className="pt-6 border-t border-outline-variant/50 flex flex-col items-start gap-2">
+                    <button
+                      type="button"
+                      data-testid="booking-submit"
+                      disabled={loading}
+                      onClick={() => void submitBooking()}
+                      className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-label-md font-medium text-on-primary hover:opacity-90 disabled:opacity-40 transition-opacity"
+                    >
+                      {loading
+                        ? skipPayments
+                          ? 'Generating AI briefing…'
+                          : 'Creating booking…'
+                        : skipPayments
+                          ? 'Confirm booking'
+                          : `Continue — ${formatMoney(totalCents)}`}
+                    </button>
+                    <p className="text-label-sm text-on-surface-variant">
+                      {skipPayments
+                        ? 'Payments skipped in dev — briefing generates immediately.'
+                        : 'No charge until after the session.'}
+                    </p>
+                  </div>
+                </form>
+              )}
             </div>
+          </div>
 
-            {form.serviceType === 'session_1on1' ? (
-              <label className="flex items-center gap-3 text-sm text-slate-300">
-                <input
-                  type="checkbox"
-                  checked={form.includePreCallBrief}
-                  onChange={(e) => setForm({ ...form, includePreCallBrief: e.target.checked })}
-                  className="rounded border-slate-600"
-                />
-                Add pre-call brief (+${PRE_CALL_BRIEF_ADDON_CENTS / 100})
-              </label>
-            ) : null}
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Session date & time
-              </label>
-              <input
-                type="datetime-local"
-                required
-                className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-slate-200"
-                value={form.scheduledAt}
-                onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Goals & questions for the expert
-              </label>
-              <textarea
-                required
-                rows={3}
-                className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 resize-none"
-                value={form.goals}
-                onChange={(e) => setForm({ ...form, goals: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Your context
-              </label>
-              <textarea
-                required
-                rows={3}
-                className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 resize-none"
-                value={form.background}
-                onChange={(e) => setForm({ ...form, background: e.target.value })}
-              />
-            </div>
-
-            <p className="text-xs text-slate-500 font-mono">
-              Estimated total: ${(totalCents / 100).toFixed(2)} USD (server-confirmed at checkout)
-            </p>
-
-            {error ? <p className="text-rose-400 text-sm">{error}</p> : null}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-semibold disabled:opacity-50"
-            >
-              {loading ? 'Creating booking…' : 'Continue to payment'}
-            </button>
-          </form>
-        )}
-      </div>
+          <CheckoutSummary
+            mentor={mentor}
+            form={form}
+            totalCents={totalCents}
+            step={step}
+            checkoutAmount={checkout?.amountCents}
+          />
+        </div>
+      </main>
     </div>
   );
 }

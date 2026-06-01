@@ -1,4 +1,5 @@
 import React from 'react';
+import { isStripePaymentsSkipped } from '@/lib/booking-payments';
 import { listMenteeBookings } from '@/lib/mentee-bookings';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
@@ -13,5 +14,11 @@ export default async function MenteeDashboard() {
 
   const bookings = await listMenteeBookings(session.userId);
 
-  return <MenteeDashboardClient session={session} bookings={bookings} />;
+  return (
+    <MenteeDashboardClient
+      session={session}
+      bookings={bookings}
+      skipPayments={isStripePaymentsSkipped()}
+    />
+  );
 }
