@@ -1,5 +1,5 @@
 import type { Json } from '@/lib/database.types';
-import { ai, callGeminiWithBackoff } from '@/lib/gemini';
+import { callLlmWithBackoff, generateStructuredJson, llmFlashModel } from '@/lib/llm';
 import { supabaseAdmin } from '@/lib/supabase';
 import { PostSessionOutput } from '@/lib/types';
 
@@ -24,6 +24,7 @@ export class SessionAgent {
     }
 
     const synthesis = await this.generateSynthesis({
+      rateLimitKey: booking.mentee_id,
       serviceType: booking.service_type,
       transcript,
       sessionObjectives: [], // Retrieve objectives if stored previously
@@ -51,6 +52,7 @@ export class SessionAgent {
    * Generates post-session summary and action items (using Gemini 2.5 Flash).
    */
   private async generateSynthesis(input: {
+    rateLimitKey: string;
     serviceType: string;
     transcript: string;
     sessionObjectives: string[];
@@ -70,51 +72,45 @@ export class SessionAgent {
       Transcript: ${input.transcript || 'EMPTY_OR_UNAVAILABLE'}
     `;
 
-    const runCall = async () => {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-          systemInstruction,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: 'OBJECT',
-            properties: {
-              session_summary: { type: 'STRING' },
-              key_insights: {
-                type: 'ARRAY',
-                items: { type: 'STRING' },
-              },
-              action_items: {
-                type: 'ARRAY',
-                items: {
-                  type: 'OBJECT',
-                  properties: {
-                    task: { type: 'STRING' },
-                    owner: { type: 'STRING', enum: ['mentor', 'mentee'] },
-                    deadline: { type: 'STRING' },
-                  },
-                  required: ['task', 'owner', 'deadline'],
-                },
-              },
-              mentor_feedback_prompt: { type: 'STRING' },
-              recommended_next_session: { type: 'STRING' },
+    return callLlmWithBackoff(() =>
+      generateStructuredJson<PostSessionOutput>({
+        model: llmFlashModel,
+        rateLimitKey: input.rateLimitKey,
+        systemInstruction,
+        prompt,
+        schema: {
+          type: 'OBJECT',
+          properties: {
+            session_summary: { type: 'STRING' },
+            key_insights: {
+              type: 'ARRAY',
+              items: { type: 'STRING' },
             },
-            required: [
-              'session_summary',
-              'key_insights',
-              'action_items',
-              'mentor_feedback_prompt',
-              'recommended_next_session',
-            ],
+            action_items: {
+              type: 'ARRAY',
+              items: {
+                type: 'OBJECT',
+                properties: {
+                  task: { type: 'STRING' },
+                  owner: { type: 'STRING', enum: ['mentor', 'mentee'] },
+                  deadline: { type: 'STRING' },
+                },
+                required: ['task', 'owner', 'deadline'],
+              },
+            },
+            mentor_feedback_prompt: { type: 'STRING' },
+            recommended_next_session: { type: 'STRING' },
           },
+          required: [
+            'session_summary',
+            'key_insights',
+            'action_items',
+            'mentor_feedback_prompt',
+            'recommended_next_session',
+          ],
         },
-      });
-
-      return JSON.parse(response.text || '{}') as PostSessionOutput;
-    };
-
-    return callGeminiWithBackoff(runCall);
+      }),
+    );
   }
 
   private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {

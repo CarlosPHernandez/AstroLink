@@ -1,5 +1,5 @@
 import type { Json } from '@/lib/database.types';
-import { ai, callGeminiWithBackoff } from '@/lib/gemini';
+import { callLlmWithBackoff, generateStructuredJson, llmProModel } from '@/lib/llm';
 import { supabaseAdmin } from '@/lib/supabase';
 import { MentorBriefingOutput, PreCallBriefOutput } from '@/lib/types';
 
@@ -26,6 +26,7 @@ export class BriefingAgent {
 
     if (service_type === 'session_1on1' || service_type === 'extended_session') {
       const briefing = await this.generateSessionBriefing({
+        rateLimitKey: booking.mentee_id,
         buyerName: booking.users.full_name,
         buyerGoals: booking.match_reason || '',
         expertName: booking.mentors.full_name,
@@ -43,6 +44,7 @@ export class BriefingAgent {
 
     if (service_type === 'pre_call_brief') {
       const preCallBrief = await this.generatePreCallBrief({
+        rateLimitKey: booking.mentee_id,
         buyerGoals: booking.match_reason || '',
         buyerBackground: '', // TODO: load from booking intake fields when persisted
         expertExpertise: booking.mentors.expertise.join(', '),
@@ -65,6 +67,7 @@ export class BriefingAgent {
    * Pre-session briefing for the expert before a live call.
    */
   private async generateSessionBriefing(input: {
+    rateLimitKey: string;
     buyerName: string;
     buyerGoals: string;
     expertName: string;
@@ -84,51 +87,51 @@ export class BriefingAgent {
       Expert expertise: ${input.expertExpertise}
     `;
 
-    const runCall = async () => {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-pro',
-        contents: prompt,
-        config: {
-          systemInstruction,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: 'OBJECT',
-            properties: {
-              session_objectives: {
-                type: 'ARRAY',
-                items: { type: 'STRING' },
-              },
-              recommended_agenda: {
-                type: 'OBJECT',
-                properties: {
-                  minutes_0_5: { type: 'STRING' },
-                  minutes_5_20: { type: 'STRING' },
-                  minutes_20_28: { type: 'STRING' },
-                  minutes_28_30: { type: 'STRING' },
-                },
-                required: ['minutes_0_5', 'minutes_5_20', 'minutes_20_28', 'minutes_28_30'],
-              },
-              mentee_context_summary: { type: 'STRING' },
-              suggested_resources: {
-                type: 'ARRAY',
-                items: { type: 'STRING' },
-              },
+    return callLlmWithBackoff(() =>
+      generateStructuredJson<MentorBriefingOutput>({
+        model: llmProModel,
+        rateLimitKey: input.rateLimitKey,
+        systemInstruction,
+        prompt,
+        schema: {
+          type: 'OBJECT',
+          properties: {
+            session_objectives: {
+              type: 'ARRAY',
+              items: { type: 'STRING' },
             },
-            required: ['session_objectives', 'recommended_agenda', 'mentee_context_summary', 'suggested_resources'],
+            recommended_agenda: {
+              type: 'OBJECT',
+              properties: {
+                minutes_0_5: { type: 'STRING' },
+                minutes_5_20: { type: 'STRING' },
+                minutes_20_28: { type: 'STRING' },
+                minutes_28_30: { type: 'STRING' },
+              },
+              required: ['minutes_0_5', 'minutes_5_20', 'minutes_20_28', 'minutes_28_30'],
+            },
+            mentee_context_summary: { type: 'STRING' },
+            suggested_resources: {
+              type: 'ARRAY',
+              items: { type: 'STRING' },
+            },
           },
+          required: [
+            'session_objectives',
+            'recommended_agenda',
+            'mentee_context_summary',
+            'suggested_resources',
+          ],
         },
-      });
-
-      return JSON.parse(response.text || '{}') as MentorBriefingOutput;
-    };
-
-    return callGeminiWithBackoff(runCall);
+      }),
+    );
   }
 
   /**
    * Async pre-call brief: structures buyer context and questions before the expert session.
    */
   private async generatePreCallBrief(input: {
+    rateLimitKey: string;
     buyerGoals: string;
     buyerBackground: string;
     expertExpertise: string;
@@ -148,57 +151,51 @@ export class BriefingAgent {
       Expert expertise: ${input.expertExpertise}
     `;
 
-    const runCall = async () => {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-pro',
-        contents: prompt,
-        config: {
-          systemInstruction,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: 'OBJECT',
-            properties: {
-              buyer_context_summary: { type: 'STRING' },
-              buyer_strengths: {
-                type: 'ARRAY',
-                items: { type: 'STRING' },
-              },
-              focus_areas: {
-                type: 'ARRAY',
-                items: {
-                  type: 'OBJECT',
-                  properties: {
-                    topic: { type: 'STRING' },
-                    why_for_expert: { type: 'STRING' },
-                    severity: { type: 'STRING', enum: ['high', 'medium'] },
-                    suggested_angle: { type: 'STRING' },
-                  },
-                  required: ['topic', 'why_for_expert', 'severity', 'suggested_angle'],
-                },
-              },
-              proposed_questions: {
-                type: 'ARRAY',
-                items: { type: 'STRING' },
-              },
-              session_readiness_score: { type: 'NUMBER' },
-              one_line_summary: { type: 'STRING' },
+    return callLlmWithBackoff(() =>
+      generateStructuredJson<PreCallBriefOutput>({
+        model: llmProModel,
+        rateLimitKey: input.rateLimitKey,
+        systemInstruction,
+        prompt,
+        schema: {
+          type: 'OBJECT',
+          properties: {
+            buyer_context_summary: { type: 'STRING' },
+            buyer_strengths: {
+              type: 'ARRAY',
+              items: { type: 'STRING' },
             },
-            required: [
-              'buyer_context_summary',
-              'buyer_strengths',
-              'focus_areas',
-              'proposed_questions',
-              'session_readiness_score',
-              'one_line_summary',
-            ],
+            focus_areas: {
+              type: 'ARRAY',
+              items: {
+                type: 'OBJECT',
+                properties: {
+                  topic: { type: 'STRING' },
+                  why_for_expert: { type: 'STRING' },
+                  severity: { type: 'STRING', enum: ['high', 'medium'] },
+                  suggested_angle: { type: 'STRING' },
+                },
+                required: ['topic', 'why_for_expert', 'severity', 'suggested_angle'],
+              },
+            },
+            proposed_questions: {
+              type: 'ARRAY',
+              items: { type: 'STRING' },
+            },
+            session_readiness_score: { type: 'NUMBER' },
+            one_line_summary: { type: 'STRING' },
           },
+          required: [
+            'buyer_context_summary',
+            'buyer_strengths',
+            'focus_areas',
+            'proposed_questions',
+            'session_readiness_score',
+            'one_line_summary',
+          ],
         },
-      });
-
-      return JSON.parse(response.text || '{}') as PreCallBriefOutput;
-    };
-
-    return callGeminiWithBackoff(runCall);
+      }),
+    );
   }
 
   private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {

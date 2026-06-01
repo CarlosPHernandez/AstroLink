@@ -1,16 +1,9 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { BookBodySchema } from '@/lib/book-request-schema';
+import { isLlmRateLimitError } from '@/lib/llm';
 import { getSession } from '@/lib/session';
 import { BookingAgent } from '@/services/agents/booking-agent';
-
-const BookBodySchema = z.object({
-  mentorId: z.string().uuid().optional(),
-  serviceType: z.enum(['session_1on1', 'pre_call_brief']),
-  includePreCallBrief: z.boolean().optional(),
-  scheduledAt: z.string().min(1),
-  goals: z.string().min(10),
-  background: z.string().min(10),
-});
 
 export async function POST(request: Request) {
   try {
@@ -41,11 +34,21 @@ export async function POST(request: Request) {
       data: {
         bookingId: result.bookingId,
         clientSecret: result.stripeClientSecret,
+        skipPayment: result.skipPayment,
         matchReason: result.matchReason,
         amountCents: result.amountCents,
       },
     });
   } catch (error: unknown) {
+    if (isLlmRateLimitError(error)) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(Math.ceil(error.retryAfterMs / 1000)) },
+        },
+      );
+    }
     const message = error instanceof Error ? error.message : 'Booking failed';
     const status = error instanceof z.ZodError ? 400 : 500;
     return NextResponse.json({ success: false, error: message }, { status });

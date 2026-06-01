@@ -1,6 +1,11 @@
 import type { Json } from '@/lib/database.types';
 import { computeBookingTotalCents } from '@/lib/booking-pricing';
-import { ai, callGeminiWithBackoff } from '@/lib/gemini';
+import {
+  createDevSkippedPaymentIntentId,
+  isStripePaymentsSkipped,
+} from '@/lib/booking-payments';
+import { callLlmWithBackoff, generateStructuredJson, llmFlashModel } from '@/lib/llm';
+import { confirmBookingWithoutPayment } from '@/lib/post-payment';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 import { MatchingOutput, ServiceType } from '@/lib/types';
@@ -29,6 +34,7 @@ export class BookingAgent {
     // 2. Matching Engine (if no mentor selected)
     if (!finalMentorId) {
       const matchResult = await this.matchMentor({
+        menteeId: params.menteeId,
         menteeGoals: params.menteeGoals,
         menteeBackground: params.menteeBackground,
         serviceType: params.serviceType,
@@ -62,34 +68,45 @@ export class BookingAgent {
       includePreCallBrief,
     });
 
+    const skipPayments = isStripePaymentsSkipped();
     const testMode = process.env.STRIPE_BOOKING_TEST_MODE === 'true';
     const connectAccountId = mentor.stripe_connect_account_id;
 
-    if (!connectAccountId && !testMode) {
+    if (!skipPayments && !connectAccountId && !testMode) {
       throw new Error(
         'This expert has not finished Stripe payouts setup yet. Set STRIPE_BOOKING_TEST_MODE=true for local checkout without Connect.'
       );
     }
 
-    const platformFee = Math.round(servicePriceCents * 0.2);
+    let paymentIntentId: string;
+    let stripeClientSecret: string | null = null;
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: servicePriceCents,
-      currency: 'usd',
-      payment_method_types: ['card'],
-      capture_method: 'manual',
-      ...(connectAccountId && !testMode
-        ? {
-            application_fee_amount: platformFee,
-            transfer_data: { destination: connectAccountId },
-          }
-        : {}),
-      metadata: {
-        mentor_id: finalMentorId,
-        mentee_id: params.menteeId,
-        service_type: params.serviceType,
-      },
-    });
+    if (skipPayments) {
+      paymentIntentId = createDevSkippedPaymentIntentId();
+    } else {
+      const platformFee = Math.round(servicePriceCents * 0.2);
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: servicePriceCents,
+        currency: 'usd',
+        payment_method_types: ['card'],
+        capture_method: 'manual',
+        ...(connectAccountId && !testMode
+          ? {
+              application_fee_amount: platformFee,
+              transfer_data: { destination: connectAccountId },
+            }
+          : {}),
+        metadata: {
+          mentor_id: finalMentorId,
+          mentee_id: params.menteeId,
+          service_type: params.serviceType,
+        },
+      });
+
+      paymentIntentId = paymentIntent.id;
+      stripeClientSecret = paymentIntent.client_secret;
+    }
 
     const { data: booking, error: bookingErr } = await supabaseAdmin
       .from('bookings')
@@ -100,7 +117,7 @@ export class BookingAgent {
         include_pre_call_brief: includePreCallBrief,
         status: 'pending_payment',
         scheduled_at: params.scheduledAt,
-        stripe_payment_intent_id: paymentIntent.id,
+        stripe_payment_intent_id: paymentIntentId,
         match_reason: params.menteeGoals || matchReason,
       })
       .select()
@@ -110,7 +127,24 @@ export class BookingAgent {
       throw new Error(`Failed to create database booking: ${bookingErr.message}`);
     }
 
-    await stripe.paymentIntents.update(paymentIntent.id, {
+    if (skipPayments) {
+      await this.logAudit('BOOKING_CREATED', booking.id, {
+        booking_id: booking.id,
+        skip_payments: true,
+      });
+
+      await confirmBookingWithoutPayment(booking.id);
+
+      return {
+        bookingId: booking.id,
+        stripeClientSecret: null,
+        skipPayment: true,
+        matchReason: params.menteeGoals || matchReason,
+        amountCents: servicePriceCents,
+      };
+    }
+
+    await stripe.paymentIntents.update(paymentIntentId, {
       metadata: {
         mentor_id: finalMentorId,
         mentee_id: params.menteeId,
@@ -121,21 +155,23 @@ export class BookingAgent {
 
     await this.logAudit('BOOKING_CREATED', booking.id, {
       booking_id: booking.id,
-      stripe_intent_id: paymentIntent.id,
+      stripe_intent_id: paymentIntentId,
     });
 
     return {
       bookingId: booking.id,
-      stripeClientSecret: paymentIntent.client_secret,
+      stripeClientSecret,
+      skipPayment: false,
       matchReason: params.menteeGoals || matchReason,
       amountCents: servicePriceCents,
     };
   }
 
   /**
-   * Matches a mentee with the optimal mentor using Gemini 2.5 Flash.
+   * Matches a mentee with the optimal mentor using the configured LLM.
    */
   private async matchMentor(input: {
+    menteeId: string;
     menteeGoals: string;
     menteeBackground: string;
     serviceType: string;
@@ -168,29 +204,23 @@ export class BookingAgent {
       ${JSON.stringify(mentors, null, 2)}
     `;
 
-    const runMatch = async () => {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-          systemInstruction: matchingSystemInstruction,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: 'OBJECT',
-            properties: {
-              mentor_id: { type: 'STRING' },
-              match_score: { type: 'NUMBER' },
-              match_reason: { type: 'STRING' },
-            },
-            required: ['mentor_id', 'match_score', 'match_reason'],
+    return callLlmWithBackoff(() =>
+      generateStructuredJson<MatchingOutput>({
+        model: llmFlashModel,
+        rateLimitKey: input.menteeId,
+        systemInstruction: matchingSystemInstruction,
+        prompt,
+        schema: {
+          type: 'OBJECT',
+          properties: {
+            mentor_id: { type: 'STRING' },
+            match_score: { type: 'NUMBER' },
+            match_reason: { type: 'STRING' },
           },
+          required: ['mentor_id', 'match_score', 'match_reason'],
         },
-      });
-
-      return JSON.parse(response.text || '{}') as MatchingOutput;
-    };
-
-    return callGeminiWithBackoff(runMatch);
+      }),
+    );
   }
 
   private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {
