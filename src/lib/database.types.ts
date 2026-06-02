@@ -49,6 +49,7 @@ export type Database = {
           daily_room_url: string | null
           id: string
           include_pre_call_brief: boolean
+          intake_background: string | null
           match_reason: string | null
           mentee_id: string
           mentee_token: string | null
@@ -65,6 +66,7 @@ export type Database = {
           daily_room_url?: string | null
           id?: string
           include_pre_call_brief?: boolean
+          intake_background?: string | null
           match_reason?: string | null
           mentee_id: string
           mentee_token?: string | null
@@ -81,6 +83,7 @@ export type Database = {
           daily_room_url?: string | null
           id?: string
           include_pre_call_brief?: boolean
+          intake_background?: string | null
           match_reason?: string | null
           mentee_id?: string
           mentee_token?: string | null
@@ -325,22 +328,34 @@ export type Database = {
       }
       users: {
         Row: {
+          bio: string
           created_at: string
           email: string
           full_name: string
           id: string
+          phone: string | null
+          stripe_customer_id: string | null
+          updated_at: string
         }
         Insert: {
+          bio?: string
           created_at?: string
           email: string
           full_name: string
           id?: string
+          phone?: string | null
+          stripe_customer_id?: string | null
+          updated_at?: string
         }
         Update: {
+          bio?: string
           created_at?: string
           email?: string
           full_name?: string
           id?: string
+          phone?: string | null
+          stripe_customer_id?: string | null
+          updated_at?: string
         }
         Relationships: []
       }

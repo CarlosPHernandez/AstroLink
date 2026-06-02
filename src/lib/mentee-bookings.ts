@@ -1,18 +1,11 @@
 import 'server-only';
 
+import type { MenteeBookingView, PartitionedMenteeBookings } from '@/lib/booking-partition';
 import { supabaseAdmin } from '@/lib/supabase';
-import type { MentorBriefingOutput, PreCallBriefOutput, ServiceType } from '@/lib/types';
+import type { MentorBriefingOutput, PreCallBriefOutput } from '@/lib/types';
 
-export interface MenteeBookingView {
-  id: string;
-  mentorName: string;
-  serviceType: ServiceType;
-  scheduledAt: string;
-  status: string;
-  matchReason: string | null;
-  dailyRoomUrl: string | null;
-  briefing: MentorBriefingOutput | PreCallBriefOutput | null;
-}
+export type { MenteeBookingView, PartitionedMenteeBookings };
+export { isBookingUpcoming, partitionMenteeBookings } from '@/lib/booking-partition';
 
 export async function listMenteeBookings(menteeId: string): Promise<MenteeBookingView[]> {
   const { data, error } = await supabaseAdmin
@@ -31,7 +24,7 @@ export async function listMenteeBookings(menteeId: string): Promise<MenteeBookin
     return {
       id: row.id,
       mentorName: mentor?.full_name ?? 'Expert',
-      serviceType: row.service_type as ServiceType,
+      serviceType: row.service_type,
       scheduledAt: row.scheduled_at,
       status: row.status,
       matchReason: row.match_reason,

@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
+import { requireApiRole } from '@/lib/api-auth';
 
 export async function POST(request: Request) {
+  const sessionOrResponse = await requireApiRole('admin');
+  if (sessionOrResponse instanceof NextResponse) {
+    return sessionOrResponse;
+  }
+
   try {
     const body = await request.json();
     const { mentorId, action } = body; // action: 'approve' | 'reject'

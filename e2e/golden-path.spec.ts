@@ -48,9 +48,15 @@ test.describe('D1 golden path (skip Stripe)', () => {
     expect(bookingId).toBeTruthy();
 
     const bookingRow = page.getByTestId(`booking-row-${bookingId}`);
-    await expect(bookingRow.getByText(E2E_GOALS)).toBeVisible();
-    await expect(bookingRow.getByText('APX-02 session briefing')).toBeVisible();
-    await expect(bookingRow.getByText(STUB_OBJECTIVE)).toBeVisible();
+    await expect(bookingRow).toBeVisible();
+    await expect(bookingRow.getByText('Chris Sembroski')).toBeVisible();
+
+    await bookingRow.getByRole('button', { name: 'View brief' }).click();
+    await expect(page.getByText('APX-02')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Pre-session brief' })).toBeVisible();
+    await expect(page.getByText(STUB_OBJECTIVE)).toBeVisible();
+
+    await page.getByRole('button', { name: 'Close briefing panel' }).click();
 
     const joinLink = page.getByTestId(`booking-join-${bookingId}`);
     if (await joinLink.isVisible()) {

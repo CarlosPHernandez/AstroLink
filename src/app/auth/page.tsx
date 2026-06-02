@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, useActionState, startTransition } from 'react';
+import React, { Suspense, useState, useActionState, startTransition } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { loginAction, registerAction } from './actions';
 
 const PRESETS = {
@@ -9,16 +11,17 @@ const PRESETS = {
   admin: { email: 'admin@astrolink.ai', fullName: 'Flight Command', role: 'admin' as const },
 };
 
-export default function AuthPage() {
+function AuthPageContent() {
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get('redirect') ?? '';
+
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [role, setRole] = useState<'mentee' | 'mentor' | 'admin'>('mentee');
   const [socialAlert, setSocialAlert] = useState<string | null>(null);
 
-  // React 19 useActionState hook for form submissions
   const [loginState, loginFormAction, loginPending] = useActionState(loginAction, undefined);
   const [registerState, registerFormAction, registerPending] = useActionState(registerAction, undefined);
 
-  // Fast demo preset trigger — submit the login form so server redirect works reliably
   const handlePresetClick = (email: string) => {
     const emailInput = document.getElementById('email') as HTMLInputElement | null;
     const passwordInput = document.getElementById('password') as HTMLInputElement | null;
@@ -33,6 +36,9 @@ export default function AuthPage() {
     const formData = new FormData();
     formData.append('email', email);
     formData.append('password', 'password123');
+    if (redirectPath) {
+      formData.append('redirect', redirectPath);
+    }
     startTransition(() => {
       loginFormAction(formData);
     });
@@ -47,32 +53,32 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-surface-container-lowest text-on-surface flex flex-col justify-center items-center p-4 sm:p-gutter relative font-sans selection:bg-primary-container selection:text-on-primary-container">
-      
-      {/* Auth Container */}
       <main className="w-full max-w-[420px] animate-reveal-up delay-100">
-        
-        {/* Brand / Header */}
         <div className="mb-6 text-center flex flex-col items-center">
-          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-md shadow-[0_4px_20px_rgba(0,88,188,0.15)] animate-reveal-down delay-200 group relative cursor-pointer">
+          <Link
+            href="/"
+            className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-md shadow-[0_4px_20px_rgba(0,88,188,0.15)] animate-reveal-down delay-200 group relative cursor-pointer"
+            aria-label="Back to home"
+          >
             <div className="pulse-ring absolute inset-0 bg-primary/20 rounded-full"></div>
             <div className="pulse-ring absolute inset-0 bg-primary/10 rounded-full" style={{ animationDelay: '0.5s' }}></div>
             <div className="absolute top-[132px] left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-inverse-surface text-inverse-on-surface text-[10px] px-3 py-1.5 rounded-lg shadow-lg z-10 flex">
               <span className="typewriter-text font-mono inline-block">Welcome to the future, Voyager</span>
             </div>
             <span className="material-symbols-outlined text-on-primary" style={{ fontSize: '28px' }}>satellite_alt</span>
-          </div>
-          <h1 className="font-headline-md text-headline-md font-bold text-on-surface tracking-tight mb-xs animate-reveal-up delay-300">
+          </Link>
+          <Link
+            href="/"
+            className="font-headline-md text-headline-md font-bold text-on-surface tracking-tight mb-xs animate-reveal-up delay-300 hover:text-primary transition-colors"
+          >
             AstralLink
-          </h1>
+          </Link>
           <p className="font-body-md text-body-md text-on-surface-variant animate-reveal-up delay-400">
             {activeTab === 'login' ? 'Sign in to your account' : 'Create your credentials'}
           </p>
         </div>
 
-        {/* Outer Card Wrapper */}
         <div className="bg-surface-container-lowest border border-outline-variant p-5 sm:p-8 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.015)] animate-reveal-up delay-300">
-          
-          {/* Tab Selector */}
           <div className="flex border-b border-outline-variant mb-6">
             <button
               type="button"
@@ -98,14 +104,12 @@ export default function AuthPage() {
             </button>
           </div>
 
-          {/* Toast / Notification Banner for Mock Social Logins */}
           {socialAlert && (
             <div className="mb-4 p-3 bg-primary-container/10 border border-primary-container/20 text-primary text-xs rounded-lg animate-fade-in">
               {socialAlert}
             </div>
           )}
 
-          {/* Display Error Message */}
           {activeTab === 'login' && loginState?.message && (
             <div className="mb-4 p-3 bg-error-container text-on-error-container text-xs rounded-lg">
               {loginState.message}
@@ -117,9 +121,8 @@ export default function AuthPage() {
             </div>
           )}
 
-          {/* Social Logins - Grid layout for better responsiveness */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm mb-lg animate-reveal-up delay-500">
-            <button 
+            <button
               type="button"
               onClick={() => handleSocialClick('Google')}
               className="w-full flex items-center justify-center gap-sm py-sm px-md border border-outline-variant rounded-lg bg-surface-container-lowest hover:bg-surface transition-colors duration-200 group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
@@ -132,7 +135,7 @@ export default function AuthPage() {
               </svg>
               <span className="font-label-md text-label-md text-on-surface">Google</span>
             </button>
-            <button 
+            <button
               type="button"
               onClick={() => handleSocialClick('X')}
               className="w-full flex items-center justify-center gap-sm py-sm px-md border border-outline-variant rounded-lg bg-surface-container-lowest hover:bg-surface transition-colors duration-200 group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
@@ -144,24 +147,23 @@ export default function AuthPage() {
             </button>
           </div>
 
-          {/* Divider */}
           <div className="relative flex items-center mb-lg animate-reveal-up delay-[600ms]">
             <div className="flex-grow border-t border-surface-variant"></div>
             <span className="flex-shrink-0 mx-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Or continue with</span>
             <div className="flex-grow border-t border-surface-variant"></div>
           </div>
 
-          {/* Form Content */}
           {activeTab === 'login' ? (
             <form action={loginFormAction} className="flex flex-col gap-md animate-reveal-up delay-[700ms]">
+              {redirectPath ? <input type="hidden" name="redirect" value={redirectPath} /> : null}
               <div>
                 <label className="block font-label-sm text-label-sm text-on-surface mb-xs" htmlFor="email">Email address</label>
-                <input 
-                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" 
-                  id="email" 
-                  name="email" 
-                  placeholder="name@company.com" 
-                  required 
+                <input
+                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+                  id="email"
+                  name="email"
+                  placeholder="name@company.com"
+                  required
                   type="email"
                   disabled={isPending}
                 />
@@ -174,12 +176,12 @@ export default function AuthPage() {
                   <label className="block font-label-sm text-label-sm text-on-surface" htmlFor="password">Password</label>
                   <a className="font-label-sm text-label-sm text-primary hover:text-on-primary-fixed-variant transition-colors" href="#">Forgot password?</a>
                 </div>
-                <input 
-                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" 
-                  id="password" 
-                  name="password" 
-                  placeholder="••••••••" 
-                  required 
+                <input
+                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+                  id="password"
+                  name="password"
+                  placeholder="••••••••"
+                  required
                   type="password"
                   disabled={isPending}
                 />
@@ -187,8 +189,8 @@ export default function AuthPage() {
                   <p className="text-error text-[10px] mt-1">{loginState.errors.password[0]}</p>
                 )}
               </div>
-              <button 
-                className="mt-xs w-full py-sm px-md bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:bg-on-primary-fixed-variant transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex justify-center items-center gap-xs group/btn cursor-pointer disabled:opacity-50" 
+              <button
+                className="mt-xs w-full py-sm px-md bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:bg-on-primary-fixed-variant transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex justify-center items-center gap-xs group/btn cursor-pointer disabled:opacity-50"
                 type="submit"
                 disabled={isPending}
               >
@@ -207,6 +209,7 @@ export default function AuthPage() {
             </form>
           ) : (
             <form action={registerFormAction} className="flex flex-col gap-md animate-reveal-up delay-[700ms]">
+              {redirectPath ? <input type="hidden" name="redirect" value={redirectPath} /> : null}
               <div>
                 <label className="block font-label-sm text-label-sm text-on-surface mb-xs">Role Target</label>
                 <div className="grid grid-cols-2 gap-2">
@@ -238,12 +241,12 @@ export default function AuthPage() {
 
               <div>
                 <label className="block font-label-sm text-label-sm text-on-surface mb-xs" htmlFor="fullName">Full Identity Name</label>
-                <input 
-                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" 
-                  id="fullName" 
-                  name="fullName" 
-                  placeholder="e.g. Carlos Hernandez" 
-                  required 
+                <input
+                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+                  id="fullName"
+                  name="fullName"
+                  placeholder="e.g. Carlos Hernandez"
+                  required
                   type="text"
                   disabled={isPending}
                 />
@@ -254,12 +257,12 @@ export default function AuthPage() {
 
               <div>
                 <label className="block font-label-sm text-label-sm text-on-surface mb-xs" htmlFor="regEmail">Official Email address</label>
-                <input 
-                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" 
-                  id="regEmail" 
-                  name="email" 
-                  placeholder="name@company.com" 
-                  required 
+                <input
+                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+                  id="regEmail"
+                  name="email"
+                  placeholder="name@company.com"
+                  required
                   type="email"
                   disabled={isPending}
                 />
@@ -270,12 +273,12 @@ export default function AuthPage() {
 
               <div>
                 <label className="block font-label-sm text-label-sm text-on-surface mb-xs" htmlFor="regPassword">Access Key (Password)</label>
-                <input 
-                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" 
-                  id="regPassword" 
-                  name="password" 
-                  placeholder="Min 6 characters" 
-                  required 
+                <input
+                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+                  id="regPassword"
+                  name="password"
+                  placeholder="Min 6 characters"
+                  required
                   type="password"
                   disabled={isPending}
                 />
@@ -284,8 +287,8 @@ export default function AuthPage() {
                 )}
               </div>
 
-              <button 
-                className="mt-xs w-full py-sm px-md bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:bg-on-primary-fixed-variant transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex justify-center items-center gap-xs group/btn cursor-pointer disabled:opacity-50" 
+              <button
+                className="mt-xs w-full py-sm px-md bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:bg-on-primary-fixed-variant transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex justify-center items-center gap-xs group/btn cursor-pointer disabled:opacity-50"
                 type="submit"
                 disabled={isPending}
               >
@@ -304,7 +307,6 @@ export default function AuthPage() {
             </form>
           )}
 
-          {/* DEMO / SIMULATION LOGINS PANEL */}
           <div className="mt-8 pt-6 border-t border-outline-variant animate-reveal-up delay-800">
             <div className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider text-center mb-3">
               Simulation Flight Presets (One-Click Bypass)
@@ -346,15 +348,13 @@ export default function AuthPage() {
               </button>
             </div>
           </div>
-
         </div>
 
-        {/* Bottom Footer Link */}
         <div className="mt-6 text-center font-body-md text-body-md text-on-surface-variant animate-reveal-up delay-[800ms]">
           {activeTab === 'login' ? (
             <>
-              Don't have an account?{' '}
-              <button 
+              Don&apos;t have an account?{' '}
+              <button
                 onClick={() => setActiveTab('signup')}
                 className="font-label-md text-label-md text-primary hover:text-on-primary-fixed-variant transition-colors cursor-pointer"
               >
@@ -364,7 +364,7 @@ export default function AuthPage() {
           ) : (
             <>
               Already have credentials?{' '}
-              <button 
+              <button
                 onClick={() => setActiveTab('login')}
                 className="font-label-md text-label-md text-primary hover:text-on-primary-fixed-variant transition-colors cursor-pointer"
               >
@@ -374,8 +374,24 @@ export default function AuthPage() {
           )}
         </div>
 
+        <div className="mt-4 text-center animate-reveal-up delay-[900ms]">
+          <Link
+            href="/"
+            data-testid="auth-back-to-home"
+            className="inline-block py-2 px-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant hover:text-on-surface border border-outline-variant hover:border-outline rounded-lg transition-all duration-200"
+          >
+            Back to Home
+          </Link>
+        </div>
       </main>
-
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={null}>
+      <AuthPageContent />
+    </Suspense>
   );
 }

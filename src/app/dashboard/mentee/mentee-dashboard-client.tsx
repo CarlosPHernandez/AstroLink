@@ -1,18 +1,19 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { logoutAction } from '@/app/auth/actions';
-import { BriefingContent } from '@/app/dashboard/mentee/briefing-content';
 import {
   BriefingSidebar,
   type BriefingSidebarState,
 } from '@/app/dashboard/mentee/briefing-sidebar';
-import type { MenteeBookingView } from '@/lib/mentee-bookings';
+import {
+  partitionMenteeBookings,
+  type MenteeBookingView,
+} from '@/lib/booking-partition';
 import type { BriefingPayload } from '@/lib/briefing-display';
-import { isSessionBriefing } from '@/lib/briefing-display';
-import { SERVICE_TYPE_LABELS, type ServiceType } from '@/lib/types';
+import { SERVICE_TYPE_LABELS } from '@/lib/types';
 
 interface SessionData {
   userId: string;
@@ -27,6 +28,16 @@ type BriefingApiResponse = {
   data?: { briefing: BriefingPayload };
 };
 
+function formatSessionWhen(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 export default function MenteeDashboardClient({
   session,
   bookings,
@@ -40,6 +51,11 @@ export default function MenteeDashboardClient({
   const [localBriefings, setLocalBriefings] = useState<Record<string, BriefingPayload>>({});
   const [sidebar, setSidebar] = useState<BriefingSidebarState>({ mode: 'closed' });
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+
+  const { upcoming, past, nextUpcoming } = useMemo(
+    () => partitionMenteeBookings(bookings),
+    [bookings],
+  );
 
   const resolveBriefing = useCallback(
     (booking: MenteeBookingView): BriefingPayload | null => {
@@ -99,8 +115,101 @@ export default function MenteeDashboardClient({
     }
   }
 
-  function closeSidebar() {
-    setSidebar({ mode: 'closed' });
+  function renderUpcomingCard(booking: MenteeBookingView) {
+    const briefing = resolveBriefing(booking);
+    const isGenerating = generatingId === booking.id;
+    const canJoin =
+      booking.dailyRoomUrl &&
+      (booking.status === 'confirmed' || booking.status === 'completed');
+
+    return (
+      <div
+        key={booking.id}
+        data-testid={`booking-row-${booking.id}`}
+        className={`border bg-surface-container-lowest p-5 rounded-md relative shadow-sm transition-colors ${
+          isGenerating ? 'border-primary/40 ring-2 ring-primary/10' : 'border-outline-variant'
+        }`}
+      >
+        <span className="absolute top-0 right-0 px-3 py-1 bg-surface-container-low text-on-surface-variant text-[9px] font-mono font-bold rounded-bl-md border-l border-b border-outline-variant uppercase">
+          {booking.status}
+        </span>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pr-16">
+          <div>
+            <h3 className="text-base font-bold text-on-surface">{booking.mentorName}</h3>
+            <p className="text-xs text-on-surface-variant mt-0.5">
+              {SERVICE_TYPE_LABELS[booking.serviceType]} · {formatSessionWhen(booking.scheduledAt)}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {briefing ? (
+              <button
+                type="button"
+                onClick={() => openBriefingPanel(booking, briefing)}
+                className="px-3 py-2 rounded-md border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary font-semibold text-[10px] uppercase tracking-wider cursor-pointer"
+              >
+                View brief
+              </button>
+            ) : booking.status === 'confirmed' || booking.status === 'pending_payment' ? (
+              <button
+                type="button"
+                onClick={() => generateBriefing(booking)}
+                disabled={generatingId !== null}
+                className="px-3 py-2 rounded-md border border-outline-variant text-on-surface-variant hover:text-on-surface text-[10px] font-semibold uppercase tracking-wider cursor-pointer disabled:opacity-50"
+              >
+                {skipPayments ? 'Generate brief' : 'Brief after pay'}
+              </button>
+            ) : null}
+            {canJoin ? (
+              <Link
+                href={`/session/${booking.id}`}
+                data-testid={`booking-join-${booking.id}`}
+                className="px-3 py-2 rounded-md bg-primary hover:bg-primary-container text-white font-semibold text-[10px] uppercase tracking-wider shadow-sm"
+              >
+                Join room
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderPastRow(booking: MenteeBookingView) {
+    const briefing = resolveBriefing(booking);
+    return (
+      <div
+        key={booking.id}
+        data-testid={`booking-past-${booking.id}`}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4 border-b border-outline-variant/40 last:border-0"
+      >
+        <div>
+          <p className="text-sm font-semibold text-on-surface">{booking.mentorName}</p>
+          <p className="text-[11px] text-on-surface-variant">
+            {formatSessionWhen(booking.scheduledAt)} · {booking.status}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {briefing ? (
+            <button
+              type="button"
+              onClick={() => openBriefingPanel(booking, briefing)}
+              className="text-[10px] font-semibold text-primary uppercase tracking-wider hover:underline cursor-pointer"
+            >
+              View brief
+            </button>
+          ) : null}
+          {booking.dailyRoomUrl && booking.status === 'completed' ? (
+            <Link
+              href={`/session/${booking.id}`}
+              className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider hover:text-on-surface"
+            >
+              Session recap
+            </Link>
+          ) : null}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -109,198 +218,121 @@ export default function MenteeDashboardClient({
         <div className="max-w-5xl mx-auto">
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-6 border-b border-outline-variant">
             <div>
-              <div className="flex items-center gap-3 mb-1">
-                <span className="px-2 py-0.5 text-[9px] font-mono bg-primary text-white rounded uppercase tracking-widest font-semibold">
-                  Your sessions
-                </span>
-              </div>
-              <h1 className="text-2xl font-bold text-on-surface tracking-tight">
+              <span className="px-2 py-0.5 text-[9px] font-mono bg-primary text-white rounded uppercase tracking-widest font-semibold">
+                Your sessions
+              </span>
+              <h1 className="text-2xl font-bold text-on-surface tracking-tight mt-2">
                 Hello,{' '}
                 <span className="font-light italic bg-gradient-to-r from-black via-zinc-800 to-zinc-600 bg-clip-text text-transparent">
                   {session.fullName}
                 </span>
               </h1>
               <p className="text-on-surface-variant text-xs mt-1">
-                Upcoming expert calls, pre-session briefs, and video rooms.
+                Upcoming calls first, then your session history.
               </p>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/dashboard/mentee/settings"
+                data-testid="mentee-settings-link"
+                className="px-4 py-2 rounded-md border border-outline-variant hover:border-outline text-on-surface-variant hover:text-on-surface text-xs font-semibold uppercase tracking-wider transition-all bg-surface shadow-sm"
+              >
+                Settings
+              </Link>
               <Link
                 href="/booking"
                 className="px-5 py-2.5 rounded-md bg-primary hover:bg-primary-container text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm"
               >
-                Book another session
+                Book session
               </Link>
               <button
                 type="button"
                 onClick={() => logoutAction()}
                 className="px-4 py-2 rounded-md border border-outline-variant hover:border-outline text-on-surface-variant hover:text-on-surface text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer bg-surface shadow-sm"
               >
-                Sign Out
+                Sign out
               </button>
             </div>
           </header>
 
-          <div className="space-y-8">
-            {bookings.length === 0 ? (
-              <div className="border border-outline-variant rounded-md p-8 text-center text-on-surface-variant text-sm">
-                No sessions yet.{' '}
-                <Link href="/" className="text-primary font-semibold hover:underline">
-                  Browse experts
-                </Link>{' '}
-                to book your first call.
-              </div>
-            ) : (
-              bookings.map((booking) => {
-                const briefing = resolveBriefing(booking);
-                const isGenerating = generatingId === booking.id;
-                const sessionBriefing = briefing && isSessionBriefing(briefing) ? briefing : null;
-                const canJoin =
-                  booking.dailyRoomUrl &&
-                  (booking.status === 'confirmed' || booking.status === 'completed');
-
-                return (
-                  <div
-                    key={booking.id}
-                    data-testid={`booking-row-${booking.id}`}
-                    className={`border bg-surface-container-lowest p-6 rounded-md relative overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.01)] transition-colors duration-300 ${
-                      isGenerating
-                        ? 'border-primary/40 ring-2 ring-primary/10'
-                        : 'border-outline-variant'
-                    }`}
-                  >
-                    <div className="absolute top-0 right-0 px-4 py-1.5 bg-surface-container-low text-on-surface-variant text-[9px] font-mono font-bold rounded-bl-md border-l border-b border-outline-variant uppercase">
-                      {booking.status}
-                    </div>
-
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
-                      <div>
-                        <h3 className="text-lg font-bold text-on-surface mb-1">{booking.mentorName}</h3>
-                        <p className="text-xs text-on-surface-variant uppercase tracking-wide">
-                          {SERVICE_TYPE_LABELS[booking.serviceType as ServiceType] ?? booking.serviceType}{' '}
-                          • {new Date(booking.scheduledAt).toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        {briefing ? (
-                          <button
-                            type="button"
-                            onClick={() => openBriefingPanel(booking, briefing)}
-                            className="px-4 py-2 rounded-md border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary font-semibold text-xs transition-all uppercase tracking-wider cursor-pointer"
-                          >
-                            View brief
-                          </button>
-                        ) : null}
-                        {canJoin ? (
-                          <Link
-                            href={`/session/${booking.id}`}
-                            data-testid={`booking-join-${booking.id}`}
-                            className="px-4 py-2 rounded-md bg-primary hover:bg-primary-container text-white font-semibold text-xs transition-all uppercase tracking-wider shadow-sm"
-                          >
-                            Join video room
-                          </Link>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    {booking.matchReason ? (
-                      <div className="p-4 rounded-md bg-surface-container-low border border-outline-variant text-xs text-on-surface-variant mb-6">
-                        <span className="font-semibold text-on-surface">Your goals: </span>
-                        {booking.matchReason}
-                      </div>
-                    ) : null}
-
-                    {isGenerating ? (
-                      <div className="border-t border-surface-container pt-6">
-                        <div className="flex items-center gap-4 p-4 rounded-md bg-primary/5 border border-primary/20 animate-ai-text-pulse">
-                          <span className="relative flex h-3 w-3 shrink-0">
-                            <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-60 animate-ai-glow" />
-                            <span className="relative inline-flex h-3 w-3 rounded-full bg-primary" />
-                          </span>
-                          <div>
-                            <p className="text-xs font-semibold text-on-surface uppercase tracking-wide">
-                              APX-02 is generating your brief
-                            </p>
-                            <p className="text-[11px] text-on-surface-variant mt-0.5">
-                              Panel open on the right — content appears when ready.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {sessionBriefing ? (
-                      <div
-                        data-testid={`booking-briefing-${booking.id}`}
-                        className="border-t border-surface-container pt-6 space-y-4"
+          {bookings.length === 0 ? (
+            <div className="border border-outline-variant rounded-md p-8 text-center text-on-surface-variant text-sm">
+              No sessions yet.{' '}
+              <Link href="/" className="text-primary font-semibold hover:underline">
+                Browse experts
+              </Link>{' '}
+              to book your first call.
+            </div>
+          ) : (
+            <div className="space-y-10">
+              {nextUpcoming ? (
+                <section
+                  className="rounded-md border border-primary/25 bg-primary/5 p-6"
+                  data-testid="mentee-next-session"
+                >
+                  <p className="text-[9px] font-mono uppercase tracking-widest text-primary font-bold mb-2">
+                    Next session
+                  </p>
+                  <h2 className="text-xl font-bold text-on-surface mb-1">{nextUpcoming.mentorName}</h2>
+                  <p className="text-sm text-on-surface-variant mb-4">
+                    {formatSessionWhen(nextUpcoming.scheduledAt)}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {resolveBriefing(nextUpcoming) ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openBriefingPanel(nextUpcoming, resolveBriefing(nextUpcoming)!)
+                        }
+                        className="px-4 py-2 rounded-md border border-primary/40 text-primary text-xs font-semibold uppercase tracking-wider cursor-pointer bg-surface"
                       >
-                        <div className="flex items-center justify-between gap-4">
-                          <h4 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
-                            APX-02 session briefing
-                          </h4>
-                          <button
-                            type="button"
-                            onClick={() => openBriefingPanel(booking, sessionBriefing)}
-                            className="text-[10px] font-semibold text-primary uppercase tracking-wider hover:underline cursor-pointer"
-                          >
-                            Expand
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="p-4 rounded-md bg-surface-container-low border border-outline-variant/30">
-                            <span className="block text-[9px] font-bold text-on-surface-variant uppercase tracking-widest mb-1.5">
-                              Objectives
-                            </span>
-                            <ul className="list-disc pl-5 text-xs text-on-surface-variant space-y-1">
-                              {sessionBriefing.session_objectives.slice(0, 2).map((obj) => (
-                                <li key={obj}>{obj}</li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div className="p-4 rounded-md bg-surface-container-low border border-outline-variant/30">
-                            <span className="block text-[9px] font-bold text-on-surface-variant uppercase tracking-widest mb-1.5">
-                              Agenda preview
-                            </span>
-                            <p className="text-xs text-on-surface-variant leading-relaxed font-light line-clamp-3">
-                              {sessionBriefing.recommended_agenda.minutes_0_5}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ) : briefing ? (
-                      <div className="border-t border-surface-container pt-6 space-y-3">
-                        <h4 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
-                          APX-02 pre-call brief ready
-                        </h4>
-                        <BriefingContent briefing={briefing} />
-                      </div>
-                    ) : booking.status === 'confirmed' || booking.status === 'pending_payment' ? (
-                      <div className="border-t border-surface-container pt-6 space-y-3">
-                        <p className="text-xs text-on-surface-variant">
-                          {skipPayments
-                            ? 'No brief yet. Generate one now — a panel will open while APX-02 works.'
-                            : 'Pre-session brief generates after payment clears.'}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => generateBriefing(booking)}
-                          disabled={generatingId !== null}
-                          className="px-4 py-2 rounded-md bg-primary hover:bg-primary-container text-white text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                        >
-                          Generate briefing
-                        </button>
-                      </div>
+                        Open brief
+                      </button>
+                    ) : null}
+                    {nextUpcoming.dailyRoomUrl &&
+                    (nextUpcoming.status === 'confirmed' ||
+                      nextUpcoming.status === 'completed') ? (
+                      <Link
+                        href={`/session/${nextUpcoming.id}`}
+                        className="px-4 py-2 rounded-md bg-primary text-white text-xs font-semibold uppercase tracking-wider shadow-sm"
+                      >
+                        Join video room
+                      </Link>
                     ) : null}
                   </div>
-                );
-              })
-            )}
-          </div>
+                </section>
+              ) : null}
+
+              <section data-testid="mentee-upcoming-sessions">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-on-surface mb-4">
+                  Upcoming ({upcoming.length})
+                </h2>
+                {upcoming.length === 0 ? (
+                  <p className="text-sm text-on-surface-variant">No upcoming sessions scheduled.</p>
+                ) : (
+                  <div className="space-y-3">{upcoming.map(renderUpcomingCard)}</div>
+                )}
+              </section>
+
+              <section data-testid="mentee-past-sessions">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-on-surface mb-4">
+                  Past sessions ({past.length})
+                </h2>
+                {past.length === 0 ? (
+                  <p className="text-sm text-on-surface-variant">No past sessions yet.</p>
+                ) : (
+                  <div className="border border-outline-variant rounded-md bg-surface-container-lowest px-5">
+                    {past.map(renderPastRow)}
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
         </div>
       </div>
 
-      <BriefingSidebar state={sidebar} onClose={closeSidebar} />
+      <BriefingSidebar state={sidebar} onClose={() => setSidebar({ mode: 'closed' })} />
     </>
   );
 }
