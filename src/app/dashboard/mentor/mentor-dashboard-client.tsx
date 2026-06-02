@@ -1,8 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { logoutAction } from '@/app/auth/actions';
+import {
+  getMentorBookingContextSummary,
+  partitionMentorBookings,
+  type MentorBookingView,
+} from '@/lib/mentor-booking-partition';
+import { SERVICE_TYPE_LABELS, type ServiceType } from '@/lib/types';
 
 interface SessionData {
   userId: string;
@@ -11,28 +17,65 @@ interface SessionData {
   fullName: string;
 }
 
-export default function MentorDashboardClient({ session }: { session: SessionData }) {
-  const isChris = session.email.toLowerCase() === 'chris@astrolink.ai' || session.email.toLowerCase() === 'chris@astralink.ai';
+interface MentorProfileState {
+  fullName: string;
+  email: string;
+  employer: string;
+  complianceStatus: string;
+  stripeOnboardingCompleted: boolean;
+  isCivilServant: boolean;
+  bio: string;
+  expertise: string;
+  rate: number;
+}
 
-  // Active Tab state: consultations | payouts | profile | reports
-  const [activeTab, setActiveTab] = useState<'consultations' | 'payouts' | 'profile' | 'reports'>('consultations');
+function defaultProfileFromSession(session: SessionData): MentorProfileState {
+  const isChris =
+    session.email.toLowerCase() === 'chris@astrolink.ai' ||
+    session.email.toLowerCase() === 'chris@astralink.ai';
 
-  // Dynamic Profile State
-  const [profile, setProfile] = useState({
+  return {
     fullName: session.fullName,
     email: session.email,
     employer: isChris ? 'Inspiration 4 / Lockheed Martin / Starfish Space' : 'Aerospace Institute',
-    complianceStatus: isChris ? 'approved' : 'stripe_incomplete', // approved | stripe_incomplete | awaiting_human_approval | document_required
+    complianceStatus: isChris ? 'approved' : 'stripe_incomplete',
     stripeOnboardingCompleted: isChris,
     isCivilServant: false,
-    bio: isChris 
-      ? 'Commercial astronaut who flew on Inspiration 4, the historic all-civilian orbital mission. Expert in payload integration and flight mechanics.' 
+    bio: isChris
+      ? 'Commercial astronaut who flew on Inspiration 4, the historic all-civilian orbital mission. Expert in payload integration and flight mechanics.'
       : 'Consultant and engineer with a passion for aerospace.',
-    expertise: isChris 
-      ? 'Commercial Spaceflight, Payload Integration, Flight Mechanics' 
+    expertise: isChris
+      ? 'Commercial Spaceflight, Payload Integration, Flight Mechanics'
       : 'Avionics, Systems Engineering',
     rate: isChris ? 320 : 250,
-  });
+  };
+}
+
+function canMentorJoin(booking: MentorBookingView): boolean {
+  return Boolean(
+    booking.dailyRoomUrl &&
+      (booking.status === 'confirmed' || booking.status === 'completed'),
+  );
+}
+
+export default function MentorDashboardClient({
+  session,
+  bookings,
+  mentorProfile,
+}: {
+  session: SessionData;
+  bookings: MentorBookingView[];
+  mentorProfile: MentorProfileState | null;
+}) {
+  const [activeTab, setActiveTab] = useState<'consultations' | 'payouts' | 'profile' | 'reports'>(
+    'consultations',
+  );
+
+  const [profile, setProfile] = useState<MentorProfileState>(
+    mentorProfile ?? defaultProfileFromSession(session),
+  );
+
+  const { upcoming, past } = useMemo(() => partitionMentorBookings(bookings), [bookings]);
 
   const [saving, setSaving] = useState(false);
   const [stripeLoading, setStripeLoading] = useState(false);
@@ -49,19 +92,6 @@ export default function MentorDashboardClient({ session }: { session: SessionDat
   const grossAmount = totalCents / 100;
   const platformFee = Math.round(grossAmount * 0.20 * 100) / 100; // 20% Split
   const mentorPayout = Math.round((grossAmount - platformFee) * 100) / 100; // 80% Split
-
-  // Mock sessions state
-  const mockIncomingSessions = [
-    {
-      id: 'book-001',
-      menteeName: 'Carlos Hernandez',
-      serviceType: 'session_1on1',
-      scheduledAt: '2026-05-30T15:00:00Z',
-      status: 'confirmed',
-      goals: 'I want to transition from traditional software engineering into flight software development at aerospace labs.',
-      background: 'BS in Computer Science, 4 years experience building web systems and IoT platforms.',
-    },
-  ];
 
   // Mock telemetry reports for Reports tab
   const mockTelemetryLogs = [
@@ -136,7 +166,7 @@ export default function MentorDashboardClient({ session }: { session: SessionDat
               <span className="px-2 py-0.5 text-[9px] font-mono bg-primary text-white rounded uppercase tracking-widest font-semibold">
                 Instructor Mode
               </span>
-              <span className="text-on-surface-variant text-xs font-mono">// APX-04 Active</span>
+              <span className="text-on-surface-variant text-xs font-mono">APX-04 active</span>
             </div>
             <h1 className="text-2xl font-bold text-on-surface tracking-tight">
               Welcome back, <span className="font-light italic bg-gradient-to-r from-primary via-secondary to-tertiary bg-clip-text text-transparent">{profile.fullName}</span>
@@ -245,49 +275,54 @@ export default function MentorDashboardClient({ session }: { session: SessionDat
             
             {/* 1. CONSULTATIONS TAB */}
             {activeTab === 'consultations' && (
-              <div className="space-y-6">
+              <div className="space-y-8" data-testid="mentor-consultations-tab">
                 <div className="flex justify-between items-center pb-3 border-b border-outline-variant/35">
                   <h2 className="text-sm font-bold uppercase tracking-wider text-on-surface">
-                    Active Scheduled Briefings
+                    Scheduled consultations
                   </h2>
-                  <span className="text-[10px] font-mono text-on-surface-variant">1 Upcoming Consultation</span>
+                  <span className="text-[10px] font-mono text-on-surface-variant">
+                    {upcoming.length} upcoming · {past.length} past
+                  </span>
                 </div>
 
-                {mockIncomingSessions.map((session) => (
-                  <div key={session.id} className="border border-outline-variant bg-surface-container-lowest p-6 rounded-md relative shadow-[0_4px_25px_rgba(0,0,0,0.01)]">
-                    <div className="absolute top-0 right-0 px-4 py-1.5 bg-surface-container-low text-on-surface-variant text-[9px] font-mono font-bold rounded-bl-md border-l border-b border-outline-variant uppercase">
-                      {session.status}
-                    </div>
+                {bookings.length === 0 ? (
+                  <p className="text-sm text-on-surface-variant">
+                    No consultations yet. When a buyer books you, sessions appear here with goals and
+                    briefing context.
+                  </p>
+                ) : (
+                  <>
+                    <section data-testid="mentor-upcoming-section">
+                      <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-3">
+                        Upcoming
+                      </h3>
+                      {upcoming.length === 0 ? (
+                        <p className="text-xs text-on-surface-variant">No upcoming consultations.</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {upcoming.map((booking) => (
+                            <MentorConsultationCard key={booking.id} booking={booking} />
+                          ))}
+                        </div>
+                      )}
+                    </section>
 
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
-                      <div>
-                        <h3 className="text-lg font-bold text-on-surface mb-1">{session.menteeName}</h3>
-                        <p className="text-[10px] text-on-surface-variant font-mono uppercase tracking-wide">
-                          {session.serviceType.replace('_', ' ')} • {new Date(session.scheduledAt).toLocaleString()}
-                        </p>
-                      </div>
-                      <div>
-                        <Link
-                          href={`/session/${session.id}`}
-                          className="px-4 py-2.5 rounded-md bg-primary hover:bg-primary-container text-white font-bold text-xs uppercase tracking-wider transition-all block text-center shadow-sm"
-                        >
-                          Join Video Room
-                        </Link>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t border-surface-container">
-                      <div className="p-4 rounded-md bg-surface-container-low/50 border border-outline-variant/20">
-                        <span className="block text-[9px] font-bold text-on-surface-variant uppercase tracking-widest mb-1.5">Mentee Bio</span>
-                        <p className="text-xs text-on-surface-variant leading-relaxed font-light">{session.background}</p>
-                      </div>
-                      <div className="p-4 rounded-md bg-surface-container-low/50 border border-outline-variant/20">
-                        <span className="block text-[9px] font-bold text-on-surface-variant uppercase tracking-widest mb-1.5">Focus Objective</span>
-                        <p className="text-xs text-on-surface-variant leading-relaxed font-light">{session.goals}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                    <section data-testid="mentor-past-section">
+                      <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-3">
+                        Past
+                      </h3>
+                      {past.length === 0 ? (
+                        <p className="text-xs text-on-surface-variant">No past consultations.</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {past.map((booking) => (
+                            <MentorConsultationCard key={booking.id} booking={booking} compact />
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  </>
+                )}
               </div>
             )}
 
@@ -550,6 +585,74 @@ export default function MentorDashboardClient({ session }: { session: SessionDat
 
         </div>
       </div>
+    </div>
+  );
+}
+
+function MentorConsultationCard({
+  booking,
+  compact = false,
+}: {
+  booking: MentorBookingView;
+  compact?: boolean;
+}) {
+  const contextSummary = getMentorBookingContextSummary(booking);
+  const goals = booking.matchReason ?? 'No goals recorded for this session.';
+  const canJoin = canMentorJoin(booking);
+
+  return (
+    <div
+      data-testid={`mentor-booking-${booking.id}`}
+      className="border border-outline-variant bg-surface-container-lowest p-6 rounded-md relative shadow-[0_4px_25px_rgba(0,0,0,0.01)]"
+    >
+      <div className="absolute top-0 right-0 px-4 py-1.5 bg-surface-container-low text-on-surface-variant text-[9px] font-mono font-bold rounded-bl-md border-l border-b border-outline-variant uppercase">
+        {booking.status.replace(/_/g, ' ')}
+      </div>
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-4 pr-20">
+        <div>
+          <h3 className={`font-bold text-on-surface mb-1 ${compact ? 'text-base' : 'text-lg'}`}>
+            {booking.menteeName}
+          </h3>
+          <p className="text-[10px] text-on-surface-variant font-mono uppercase tracking-wide">
+            {SERVICE_TYPE_LABELS[booking.serviceType as ServiceType] ?? booking.serviceType} •{' '}
+            {new Date(booking.scheduledAt).toLocaleString()}
+          </p>
+        </div>
+        {canJoin ? (
+          <Link
+            href={`/session/${booking.id}`}
+            data-testid={`mentor-join-${booking.id}`}
+            className="px-4 py-2.5 rounded-md bg-primary hover:bg-primary-container text-white font-bold text-xs uppercase tracking-wider transition-all block text-center shadow-sm"
+          >
+            Join video room
+          </Link>
+        ) : null}
+      </div>
+
+      {!compact ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-surface-container">
+          <div className="p-4 rounded-md bg-surface-container-low/50 border border-outline-variant/20">
+            <span className="block text-[9px] font-bold text-on-surface-variant uppercase tracking-widest mb-1.5">
+              Goals
+            </span>
+            <p className="text-xs text-on-surface-variant leading-relaxed font-light">{goals}</p>
+          </div>
+          <div className="p-4 rounded-md bg-surface-container-low/50 border border-outline-variant/20">
+            <span className="block text-[9px] font-bold text-on-surface-variant uppercase tracking-widest mb-1.5">
+              Context
+            </span>
+            <p className="text-xs text-on-surface-variant leading-relaxed font-light">
+              {contextSummary}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <p className="text-xs text-on-surface-variant line-clamp-2 pt-2 border-t border-surface-container">
+          <span className="font-semibold text-on-surface">Goals: </span>
+          {goals}
+        </p>
+      )}
     </div>
   );
 }

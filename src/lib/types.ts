@@ -34,7 +34,11 @@ export interface User {
   id: string; // UUID
   email: string;
   full_name: string;
+  phone: string | null;
+  bio: string;
+  stripe_customer_id: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 // 2. Mentors Table
@@ -83,6 +87,7 @@ export interface Booking {
   mentee_token: string | null;
   match_reason: string | null;
   briefing_json: MentorBriefingOutput | PreCallBriefOutput | null;
+  intake_background: string | null;
   created_at: string;
 }
 

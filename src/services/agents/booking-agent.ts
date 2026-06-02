@@ -6,6 +6,7 @@ import {
 } from '@/lib/booking-payments';
 import { callLlmWithBackoff, generateStructuredJson, llmFlashModel } from '@/lib/llm';
 import { confirmBookingWithoutPayment } from '@/lib/post-payment';
+import { getOrCreateStripeCustomerForMentee } from '@/lib/stripe-customer';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 import { MatchingOutput, ServiceType } from '@/lib/types';
@@ -85,12 +86,14 @@ export class BookingAgent {
       paymentIntentId = createDevSkippedPaymentIntentId();
     } else {
       const platformFee = Math.round(servicePriceCents * 0.2);
+      const stripeCustomerId = await getOrCreateStripeCustomerForMentee(params.menteeId);
 
       const paymentIntent = await stripe.paymentIntents.create({
         amount: servicePriceCents,
         currency: 'usd',
         payment_method_types: ['card'],
         capture_method: 'manual',
+        ...(stripeCustomerId ? { customer: stripeCustomerId } : {}),
         ...(connectAccountId && !testMode
           ? {
               application_fee_amount: platformFee,
@@ -119,6 +122,7 @@ export class BookingAgent {
         scheduled_at: params.scheduledAt,
         stripe_payment_intent_id: paymentIntentId,
         match_reason: params.menteeGoals || matchReason,
+        intake_background: params.menteeBackground || null,
       })
       .select()
       .single();
