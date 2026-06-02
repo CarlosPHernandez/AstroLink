@@ -18,6 +18,8 @@ Paid **live 1:1** golden path only. Defer text threads, recorded video, full tri
 | **T3** — Briefs (`briefing_json` + webhook APX-02) | Done | `post-payment.ts`, stripe webhook, mentee dashboard |
 | **T4** — Daily (room + session page + capture) | Done (D1) | Webhook verifies HMAC, `meeting.ended` → `post-session.ts` (APX-03 + capture). Transcript fetch deferred. |
 | **T5** — Tests (Vitest + contract tests + E2E golden path) | Done (skip-Stripe) | `npm test`, `npm run test:e2e` — Stripe/Daily webhook E2E deferred |
+
+See [d2-next-steps.md](./d2-next-steps.md) for post-D1 priorities (brief auto-open, moderation, plain-language copy, three modalities).
 | **T6** — SKUs (`session_1on1` + optional pre-call brief) | Done | `booking-pricing.ts`, booking UI |
 | **T7** — Pricing (`live_session_price_cents` server-side) | Done | Migration + `BookingAgent` |
 | **T8** — XPRIZE Gemini decision log export | Not started | |
