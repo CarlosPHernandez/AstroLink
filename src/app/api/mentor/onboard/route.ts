@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
+import { requireApiRole } from '@/lib/api-auth';
 
 export async function POST(request: Request) {
+  const sessionOrResponse = await requireApiRole('mentor');
+  if (sessionOrResponse instanceof NextResponse) {
+    return sessionOrResponse;
+  }
+
   try {
     const formData = await request.formData();
     

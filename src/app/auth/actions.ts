@@ -1,6 +1,11 @@
 'use server';
 
+import {
+  getDefaultPathAfterAuth,
+  getSafeRedirectPath,
+} from '@/lib/auth-redirect';
 import { createSession, deleteSession, getSession } from '@/lib/session';
+import { ensureMenteeUserRow } from '@/lib/user-profile';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
@@ -110,20 +115,23 @@ export async function loginAction(
   const isMentor = role === 'mentor';
   const hasOnboarded = isPreset || !isMentor;
 
+  let sessionUserId = userId;
+  if (role === 'mentee') {
+    sessionUserId = await ensureMenteeUserRow({ userId, email, fullName });
+  }
+
   // 2. Start Session
   await createSession({
-    userId,
+    userId: sessionUserId,
     email,
     role,
     fullName,
     onboarded: hasOnboarded,
   });
 
-  // 3. Redirect
-  const target = hasOnboarded 
-    ? (role === 'admin' ? '/dashboard/admin' : role === 'mentor' ? '/dashboard/mentor' : '/dashboard/mentee')
-    : '/onboard';
-  redirect(target);
+  const redirectParam = formData.get('redirect');
+  const fallback = getDefaultPathAfterAuth({ role, onboarded: hasOnboarded });
+  redirect(getSafeRedirectPath(redirectParam?.toString(), fallback));
 
   return { success: true };
 }
@@ -147,21 +155,38 @@ export async function registerAction(
   }
 
   const { fullName, email, role } = result.data;
-  const userId = 'usr-' + Math.random().toString(36).substring(2, 9);
+  let userId = 'usr-' + Math.random().toString(36).substring(2, 9);
+
+  const emailLower = email.toLowerCase();
+  if (emailLower === PRESETS.mentee.email.toLowerCase()) {
+    userId = PRESETS.mentee.userId;
+  } else if (emailLower === PRESETS.mentor.email.toLowerCase()) {
+    userId = PRESETS.mentor.userId;
+  } else if (emailLower === PRESETS.admin.email.toLowerCase()) {
+    userId = PRESETS.admin.userId;
+  }
+
   const isMentor = role === 'mentor';
+  let sessionUserId = userId;
+  if (role === 'mentee') {
+    sessionUserId = await ensureMenteeUserRow({ userId, email, fullName });
+  }
 
   // Start Session
   await createSession({
-    userId,
+    userId: sessionUserId,
     email,
     role,
     fullName,
     onboarded: !isMentor,
   });
 
-  // Redirect
-  const target = isMentor ? '/onboard' : (role === 'admin' ? '/dashboard/admin' : '/dashboard/mentee');
-  redirect(target);
+  const redirectParam = formData.get('redirect');
+  const fallback = getDefaultPathAfterAuth({
+    role,
+    onboarded: !isMentor,
+  });
+  redirect(getSafeRedirectPath(redirectParam?.toString(), fallback));
 
   return { success: true };
 }

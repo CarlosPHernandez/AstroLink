@@ -1,28 +1,46 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getDefaultPathAfterAuth } from './lib/auth-redirect';
 import { decryptSessionString } from './lib/session';
 
+function redirectToAuth(request: NextRequest, returnPath: string) {
+  const authUrl = new URL('/auth', request.url);
+  authUrl.searchParams.set('redirect', returnPath);
+  return NextResponse.redirect(authUrl);
+}
+
+function redirectForRole(session: NonNullable<ReturnType<typeof decryptSessionString>>) {
+  return getDefaultPathAfterAuth({
+    role: session.role,
+    onboarded: session.onboarded,
+  });
+}
+
 export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  
-  // Read session cookie directly from the request header
+  const { pathname, search } = request.nextUrl;
+  const returnPath = `${pathname}${search}`;
+
   const sessionCookie = request.cookies.get('astrolink_session')?.value;
   const session = sessionCookie ? decryptSessionString(sessionCookie) : null;
 
-  // Boundaries to protect
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', returnPath);
+
   const isDashboard = pathname.startsWith('/dashboard');
   const isBooking = pathname.startsWith('/booking');
   const isSession = pathname.startsWith('/session');
+  const isOnboard = pathname.startsWith('/onboard');
+  const isAuth = pathname === '/auth';
 
-  if (isDashboard || isBooking || isSession) {
-    // 1. Not logged in: redirect to /auth
+  if (isAuth && session) {
+    return NextResponse.redirect(new URL(redirectForRole(session), request.url));
+  }
+
+  if (isDashboard || isBooking || isSession || isOnboard) {
     if (!session) {
-      const authUrl = new URL('/auth', request.url);
-      authUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(authUrl);
+      return redirectToAuth(request, returnPath);
     }
 
-    // 2. Logged in: check dashboard role matches
     if (pathname.startsWith('/dashboard/mentor') && session.role !== 'mentor') {
       const fallback = session.role === 'admin' ? '/dashboard/admin' : '/dashboard/mentee';
       return NextResponse.redirect(new URL(fallback, request.url));
@@ -37,9 +55,18 @@ export function proxy(request: NextRequest) {
       const fallback = session.role === 'mentor' ? '/dashboard/mentor' : '/dashboard/mentee';
       return NextResponse.redirect(new URL(fallback, request.url));
     }
+
+    if (isOnboard && session.role !== 'mentor') {
+      const fallback = session.role === 'admin' ? '/dashboard/admin' : '/dashboard/mentee';
+      return NextResponse.redirect(new URL(fallback, request.url));
+    }
   }
 
-  return NextResponse.next();
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {
@@ -47,5 +74,7 @@ export const config = {
     '/dashboard/:path*',
     '/booking/:path*',
     '/session/:path*',
+    '/onboard/:path*',
+    '/auth',
   ],
 };

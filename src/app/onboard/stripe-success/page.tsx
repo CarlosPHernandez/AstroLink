@@ -1,7 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
+import { requireRole } from '@/lib/require-session';
 
-export default function StripeSuccessPage() {
+export default async function StripeSuccessPage() {
+  await requireRole('mentor');
+
   return (
     <div className="min-h-screen bg-surface-container-lowest text-on-surface flex flex-col justify-center items-center p-4 sm:p-gutter relative font-sans selection:bg-primary-container selection:text-on-primary-container">
       

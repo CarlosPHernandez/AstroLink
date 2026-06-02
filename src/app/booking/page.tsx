@@ -1,7 +1,6 @@
-import { redirect } from 'next/navigation';
 import { isStripePaymentsSkipped } from '@/lib/booking-payments';
 import { getMentorBySlug } from '@/lib/mentor-directory';
-import { getSession } from '@/lib/session';
+import { requireSession } from '@/lib/require-session';
 import BookingClient from './booking-client';
 
 export default async function BookingPage({
@@ -9,10 +8,7 @@ export default async function BookingPage({
 }: {
   searchParams: Promise<{ mentor?: string }>;
 }) {
-  const session = await getSession();
-  if (!session) {
-    redirect('/auth');
-  }
+  const session = await requireSession();
 
   const { mentor: mentorSlug } = await searchParams;
   const mentor = mentorSlug ? await getMentorBySlug(mentorSlug) : null;
