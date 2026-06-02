@@ -21,7 +21,7 @@ export default async function StripeSuccessPage() {
         
         <h2 className="text-lg font-bold uppercase tracking-wider text-on-surface mb-2">Stripe Onboarding Complete</h2>
         <p className="text-on-surface-variant text-xs leading-relaxed mb-8 font-light">
-          Your Stripe Connect Express payout account has been initialized. ComplianceAgent (APX-04) is reviewing your aerospace credentials.
+          Your Stripe Connect Express payout account has been initialized. Our compliance review is checking your aerospace credentials.
         </p>
 
         <div className="space-y-3">

@@ -97,21 +97,21 @@ export default function MentorDashboardClient({
   const mockTelemetryLogs = [
     {
       id: 'log-m1',
-      agent: 'APX-04',
+      agent: 'Compliance',
       event: 'BIO_RISK_SCANNED',
       details: 'Biographical review executed on ' + profile.fullName + '. Risk index: LOW.',
       ts: 'Just now'
     },
     {
       id: 'log-m2',
-      agent: 'APX-01',
+      agent: 'Payouts',
       event: 'STRIPE_CAP_INTEGRATED',
       details: profile.stripeOnboardingCompleted ? 'Split checkout routes active. Escrow hold checked.' : 'Awaiting Stripe payouts credentials.',
       ts: '10 minutes ago'
     },
     {
       id: 'log-m3',
-      agent: 'APX-02',
+      agent: 'Briefing',
       event: 'BRIEFING_PACKET_COMPILED',
       details: 'Compiled match briefings for Carlos Hernandez (objectives matched).',
       ts: '1 hour ago'
@@ -150,7 +150,7 @@ export default function MentorDashboardClient({
         if (profile.stripeOnboardingCompleted) {
           setProfile(prev => ({ ...prev, complianceStatus: 'awaiting_human_approval' }));
         }
-        alert('NASA Form NF-1860 uploaded. ComplianceAgent (APX-04) scanned and confirmed supervisor signatures!');
+        alert('NASA Form NF-1860 uploaded. Compliance review scanned and confirmed supervisor signatures!');
       }, 1500);
     }
   };
@@ -166,7 +166,7 @@ export default function MentorDashboardClient({
               <span className="px-2 py-0.5 text-[9px] font-mono bg-primary text-white rounded uppercase tracking-widest font-semibold">
                 Instructor Mode
               </span>
-              <span className="text-on-surface-variant text-xs font-mono">APX-04 active</span>
+              <span className="text-on-surface-variant text-xs font-mono">Compliance review active</span>
             </div>
             <h1 className="text-2xl font-bold text-on-surface tracking-tight">
               Welcome back, <span className="font-light italic bg-gradient-to-r from-primary via-secondary to-tertiary bg-clip-text text-transparent">{profile.fullName}</span>
@@ -498,7 +498,7 @@ export default function MentorDashboardClient({
                           NASA Form NF-1860 Approval Scans
                         </span>
                         <p className="text-[10px] text-on-surface-variant leading-normal font-light">
-                          Upload Outside Employment paperwork. APX-04 extracts clearance credentials and maps expiry parameters automatically.
+                          Upload Outside Employment paperwork. AstroLink extracts clearance credentials and maps expiry parameters automatically.
                         </p>
                         <input
                           type="file"
@@ -564,7 +564,7 @@ export default function MentorDashboardClient({
                     Instruction Telemetries
                   </h3>
                   <p className="text-xs text-on-surface-variant leading-relaxed mb-4">
-                    The APX system monitors communications, scheduled timings, and briefing packets to help improve flight software consultation quality.
+                    AstroLink monitors communications, scheduled timings, and briefing packets to help improve session quality.
                   </p>
                   
                   <div className="grid grid-cols-2 gap-4">

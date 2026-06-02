@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { logoutAction } from '@/app/auth/actions';
 import {
   BriefingSidebar,
@@ -48,6 +48,9 @@ export default function MenteeDashboardClient({
   skipPayments?: boolean;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const bookedId = searchParams.get('booked');
+  const handledBookedRef = useRef<string | null>(null);
   const [localBriefings, setLocalBriefings] = useState<Record<string, BriefingPayload>>({});
   const [sidebar, setSidebar] = useState<BriefingSidebarState>({ mode: 'closed' });
   const [generatingId, setGeneratingId] = useState<string | null>(null);
@@ -114,6 +117,33 @@ export default function MenteeDashboardClient({
       setGeneratingId(null);
     }
   }
+
+  useEffect(() => {
+    if (!bookedId || handledBookedRef.current === bookedId) {
+      return;
+    }
+
+    const booking = bookings.find((b) => b.id === bookedId);
+    if (!booking) {
+      return;
+    }
+
+    handledBookedRef.current = bookedId;
+
+    const briefing = localBriefings[booking.id] ?? booking.briefing;
+    if (briefing) {
+      setSidebar({
+        mode: 'ready',
+        bookingId: booking.id,
+        mentorName: booking.mentorName,
+        briefing,
+      });
+    } else {
+      void generateBriefing(booking);
+    }
+
+    router.replace('/dashboard/mentee', { scroll: false });
+  }, [bookedId, bookings, localBriefings, router]);
 
   function renderUpcomingCard(booking: MenteeBookingView) {
     const briefing = resolveBriefing(booking);

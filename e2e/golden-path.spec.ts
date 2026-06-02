@@ -14,7 +14,7 @@ test.describe('D1 golden path (skip Stripe)', () => {
     await deleteE2eBookingsForMentee();
   });
 
-  test('book Chris, see APX-02 briefing, open session room', async ({ page }) => {
+  test('book Chris, see session brief, open session room', async ({ page }) => {
     await page.goto('/booking?mentor=chris-sembroski', { waitUntil: 'networkidle' });
 
     await expect(page.getByRole('heading', { name: 'Chris Sembroski' })).toBeVisible();
@@ -51,9 +51,9 @@ test.describe('D1 golden path (skip Stripe)', () => {
     await expect(bookingRow).toBeVisible();
     await expect(bookingRow.getByText('Chris Sembroski')).toBeVisible();
 
-    await bookingRow.getByRole('button', { name: 'View brief' }).click();
-    await expect(page.getByText('APX-02')).toBeVisible();
+    await expect(page.getByTestId('briefing-sidebar')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Pre-session brief' })).toBeVisible();
+    await expect(page.getByText('Session brief')).toBeVisible();
     await expect(page.getByText(STUB_OBJECTIVE)).toBeVisible();
 
     await page.getByRole('button', { name: 'Close briefing panel' }).click();
