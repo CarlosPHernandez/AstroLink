@@ -104,6 +104,7 @@ export function BriefingSidebar({ state, onClose }: BriefingSidebarProps) {
       />
 
       <aside
+        data-testid="briefing-sidebar"
         role="dialog"
         aria-modal="true"
         aria-labelledby="briefing-panel-title"
@@ -118,7 +119,7 @@ export function BriefingSidebar({ state, onClose }: BriefingSidebarProps) {
             <div className="min-w-0">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <span className="rounded bg-primary px-2 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-widest text-on-primary animate-ai-shimmer-badge">
-                  APX-02
+                  Session brief
                 </span>
                 {mode === 'thinking' ? (
                   <span className="text-[9px] font-mono uppercase tracking-widest text-primary animate-pulse">

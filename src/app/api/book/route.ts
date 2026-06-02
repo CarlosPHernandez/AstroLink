@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { BookBodySchema } from '@/lib/book-request-schema';
+import { screenBookingIntake } from '@/lib/intake-moderation';
 import { isLlmRateLimitError } from '@/lib/llm';
 import { getSession } from '@/lib/session';
 import { BookingAgent } from '@/services/agents/booking-agent';
@@ -13,6 +14,14 @@ export async function POST(request: Request) {
     }
 
     const body = BookBodySchema.parse(await request.json());
+
+    const moderation = await screenBookingIntake({
+      goals: body.goals,
+      background: body.background,
+    });
+    if (!moderation.allowed) {
+      return NextResponse.json({ success: false, error: moderation.reason }, { status: 422 });
+    }
 
     const scheduledAt = body.scheduledAt.includes('T')
       ? new Date(body.scheduledAt).toISOString()

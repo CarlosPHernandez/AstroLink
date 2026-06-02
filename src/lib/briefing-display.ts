@@ -14,5 +14,5 @@ export const BRIEFING_THINKING_STEPS = [
   'Reading your session goals…',
   'Matching expert context…',
   'Structuring agenda & objectives…',
-  'APX-02 compiling your brief…',
+  'Compiling your brief…',
 ] as const;

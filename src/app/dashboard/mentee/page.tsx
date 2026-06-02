@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { isStripePaymentsSkipped } from '@/lib/booking-payments';
 import { listMenteeBookings } from '@/lib/mentee-bookings';
 import { requireSession } from '@/lib/require-session';
 import MenteeDashboardClient from './mentee-dashboard-client';
 
-export default async function MenteeDashboard() {
+async function MenteeDashboardContent() {
   const session = await requireSession();
 
   const bookings = await listMenteeBookings(session.userId);
@@ -15,5 +15,13 @@ export default async function MenteeDashboard() {
       bookings={bookings}
       skipPayments={isStripePaymentsSkipped()}
     />
+  );
+}
+
+export default function MenteeDashboard() {
+  return (
+    <Suspense fallback={null}>
+      <MenteeDashboardContent />
+    </Suspense>
   );
 }
