@@ -69,5 +69,19 @@ test.describe('D1 golden path (skip Stripe)', () => {
     await expect(page.getByTestId('session-mentor-name')).toContainText('Chris Sembroski');
     await expect(page.getByText(STUB_OBJECTIVE)).toBeVisible();
     await expect(page.getByTestId('session-exit')).toBeVisible();
+
+    const joinReady = page.getByTestId('session-join-ready');
+    const provisioning = page.getByTestId('session-provisioning');
+    const tokenError = page.getByTestId('session-token-error');
+
+    if (await joinReady.isVisible()) {
+      await expect(page.locator('[data-testid="session-daily-iframe"]')).toBeVisible();
+    } else if (await provisioning.isVisible()) {
+      await expect(provisioning).toContainText(/Room preparing|Preparing room/i);
+    } else if (await tokenError.isVisible()) {
+      await expect(tokenError).toBeVisible();
+    }
+
+    await expect(page.locator('.bg-background')).toBeVisible();
   });
 });

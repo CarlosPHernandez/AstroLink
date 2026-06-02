@@ -4,7 +4,7 @@ import {
   isDevSkippedPaymentIntent,
   isStripePaymentsSkipped,
 } from '@/lib/booking-payments';
-import { createDailyRoomForBooking } from '@/lib/daily';
+import { provisionDailyRoomForBooking } from '@/lib/daily';
 import { supabaseAdmin } from '@/lib/supabase';
 import { BriefingAgent } from '@/services/agents/briefing-agent';
 import { PaymentAgent } from '@/services/agents/payment-agent';
@@ -38,15 +38,7 @@ export async function confirmBookingWithoutPayment(bookingId: string) {
   await briefingAgent.prepareBriefing(bookingId);
 
   if (!booking.daily_room_url && process.env.DAILY_API_KEY) {
-    const daily = await createDailyRoomForBooking(bookingId);
-    await supabaseAdmin
-      .from('bookings')
-      .update({
-        daily_room_url: daily.roomUrl,
-        mentee_token: daily.menteeToken,
-        mentor_token: daily.mentorToken,
-      })
-      .eq('id', bookingId);
+    await provisionDailyRoomForBooking(bookingId);
   }
 
   return { bookingId, alreadyProcessed: false };
@@ -99,16 +91,8 @@ export async function fulfillBookingAfterPayment(params: {
   const briefingAgent = new BriefingAgent();
   await briefingAgent.prepareBriefing(booking.id);
 
-  if (!booking.daily_room_url) {
-    const daily = await createDailyRoomForBooking(booking.id);
-    await supabaseAdmin
-      .from('bookings')
-      .update({
-        daily_room_url: daily.roomUrl,
-        mentee_token: daily.menteeToken,
-        mentor_token: daily.mentorToken,
-      })
-      .eq('id', booking.id);
+  if (!booking.daily_room_url && process.env.DAILY_API_KEY) {
+    await provisionDailyRoomForBooking(booking.id);
   }
 
   return { bookingId: booking.id, alreadyProcessed: false };

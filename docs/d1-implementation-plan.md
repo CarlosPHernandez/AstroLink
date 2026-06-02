@@ -49,6 +49,10 @@ See [d2-next-steps.md](./d2-next-steps.md) for post-D1 priorities (brief auto-op
 | 8 | Vitest harness | Yes (`vitest.config.ts`, `npm test`) |
 | 9 | Playwright E2E (skip-Stripe golden path) | Yes (`playwright.config.ts`, `npm run test:e2e`) |
 
+## Video session demo (extended runbook)
+
+Full rehearsal script, preflight, failure cheatsheet, and dev operator commands: [how-to/video-session-demo.md](./how-to/video-session-demo.md).
+
 ## Verify before demo (manual)
 
 1. Sign in as Carlos (`carlos@astrolink.ai`).
