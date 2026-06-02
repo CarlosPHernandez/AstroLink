@@ -4,6 +4,8 @@ Production-ready rehearsal for the D1 golden path: pay → Daily room → `/sess
 
 See also [d1-implementation-plan.md](../d1-implementation-plan.md) and [d2-next-steps.md](../d2-next-steps.md).
 
+**Related:** [Tutorial: first video session](../tutorial/first-video-session.md) · [Reference](../reference/video-session.md) · [Architecture](../explanation/video-session-architecture.md)
+
 ## Environment
 
 | Variable | Purpose |

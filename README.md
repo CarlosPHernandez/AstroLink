@@ -33,7 +33,19 @@ Paid aerospace expert network (live 1:1 sessions, Stripe, Daily, Gemini agents).
 4. After authorize, either:
    - Forward webhooks: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`, or
    - Dev fulfill: `POST /api/book/fulfill` with `{ "bookingId": "<uuid>" }` (development only).
-5. Mentee dashboard shows APX-02 briefing; **Join session** uses the Daily room URL.
+5. Mentee dashboard shows APX-02 briefing; **Join session** opens `/session/[bookingId]` with a server-minted Daily token (private room).
+
+## Documentation
+
+Index: [docs/README.md](docs/README.md)
+
+| Topic | Start here |
+|-------|------------|
+| First local video call | [docs/tutorial/first-video-session.md](docs/tutorial/first-video-session.md) |
+| Investor demo runbook | [docs/how-to/video-session-demo.md](docs/how-to/video-session-demo.md) |
+| Video APIs & gates | [docs/reference/video-session.md](docs/reference/video-session.md) |
+| Why private rooms + webhooks | [docs/explanation/video-session-architecture.md](docs/explanation/video-session-architecture.md) |
+| D1 status & checklist | [docs/d1-implementation-plan.md](docs/d1-implementation-plan.md) |
 
 ## Tests
 

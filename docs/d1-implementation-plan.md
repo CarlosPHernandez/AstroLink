@@ -16,7 +16,7 @@ Paid **live 1:1** golden path only. Defer text threads, recorded video, full tri
 | **T1** — DB roster (seed mentors; landing from Supabase) | Done | `mentor-directory.ts`, seed migration, landing props |
 | **T2** — Checkout (`/api/book` + Stripe Elements + server price) | Done | `booking-client.tsx`, `STRIPE_BOOKING_TEST_MODE` for dev without Connect |
 | **T3** — Briefs (`briefing_json` + webhook APX-02) | Done | `post-payment.ts`, stripe webhook, mentee dashboard |
-| **T4** — Daily (room + session page + capture) | Done (D1) | Webhook verifies HMAC, `meeting.ended` → `post-session.ts` (APX-03 + capture). Transcript fetch deferred. |
+| **T4** — Daily (room + session page + capture) | Done (D1) | Private rooms, per-load meeting tokens, session gates. Webhook HMAC + `meeting.ended` → `post-session.ts`. See [reference/video-session.md](./reference/video-session.md). |
 | **T5** — Tests (Vitest + contract tests + E2E golden path) | Done (skip-Stripe) | `npm test`, `npm run test:e2e` — Stripe/Daily webhook E2E deferred |
 
 See [d2-next-steps.md](./d2-next-steps.md) for post-D1 priorities (brief auto-open, moderation, plain-language copy, three modalities).
@@ -42,7 +42,7 @@ See [d2-next-steps.md](./d2-next-steps.md) for post-D1 priorities (brief auto-op
 | 1 | Single roster source of truth (`mentors` table) | Yes |
 | 2 | Wire `/api/book` to `BookingAgent` | Yes |
 | 3 | Persist APX-02 on `bookings.briefing_json` | Yes |
-| 4 | Real Daily room in D1 | Yes (embed + create) |
+| 4 | Real Daily room in D1 | Yes (private room + tokenized iframe) |
 | 5 | Server-authoritative `live_session_price_cents` | Yes |
 | 6 | D1 SKUs: live + optional brief add-on | Yes |
 | 7 | APX-02 on payment success (idempotent webhook) | Yes |
@@ -73,6 +73,6 @@ Full rehearsal script, preflight, failure cheatsheet, and dev operator commands:
 | Stripe webhook | `src/app/api/webhooks/stripe/route.ts` |
 | Post-pay orchestration | `src/lib/post-payment.ts` |
 | Post-session orchestration | `src/lib/post-session.ts` |
-| Daily | `src/lib/daily.ts`, `src/app/session/[bookingId]/`, `src/app/api/webhooks/daily/` |
+| Daily | `src/lib/daily.ts`, `src/lib/booking-access.ts`, `src/app/session/[bookingId]/`, `src/app/api/webhooks/daily/`, `src/app/api/session/provision/` |
 | Mentee dashboard | `src/lib/mentee-bookings.ts`, `mentee-dashboard-client.tsx` |
 | Migrations | `supabase/migrations/20260531140000_*.sql`, `20260531140100_seed_d1_dev.sql` |
