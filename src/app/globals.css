@@ -289,3 +289,17 @@ body {
     display: none;
   }
 }
+
+/* Cinematic portrait when intro video is not yet uploaded */
+.expert-intro-ken-burns {
+  animation: expertKenBurns 18s ease-in-out infinite alternate;
+}
+
+@keyframes expertKenBurns {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  100% {
+    transform: scale(1.08) translate(-1%, -1%);
+  }
+}

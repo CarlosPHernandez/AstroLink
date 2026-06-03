@@ -68,4 +68,19 @@ test.describe('Auth and landing smoke', () => {
     await expect(page.getByText('Chris Sembroski')).toBeVisible();
     await expect(page.getByText('$320/hr')).toBeVisible();
   });
+
+  test('expert name links to public profile page', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('expert-profile-link-chris-sembroski').click();
+    await expect(page).toHaveURL(/\/experts\/chris-sembroski/);
+    await expect(page.getByTestId('expert-profile-name')).toHaveText('Chris Sembroski');
+    await expect(page.getByTestId('expert-ask-input')).toBeVisible();
+  });
+
+  test('meet preview expands on landing directory', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('expert-preview-chris-sembroski').click();
+    await expect(page.getByTestId('expert-preview-chris-sembroski')).toHaveText(/Close/i);
+    await expect(page.getByTestId('expert-preview-panel-chris-sembroski')).toBeVisible();
+  });
 });

@@ -16,6 +16,7 @@ export interface ListedExpert {
   expertise: string[];
   bio: string;
   imageUrl: string;
+  introVideoUrl: string | null;
   availability: 'Available Now' | 'Book Session';
   liveSessionPriceCents: number;
   stripeOnboardingCompleted: boolean;
@@ -51,6 +52,7 @@ export function mentorToListedExpert(mentor: Mentor): ListedExpert {
     expertise: mentor.expertise,
     bio: mentor.bio,
     imageUrl: mentor.image_url ?? '/chris_sembroski.jpeg',
+    introVideoUrl: mentor.intro_video_url,
     availability: mentor.stripe_onboarding_completed ? 'Available Now' : 'Book Session',
     liveSessionPriceCents: mentor.live_session_price_cents,
     stripeOnboardingCompleted: mentor.stripe_onboarding_completed,

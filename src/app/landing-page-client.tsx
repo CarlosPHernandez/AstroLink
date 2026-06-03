@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { logoutAction } from '@/app/auth/actions';
+import { ExpertPreviewPanel } from '@/components/expert-preview-panel';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 interface SessionData {
@@ -23,6 +24,7 @@ export default function LandingPageClient({
   experts: ListedExpert[];
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [heroState, setHeroState] = useState<'text' | 'video' | 'call'>('text');
   const autoCycleRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -77,6 +79,7 @@ export default function LandingPageClient({
 
   const handleCategoryChange = (cat: string) => {
     setSelectedCategory(cat);
+    setExpandedSlug(null);
     setScrollProgress(0);
     scrollContainerRef.current?.scrollTo({ left: 0 });
   };
@@ -403,6 +406,20 @@ export default function LandingPageClient({
               </div>
             </header>
 
+            {expandedSlug ? (
+              (() => {
+                const previewExpert = filteredExperts.find((e) => e.slug === expandedSlug);
+                if (!previewExpert) return null;
+                return (
+                  <ExpertPreviewPanel
+                    expert={previewExpert}
+                    session={session}
+                    onClose={() => setExpandedSlug(null)}
+                  />
+                );
+              })()
+            ) : null}
+
             {/* Expert Cards Carousel / Grid */}
             <div 
               ref={scrollContainerRef}
@@ -418,7 +435,11 @@ export default function LandingPageClient({
                 <div 
                   key={expert.id}
                   data-testid={`expert-card-${expert.slug}`}
-                  className="w-[84vw] xs:w-[320px] sm:w-[360px] md:w-full flex-shrink-0 md:flex-shrink snap-start p-6 border border-outline-variant bg-surface-container-lowest hover:border-outline hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 flex flex-col justify-between rounded-md group"
+                  className={`w-[84vw] xs:w-[320px] sm:w-[360px] md:w-full flex-shrink-0 md:flex-shrink snap-start p-6 border bg-surface-container-lowest hover:border-outline hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 flex flex-col justify-between rounded-md group ${
+                    expandedSlug === expert.slug
+                      ? 'border-primary ring-1 ring-primary/30'
+                      : 'border-outline-variant'
+                  }`}
                 >
                   <div>
                     <div className="flex gap-4 items-start mb-4">
@@ -436,7 +457,13 @@ export default function LandingPageClient({
                       <div className="flex-grow">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="text-sm font-bold text-on-surface group-hover:text-black transition-colors">{expert.name}</h3>
+                            <Link
+                              href={`/experts/${expert.slug}`}
+                              className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors hover:underline underline-offset-2"
+                              data-testid={`expert-profile-link-${expert.slug}`}
+                            >
+                              {expert.name}
+                            </Link>
                             <p className="text-[10px] text-on-surface-variant font-mono leading-none mb-1 uppercase mt-0.5">{expert.role}</p>
                             <p className="text-[10px] text-zinc-450 leading-none">{expert.employer}</p>
                           </div>
@@ -481,25 +508,54 @@ export default function LandingPageClient({
                     </ul>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-surface-container mt-auto">
-                    <span className="text-[11px] font-mono text-on-surface font-semibold">
-                      ${expert.rate}/hr
-                    </span>
-                    <Link
-                      href={
-                        session
-                          ? `/booking?mentor=${encodeURIComponent(expert.slug)}`
-                          : '/auth'
-                      }
-                      data-testid={`expert-book-${expert.slug}`}
-                      className={`px-3.5 py-2 border text-center text-[10px] font-bold uppercase tracking-wider transition-all duration-150 rounded-md ${
-                        expert.availability === 'Available Now'
-                          ? 'bg-primary text-white border-primary hover:bg-primary-container'
-                          : 'border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary bg-white shadow-sm'
-                      }`}
-                    >
-                      {expert.availability === 'Available Now' ? 'Book session' : 'Schedule'}
-                    </Link>
+                  <div className="flex flex-col gap-2.5 pt-4 border-t border-surface-container mt-auto">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-mono text-on-surface font-semibold">
+                        ${expert.rate}/hr
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedSlug((current) =>
+                            current === expert.slug ? null : expert.slug,
+                          )
+                        }
+                        data-testid={`expert-preview-${expert.slug}`}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md border transition-all cursor-pointer ${
+                          expandedSlug === expert.slug
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary bg-white'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[14px]">
+                          {expandedSlug === expert.slug ? 'expand_less' : 'play_circle'}
+                        </span>
+                        {expandedSlug === expert.slug ? 'Close' : 'Meet'}
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link
+                        href={`/experts/${expert.slug}`}
+                        className="flex-1 px-3 py-2 border border-outline-variant text-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant rounded-md hover:border-primary hover:text-primary bg-surface-container-low transition-colors"
+                      >
+                        Profile
+                      </Link>
+                      <Link
+                        href={
+                          session
+                            ? `/booking?mentor=${encodeURIComponent(expert.slug)}`
+                            : '/auth'
+                        }
+                        data-testid={`expert-book-${expert.slug}`}
+                        className={`flex-1 px-3 py-2 border text-center text-[10px] font-bold uppercase tracking-wider transition-all duration-150 rounded-md ${
+                          expert.availability === 'Available Now'
+                            ? 'bg-primary text-white border-primary hover:bg-primary-container'
+                            : 'border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary bg-white shadow-sm'
+                        }`}
+                      >
+                        {expert.availability === 'Available Now' ? 'Book session' : 'Schedule'}
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}
