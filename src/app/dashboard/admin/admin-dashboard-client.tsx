@@ -1,7 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { logoutAction } from '@/app/auth/actions';
+
+type WaitlistMetrics = {
+  total: number;
+  last7d: number;
+  prev7d: number;
+  wowPercent: number | null;
+  dailyTrend: Array<{ day: string; signups: number }>;
+  topReferrers: Array<{ referrer: string; signups: number }>;
+};
+
+function formatWowLabel(wowPercent: number | null): string {
+  if (wowPercent === null) return 'New baseline';
+  if (wowPercent > 0) return `+${wowPercent}%`;
+  if (wowPercent < 0) return `${wowPercent}%`;
+  return '0%';
+}
 
 interface SessionData {
   userId: string;
@@ -11,6 +27,48 @@ interface SessionData {
 }
 
 export default function AdminDashboardClient({ session }: { session: SessionData }) {
+  const [waitlist, setWaitlist] = useState<WaitlistMetrics | null>(null);
+  const [waitlistError, setWaitlistError] = useState<string | null>(null);
+  const [waitlistLoading, setWaitlistLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadWaitlist() {
+      setWaitlistLoading(true);
+      setWaitlistError(null);
+      try {
+        const response = await fetch('/api/admin/metrics');
+        const data = (await response.json()) as {
+          success?: boolean;
+          waitlist?: WaitlistMetrics;
+          error?: string;
+        };
+        if (!response.ok || !data.success || !data.waitlist) {
+          throw new Error(data.error ?? 'Failed to load waitlist metrics');
+        }
+        if (!cancelled) {
+          setWaitlist(data.waitlist);
+        }
+      } catch (error: unknown) {
+        if (!cancelled) {
+          setWaitlistError(
+            error instanceof Error ? error.message : 'Failed to load waitlist metrics',
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setWaitlistLoading(false);
+        }
+      }
+    }
+
+    void loadWaitlist();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Mock live audit logs
   const [logs, setLogs] = useState([
     {
@@ -168,6 +226,63 @@ export default function AdminDashboardClient({ session }: { session: SessionData
               ) : (
                 <p className="text-on-surface-variant text-xs italic">Compliance review queue is clear.</p>
               )}
+            </div>
+
+            {/* Early access waitlist */}
+            <div className="p-6 rounded-md border border-outline-variant bg-surface-container-lowest shadow-sm">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-on-surface mb-4 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                Early access waitlist
+              </h2>
+              {waitlistLoading ? (
+                <p className="text-on-surface-variant text-xs font-mono">Loading waitlist…</p>
+              ) : waitlistError ? (
+                <p className="text-error text-xs">{waitlistError}</p>
+              ) : waitlist ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-surface-container-low border border-outline-variant p-3 rounded-md">
+                      <span className="text-[9px] text-on-surface-variant uppercase block tracking-widest font-mono mb-1">
+                        Total
+                      </span>
+                      <span className="text-base font-bold text-on-surface">{waitlist.total}</span>
+                    </div>
+                    <div className="bg-surface-container-low border border-outline-variant p-3 rounded-md">
+                      <span className="text-[9px] text-on-surface-variant uppercase block tracking-widest font-mono mb-1">
+                        Last 7d
+                      </span>
+                      <span className="text-base font-bold text-on-surface">{waitlist.last7d}</span>
+                    </div>
+                    <div className="bg-surface-container-low border border-outline-variant p-3 rounded-md">
+                      <span className="text-[9px] text-on-surface-variant uppercase block tracking-widest font-mono mb-1">
+                        WoW
+                      </span>
+                      <span className="text-base font-bold text-on-surface">
+                        {formatWowLabel(waitlist.wowPercent)}
+                      </span>
+                    </div>
+                  </div>
+                  {waitlist.topReferrers.length > 0 ? (
+                    <div>
+                      <p className="text-[9px] text-on-surface-variant uppercase tracking-widest font-mono mb-2">
+                        Top referrers
+                      </p>
+                      <ul className="space-y-1 text-xs font-mono text-on-surface">
+                        {waitlist.topReferrers.map((row) => (
+                          <li key={row.referrer} className="flex justify-between gap-2">
+                            <span className="truncate">{row.referrer}</span>
+                            <span className="text-on-surface-variant shrink-0">{row.signups}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p className="text-on-surface-variant text-xs italic">
+                      No referrers yet — use ?ref= on /early-access links.
+                    </p>
+                  )}
+                </div>
+              ) : null}
             </div>
 
             {/* Platform Metrics */}
