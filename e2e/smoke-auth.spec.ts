@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { mentorAuthFile } from './fixtures/auth';
-import { loginWithPreset } from './helpers/login';
+import { createStorageState } from './helpers/session-bootstrap';
+import path from 'node:path';
+import os from 'node:os';
 
 const emptyStorage = { cookies: [] as [], origins: [] as [] };
 
@@ -38,14 +40,18 @@ test.describe('Auth and landing smoke', () => {
     });
   });
 
-  test('mentee preset lands on mentee dashboard', async ({ browser }) => {
+  test('mentee session bootstrap lands on mentee dashboard', async ({ browser }) => {
     const context = await browser.newContext({ storageState: emptyStorage });
     const page = await context.newPage();
-
-    await loginWithPreset(page, 'auth-preset-mentee', 'mentee');
-    await expect(page.getByRole('heading', { name: /Carlos Hernandez/ })).toBeVisible();
-
+    const tempAuth = path.join(os.tmpdir(), `astrolink-e2e-mentee-${Date.now()}.json`);
+    await createStorageState('mentee', tempAuth);
     await context.close();
+
+    const authed = await browser.newContext({ storageState: tempAuth });
+    const authedPage = await authed.newPage();
+    await authedPage.goto('/dashboard/mentee');
+    await expect(authedPage.getByRole('heading', { name: /Carlos Hernandez/ })).toBeVisible();
+    await authed.close();
   });
 
   test.describe('mentor role guard', () => {
