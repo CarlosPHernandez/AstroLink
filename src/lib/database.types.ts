@@ -111,6 +111,30 @@ export type Database = {
           },
         ]
       }
+      early_access_signups: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          referrer: string | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          referrer?: string | null
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          referrer?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
       compliance_reviews: {
         Row: {
           bio_analysis_reasoning: string | null

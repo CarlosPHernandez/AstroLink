@@ -66,6 +66,10 @@
   --spacing-container-max: 1200px;
   --spacing-gutter: 24px;
 
+  /* Content max-widths (avoid max-w-lg etc. — those names collide with --spacing-lg) */
+  --max-width-prose: 42rem;
+  --max-width-content: 48rem;
+
   /* Custom Font Families */
   --font-display: "Inter", sans-serif;
   --font-headline-lg: "Inter", sans-serif;
