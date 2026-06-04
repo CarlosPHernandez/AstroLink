@@ -4,6 +4,8 @@ import {
   getDefaultPathAfterAuth,
   getSafeRedirectPath,
 } from '@/lib/auth-redirect';
+import { isAdminEmailAllowed, isDemoAuthEnabled } from '@/lib/app-mode';
+import { AUTH_PRESETS, resolvePresetLogin } from '@/lib/auth-presets';
 import { createSession, deleteSession, getSession } from '@/lib/session';
 import { ensureMenteeUserRow } from '@/lib/user-profile';
 import { redirect } from 'next/navigation';
@@ -33,33 +35,21 @@ export type ActionState = {
   success?: boolean;
 };
 
-// Preset credentials for easy testing
-/** Match `supabase/migrations/20260531140100_seed_d1_dev.sql` until Supabase Auth ships */
-const PRESETS = {
-  mentor: {
-    email: 'chris@astrolink.ai',
-    fullName: 'Chris Sembroski',
-    role: 'mentor' as const,
-    userId: 'a0000002-0000-4000-8000-000000000002',
-  },
-  mentee: {
-    email: 'carlos@astrolink.ai',
-    fullName: 'Carlos Hernandez',
-    role: 'mentee' as const,
-    userId: 'a0000001-0000-4000-8000-000000000001',
-  },
-  admin: {
-    email: 'admin@astrolink.ai',
-    fullName: 'Flight Command',
-    role: 'admin' as const,
-    userId: 'a0000003-0000-4000-8000-000000000003',
-  },
-};
+function demoAuthDisabledState(): ActionState {
+  return {
+    message: 'Sign-in is not available on this deployment. Join the waitlist instead.',
+    success: false,
+  };
+}
 
 export async function loginAction(
   prevState: ActionState | undefined,
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionState> {
+  if (!isDemoAuthEnabled()) {
+    return demoAuthDisabledState();
+  }
+
   const result = LoginSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
@@ -73,36 +63,22 @@ export async function loginAction(
   }
 
   const { email } = result.data;
-  
-  // 1. Identify User Role and Details
+
+  const preset = resolvePresetLogin(email);
   let role: 'mentor' | 'mentee' | 'admin' = 'mentee';
   let fullName = '';
-  let userId = 'usr-' + Math.random().toString(36).substring(2, 9);
+  let userId = `usr-${Math.random().toString(36).substring(2, 9)}`;
+  let isPreset = false;
 
-  // Check presets
-  const isPreset = 
-    email.toLowerCase() === PRESETS.mentor.email.toLowerCase() ||
-    email.toLowerCase() === PRESETS.mentee.email.toLowerCase() ||
-    email.toLowerCase() === PRESETS.admin.email.toLowerCase();
-
-  if (email.toLowerCase() === PRESETS.mentor.email.toLowerCase()) {
-    role = PRESETS.mentor.role;
-    fullName = PRESETS.mentor.fullName;
-    userId = PRESETS.mentor.userId;
-  } else if (email.toLowerCase() === PRESETS.mentee.email.toLowerCase()) {
-    role = PRESETS.mentee.role;
-    fullName = PRESETS.mentee.fullName;
-    userId = PRESETS.mentee.userId;
-  } else if (email.toLowerCase() === PRESETS.admin.email.toLowerCase()) {
-    role = PRESETS.admin.role;
-    fullName = PRESETS.admin.fullName;
-    userId = PRESETS.admin.userId;
+  if (preset) {
+    role = preset.role;
+    fullName = preset.fullName;
+    userId = preset.userId;
+    isPreset = preset.isPreset;
   } else {
-    // Generate name from email prefix
     const prefix = email.split('@')[0];
     fullName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-    
-    // Auto-detect role for test entries
+
     if (email.toLowerCase().includes('mentor')) {
       role = 'mentor';
     } else if (email.toLowerCase().includes('admin')) {
@@ -110,6 +86,13 @@ export async function loginAction(
     } else {
       role = 'mentee';
     }
+  }
+
+  if (role === 'admin' && !isAdminEmailAllowed(email)) {
+    return {
+      message: 'This account is not authorized for admin access.',
+      success: false,
+    };
   }
 
   const isMentor = role === 'mentor';
@@ -120,7 +103,6 @@ export async function loginAction(
     sessionUserId = await ensureMenteeUserRow({ userId, email, fullName });
   }
 
-  // 2. Start Session
   await createSession({
     userId: sessionUserId,
     email,
@@ -138,8 +120,12 @@ export async function loginAction(
 
 export async function registerAction(
   prevState: ActionState | undefined,
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionState> {
+  if (!isDemoAuthEnabled()) {
+    return demoAuthDisabledState();
+  }
+
   const result = RegisterSchema.safeParse({
     fullName: formData.get('fullName'),
     email: formData.get('email'),
@@ -155,15 +141,18 @@ export async function registerAction(
   }
 
   const { fullName, email, role } = result.data;
-  let userId = 'usr-' + Math.random().toString(36).substring(2, 9);
 
-  const emailLower = email.toLowerCase();
-  if (emailLower === PRESETS.mentee.email.toLowerCase()) {
-    userId = PRESETS.mentee.userId;
-  } else if (emailLower === PRESETS.mentor.email.toLowerCase()) {
-    userId = PRESETS.mentor.userId;
-  } else if (emailLower === PRESETS.admin.email.toLowerCase()) {
-    userId = PRESETS.admin.userId;
+  if (role === 'admin' && !isAdminEmailAllowed(email)) {
+    return {
+      message: 'This account is not authorized for admin access.',
+      success: false,
+    };
+  }
+
+  let userId = `usr-${Math.random().toString(36).substring(2, 9)}`;
+  const preset = resolvePresetLogin(email);
+  if (preset) {
+    userId = preset.userId;
   }
 
   const isMentor = role === 'mentor';
@@ -172,7 +161,6 @@ export async function registerAction(
     sessionUserId = await ensureMenteeUserRow({ userId, email, fullName });
   }
 
-  // Start Session
   await createSession({
     userId: sessionUserId,
     email,
@@ -193,9 +181,10 @@ export async function registerAction(
 
 export async function onboardMentorAction(
   prevState: ActionState | undefined,
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionState> {
-  const isCivilServant = formData.get('isCivilServant') === 'on' || formData.get('isCivilServant') === 'true';
+  const isCivilServant =
+    formData.get('isCivilServant') === 'on' || formData.get('isCivilServant') === 'true';
 
   const result = OnboardSchema.safeParse({
     employer: formData.get('employer'),
@@ -210,7 +199,6 @@ export async function onboardMentorAction(
     };
   }
 
-  // Validate PDF file if civil servant
   if (isCivilServant) {
     const file = formData.get('file') as File | null;
     if (!file || file.size === 0 || !file.name.toLowerCase().endsWith('.pdf')) {
@@ -223,7 +211,6 @@ export async function onboardMentorAction(
     }
   }
 
-  // Retrieve current session
   const session = await getSession();
   if (!session) {
     return {
@@ -232,7 +219,6 @@ export async function onboardMentorAction(
     };
   }
 
-  // Update session to set onboarded: true
   await createSession({
     userId: session.userId,
     email: session.email,
@@ -241,7 +227,6 @@ export async function onboardMentorAction(
     onboarded: true,
   });
 
-  // Redirect to Stripe simulated onboarding success screen
   redirect('/onboard/stripe-success');
 
   return { success: true };
@@ -249,5 +234,8 @@ export async function onboardMentorAction(
 
 export async function logoutAction() {
   await deleteSession();
-  redirect('/auth');
+  redirect(isDemoAuthEnabled() ? '/auth' : '/early-access');
 }
+
+/** Server-only export for E2E session bootstrap. */
+export { AUTH_PRESETS };

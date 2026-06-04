@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { EarlyAccessBodySchema } from '@/lib/early-access-schema';
+import {
+  assertEarlyAccessRateLimit,
+  getEarlyAccessClientKey,
+  isEarlyAccessRateLimitError,
+} from '@/lib/early-access-rate-limit';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   try {
+    assertEarlyAccessRateLimit(getEarlyAccessClientKey(request));
     const body = EarlyAccessBodySchema.parse(await request.json());
 
     const { error } = await supabaseAdmin.from('early_access_signups').insert({
@@ -30,6 +36,17 @@ export async function POST(request: Request) {
       message: "You're on the list. We'll reach out when early access opens.",
     });
   } catch (error: unknown) {
+    if (isEarlyAccessRateLimitError(error)) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.ceil(error.retryAfterMs / 1000)),
+          },
+        },
+      );
+    }
     const message = error instanceof Error ? error.message : 'Signup failed';
     const status = error instanceof z.ZodError ? 400 : 500;
     return NextResponse.json({ success: false, error: message }, { status });

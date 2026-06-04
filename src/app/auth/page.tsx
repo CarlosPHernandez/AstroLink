@@ -1,15 +1,9 @@
 'use client';
 
-import React, { Suspense, useState, useActionState, startTransition } from 'react';
+import React, { Suspense, useState, useActionState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { loginAction, registerAction } from './actions';
-
-const PRESETS = {
-  mentor: { email: 'chris@astrolink.ai', fullName: 'Chris Sembroski', role: 'mentor' as const },
-  mentee: { email: 'carlos@astrolink.ai', fullName: 'Carlos Hernandez', role: 'mentee' as const },
-  admin: { email: 'admin@astrolink.ai', fullName: 'Flight Command', role: 'admin' as const },
-};
 
 function AuthPageContent() {
   const searchParams = useSearchParams();
@@ -22,30 +16,10 @@ function AuthPageContent() {
   const [loginState, loginFormAction, loginPending] = useActionState(loginAction, undefined);
   const [registerState, registerFormAction, registerPending] = useActionState(registerAction, undefined);
 
-  const handlePresetClick = (email: string) => {
-    const emailInput = document.getElementById('email') as HTMLInputElement | null;
-    const passwordInput = document.getElementById('password') as HTMLInputElement | null;
-    const form = emailInput?.closest('form');
-    if (emailInput && passwordInput && form) {
-      emailInput.value = email;
-      passwordInput.value = 'password123';
-      form.requestSubmit();
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('email', email);
-    formData.append('password', 'password123');
-    if (redirectPath) {
-      formData.append('redirect', redirectPath);
-    }
-    startTransition(() => {
-      loginFormAction(formData);
-    });
-  };
-
   const handleSocialClick = (platform: string) => {
-    setSocialAlert(`Social Auth via ${platform} is bypassed for the simulation. Please use the Email login or click one of the Simulation Flight Presets below.`);
+    setSocialAlert(
+      `${platform} sign-in is not available yet. Use email and password, or join the waitlist from the home page.`,
+    );
     setTimeout(() => setSocialAlert(null), 6000);
   };
 
@@ -307,47 +281,6 @@ function AuthPageContent() {
             </form>
           )}
 
-          <div className="mt-8 pt-6 border-t border-outline-variant animate-reveal-up delay-800">
-            <div className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider text-center mb-3">
-              Simulation Flight Presets (One-Click Bypass)
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                disabled={isPending}
-                data-testid="auth-preset-mentee"
-                onClick={() => handlePresetClick(PRESETS.mentee.email)}
-                className="flex flex-col items-center justify-center p-2 border border-outline-variant bg-surface-container-lowest hover:border-primary hover:bg-surface-container-low transition-all rounded-lg group text-center cursor-pointer disabled:opacity-50"
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mb-1" />
-                <div className="text-[10px] font-bold text-on-surface-variant leading-none mb-1 group-hover:text-primary transition-colors">Mentee</div>
-                <div className="text-[8px] font-mono text-zinc-400 truncate w-full">Carlos H.</div>
-              </button>
-
-              <button
-                type="button"
-                disabled={isPending}
-                data-testid="auth-preset-mentor"
-                onClick={() => handlePresetClick(PRESETS.mentor.email)}
-                className="flex flex-col items-center justify-center p-2 border border-outline-variant bg-surface-container-lowest hover:border-primary hover:bg-surface-container-low transition-all rounded-lg group text-center cursor-pointer disabled:opacity-50"
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mb-1" />
-                <div className="text-[10px] font-bold text-on-surface-variant leading-none mb-1 group-hover:text-primary transition-colors">Mentor</div>
-                <div className="text-[8px] font-mono text-zinc-400 truncate w-full">Chris S.</div>
-              </button>
-
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => handlePresetClick(PRESETS.admin.email)}
-                className="flex flex-col items-center justify-center p-2 border border-outline-variant bg-surface-container-lowest hover:border-primary hover:bg-surface-container-low transition-all rounded-lg group text-center cursor-pointer disabled:opacity-50"
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mb-1" />
-                <div className="text-[10px] font-bold text-on-surface-variant leading-none mb-1 group-hover:text-primary transition-colors">Admin</div>
-                <div className="text-[8px] font-mono text-zinc-400 truncate w-full">Flight Ops</div>
-              </button>
-            </div>
-          </div>
         </div>
 
         <div className="mt-6 text-center font-body-md text-body-md text-on-surface-variant animate-reveal-up delay-[800ms]">

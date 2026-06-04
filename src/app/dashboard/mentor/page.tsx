@@ -1,11 +1,11 @@
 import React from 'react';
 import { listMentorBookings } from '@/lib/mentor-bookings';
-import { requireSession } from '@/lib/require-session';
+import { requireRole } from '@/lib/require-session';
 import { supabaseAdmin } from '@/lib/supabase';
 import MentorDashboardClient from './mentor-dashboard-client';
 
 export default async function MentorDashboard() {
-  const session = await requireSession();
+  const session = await requireRole('mentor');
 
   const [bookings, mentorRow] = await Promise.all([
     listMentorBookings(session.userId),

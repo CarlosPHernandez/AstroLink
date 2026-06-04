@@ -40,6 +40,8 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       ...process.env,
+      APP_MODE: 'full',
+      ENABLE_DEMO_AUTH: 'true',
       SKIP_STRIPE_PAYMENTS: 'true',
       E2E_STUB_LLM: 'true',
       DAILY_API_KEY: '',

@@ -23,12 +23,12 @@ Paid aerospace expert network (live 1:1 sessions, Stripe, Daily, Gemini agents).
    supabase gen types typescript --linked -o src/lib/database.types.ts
    ```
 
-4. **Mock auth IDs** (until Supabase Auth): preset logins in `src/app/auth/actions.ts` should use seed UUIDs — mentee `a0000001-0000-4000-8000-000000000001`, mentor Chris `a0000002-0000-4000-8000-000000000002`.
+4. **Demo auth** (until Supabase Auth): with `ENABLE_DEMO_AUTH=true`, use seed emails in `src/lib/auth-presets.ts` — mentee `a0000001-0000-4000-8000-000000000001`, mentor Chris `a0000002-0000-4000-8000-000000000002`.
 
 ## D1 local booking flow
 
 1. Set in `.env.local`: Supabase keys, `OPENAI_API_KEY` (or `GEMINI_API_KEY`), `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `DAILY_API_KEY`, and `SKIP_STRIPE_PAYMENTS=true` for local booking without Stripe.
-2. Run `npm run dev`, sign in as **Carlos** (`carlos@astrolink.ai` preset on `/auth`).
+2. Run `npm run dev`, sign in as **Carlos** (`carlos@astrolink.ai` on `/auth` with demo auth enabled).
 3. Landing loads Chris from DB → **Book** → `/booking?mentor=chris-sembroski` → pay with Stripe test card `4242…`.
 4. After authorize, either:
    - Forward webhooks: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`, or
@@ -58,9 +58,9 @@ Vitest covers D1 contract logic: booking pricing, `/api/book` request schema, Da
 
 ### E2E (Playwright)
 
-Automates the skip-Stripe D1 golden path: preset login → book Chris → APX-02 briefing → session room.
+Automates the skip-Stripe D1 golden path: E2E session bootstrap → book Chris → APX-02 briefing → session room.
 
-**Prerequisites:** `.env.local` with Supabase keys, `SESSION_SECRET`, and seed data applied (`20260531140100_seed_d1_dev.sql`). Playwright sets `SKIP_STRIPE_PAYMENTS=true` and `E2E_STUB_LLM=true` on the dev server automatically.
+**Prerequisites:** `.env.local` with Supabase keys, `ENCRYPTION_KEY`, and seed data applied (`20260531140100_seed_d1_dev.sql`). Playwright sets `APP_MODE=full`, `ENABLE_DEMO_AUTH=true`, `SKIP_STRIPE_PAYMENTS=true`, and `E2E_STUB_LLM=true` on the dev server automatically.
 
 Playwright starts its own Next.js dev server on `127.0.0.1:3000` — stop any other process on that port before running E2E.
 
