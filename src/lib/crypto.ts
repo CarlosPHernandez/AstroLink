@@ -8,19 +8,30 @@ const AUTH_TAG_LENGTH = 16; // 16 bytes auth tag is standard
 // Must be 32 bytes for AES-256 (256 bits)
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
-if (!ENCRYPTION_KEY) {
+function requireEncryptionKeyInProduction(): void {
+  if (process.env.NODE_ENV !== 'production') {
+    return;
+  }
+  if (ENCRYPTION_KEY?.trim()) {
+    return;
+  }
+  throw new Error(
+    'ENCRYPTION_KEY is required in production. Generate one with: openssl rand -hex 32',
+  );
+}
+
+if (!ENCRYPTION_KEY && process.env.NODE_ENV !== 'production') {
   console.warn(
-    'Warning: ENCRYPTION_KEY environment variable is not set. Using a temporary key for development.'
+    'Warning: ENCRYPTION_KEY environment variable is not set. Using a temporary key for development.',
   );
 }
 
 // Ensure we have a 32-byte key
 const getSecretKey = (): Buffer => {
+  requireEncryptionKeyInProduction();
   if (ENCRYPTION_KEY) {
-    // If it's hex or base64, we could parse it, but we can also hash it to ensure 32 bytes
     return crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
   }
-  // Fallback dev key
   return crypto.createHash('sha256').update('dev-fallback-secret-key-astrolink').digest();
 };
 

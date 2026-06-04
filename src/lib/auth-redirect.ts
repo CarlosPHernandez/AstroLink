@@ -1,4 +1,5 @@
 import 'server-only';
+import { isProtectedAppSurfaceEnabled } from '@/lib/app-mode';
 import type { SessionData } from '@/lib/session';
 
 /** Same-origin relative path only; blocks open redirects. */
@@ -43,13 +44,21 @@ export function getDefaultPathAfterAuth(params: {
   return '/dashboard/mentee';
 }
 
+export function getSignInPath(): string {
+  return isProtectedAppSurfaceEnabled() ? '/auth' : '/early-access';
+}
+
 export function toAuthWithRedirect(returnPath: string): string {
+  const signInPath = getSignInPath();
   if (!returnPath) {
-    return '/auth';
+    return signInPath;
   }
   const safe = getSafeRedirectPath(returnPath, '');
   if (!safe) {
-    return '/auth';
+    return signInPath;
+  }
+  if (signInPath === '/early-access') {
+    return signInPath;
   }
   return `/auth?redirect=${encodeURIComponent(safe)}`;
 }

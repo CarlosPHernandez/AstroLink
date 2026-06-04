@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { isProtectedAppSurfaceEnabled } from './lib/app-mode';
 import { getDefaultPathAfterAuth } from './lib/auth-redirect';
 import { decryptSessionString } from './lib/session';
 
@@ -7,6 +8,10 @@ function redirectToAuth(request: NextRequest, returnPath: string) {
   const authUrl = new URL('/auth', request.url);
   authUrl.searchParams.set('redirect', returnPath);
   return NextResponse.redirect(authUrl);
+}
+
+function redirectToEarlyAccess(request: NextRequest) {
+  return NextResponse.redirect(new URL('/early-access', request.url));
 }
 
 function redirectForRole(session: NonNullable<ReturnType<typeof decryptSessionString>>) {
@@ -31,6 +36,17 @@ export function proxy(request: NextRequest) {
   const isSession = pathname.startsWith('/session');
   const isOnboard = pathname.startsWith('/onboard');
   const isAuth = pathname === '/auth';
+
+  if (!isProtectedAppSurfaceEnabled()) {
+    if (isAuth || isDashboard || isBooking || isSession || isOnboard) {
+      return redirectToEarlyAccess(request);
+    }
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
 
   if (isAuth && session) {
     return NextResponse.redirect(new URL(redirectForRole(session), request.url));
