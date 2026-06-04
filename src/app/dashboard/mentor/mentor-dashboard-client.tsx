@@ -29,25 +29,17 @@ interface MentorProfileState {
   rate: number;
 }
 
-function defaultProfileFromSession(session: SessionData): MentorProfileState {
-  const isChris =
-    session.email.toLowerCase() === 'chris@astrolink.ai' ||
-    session.email.toLowerCase() === 'chris@astralink.ai';
-
+function emptyProfileFromSession(session: SessionData): MentorProfileState {
   return {
     fullName: session.fullName,
     email: session.email,
-    employer: isChris ? 'Inspiration 4 / Lockheed Martin / Starfish Space' : 'Aerospace Institute',
-    complianceStatus: isChris ? 'approved' : 'stripe_incomplete',
-    stripeOnboardingCompleted: isChris,
+    employer: '',
+    complianceStatus: 'stripe_incomplete',
+    stripeOnboardingCompleted: false,
     isCivilServant: false,
-    bio: isChris
-      ? 'Commercial astronaut who flew on Inspiration 4, the historic all-civilian orbital mission. Expert in payload integration and flight mechanics.'
-      : 'Consultant and engineer with a passion for aerospace.',
-    expertise: isChris
-      ? 'Commercial Spaceflight, Payload Integration, Flight Mechanics'
-      : 'Avionics, Systems Engineering',
-    rate: isChris ? 320 : 250,
+    bio: '',
+    expertise: '',
+    rate: 0,
   };
 }
 
@@ -72,8 +64,9 @@ export default function MentorDashboardClient({
   );
 
   const [profile, setProfile] = useState<MentorProfileState>(
-    mentorProfile ?? defaultProfileFromSession(session),
+    mentorProfile ?? emptyProfileFromSession(session),
   );
+  const profileNeedsOnboarding = mentorProfile === null;
 
   const { upcoming, past } = useMemo(() => partitionMentorBookings(bookings), [bookings]);
 
@@ -92,31 +85,6 @@ export default function MentorDashboardClient({
   const grossAmount = totalCents / 100;
   const platformFee = Math.round(grossAmount * 0.20 * 100) / 100; // 20% Split
   const mentorPayout = Math.round((grossAmount - platformFee) * 100) / 100; // 80% Split
-
-  // Mock telemetry reports for Reports tab
-  const mockTelemetryLogs = [
-    {
-      id: 'log-m1',
-      agent: 'Compliance',
-      event: 'BIO_RISK_SCANNED',
-      details: 'Biographical review executed on ' + profile.fullName + '. Risk index: LOW.',
-      ts: 'Just now'
-    },
-    {
-      id: 'log-m2',
-      agent: 'Payouts',
-      event: 'STRIPE_CAP_INTEGRATED',
-      details: profile.stripeOnboardingCompleted ? 'Split checkout routes active. Escrow hold checked.' : 'Awaiting Stripe payouts credentials.',
-      ts: '10 minutes ago'
-    },
-    {
-      id: 'log-m3',
-      agent: 'Briefing',
-      event: 'BRIEFING_PACKET_COMPILED',
-      details: 'Compiled match briefings for Carlos Hernandez (objectives matched).',
-      ts: '1 hour ago'
-    }
-  ];
 
   // Handlers
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -198,6 +166,13 @@ export default function MentorDashboardClient({
             </button>
           </div>
         </header>
+
+        {profileNeedsOnboarding ? (
+          <div className="mb-8 p-4 rounded-md border border-amber-200 bg-amber-50 text-amber-900 text-xs">
+            Complete your mentor profile and Stripe onboarding to appear in the public roster and
+            accept bookings.
+          </div>
+        ) : null}
 
         {/* Dashboard Split Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -525,59 +500,14 @@ export default function MentorDashboardClient({
 
             {/* 4. REPORTS & TELEMETRY TAB */}
             {activeTab === 'reports' && (
-              <div className="space-y-6">
-                <div className="pb-3 border-b border-outline-variant/35 flex justify-between items-center">
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-on-surface">
-                    Compliance telemetry & briefing packets
-                  </h2>
-                  <span className="text-[9px] font-mono text-on-surface-variant">Telemetry Online</span>
-                </div>
-
-                {/* Audit telemetries */}
-                <div className="p-6 rounded-md border border-outline-variant bg-surface shadow-sm space-y-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface mb-4 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    Biographical telemetry & security logs
-                  </h3>
-
-                  <div className="space-y-3.5">
-                    {mockTelemetryLogs.map((log) => (
-                      <div key={log.id} className="p-4 rounded-md bg-surface-container-low border border-outline-variant text-xs flex justify-between items-start gap-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="px-1.5 py-0.5 rounded text-[8px] font-mono font-bold bg-primary text-white">
-                              {log.agent}
-                            </span>
-                            <span className="font-bold text-on-surface uppercase tracking-widest font-mono text-[9px]">{log.event}</span>
-                          </div>
-                          <p className="text-on-surface-variant font-light leading-relaxed">{log.details}</p>
-                        </div>
-                        <span className="text-[9px] font-mono text-on-surface-variant flex-shrink-0">{log.ts}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Briefing telemetries */}
-                <div className="p-6 rounded-md border border-outline-variant bg-surface shadow-sm">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface mb-3">
-                    Instruction Telemetries
-                  </h3>
-                  <p className="text-xs text-on-surface-variant leading-relaxed mb-4">
-                    AstroLink monitors communications, scheduled timings, and briefing packets to help improve session quality.
-                  </p>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-surface-container-low border border-outline-variant p-4 rounded-md text-center">
-                      <span className="text-[9px] text-on-surface-variant uppercase block font-mono tracking-widest mb-1">Match Quality Index</span>
-                      <span className="text-lg font-bold text-on-surface">98.2%</span>
-                    </div>
-                    <div className="bg-surface-container-low border border-outline-variant p-4 rounded-md text-center">
-                      <span className="text-[9px] text-on-surface-variant uppercase block font-mono tracking-widest mb-1">Tele-Session Duration</span>
-                      <span className="text-lg font-bold text-on-surface">30 Min (Escrow locked)</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="p-6 rounded-md border border-outline-variant bg-surface shadow-sm">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-on-surface mb-2">
+                  Session reports
+                </h2>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
+                  Compliance and briefing telemetry will appear here after your mentor profile is
+                  approved and you complete live sessions.
+                </p>
               </div>
             )}
 
