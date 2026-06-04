@@ -2,6 +2,15 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.1.2.0] - 2026-06-04
+
+### Added
+
+- Demo mentor seed (`carlos-hernandez`, `carlosphernandez2020@gmail.com`) for dual-device live video walkthroughs.
+- `DEMO_MENTOR_PRESET` in `auth-presets` so demo login maps to the new mentor row.
+- Unit tests for demo mentor preset resolution.
+- How-to runbook: `docs/how-to/demo-dual-device-video.md`.
+
 ## [0.1.1.0] - 2026-06-04
 
 ### Added

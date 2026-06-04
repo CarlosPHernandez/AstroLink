@@ -31,6 +31,14 @@ export const AUTH_PRESETS = {
   }
 >;
 
+/** Dual-device demo mentor; matches `20260605120000_seed_carlos_demo_mentor.sql`. */
+export const DEMO_MENTOR_PRESET = {
+  email: 'carlosphernandez2020@gmail.com',
+  fullName: 'Carlos Hernandez',
+  role: 'mentor' as const,
+  userId: 'a0000004-0000-4000-8000-000000000004',
+};
+
 export function resolvePresetLogin(email: string): {
   role: SessionData['role'];
   fullName: string;
@@ -38,6 +46,9 @@ export function resolvePresetLogin(email: string): {
   isPreset: boolean;
 } | null {
   const normalized = email.trim().toLowerCase();
+  if (normalized === DEMO_MENTOR_PRESET.email) {
+    return { ...DEMO_MENTOR_PRESET, isPreset: true };
+  }
   if (normalized === AUTH_PRESETS.mentor.email) {
     return { ...AUTH_PRESETS.mentor, isPreset: true };
   }
