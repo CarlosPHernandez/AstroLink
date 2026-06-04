@@ -23,7 +23,7 @@ Paid aerospace expert network (live 1:1 sessions, Stripe, Daily, Gemini agents).
    supabase gen types typescript --linked -o src/lib/database.types.ts
    ```
 
-4. **Demo auth** (until Supabase Auth): with `ENABLE_DEMO_AUTH=true`, use seed emails in `src/lib/auth-presets.ts` — mentee `a0000001-0000-4000-8000-000000000001`, mentor Chris `a0000002-0000-4000-8000-000000000002`.
+4. **Demo auth** (until Supabase Auth): with `ENABLE_DEMO_AUTH=true`, use seed emails in `src/lib/auth-presets.ts` — mentee `carlos@astrolink.ai`, mentor Chris `chris@astrolink.ai`, or demo mentor Carlos `carlosphernandez2020@gmail.com` (dual-device video: see `docs/how-to/demo-dual-device-video.md`).
 
 ## D1 local booking flow
 
