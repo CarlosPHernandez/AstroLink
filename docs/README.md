@@ -19,6 +19,15 @@ Structured using [Diataxis](https://diataxis.fr/): tutorials teach, how-tos guid
 | [reference/video-session.md](./reference/video-session.md) | Reference | APIs, gates, env vars, module map |
 | [explanation/video-session-architecture.md](./explanation/video-session-architecture.md) | Explanation | Why private rooms, tokens, and webhooks |
 
+## Team ops (3-person)
+
+| Doc | Quadrant | Description |
+|-----|----------|-------------|
+| [how-to/weekly-ops-slack-template.md](./how-to/weekly-ops-slack-template.md) | How-to | Monday #astrolink-ops post after Canvas refresh |
+| [how-to/marketing-referrer-taxonomy.md](./how-to/marketing-referrer-taxonomy.md) | How-to | `ref` values for /early-access attribution |
+
+Cursor canvases (Carlos refreshes): `weekly-team-brief`, `sales-pipeline`, `marketing-funnel` under the workspace `canvases/` directory.
+
 ## Other
 
 | Doc | Notes |
