@@ -15,6 +15,7 @@ Structured using [Diataxis](https://diataxis.fr/): tutorials teach, how-tos guid
 |-----|----------|-------------|
 | [tutorial/first-video-session.md](./tutorial/first-video-session.md) | Tutorial | First local video call from install to recap |
 | [how-to/video-session-demo.md](./how-to/video-session-demo.md) | How-to | Investor demo runbook, cheatsheet, dev operator |
+| [how-to/daily-live-account-guardrails-plan.md](./how-to/daily-live-account-guardrails-plan.md) | How-to | Live Daily account quota guardrails and demo approval plan |
 | [reference/video-session.md](./reference/video-session.md) | Reference | APIs, gates, env vars, module map |
 | [explanation/video-session-architecture.md](./explanation/video-session-architecture.md) | Explanation | Why private rooms, tokens, and webhooks |
 
