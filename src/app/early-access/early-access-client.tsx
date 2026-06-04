@@ -16,6 +16,47 @@ const CHRIS = {
 const fieldClass =
   'w-full bg-surface-container-lowest border border-outline-variant rounded-md px-4 py-3 text-body-md text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all';
 
+function ChrisPortrait({
+  className,
+  sizes,
+  priority,
+  imageFailed,
+  onImageError,
+}: {
+  className: string;
+  sizes: string;
+  priority?: boolean;
+  imageFailed: boolean;
+  onImageError: () => void;
+}) {
+  if (imageFailed) {
+    return (
+      <div
+        className={`${className} flex flex-col items-center justify-center bg-gradient-to-br from-primary-fixed via-primary-container/30 to-tertiary-container/40`}
+      >
+        <span className="material-symbols-outlined text-primary mb-sm" style={{ fontSize: 56 }}>
+          rocket_launch
+        </span>
+        <span className="text-headline-md font-bold text-on-primary-fixed">CS</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={className}>
+      <Image
+        src={CHRIS.imageSrc}
+        alt={CHRIS.name}
+        fill
+        className="object-cover object-top"
+        sizes={sizes}
+        priority={priority}
+        onError={onImageError}
+      />
+    </div>
+  );
+}
+
 export default function EarlyAccessClient() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -84,22 +125,71 @@ export default function EarlyAccessClient() {
       </header>
 
       <main>
-        <section className="max-w-[1200px] mx-auto px-md sm:px-lg pt-xl sm:pt-xxl pb-lg">
-          <div className="max-w-3xl">
-            <p className="text-label-md text-primary font-semibold uppercase tracking-wider mb-sm animate-reveal-up">
-              Aerospace expert network
-            </p>
-            <h1 className="text-headline-lg-mobile sm:text-display text-on-surface font-bold tracking-tight mb-md animate-reveal-up delay-100">
-              Talk to the people who&apos;ve actually been there.
-            </h1>
-            <p className="text-body-lg text-on-surface-variant max-w-2xl animate-reveal-up delay-200">
-              AstroLink connects you with verified aerospace professionals for live, one-on-one video
-              sessions — astronauts, flight controllers, and operators who have done the work in orbit
-              and on the ground.
-            </p>
+        <section className="max-w-[1200px] mx-auto px-md sm:px-lg pt-xl sm:pt-xxl pb-lg relative">
+          <div
+            className="absolute top-0 right-0 w-[min(100%,420px)] h-[420px] bg-gradient-to-bl from-primary-container/10 via-secondary-container/5 to-transparent blur-3xl rounded-full -z-10 pointer-events-none"
+            aria-hidden
+          />
+
+          <div className="grid lg:grid-cols-2 gap-xl lg:gap-xxl items-center">
+            <div className="w-full min-w-0 order-2 lg:order-1">
+              <p className="text-label-md text-primary font-semibold uppercase tracking-wider mb-sm animate-reveal-up">
+                Aerospace expert network
+              </p>
+              <h1 className="text-headline-lg-mobile sm:text-display text-on-surface font-bold tracking-tight mb-md animate-reveal-up delay-100">
+                Talk to the people who&apos;ve actually been there.
+              </h1>
+              <p className="text-body-lg text-on-surface-variant leading-relaxed animate-reveal-up delay-200">
+                AstroLink connects you with verified aerospace professionals for live, one-on-one video
+                sessions — astronauts, flight controllers, and operators who have done the work in orbit
+                and on the ground.
+              </p>
+              <a
+                href="#signup"
+                className="inline-flex mt-lg items-center gap-xs bg-primary text-on-primary px-lg py-sm rounded-md font-label-md font-semibold hover:bg-primary-container transition-all active:scale-[0.99] shadow-sm animate-reveal-up delay-300"
+              >
+                Join the waitlist
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                  arrow_downward
+                </span>
+              </a>
+            </div>
+
+            <div
+              className="w-full min-w-0 order-1 lg:order-2 animate-reveal-up delay-200"
+              data-testid="early-access-hero-portrait"
+            >
+              <div className="relative mx-auto w-full max-w-[420px] aspect-[4/5] rounded-2xl overflow-hidden border border-outline-variant floating-card-shadow bg-surface-container-low">
+                <ChrisPortrait
+                  className="absolute inset-0"
+                  sizes="(max-width: 1024px) 90vw, 420px"
+                  priority
+                  imageFailed={imageFailed}
+                  onImageError={() => setImageFailed(true)}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/85 via-inverse-surface/20 to-transparent pointer-events-none" />
+                <div className="absolute top-md left-md flex items-center gap-xs bg-surface-container-lowest/95 backdrop-blur-sm border border-outline-variant/50 rounded-full px-3 py-1.5 shadow-sm">
+                  <span className="material-symbols-outlined text-primary" style={{ fontSize: 18 }}>
+                    verified
+                  </span>
+                  <span className="text-label-sm font-semibold text-on-surface uppercase tracking-wide">
+                    Verified astronaut
+                  </span>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-lg sm:p-xl">
+                  <p className="text-label-sm text-inverse-on-surface/80 uppercase tracking-wider font-mono mb-xs">
+                    Featured on AstroLink
+                  </p>
+                  <p className="text-headline-md sm:text-headline-lg font-bold text-inverse-on-surface tracking-tight">
+                    {CHRIS.name}
+                  </p>
+                  <p className="text-label-md text-inverse-on-surface/90 mt-xs">{CHRIS.title}</p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <ul className="mt-xl grid sm:grid-cols-3 gap-md max-w-3xl animate-reveal-up delay-300">
+          <ul className="mt-xl grid sm:grid-cols-3 gap-md animate-reveal-up delay-400">
             {[
               {
                 icon: 'verified',
@@ -152,22 +242,12 @@ export default function EarlyAccessClient() {
                   data-testid="featured-expert-chris-sembroski"
                 >
                   <div className="flex gap-md items-start">
-                    <div className="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-primary-fixed border border-outline-variant">
-                      {!imageFailed ? (
-                        <Image
-                          src={CHRIS.imageSrc}
-                          alt={CHRIS.name}
-                          fill
-                          className="object-cover"
-                          sizes="96px"
-                          onError={() => setImageFailed(true)}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-primary text-on-primary font-bold text-xl">
-                          CS
-                        </div>
-                      )}
-                    </div>
+                    <ChrisPortrait
+                      className="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-outline-variant"
+                      sizes="96px"
+                      imageFailed={imageFailed}
+                      onImageError={() => setImageFailed(true)}
+                    />
                     <div className="min-w-0">
                       <h3 className="text-headline-md font-semibold text-on-surface">{CHRIS.name}</h3>
                       <p className="text-label-md text-primary font-medium mt-xs">{CHRIS.title}</p>
