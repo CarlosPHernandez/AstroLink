@@ -54,7 +54,8 @@ two-person session is about 60 participant-minutes.
 
 2. **Webhook verification**
    - Configure Daily to send only `meeting.ended` to:
-     `https://<demo-domain>/api/webhooks/daily`.
+     `https://astro-link-sooty.vercel.app/api/webhooks/daily`.
+   - Demo/staging host: [astro-link-sooty.vercel.app](https://astro-link-sooty.vercel.app).
    - Send a Daily dashboard test webhook or complete one short dry-run call.
    - Confirm the app accepts the HMAC and logs a successful completion path.
 
@@ -149,12 +150,15 @@ Suggested gates:
 The page should show a clear message instead of creating a Daily token outside
 the allowed window.
 
-### 4. Rate limit Daily API calls
+### 4. Rate limit Daily API calls (deferred from Phase 1)
 
-Add a small `daily-rate-limit.ts` helper modeled after
-`src/lib/llm-rate-limit.ts`.
+**Eng review decision (2026-06-04):** Defer app-level Daily API rate limits to Phase 2.
+In-memory limits (same pattern as `llm-rate-limit.ts`) are not globally enforced on
+Vercel multi-instance deployments. Phase 1 relies on Daily room/token properties and
+`DAILY_PROVISION_ENABLED` instead.
 
-Initial limits:
+When the usage ledger ships in Phase 2, add Supabase-backed counters (not in-memory
+Maps) with these initial limits:
 
 | Operation | Scope | Suggested limit |
 |-----------|-------|-----------------|
@@ -162,9 +166,6 @@ Initial limits:
 | Room provision | booking | 2/hour |
 | Meeting token mint | booking + user | 10/hour |
 | Meeting token mint | global | 120/hour |
-
-This is not a substitute for minute budgeting, but it prevents accidental loops
-or repeated page refreshes from hammering Daily.
 
 ## Phase 2 - Participant-minute budget enforcement
 
@@ -288,7 +289,7 @@ against a CEO/customer-demo lens.
 
 | Question | Review result |
 |----------|---------------|
-| Can one bad loop consume the Daily account? | Phase 1 limits API call frequency and call length; Phase 2 adds hard budget enforcement. |
+| Can one bad loop consume the Daily account? | Phase 1 tightens room/token TTL and join windows; Phase 2 adds hard budget enforcement. App API rate limits deferred to Phase 2 (Vercel in-memory limits are not global). |
 | Can a random user join the demo? | Existing participant auth + Daily private rooms already protect access; token join windows make this tighter. |
 | Can a legitimate participant get blocked during the demo? | Risk exists if join windows are too narrow. Use a 15-minute early / 60-minute late window for the first demo. |
 | Can we explain spend clearly? | Yes: "Daily bills participant-minutes; a 15-minute two-person demo is about 30 minutes of usage." |
@@ -301,3 +302,103 @@ Approve **Phase 1** for immediate implementation before any Chris/customer demo.
 Approve **Phase 2** before repeated live-account usage. Defer **Phase 3** until
 after the first live demo unless stale rooms or missed webhooks show up during
 rehearsal.
+
+## Eng review amendments (2026-06-04)
+
+Decisions from `/plan-eng-review`:
+
+1. **Defer `daily-rate-limit.ts` from Phase 1.** In-memory limits (same pattern as
+   `llm-rate-limit.ts`) are not globally enforced on Vercel multi-instance
+   deployments. Phase 1 protection comes from `DAILY_PROVISION_ENABLED`, Daily room
+   props (`max_participants`, `eject_after_elapsed`, `eject_at_room_exp`), and
+   meeting-token `nbf`/`exp`. Revisit Supabase-backed counters with the Phase 2
+   usage ledger.
+2. **Keep join-window gates in Phase 1.** Extend `SessionGate` with `too_early` and
+   `expired`; mirror the same window in Daily token properties.
+3. **Pin webhook URL** to production demo host:
+   `https://astro-link-sooty.vercel.app/api/webhooks/daily`.
+4. **Force E2E Daily-free:** add `DAILY_API_KEY: ''` (or unset) to
+   `playwright.config.ts` `webServer.env` so CI never provisions real rooms.
+
+## What already exists
+
+| Capability | Location | Plan reuse |
+|------------|----------|------------|
+| Room provision on payment | `post-payment.ts` | Extend with `DAILY_PROVISION_ENABLED` gate |
+| Daily REST + HMAC webhook | `src/lib/daily.ts`, `webhooks/daily/route.ts` | Extend room/token props; no rewrite |
+| Session auth + token mint | `booking-access.ts` | Add join-window gates + pass scheduled_at into token |
+| LLM rate-limit pattern | `llm-rate-limit.ts` | Reference only; defer Daily API rate limits to Phase 2 |
+| Dev simulate `meeting.ended` | `api/dev/session-operator/route.ts` | Keep non-prod only |
+| E2E tolerant session states | `e2e/golden-path.spec.ts` | Already accepts provisioning/token-error; strip Daily key in webServer |
+
+## NOT in scope (explicit deferrals)
+
+| Item | Rationale |
+|------|-----------|
+| App-level Daily API rate limits (Phase 1) | Vercel in-memory limits are per-instance; defer to Phase 2 ledger |
+| Exact participant-count reconciliation | Phase 2; conservative estimates sufficient for first demo |
+| Automated room deletion | Phase 3; manual Daily dashboard cleanup until then |
+| Admin budget override UI | Phase 2; env flag only initially |
+| Custom Daily Prebuilt | Listed in non-goals |
+
+## Failure modes (production)
+
+| Failure | Test? | Handling? | User sees |
+|---------|-------|-----------|-----------|
+| Webhook HMAC mismatch | `daily.test.ts` | 401 response | Booking stuck `confirmed` — **critical gap** until Phase 3 reconcile |
+| Refresh loop mints tokens | None | 4h token TTL today | Silent API spend — **Phase 1 fixes** via token `nbf`/`exp` + join gates |
+| Provision with key in local E2E | Partial E2E | No key strip in webServer | Accidental room creation — **fix playwright env** |
+| Budget race (two provisions) | N/A Phase 2 | No transaction | Both rooms created — **Phase 2 needs row lock or serializable tx** |
+| Join 5 min before window | None planned | Gate blocks mint | Clear `too_early` message — **Phase 1** |
+
+## Implementation Tasks
+
+Synthesized from eng review. Run with Claude Code; checkbox as you ship.
+
+- [ ] **T1 (P1, human: ~1h / CC: ~15min)** — `DAILY_PROVISION_ENABLED` feature flag
+  - Surfaced by: Architecture — ungated provision when `DAILY_API_KEY` set (`post-payment.ts:40,94`)
+  - Files: `src/lib/daily.ts`, `post-payment.ts`, `api/session/provision/route.ts`, `api/dev/session-operator/route.ts`, `.env.example`
+  - Verify: unit tests + booking without key locally still confirms
+- [ ] **T2 (P1, human: ~2h / CC: ~20min)** — Demo room + token properties
+  - Surfaced by: Architecture — 48h room TTL, no max participants (`daily.ts:16-18,84-92`)
+  - Files: `src/lib/daily.ts`, `.env.example`
+  - Verify: `npm test` daily.test.ts + manual room inspect in Daily dashboard
+- [ ] **T3 (P1, human: ~2h / CC: ~25min)** — Join window gates (`too_early` / `expired`)
+  - Surfaced by: Architecture — gate always `ready` when confirmed + URL (`booking-access.ts:49-61`)
+  - Files: `booking-access.ts`, `session-room-client.tsx`, new `booking-access.test.ts`
+  - Verify: unit tests for window boundaries; UI shows messages not iframe
+- [ ] **T4 (P1, human: ~15min / CC: ~5min)** — E2E Daily-free webServer env
+  - Surfaced by: Test review — playwright inherits `.env.local` Daily key
+  - Files: `playwright.config.ts`
+  - Verify: `npm run test:e2e` never calls Daily REST
+- [ ] **T5 (P2, human: ~4h / CC: ~45min)** — `daily_usage_events` ledger + budget gate
+  - Surfaced by: Phase 2 plan + budget race concern
+  - Files: new migration, `src/lib/daily-usage.ts`, `post-payment.ts`, webhook handler
+  - Verify: unit tests for reserve/hard-stop; migration applied on Supabase project
+- [ ] **T6 (P3, human: ~3h / CC: ~30min)** — Missed-webhook reconciliation endpoint
+  - Surfaced by: Failure modes — stuck `confirmed` after call
+  - Files: `api/admin/daily-reconcile/route.ts` (or extend session-operator pattern)
+
+## Parallelization
+
+| Step | Modules | Depends on |
+|------|---------|------------|
+| T1 feature flag | `daily.ts`, `post-payment.ts`, API routes | — |
+| T2 room/token props | `daily.ts` | T1 (shared env helpers) |
+| T3 join gates | `booking-access.ts`, session UI | T2 (token nbf/exp helpers) |
+| T4 E2E env | `playwright.config.ts` | — |
+
+**Lanes:** Launch T1+T4 in parallel. Then T2 → T3 sequential. Phase 2 (T5) after Phase 1 merges.
+
+## GSTACK REVIEW REPORT
+
+| Review | Trigger | Why | Runs | Status | Findings |
+|--------|---------|-----|------|--------|----------|
+| CEO Review | `/plan-ceo-review` | Scope & strategy | 0 | — | Manual CEO-hours table in plan only |
+| Codex Review | `/codex review` | Independent 2nd opinion | 0 | — | Not run (user skipped outside voice) |
+| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 1 | issues_open | 6 issues, 2 critical gaps, scope amended |
+| Design Review | `/plan-design-review` | UI/UX gaps | 0 | — | Join-window UI only (minimal) |
+| DX Review | `/plan-devex-review` | Developer experience gaps | 0 | — | — |
+
+- **UNRESOLVED:** 0 (rate-limit store + join-window phase decided)
+- **VERDICT:** ENG REVIEW COMPLETE WITH AMENDMENTS — Phase 1 ready to implement after plan updates applied; eng review required before ship remains satisfied for this plan pass

@@ -15,7 +15,35 @@ interface DailyMeetingTokenResponse {
 
 const DEFAULT_ROOM_TTL_SEC = 60 * 60 * 48;
 const MEETING_TOKEN_TTL_SEC = 60 * 60 * 4;
-const SCHEDULED_WINDOW_AFTER_SEC = 60 * 60 * 4;
+
+export type SessionJoinPhase = 'too_early' | 'ready' | 'expired' | 'unscheduled';
+
+function parseDailyEnvInt(value: string | undefined, fallback: number): number {
+  if (!value?.trim()) {
+    return fallback;
+  }
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+export function getDailyDemoConfig() {
+  return {
+    maxParticipants: parseDailyEnvInt(process.env.DAILY_MAX_PARTICIPANTS, 2),
+    joinWindowBeforeMinutes: parseDailyEnvInt(process.env.DAILY_ROOM_JOIN_WINDOW_BEFORE_MINUTES, 15),
+    joinWindowAfterMinutes: parseDailyEnvInt(process.env.DAILY_ROOM_JOIN_WINDOW_AFTER_MINUTES, 60),
+    maxCallMinutes: parseDailyEnvInt(process.env.DAILY_MAX_CALL_MINUTES, 35),
+  };
+}
+
+/** Explicit opt-in — production/demo must set DAILY_PROVISION_ENABLED=true. */
+export function isDailyProvisionEnabled(): boolean {
+  const flag = process.env.DAILY_PROVISION_ENABLED?.trim().toLowerCase();
+  return flag === 'true';
+}
+
+export function canProvisionDailyRoom(): boolean {
+  return isDailyProvisionEnabled() && Boolean(process.env.DAILY_API_KEY?.trim());
+}
 
 export function dailyRoomNameForBooking(bookingId: string): string {
   return `astrolink-${bookingId.replace(/-/g, '').slice(0, 20)}`;
@@ -30,18 +58,63 @@ export function extractDailyRoomNameFromUrl(roomUrl: string): string | null {
   }
 }
 
-/** Room `exp` unix timestamp: scheduled end + buffer, or 48h from now. */
-export function roomExpiryUnix(scheduledAt?: string | null): number {
-  const nowSec = Math.floor(Date.now() / 1000);
-  if (!scheduledAt) {
-    return nowSec + DEFAULT_ROOM_TTL_SEC;
+export function meetingTokenWindowUnix(scheduledAt: string | null | undefined): {
+  nbf: number;
+  exp: number;
+  ejectAfterElapsed: number;
+} | null {
+  if (!scheduledAt?.trim()) {
+    return null;
   }
   const scheduledMs = new Date(scheduledAt).getTime();
   if (Number.isNaN(scheduledMs)) {
-    return nowSec + DEFAULT_ROOM_TTL_SEC;
+    return null;
   }
-  const windowEndSec = Math.floor((scheduledMs + SCHEDULED_WINDOW_AFTER_SEC * 1000) / 1000);
-  return Math.max(nowSec + 60 * 60 * 2, windowEndSec);
+
+  const cfg = getDailyDemoConfig();
+  const nbf = Math.floor((scheduledMs - cfg.joinWindowBeforeMinutes * 60_000) / 1000);
+  const exp = Math.floor((scheduledMs + cfg.joinWindowAfterMinutes * 60_000) / 1000);
+
+  return {
+    nbf,
+    exp,
+    ejectAfterElapsed: cfg.maxCallMinutes * 60,
+  };
+}
+
+export function resolveSessionJoinPhase(
+  scheduledAt: string | null | undefined,
+  nowMs: number = Date.now(),
+): SessionJoinPhase {
+  if (!scheduledAt?.trim()) {
+    return 'unscheduled';
+  }
+  const scheduledMs = new Date(scheduledAt).getTime();
+  if (Number.isNaN(scheduledMs)) {
+    return 'unscheduled';
+  }
+
+  const cfg = getDailyDemoConfig();
+  const windowStart = scheduledMs - cfg.joinWindowBeforeMinutes * 60_000;
+  const windowEnd = scheduledMs + cfg.joinWindowAfterMinutes * 60_000;
+
+  if (nowMs < windowStart) {
+    return 'too_early';
+  }
+  if (nowMs > windowEnd) {
+    return 'expired';
+  }
+  return 'ready';
+}
+
+/** Room `exp` unix timestamp: join-window end when scheduled, else 48h from now. */
+export function roomExpiryUnix(scheduledAt?: string | null): number {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const window = meetingTokenWindowUnix(scheduledAt);
+  if (window) {
+    return Math.max(nowSec + 60 * 60 * 2, window.exp);
+  }
+  return nowSec + DEFAULT_ROOM_TTL_SEC;
 }
 
 export function meetingTokenExpiryUnix(roomExp?: number): number {
@@ -74,6 +147,7 @@ export async function createDailyRoomForBooking(
   const apiKey = getDailyApiKey();
   const roomName = dailyRoomNameForBooking(bookingId);
   const exp = roomExpiryUnix(options?.scheduledAt);
+  const cfg = getDailyDemoConfig();
 
   const response = await fetch('https://api.daily.co/v1/rooms', {
     method: 'POST',
@@ -89,6 +163,10 @@ export async function createDailyRoomForBooking(
         enable_chat: true,
         start_video_off: false,
         start_audio_off: false,
+        max_participants: cfg.maxParticipants,
+        enforce_unique_user_ids: true,
+        eject_at_room_exp: true,
+        eject_after_elapsed: cfg.maxCallMinutes * 60,
       },
     }),
   });
@@ -112,9 +190,12 @@ export async function createMeetingToken(params: {
   userName: string;
   isOwner: boolean;
   exp?: number;
+  nbf?: number;
+  ejectAfterElapsed?: number;
 }): Promise<string> {
   const apiKey = getDailyApiKey();
   const exp = params.exp ?? meetingTokenExpiryUnix();
+  const tokenWindow = params.nbf != null;
 
   const response = await fetch('https://api.daily.co/v1/meeting-tokens', {
     method: 'POST',
@@ -129,6 +210,13 @@ export async function createMeetingToken(params: {
         user_name: params.userName,
         is_owner: params.isOwner,
         exp,
+        ...(tokenWindow
+          ? {
+              nbf: params.nbf,
+              eject_at_token_exp: true,
+              eject_after_elapsed: params.ejectAfterElapsed,
+            }
+          : {}),
       },
     }),
   });
@@ -175,6 +263,10 @@ export async function provisionDailyRoomForBooking(bookingId: string): Promise<{
     }
   }
 
+  if (!canProvisionDailyRoom()) {
+    throw new Error('Daily room provisioning is disabled');
+  }
+
   const daily = await createDailyRoomForBooking(bookingId, {
     scheduledAt: booking.scheduled_at,
   });
@@ -202,17 +294,24 @@ export async function buildAuthorizedDailyJoinUrl(params: {
   userId: string;
   userName: string;
   isOwner: boolean;
+  scheduledAt?: string | null;
 }): Promise<string> {
   const roomName = extractDailyRoomNameFromUrl(params.roomUrl);
   if (!roomName) {
     throw new Error('Invalid Daily room URL');
   }
 
+  const window = meetingTokenWindowUnix(params.scheduledAt);
+  const roomExp = roomExpiryUnix(params.scheduledAt);
+
   const token = await createMeetingToken({
     roomName,
     userId: params.userId,
     userName: params.userName,
     isOwner: params.isOwner,
+    exp: window?.exp ?? meetingTokenExpiryUnix(roomExp),
+    nbf: window?.nbf,
+    ejectAfterElapsed: window?.ejectAfterElapsed,
   });
 
   return buildDailyJoinUrl(params.roomUrl, token);

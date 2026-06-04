@@ -4,7 +4,7 @@ import {
   isDevSkippedPaymentIntent,
   isStripePaymentsSkipped,
 } from '@/lib/booking-payments';
-import { provisionDailyRoomForBooking } from '@/lib/daily';
+import { canProvisionDailyRoom, provisionDailyRoomForBooking } from '@/lib/daily';
 import { supabaseAdmin } from '@/lib/supabase';
 import { BriefingAgent } from '@/services/agents/briefing-agent';
 import { PaymentAgent } from '@/services/agents/payment-agent';
@@ -37,7 +37,7 @@ export async function confirmBookingWithoutPayment(bookingId: string) {
   const briefingAgent = new BriefingAgent();
   await briefingAgent.prepareBriefing(bookingId);
 
-  if (!booking.daily_room_url && process.env.DAILY_API_KEY) {
+  if (!booking.daily_room_url && canProvisionDailyRoom()) {
     await provisionDailyRoomForBooking(bookingId);
   }
 
@@ -91,7 +91,7 @@ export async function fulfillBookingAfterPayment(params: {
   const briefingAgent = new BriefingAgent();
   await briefingAgent.prepareBriefing(booking.id);
 
-  if (!booking.daily_room_url && process.env.DAILY_API_KEY) {
+  if (!booking.daily_room_url && canProvisionDailyRoom()) {
     await provisionDailyRoomForBooking(booking.id);
   }
 

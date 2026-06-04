@@ -1,6 +1,9 @@
 import 'server-only';
 
-import { buildAuthorizedDailyJoinUrl } from '@/lib/daily';
+import {
+  buildAuthorizedDailyJoinUrl,
+  resolveSessionJoinPhase,
+} from '@/lib/daily';
 import { getSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { MentorBriefingOutput, PreCallBriefOutput } from '@/lib/types';
@@ -9,6 +12,8 @@ export type SessionParticipantRole = 'mentee' | 'mentor' | 'admin';
 
 export type SessionGate =
   | 'ready'
+  | 'too_early'
+  | 'expired'
   | 'pending_payment'
   | 'provisioning'
   | 'completed'
@@ -46,7 +51,14 @@ function resolveSessionRole(params: {
   return null;
 }
 
-function resolveGate(status: string, dailyRoomUrl: string | null): SessionGate {
+export function resolveSessionGate(params: {
+  status: string;
+  dailyRoomUrl: string | null;
+  scheduledAt: string | null;
+  nowMs?: number;
+}): SessionGate {
+  const { status, dailyRoomUrl, scheduledAt, nowMs = Date.now() } = params;
+
   if (status === 'pending_payment') {
     return 'pending_payment';
   }
@@ -57,7 +69,18 @@ function resolveGate(status: string, dailyRoomUrl: string | null): SessionGate {
     return 'completed';
   }
   if (status === 'confirmed') {
-    return dailyRoomUrl ? 'ready' : 'provisioning';
+    if (!dailyRoomUrl) {
+      return 'provisioning';
+    }
+
+    const joinPhase = resolveSessionJoinPhase(scheduledAt, nowMs);
+    if (joinPhase === 'too_early') {
+      return 'too_early';
+    }
+    if (joinPhase === 'expired') {
+      return 'expired';
+    }
+    return 'ready';
   }
   return 'unavailable';
 }
@@ -94,7 +117,11 @@ export async function getBookingForSession(
   }
 
   const mentor = data.mentors as { full_name: string } | null;
-  const gate = resolveGate(data.status, data.daily_room_url);
+  const gate = resolveSessionGate({
+    status: data.status,
+    dailyRoomUrl: data.daily_room_url,
+    scheduledAt: data.scheduled_at,
+  });
 
   let dailyJoinUrl: string | null = null;
   let tokenError: string | null = null;
@@ -106,6 +133,7 @@ export async function getBookingForSession(
         userId: session.userId,
         userName: session.fullName,
         isOwner: sessionRole === 'mentor' || sessionRole === 'admin',
+        scheduledAt: data.scheduled_at,
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Meeting token failed';

@@ -131,6 +131,45 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             </div>
           )}
 
+          {booking.gate === 'too_early' && (
+            <div
+              data-testid="session-too-early"
+              className="text-center max-w-md p-8 border border-outline-variant rounded-lg bg-surface-container-lowest"
+            >
+              <h3 className="text-headline-md font-bold text-on-surface mb-2">Not open yet</h3>
+              <p className="text-body-md text-on-surface-variant mb-4">
+                The video room opens shortly before your scheduled session (
+                {formatSessionWhen(booking.scheduledAt)}). Check back a few minutes before start
+                time.
+              </p>
+              <Link
+                href={exitHref}
+                className="inline-block px-5 py-2.5 rounded-md bg-primary text-on-primary text-label-sm font-semibold hover:bg-primary-container"
+              >
+                Back to dashboard
+              </Link>
+            </div>
+          )}
+
+          {booking.gate === 'expired' && (
+            <div
+              data-testid="session-expired"
+              className="text-center max-w-md p-8 border border-outline-variant rounded-lg bg-surface-container-lowest"
+            >
+              <h3 className="text-headline-md font-bold text-on-surface mb-2">Join window closed</h3>
+              <p className="text-body-md text-on-surface-variant mb-4">
+                The scheduled join window for this session has ended. If you still need help, contact
+                support or book another session from your dashboard.
+              </p>
+              <Link
+                href={exitHref}
+                className="inline-block px-5 py-2.5 rounded-md bg-primary text-on-primary text-label-sm font-semibold hover:bg-primary-container"
+              >
+                Back to dashboard
+              </Link>
+            </div>
+          )}
+
           {booking.gate === 'provisioning' && (
             <div
               data-testid="session-provisioning"
