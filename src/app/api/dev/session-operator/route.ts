@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { dailyRoomNameForBooking, extractDailyRoomNameFromUrl, provisionDailyRoomForBooking } from '@/lib/daily';
+import {
+  canProvisionDailyRoom,
+  dailyRoomNameForBooking,
+  extractDailyRoomNameFromUrl,
+  isDailyProvisionEnabled,
+  provisionDailyRoomForBooking,
+} from '@/lib/daily';
 import { fulfillBookingAfterMeetingEnded } from '@/lib/post-session';
 import { getSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
@@ -75,13 +81,18 @@ export async function POST(request: Request) {
         scheduledAt: booking.scheduled_at,
         sessionRecord: sessionRow ?? null,
         dailyApiConfigured: Boolean(process.env.DAILY_API_KEY),
+        dailyProvisionEnabled: isDailyProvisionEnabled(),
+        canProvisionDailyRoom: canProvisionDailyRoom(),
         webhookHmacConfigured: Boolean(process.env.DAILY_WEBHOOK_HMAC),
       });
     }
 
     if (action === 'provision') {
-      if (!process.env.DAILY_API_KEY) {
-        return NextResponse.json({ error: 'DAILY_API_KEY is not configured' }, { status: 503 });
+      if (!canProvisionDailyRoom()) {
+        return NextResponse.json(
+          { error: 'Daily room provisioning is disabled (set DAILY_PROVISION_ENABLED=true and DAILY_API_KEY)' },
+          { status: 503 },
+        );
       }
       const result = await provisionDailyRoomForBooking(bookingId);
       return NextResponse.json({ success: true, ...result });

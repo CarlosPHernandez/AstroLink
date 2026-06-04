@@ -42,6 +42,8 @@ export default defineConfig({
       ...process.env,
       SKIP_STRIPE_PAYMENTS: 'true',
       E2E_STUB_LLM: 'true',
+      DAILY_API_KEY: '',
+      DAILY_PROVISION_ENABLED: 'false',
     },
   },
 });

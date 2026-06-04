@@ -2,12 +2,16 @@ import { createHmac } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildDailyJoinUrl,
+  canProvisionDailyRoom,
   createDailyRoomForBooking,
   createMeetingToken,
   dailyRoomNameForBooking,
   extractDailyRoomNameFromUrl,
+  isDailyProvisionEnabled,
   meetingTokenExpiryUnix,
+  meetingTokenWindowUnix,
   parseMeetingEndedEvent,
+  resolveSessionJoinPhase,
   roomExpiryUnix,
   verifyDailyWebhookSignature,
 } from '@/lib/daily';
@@ -39,6 +43,67 @@ describe('Daily helpers', () => {
     });
   });
 
+  describe('isDailyProvisionEnabled', () => {
+    afterEach(() => {
+      delete process.env.DAILY_PROVISION_ENABLED;
+    });
+
+    it('is false unless explicitly true', () => {
+      expect(isDailyProvisionEnabled()).toBe(false);
+      process.env.DAILY_PROVISION_ENABLED = 'false';
+      expect(isDailyProvisionEnabled()).toBe(false);
+      process.env.DAILY_PROVISION_ENABLED = 'true';
+      expect(isDailyProvisionEnabled()).toBe(true);
+    });
+  });
+
+  describe('canProvisionDailyRoom', () => {
+    afterEach(() => {
+      delete process.env.DAILY_PROVISION_ENABLED;
+      delete process.env.DAILY_API_KEY;
+    });
+
+    it('requires flag and API key', () => {
+      expect(canProvisionDailyRoom()).toBe(false);
+      process.env.DAILY_API_KEY = 'key';
+      expect(canProvisionDailyRoom()).toBe(false);
+      process.env.DAILY_PROVISION_ENABLED = 'true';
+      expect(canProvisionDailyRoom()).toBe(true);
+    });
+  });
+
+  describe('resolveSessionJoinPhase', () => {
+    it('returns unscheduled when no schedule', () => {
+      expect(resolveSessionJoinPhase(null, Date.now())).toBe('unscheduled');
+    });
+
+    it('returns too_early before join window', () => {
+      const scheduledAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      expect(resolveSessionJoinPhase(scheduledAt, Date.now())).toBe('too_early');
+    });
+
+    it('returns ready inside join window', () => {
+      const scheduledAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+      expect(resolveSessionJoinPhase(scheduledAt, Date.now())).toBe('ready');
+    });
+
+    it('returns expired after join window', () => {
+      const scheduledAt = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+      expect(resolveSessionJoinPhase(scheduledAt, Date.now())).toBe('expired');
+    });
+  });
+
+  describe('meetingTokenWindowUnix', () => {
+    it('returns nbf/exp/ejectAfterElapsed for scheduled sessions', () => {
+      const scheduledAt = new Date('2030-06-01T18:00:00.000Z').toISOString();
+      const window = meetingTokenWindowUnix(scheduledAt);
+      expect(window).not.toBeNull();
+      expect(window!.nbf).toBeLessThan(Math.floor(new Date(scheduledAt).getTime() / 1000));
+      expect(window!.exp).toBeGreaterThan(Math.floor(new Date(scheduledAt).getTime() / 1000));
+      expect(window!.ejectAfterElapsed).toBe(35 * 60);
+    });
+  });
+
   describe('roomExpiryUnix', () => {
     it('defaults to ~48h from now when no schedule', () => {
       const now = Math.floor(Date.now() / 1000);
@@ -50,8 +115,9 @@ describe('Daily helpers', () => {
     it('extends past scheduled_at when provided', () => {
       const scheduledAt = new Date(Date.now() + 60 * 60 * 24).toISOString();
       const exp = roomExpiryUnix(scheduledAt);
-      const scheduledSec = Math.floor(new Date(scheduledAt).getTime() / 1000);
-      expect(exp).toBeGreaterThanOrEqual(scheduledSec);
+      const window = meetingTokenWindowUnix(scheduledAt);
+      expect(window).not.toBeNull();
+      expect(exp).toBeGreaterThanOrEqual(window!.exp);
     });
   });
 
@@ -167,9 +233,20 @@ describe('Daily helpers', () => {
       expect(fetchMock).toHaveBeenCalledOnce();
       const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       const body = JSON.parse(String(init.body)) as {
-        properties: { privacy: string; exp: number };
+        properties: {
+          privacy: string;
+          exp: number;
+          max_participants: number;
+          enforce_unique_user_ids: boolean;
+          eject_at_room_exp: boolean;
+          eject_after_elapsed: number;
+        };
       };
       expect(body.properties.privacy).toBe('private');
+      expect(body.properties.max_participants).toBe(2);
+      expect(body.properties.enforce_unique_user_ids).toBe(true);
+      expect(body.properties.eject_at_room_exp).toBe(true);
+      expect(body.properties.eject_after_elapsed).toBe(35 * 60);
       expect(body.properties.exp).toBeGreaterThan(Math.floor(Date.now() / 1000));
     });
   });
@@ -195,6 +272,8 @@ describe('Daily helpers', () => {
         userName: 'Carlos',
         isOwner: true,
         exp: 9999999999,
+        nbf: 9999990000,
+        ejectAfterElapsed: 2100,
       });
 
       expect(token).toBe('daily_meeting_token');
@@ -206,6 +285,9 @@ describe('Daily helpers', () => {
           user_name: string;
           is_owner: boolean;
           exp: number;
+          nbf: number;
+          eject_at_token_exp: boolean;
+          eject_after_elapsed: number;
         };
       };
       expect(body.properties).toMatchObject({
@@ -214,6 +296,9 @@ describe('Daily helpers', () => {
         user_name: 'Carlos',
         is_owner: true,
         exp: 9999999999,
+        nbf: 9999990000,
+        eject_at_token_exp: true,
+        eject_after_elapsed: 2100,
       });
     });
   });
