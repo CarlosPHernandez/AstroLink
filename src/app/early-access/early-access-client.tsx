@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { parseEarlyAccessReferrer } from '@/lib/early-access-referrer';
 
 const CHRIS = {
   name: 'Chris Sembroski',
@@ -79,7 +80,9 @@ export default function EarlyAccessClient() {
 
     try {
       const referrer =
-        typeof window !== 'undefined' ? window.location.search.slice(1) || undefined : undefined;
+        typeof window !== 'undefined'
+          ? parseEarlyAccessReferrer(window.location.search)
+          : undefined;
 
       const response = await fetch('/api/early-access', {
         method: 'POST',
