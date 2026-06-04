@@ -133,17 +133,18 @@ export default function EarlyAccessClient() {
 
         <section className="bg-surface-container-low border-y border-outline-variant">
           <div className="max-w-[1200px] mx-auto px-md sm:px-lg py-xl sm:py-xxl">
-            <div className="grid lg:grid-cols-2 gap-xl items-center">
-              <div className="order-2 lg:order-1">
+            <div className="grid lg:grid-cols-2 gap-xl items-start">
+              <div className="order-2 lg:order-1 w-full min-w-0">
                 <p className="text-label-md text-primary font-semibold uppercase tracking-wider mb-sm">
                   Featured expert
                 </p>
                 <h2 className="text-headline-md sm:text-headline-lg text-on-surface font-bold tracking-tight mb-sm">
                   The caliber on AstroLink
                 </h2>
-                <p className="text-body-md text-on-surface-variant mb-lg max-w-lg">
-                  Our network starts with practitioners at the top of the field — people whose careers
-                  span human spaceflight, defense aerospace, and the new commercial space economy.
+                <p className="text-body-lg text-on-surface-variant mb-lg leading-relaxed">
+                  Chris is the standard, not the exception. Our roster brings together people who have
+                  flown missions, run operations, and built hardware—from human spaceflight and defense
+                  aerospace to today&apos;s commercial space economy.
                 </p>
 
                 <article
@@ -187,7 +188,7 @@ export default function EarlyAccessClient() {
                 </article>
               </div>
 
-              <div className="order-1 lg:order-2">
+              <div className="order-1 lg:order-2 w-full min-w-0">
                 <div
                   id="signup"
                   className="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg sm:p-xl floating-card-shadow scroll-mt-24"
