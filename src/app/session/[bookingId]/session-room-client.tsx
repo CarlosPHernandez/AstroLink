@@ -1,9 +1,15 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import type { BookingSessionView } from '@/lib/booking-access';
 import type { MentorBriefingOutput } from '@/lib/types';
+import { formatSessionWhen } from '@/lib/format';
+import {
+  getMediaOriginSnapshot,
+  MEDIA_ORIGIN_SERVER_SNAPSHOT,
+  subscribeMediaOrigin,
+} from '@/lib/media-origin';
 
 const PROVISION_POLL_MS = 5000;
 const PROVISION_TIMEOUT_MS = 120_000;
@@ -21,26 +27,17 @@ function dashboardHref(role: BookingSessionView['sessionRole']): string {
   return '/dashboard/mentee';
 }
 
-function formatSessionWhen(iso: string): string {
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
-}
-
 export default function SessionRoomClient({ booking }: { booking: BookingSessionView }) {
   const [ended, setEnded] = useState(false);
   const [provisioningStartedAt] = useState(() => Date.now());
   const [elapsedMs, setElapsedMs] = useState(0);
   const [provisionLoading, setProvisionLoading] = useState(false);
   const [provisionError, setProvisionError] = useState<string | null>(null);
+  const { insecure: insecureMediaOrigin, httpsOrigin: httpsDevOrigin } = useSyncExternalStore(
+    subscribeMediaOrigin,
+    getMediaOriginSnapshot,
+    () => MEDIA_ORIGIN_SERVER_SNAPSHOT,
+  );
 
   const exitHref = dashboardHref(booking.sessionRole);
 
@@ -112,7 +109,24 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
       </header>
 
       <div className="flex-grow flex flex-col lg:flex-row">
-        <div className="flex-grow bg-surface-container flex items-center justify-center p-8 border-r border-outline-variant">
+        <div className="flex-grow bg-surface-container flex flex-col items-center justify-center p-8 border-r border-outline-variant">
+          {insecureMediaOrigin && (
+            <div
+              data-testid="session-insecure-origin-warning"
+              className="w-full max-w-4xl mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-body-md text-on-surface"
+            >
+              Camera and microphone are blocked over plain HTTP on this address. On your Mac,{' '}
+              <a href="http://localhost:3000" className="font-semibold text-primary underline">
+                http://localhost:3000
+              </a>{' '}
+              works. For an iPhone or another device on your Wi‑Fi, stop the server and run{' '}
+              <code className="font-mono text-label-sm">npm run dev:lan</code>, then open{' '}
+              <a href={httpsDevOrigin} className="font-semibold text-primary underline">
+                {httpsDevOrigin}
+              </a>{' '}
+              and accept Safari&apos;s certificate warning.
+            </div>
+          )}
           {booking.gate === 'pending_payment' && (
             <div
               data-testid="session-pending-payment"
@@ -139,8 +153,8 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Not open yet</h3>
               <p className="text-body-md text-on-surface-variant mb-4">
                 The video room opens shortly before your scheduled session (
-                {formatSessionWhen(booking.scheduledAt)}). Check back a few minutes before start
-                time.
+                <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span>).
+                Check back a few minutes before start time.
               </p>
               <Link
                 href={exitHref}
@@ -326,7 +340,7 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
           <div>
             <h3 className="text-headline-md font-bold text-on-surface">Session briefing</h3>
             <p className="text-label-sm text-on-surface-variant mt-1">
-              {formatSessionWhen(booking.scheduledAt)}
+              <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span>
             </p>
           </div>
           {isSessionBriefing(booking.briefing) ? (

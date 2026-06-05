@@ -2,6 +2,23 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.1.2.1] - 2026-06-04
+
+### Added
+
+- `npm run dev:lan` for HTTPS dev on LAN (camera/mic on phones during dual-device video demos).
+- `src/lib/media-origin.ts` and `src/lib/format.ts` with unit tests.
+- `allowedDevOrigins` in `next.config.ts` for LAN HMR; `certificates/` gitignored.
+
+### Changed
+
+- Mentee/mentor dashboards and session room use shared session time formatting.
+- Video session how-tos updated for LAN HTTPS workflow.
+
+### Fixed
+
+- Session room infinite re-render from uncached `useSyncExternalStore` media-origin snapshot (React 19).
+
 ## [0.1.2.0] - 2026-06-04
 
 ### Added

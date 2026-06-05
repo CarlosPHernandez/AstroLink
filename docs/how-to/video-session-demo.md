@@ -26,7 +26,8 @@ npm run dev
 3. Send a test webhook from Daily or complete one dry-run call and confirm app logs show `received: true`.
 4. If using Stripe: `stripe listen --forward-to localhost:3000/api/webhooks/stripe` running.
 5. Two browsers (or profiles): mentee `carlos@astrolink.ai`, mentor `chris@astrolink.ai` (seed users).
-6. Allow camera/microphone for your Daily domain when the iframe loads.
+6. **Phone / second device on Wi‑Fi:** run `npm run dev:lan` and open `https://<LAN-IP>:3000` (accept Safari's cert warning). Plain `http://192.168.x.x:3000` blocks camera/mic. **Mac mentor:** `http://localhost:3000` is fine.
+7. Allow camera/microphone for your Daily domain when the iframe loads.
 
 ## Standard demo script (&lt;15 min)
 
@@ -51,6 +52,7 @@ npm run dev
 | No **Join room** / “Room preparing” | Room not provisioned yet | Wait 30s and refresh; use **Retry room setup** on session page; or `POST /api/book/fulfill` |
 | Session page “Payment required” | `pending_payment` | Fulfill payment or dev fulfill |
 | Iframe blank / denied | Missing token or Daily outage | Check server logs for `bookingId`; reprovision via dev operator (below) |
+| Iframe “something went wrong” / no camera on phone | Plain HTTP on LAN IP blocks camera/mic | `npm run dev:lan` → `https://<LAN-IP>:3000` on phone; session page shows steps |
 | Booking stuck `confirmed`, no recap | `meeting.ended` webhook missed | Re-end call in Daily, or dev simulate (below) |
 | Escrow not captured | Webhook never ran | Same as above; escrow stays authorized until capture |
 

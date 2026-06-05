@@ -23,6 +23,7 @@ Cloud Agent VMs often inject only `NEXT_PUBLIC_SUPABASE_URL`. **`NEXT_PUBLIC_SUP
 | Task | Command |
 |------|---------|
 | Dev server | `npm run dev` → http://127.0.0.1:3000 |
+| Dev server (phone on Wi‑Fi) | `npm run dev:lan` → https://\<LAN-IP\>:3000 — required for camera/mic on iPhone |
 | Unit tests | `npm test` (no external services) |
 | Lint | `npm run lint` (repo may have pre-existing ESLint errors) |
 | Production build | `npm run build` |

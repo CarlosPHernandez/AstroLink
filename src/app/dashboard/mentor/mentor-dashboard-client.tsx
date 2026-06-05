@@ -9,6 +9,7 @@ import {
   type MentorBookingView,
 } from '@/lib/mentor-booking-partition';
 import { SERVICE_TYPE_LABELS, type ServiceType } from '@/lib/types';
+import { formatSessionWhen } from '@/lib/format';
 
 interface SessionData {
   userId: string;
@@ -546,7 +547,7 @@ function MentorConsultationCard({
           </h3>
           <p className="text-[10px] text-on-surface-variant font-mono uppercase tracking-wide">
             {SERVICE_TYPE_LABELS[booking.serviceType as ServiceType] ?? booking.serviceType} •{' '}
-            {new Date(booking.scheduledAt).toLocaleString()}
+            <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span>
           </p>
         </div>
         {canJoin ? (
