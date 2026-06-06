@@ -30,7 +30,7 @@ export class SessionAgent {
         await this.logAudit('SESSION_SYNTHESIS_SKIPPED', bookingId, {
           reason: existingSession.transcript_available ? 'already_synthesized' : 'fallback_exists',
         });
-        return existingSession.summary_json as PostSessionOutput;
+        return existingSession.summary_json as unknown as PostSessionOutput;
       }
     }
 
@@ -87,7 +87,7 @@ export class SessionAgent {
           .select('summary_json')
           .eq('booking_id', bookingId)
           .maybeSingle();
-        return (racedSession?.summary_json ?? synthesis) as PostSessionOutput;
+        return (racedSession?.summary_json ?? synthesis) as unknown as PostSessionOutput;
       }
       throw new Error(`Failed to insert session record: ${sessionErr.message}`);
     }

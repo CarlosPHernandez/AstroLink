@@ -127,7 +127,7 @@ function utterancesFromJson(value: Json | null): TranscriptUtterance[] {
   if (!Array.isArray(value)) {
     return [];
   }
-  return value as TranscriptUtterance[];
+  return value as unknown as TranscriptUtterance[];
 }
 
 function durationMinutesFromUtterances(
