@@ -3,16 +3,37 @@ import { callLlmWithBackoff, generateStructuredJson, llmFlashModel } from '@/lib
 import { supabaseAdmin } from '@/lib/supabase';
 import { PostSessionOutput } from '@/lib/types';
 
+function isUniqueViolation(error: { code?: string } | null): boolean {
+  return error?.code === '23505';
+}
+
 export class SessionAgent {
   private agentId = 'APX-03' as const;
 
   /**
    * Summarizes the concluded session using transcript text.
+   * Idempotent on booking_id; upgrades fallback sessions when real transcript arrives.
    */
   async synthesizeSession(bookingId: string, transcript: string, durationMinutes: number) {
     await this.logAudit('SESSION_SYNTHESIS_START', bookingId, { durationMinutes });
 
-    // Fetch booking details
+    const { data: existingSession } = await supabaseAdmin
+      .from('sessions')
+      .select('id, transcript_available, summary_json')
+      .eq('booking_id', bookingId)
+      .maybeSingle();
+
+    const hasTranscript = Boolean(transcript.trim());
+
+    if (existingSession) {
+      if (existingSession.transcript_available || !hasTranscript) {
+        await this.logAudit('SESSION_SYNTHESIS_SKIPPED', bookingId, {
+          reason: existingSession.transcript_available ? 'already_synthesized' : 'fallback_exists',
+        });
+        return existingSession.summary_json as unknown as PostSessionOutput;
+      }
+    }
+
     const { data: booking, error: bookingErr } = await supabaseAdmin
       .from('bookings')
       .select('*, users(*), mentors(*)')
@@ -27,19 +48,47 @@ export class SessionAgent {
       rateLimitKey: booking.mentee_id,
       serviceType: booking.service_type,
       transcript,
-      sessionObjectives: [], // Retrieve objectives if stored previously
+      sessionObjectives: [],
       durationMinutes,
     });
 
-    // Write to public.sessions
+    if (existingSession) {
+      const { error: updateErr } = await supabaseAdmin
+        .from('sessions')
+        .update({
+          duration_seconds: durationMinutes * 60,
+          transcript_available: hasTranscript,
+          summary_json: synthesis as unknown as Json,
+        })
+        .eq('booking_id', bookingId);
+
+      if (updateErr) {
+        throw new Error(`Failed to upgrade session record: ${updateErr.message}`);
+      }
+
+      await this.logAudit('SESSION_SYNTHESIS_UPGRADED', bookingId, { synthesis });
+      return synthesis;
+    }
+
     const { error: sessionErr } = await supabaseAdmin.from('sessions').insert({
       booking_id: bookingId,
       duration_seconds: durationMinutes * 60,
-      transcript_available: !!transcript,
+      transcript_available: hasTranscript,
       summary_json: synthesis as unknown as Json,
     });
 
     if (sessionErr) {
+      if (isUniqueViolation(sessionErr)) {
+        await this.logAudit('SESSION_SYNTHESIS_SKIPPED', bookingId, {
+          reason: 'concurrent_insert',
+        });
+        const { data: racedSession } = await supabaseAdmin
+          .from('sessions')
+          .select('summary_json')
+          .eq('booking_id', bookingId)
+          .maybeSingle();
+        return (racedSession?.summary_json ?? synthesis) as unknown as PostSessionOutput;
+      }
       throw new Error(`Failed to insert session record: ${sessionErr.message}`);
     }
 

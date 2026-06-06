@@ -303,6 +303,44 @@ export type Database = {
           },
         ]
       }
+      session_transcripts: {
+        Row: {
+          booking_id: string
+          created_at: string
+          daily_transcript_id: string | null
+          id: string
+          source_locale: string
+          utterances_json: Json | null
+          vtt_text: string | null
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          daily_transcript_id?: string | null
+          id?: string
+          source_locale?: string
+          utterances_json?: Json | null
+          vtt_text?: string | null
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          daily_transcript_id?: string | null
+          id?: string
+          source_locale?: string
+          utterances_json?: Json | null
+          vtt_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_transcripts_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           booking_id: string

@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import type { BookingSessionView } from '@/lib/booking-access';
-import type { MentorBriefingOutput } from '@/lib/types';
+import type { MentorBriefingOutput, PostSessionOutput } from '@/lib/types';
 import { formatSessionWhen } from '@/lib/format';
 import {
   getMediaOriginSnapshot,
@@ -18,6 +18,104 @@ function isSessionBriefing(
   briefing: BookingSessionView['briefing'],
 ): briefing is MentorBriefingOutput {
   return briefing !== null && 'session_objectives' in briefing;
+}
+
+type SessionRecapResponse = {
+  ready: boolean;
+  recap: PostSessionOutput | null;
+  transcriptAvailable: boolean;
+};
+
+function SessionRecapPanel({ bookingId }: { bookingId: string }) {
+  const [state, setState] = useState<'loading' | 'ready' | 'pending' | 'error'>('loading');
+  const [recap, setRecap] = useState<PostSessionOutput | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRecap() {
+      try {
+        const res = await fetch(`/api/session/${bookingId}/recap`);
+        const data = (await res.json()) as SessionRecapResponse & { error?: string };
+        if (!res.ok) {
+          throw new Error(data.error ?? 'Could not load recap');
+        }
+        if (cancelled) {
+          return;
+        }
+        if (data.ready && data.recap) {
+          setRecap(data.recap);
+          setState('ready');
+          return;
+        }
+        setState('pending');
+      } catch (err: unknown) {
+        if (cancelled) {
+          return;
+        }
+        setError(err instanceof Error ? err.message : 'Could not load recap');
+        setState('error');
+      }
+    }
+
+    void loadRecap();
+    const id = window.setInterval(() => {
+      void loadRecap();
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [bookingId]);
+
+  if (state === 'loading' || state === 'pending') {
+    return (
+      <p className="text-body-md text-on-surface-variant mb-6" data-testid="session-recap-pending">
+        {state === 'loading' ? 'Loading your recap…' : 'Recap is still generating. This refreshes automatically.'}
+      </p>
+    );
+  }
+
+  if (state === 'error' || !recap) {
+    return (
+      <p className="text-body-md text-on-surface-variant mb-6" data-testid="session-recap-error">
+        {error ?? 'Recap is not available yet. Check your dashboard in a minute.'}
+      </p>
+    );
+  }
+
+  return (
+    <div className="w-full text-left space-y-4 mb-6" data-testid="session-recap-content">
+      <p className="text-body-md text-on-surface">{recap.session_summary}</p>
+      {recap.key_insights.length > 0 && (
+        <div>
+          <h4 className="text-label-sm font-semibold text-on-surface mb-2">Key insights</h4>
+          <ul className="space-y-1 text-body-md text-on-surface-variant">
+            {recap.key_insights.map((insight) => (
+              <li key={insight}>• {insight}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {recap.action_items.length > 0 && (
+        <div>
+          <h4 className="text-label-sm font-semibold text-on-surface mb-2">Action items</h4>
+          <ul className="space-y-2 text-body-md text-on-surface-variant">
+            {recap.action_items.map((item) => (
+              <li key={`${item.task}-${item.owner}`}>
+                <span className="text-on-surface">{item.task}</span>
+                <span className="block text-label-sm">
+                  {item.owner} · {item.deadline}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function dashboardHref(role: BookingSessionView['sessionRole']): string {
@@ -38,7 +136,7 @@ function SessionGatePanel({
   return (
     <div
       data-testid={testId}
-      className="w-full max-w-md mx-auto rounded-xl border border-outline-variant bg-surface-container-lowest p-6 text-center shadow-sm sm:p-8"
+      className="w-full max-w-[var(--max-width-content)] mx-auto rounded-xl border border-outline-variant bg-surface-container-lowest p-6 text-center shadow-sm sm:p-8"
     >
       {children}
     </div>
@@ -287,9 +385,7 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
           {booking.gate === 'completed' && (
             <SessionGatePanel testId="session-completed">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Session completed</h3>
-              <p className="text-body-md text-on-surface-variant mb-6">
-                Your recap and payment status are on your dashboard.
-              </p>
+              <SessionRecapPanel bookingId={booking.id} />
               <Link
                 href={exitHref}
                 className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"

@@ -12,6 +12,7 @@ See also [d1-implementation-plan.md](../d1-implementation-plan.md) and [d2-next-
 |----------|---------|
 | `DAILY_API_KEY` | Create private rooms + meeting tokens |
 | `DAILY_WEBHOOK_HMAC` | Verify `POST /api/webhooks/daily` (base64 secret from Daily dashboard) |
+| `DAILY_TRANSCRIPTION_ENABLED=true` | Mentor tokens auto-start transcription; APX-03 runs on `transcript.ready-to-download` |
 | `SKIP_STRIPE_PAYMENTS=true` | Skip Stripe; use dev fulfill |
 | Stripe test keys | Real card flow + `stripe listen` |
 
@@ -22,12 +23,13 @@ npm run dev
 ## Preflight (before investor demo)
 
 1. `DAILY_API_KEY` and `DAILY_WEBHOOK_HMAC` set in `.env.local`.
-2. Daily dashboard webhook points to your tunnel: `https://<tunnel>/api/webhooks/daily`, event `meeting.ended`.
-3. Send a test webhook from Daily or complete one dry-run call and confirm app logs show `received: true`.
-4. If using Stripe: `stripe listen --forward-to localhost:3000/api/webhooks/stripe` running.
-5. Two browsers (or profiles): mentee `carlos@astrolink.ai`, mentor `chris@astrolink.ai` (seed users).
-6. **Phone / second device on Wi‑Fi:** run `npm run dev:lan` and open `https://<LAN-IP>:3000` (accept Safari's cert warning). Plain `http://192.168.x.x:3000` blocks camera/mic. **Mac mentor:** `http://localhost:3000` is fine.
-7. Allow camera/microphone for your Daily domain when the iframe loads.
+2. Daily dashboard webhook points to your tunnel: `https://<tunnel>/api/webhooks/daily`, events `meeting.ended` and (when transcription is on) `transcript.ready-to-download`.
+3. Daily domain transcription enabled when using `DAILY_TRANSCRIPTION_ENABLED=true`.
+4. Send a test webhook from Daily or complete one dry-run call and confirm app logs show `received: true`.
+5. If using Stripe: `stripe listen --forward-to localhost:3000/api/webhooks/stripe` running.
+6. Two browsers (or profiles): mentee `carlos@astrolink.ai`, mentor `chris@astrolink.ai` (seed users).
+7. **Phone / second device on Wi‑Fi:** run `npm run dev:lan` and open `https://<LAN-IP>:3000` (accept Safari's cert warning). Plain `http://192.168.x.x:3000` blocks camera/mic. **Mac mentor:** `http://localhost:3000` is fine.
+8. Allow camera/microphone for your Daily domain when the iframe loads.
 
 ## Standard demo script (&lt;15 min)
 
@@ -36,8 +38,9 @@ npm run dev
 3. Second browser: sign in as mentor → mentor dashboard → **Join room** for the same booking.
 4. Both land on `/session/[id]` with light shell + Daily iframe (tokenized private room).
 5. **End the call inside Daily’s UI** (hang up). The header **End session** button only updates local UI; it does **not** capture payment.
-6. Within ~1 minute: booking `completed`, mentee sees recap on dashboard.
-7. Stripe (if used): payment intent `requires_capture` → captured after step 5.
+6. Within ~1 minute: booking `completed`, mentee sees English recap on `/session/[id]` and dashboard.
+7. With transcription enabled: recap content should reference call topics (RPO, delta-V, etc.) after `transcript.ready-to-download`, not the empty-transcript apology template.
+8. Stripe (if used): payment intent `requires_capture` → captured after step 5 (`meeting.ended`).
 
 ## Two-user join proof
 
@@ -54,6 +57,7 @@ npm run dev
 | Iframe blank / denied | Missing token or Daily outage | Check server logs for `bookingId`; reprovision via dev operator (below) |
 | Iframe “something went wrong” / no camera on phone | Plain HTTP on LAN IP blocks camera/mic | `npm run dev:lan` → `https://<LAN-IP>:3000` on phone; session page shows steps |
 | Booking stuck `confirmed`, no recap | `meeting.ended` webhook missed | Re-end call in Daily, or dev simulate (below) |
+| Booking `completed` but recap is generic apology | Transcription off or `transcript.ready` missed | Set `DAILY_TRANSCRIPTION_ENABLED=true`; subscribe webhook; or `simulate_transcript_ready` |
 | Escrow not captured | Webhook never ran | Same as above; escrow stays authorized until capture |
 
 ## No-show / webhook miss
@@ -77,6 +81,12 @@ npm run dev
 ```json
 { "bookingId": "<uuid>", "action": "simulate_meeting_ended" }
 ```
+
+```json
+{ "bookingId": "<uuid>", "action": "simulate_transcript_ready" }
+```
+
+Ingests `src/lib/transcript-translation/__fixtures__/sample.vtt`, persists `session_transcripts`, and runs APX-03 (dev only).
 
 Production-safe retry without dev tools: `POST /api/session/provision` with `{ "bookingId": "..." }` when status is `confirmed` and room URL is missing.
 

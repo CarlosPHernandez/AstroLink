@@ -2,10 +2,16 @@ import { NextResponse } from 'next/server';
 
 import {
   parseMeetingEndedEvent,
+  parseTranscriptErrorEvent,
+  parseTranscriptReadyEvent,
   verifyDailyWebhookSignature,
   type DailyWebhookEvent,
 } from '@/lib/daily';
-import { fulfillBookingAfterMeetingEnded } from '@/lib/post-session';
+import {
+  fulfillBookingAfterMeetingEnded,
+  fulfillBookingAfterTranscriptError,
+  fulfillBookingAfterTranscriptReady,
+} from '@/lib/post-session';
 
 export async function POST(request: Request) {
   const hmacSecret = process.env.DAILY_WEBHOOK_HMAC;
@@ -39,6 +45,19 @@ export async function POST(request: Request) {
   }
 
   try {
+    const transcriptReady = parseTranscriptReadyEvent(body);
+    if (transcriptReady) {
+      const result = await fulfillBookingAfterTranscriptReady(transcriptReady);
+      return NextResponse.json({ received: true, ...result });
+    }
+
+    const transcriptError = parseTranscriptErrorEvent(body);
+    if (transcriptError) {
+      console.error('[daily] transcript.error', transcriptError);
+      const result = await fulfillBookingAfterTranscriptError(transcriptError);
+      return NextResponse.json({ received: true, ...result });
+    }
+
     const meetingEnded = parseMeetingEndedEvent(body);
     if (!meetingEnded) {
       return NextResponse.json({ received: true, skipped: 'unsupported_event' });

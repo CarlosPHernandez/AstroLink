@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -6,16 +9,22 @@ import {
   dailyRoomNameForBooking,
   extractDailyRoomNameFromUrl,
   isDailyProvisionEnabled,
+  isDailyTranscriptionEnabled,
   provisionDailyRoomForBooking,
 } from '@/lib/daily';
-import { fulfillBookingAfterMeetingEnded } from '@/lib/post-session';
+import { fulfillBookingAfterMeetingEnded, ingestTranscriptVttForBooking } from '@/lib/post-session';
 import { getSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
 
 const BodySchema = z.object({
   bookingId: z.string().uuid(),
-  action: z.enum(['status', 'provision', 'simulate_meeting_ended']),
+  action: z.enum(['status', 'provision', 'simulate_meeting_ended', 'simulate_transcript_ready']),
 });
+
+const SAMPLE_VTT_PATH = join(
+  process.cwd(),
+  'src/lib/transcript-translation/__fixtures__/sample.vtt',
+);
 
 async function assertBookingAccess(bookingId: string, userId: string, role: string) {
   const { data: booking, error } = await supabaseAdmin
@@ -68,7 +77,13 @@ export async function POST(request: Request) {
 
       const { data: sessionRow } = await supabaseAdmin
         .from('sessions')
-        .select('id, duration_minutes, created_at')
+        .select('id, duration_seconds, transcript_available, completed_at')
+        .eq('booking_id', bookingId)
+        .maybeSingle();
+
+      const { data: transcriptRow } = await supabaseAdmin
+        .from('session_transcripts')
+        .select('id, daily_transcript_id, created_at')
         .eq('booking_id', bookingId)
         .maybeSingle();
 
@@ -80,8 +95,10 @@ export async function POST(request: Request) {
         stripePaymentIntentId: booking.stripe_payment_intent_id,
         scheduledAt: booking.scheduled_at,
         sessionRecord: sessionRow ?? null,
+        transcriptRecord: transcriptRow ?? null,
         dailyApiConfigured: Boolean(process.env.DAILY_API_KEY),
         dailyProvisionEnabled: isDailyProvisionEnabled(),
+        dailyTranscriptionEnabled: isDailyTranscriptionEnabled(),
         canProvisionDailyRoom: canProvisionDailyRoom(),
         webhookHmacConfigured: Boolean(process.env.DAILY_WEBHOOK_HMAC),
       });
@@ -109,6 +126,18 @@ export async function POST(request: Request) {
         start_ts: now - 1800,
         end_ts: now,
         meeting_id: `dev_sim_${bookingId.slice(0, 8)}`,
+      });
+
+      return NextResponse.json({ success: true, ...result });
+    }
+
+    if (action === 'simulate_transcript_ready') {
+      const vttText = readFileSync(SAMPLE_VTT_PATH, 'utf8');
+      const result = await ingestTranscriptVttForBooking({
+        bookingId,
+        vttText,
+        dailyTranscriptId: `dev_sim_${bookingId.slice(0, 8)}`,
+        durationMinutes: 30,
       });
 
       return NextResponse.json({ success: true, ...result });
