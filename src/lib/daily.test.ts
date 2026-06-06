@@ -8,9 +8,11 @@ import {
   dailyRoomNameForBooking,
   extractDailyRoomNameFromUrl,
   isDailyProvisionEnabled,
+  isDailyTranscriptionEnabled,
   meetingTokenExpiryUnix,
   meetingTokenWindowUnix,
   parseMeetingEndedEvent,
+  parseTranscriptReadyEvent,
   resolveSessionJoinPhase,
   roomExpiryUnix,
   verifyDailyWebhookSignature,
@@ -251,11 +253,46 @@ describe('Daily helpers', () => {
     });
   });
 
+  describe('isDailyTranscriptionEnabled', () => {
+    afterEach(() => {
+      delete process.env.DAILY_TRANSCRIPTION_ENABLED;
+    });
+
+    it('is false unless explicitly enabled', () => {
+      expect(isDailyTranscriptionEnabled()).toBe(false);
+      process.env.DAILY_TRANSCRIPTION_ENABLED = 'true';
+      expect(isDailyTranscriptionEnabled()).toBe(true);
+    });
+  });
+
+  describe('parseTranscriptReadyEvent', () => {
+    it('parses transcript.ready-to-download payload', () => {
+      const parsed = parseTranscriptReadyEvent({
+        type: 'transcript.ready-to-download',
+        payload: {
+          id: 'transcript-123',
+          room_name: 'astrolink-abc',
+          duration: 1800,
+          mtg_session_id: 'mtg-1',
+          status: 't_finished',
+        },
+      });
+
+      expect(parsed).toEqual({
+        transcriptId: 'transcript-123',
+        roomName: 'astrolink-abc',
+        durationSeconds: 1800,
+        meetingSessionId: 'mtg-1',
+      });
+    });
+  });
+
   describe('createMeetingToken', () => {
     afterEach(() => {
       vi.unstubAllGlobals();
       vi.restoreAllMocks();
       delete process.env.DAILY_API_KEY;
+      delete process.env.DAILY_TRANSCRIPTION_ENABLED;
     });
 
     it('posts role-bound token properties to Daily', async () => {
@@ -300,6 +337,33 @@ describe('Daily helpers', () => {
         eject_at_token_exp: true,
         eject_after_elapsed: 2100,
       });
+    });
+
+    it('enables auto_start_transcription for owner tokens when flag is on', async () => {
+      process.env.DAILY_API_KEY = 'test-key';
+      process.env.DAILY_TRANSCRIPTION_ENABLED = 'true';
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ token: 'daily_meeting_token' }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      await createMeetingToken({
+        roomName: 'astrolink-abc',
+        userId: 'mentor-1',
+        userName: 'Chris',
+        isOwner: true,
+      });
+
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      const body = JSON.parse(String(init.body)) as {
+        properties: {
+          auto_start_transcription?: boolean;
+          auto_transcription_settings?: { language: string };
+        };
+      };
+      expect(body.properties.auto_start_transcription).toBe(true);
+      expect(body.properties.auto_transcription_settings).toEqual({ language: 'en' });
     });
   });
 });

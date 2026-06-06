@@ -28,3 +28,8 @@ export {
   selectTranscriptWindow,
   stripFillerForSynthesis,
 } from '@/lib/transcript-translation/token-budget';
+export { parseWebVtt } from '@/lib/transcript-translation/parse-webvtt';
+export { mapSpeakersToRoles } from '@/lib/transcript-translation/map-speakers';
+export type { SpeakerMappingContext } from '@/lib/transcript-translation/map-speakers';
+export { fetchDailyTranscriptVtt } from '@/lib/transcript-translation/fetch-daily-transcript';
+export { persistSessionTranscript } from '@/lib/transcript-translation/persist-transcript';

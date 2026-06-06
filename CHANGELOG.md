@@ -2,6 +2,19 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.1.3.0] - 2026-06-06
+
+### Added
+
+- D3 Phase 1 post-session transcript pipeline: Daily WebVTT fetch/parse, `session_transcripts` table with participant RLS, dual-trigger synthesis gate (`meeting.ended` + `transcript.ready`), and `transcript.error` fallback to APX-03 synthesis.
+- `GET /api/session/[bookingId]/recap` for booking participants; session room recap panel polls until recap is ready.
+- Unit tests for post-session gate, persist, Daily webhook routing, and recap access.
+
+### Changed
+
+- Post-session fulfillment split into persist vs synthesis paths with idempotent inserts (`23505` handling).
+- Dev session-operator supports `simulate_transcript_ready` / `simulate_transcript_error` for local dogfooding.
+
 ## [0.1.2.1] - 2026-06-04
 
 ### Added

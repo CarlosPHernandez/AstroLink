@@ -41,6 +41,12 @@ export function isDailyProvisionEnabled(): boolean {
   return flag === 'true';
 }
 
+/** When true, APX-03 runs on transcript.ready-to-download instead of meeting.ended. */
+export function isDailyTranscriptionEnabled(): boolean {
+  const flag = process.env.DAILY_TRANSCRIPTION_ENABLED?.trim().toLowerCase();
+  return flag === 'true';
+}
+
 export function canProvisionDailyRoom(): boolean {
   return isDailyProvisionEnabled() && Boolean(process.env.DAILY_API_KEY?.trim());
 }
@@ -210,6 +216,14 @@ export async function createMeetingToken(params: {
         user_name: params.userName,
         is_owner: params.isOwner,
         exp,
+        ...(params.isOwner && isDailyTranscriptionEnabled()
+          ? {
+              auto_start_transcription: true,
+              auto_transcription_settings: {
+                language: 'en',
+              },
+            }
+          : {}),
         ...(tokenWindow
           ? {
               nbf: params.nbf,
@@ -317,16 +331,34 @@ export async function buildAuthorizedDailyJoinUrl(params: {
   return buildDailyJoinUrl(params.roomUrl, token);
 }
 
-/** Daily meeting.ended webhook envelope (subset used by AstroLink). */
+/** Daily webhook envelope (subset used by AstroLink). */
 export type DailyWebhookEvent = {
   type: string;
   payload?: {
     type?: string;
     room?: string;
+    room_name?: string;
     start_ts?: number;
     end_ts?: number;
     meeting_id?: string;
+    id?: string;
+    duration?: number;
+    mtg_session_id?: string;
+    status?: string;
+    error?: string;
   };
+};
+
+export type TranscriptReadyPayload = {
+  transcriptId: string;
+  roomName: string;
+  durationSeconds?: number;
+  meetingSessionId?: string;
+};
+
+export type TranscriptErrorPayload = {
+  roomName?: string;
+  error?: string;
 };
 
 /**
@@ -378,5 +410,42 @@ export function parseMeetingEndedEvent(body: DailyWebhookEvent): {
     start_ts: inner.start_ts,
     end_ts: inner.end_ts,
     meeting_id: inner.meeting_id,
+  };
+}
+
+export function parseTranscriptReadyEvent(body: DailyWebhookEvent): TranscriptReadyPayload | null {
+  const eventType = body.type ?? body.payload?.type;
+  if (eventType !== 'transcript.ready-to-download') {
+    return null;
+  }
+
+  const inner = body.payload;
+  if (!inner) {
+    return null;
+  }
+
+  const transcriptId = inner.id?.trim();
+  const roomName = inner.room_name?.trim();
+  if (!transcriptId || !roomName) {
+    return null;
+  }
+
+  return {
+    transcriptId,
+    roomName,
+    durationSeconds: inner.duration,
+    meetingSessionId: inner.mtg_session_id,
+  };
+}
+
+export function parseTranscriptErrorEvent(body: DailyWebhookEvent): TranscriptErrorPayload | null {
+  const eventType = body.type ?? body.payload?.type;
+  if (eventType !== 'transcript.error') {
+    return null;
+  }
+
+  return {
+    roomName: body.payload?.room_name,
+    error: body.payload?.error,
   };
 }
