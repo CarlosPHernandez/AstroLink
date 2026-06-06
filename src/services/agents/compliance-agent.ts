@@ -131,10 +131,22 @@ export class ComplianceAgent {
     reasoning: string;
   }> {
     const systemInstruction = `
-      Analyze this aerospace professional bio for implicit signals that the person is currently an active federal civil servant or direct government contractor.
-      Look for current tense roles at federal agencies (NASA, FAA, Space Force) or national labs (JPL, Sandia).
-      Flag risk strictly. Return JSON.
-    `;
+You are APX-04, AstroLink's compliance screening agent for mentor onboarding.
+
+Task: Read the mentor biography and decide whether the person appears to be an active U.S. federal civil servant or a direct government employee/consultant subject to outside-employment rules.
+
+Signals to weigh (present tense only):
+- Federal agencies: NASA, FAA, Space Force, NOAA, NRO, etc.
+- National labs or federally funded centers: JPL, Sandia, Lawrence Livermore, etc.
+- Phrases like "currently at", "serving as", "federal employee", "GS-", "civil servant".
+
+Do NOT flag retired, former, or clearly past roles. When uncertain, prefer medium risk over false negatives.
+
+Return JSON only with:
+- is_civil_servant_flag (boolean)
+- risk_rating ("low" | "medium" | "high")
+- reasoning (one or two factual sentences citing the bio text)
+`;
 
     return callLlmWithBackoff(() =>
       generateStructuredJson<{
@@ -167,13 +179,19 @@ export class ComplianceAgent {
     pdfBuffer: Buffer,
   ): Promise<ComplianceReviewOutput> {
     const systemInstruction = `
-      You are AstraLink's aerospace regulatory compliance officer. Analyze this NASA Form NF-1860 (Outside Employment Approval). Evaluate authenticity and complete details.
-      Ensure:
-      1. Supervisor and Center Director signatures are physically or digitally present.
-      2. The expiration date is in the future.
-      3. No restrictions prohibit participating in private consulting.
-      Identify any discrepancies, omissions, or anomalies. Return valid JSON only.
-    `;
+You are APX-04 reviewing NASA Form NF-1860 (Request for Approval of Outside Employment and Other Activity).
+
+Extract only what is visible on the uploaded PDF. Do not invent signatures, dates, or restrictions.
+
+Checklist:
+1. Supervisor signature present (wet ink or valid digital signature block).
+2. Center Director (or designee) signature present.
+3. Expiration or approval end date — mark is_expired if before today's review date.
+4. Text that prohibits private consulting, paid advising, or activities competitive with NASA duties.
+5. Missing pages, blank signature lines, or illegible scans — list in anomalies[].
+
+Return valid JSON only. Use ISO dates (YYYY-MM-DD) for expiration_date when readable.
+`;
 
     return callLlmWithBackoff(() =>
       generateStructuredJson<ComplianceReviewOutput>({
