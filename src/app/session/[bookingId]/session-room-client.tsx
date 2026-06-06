@@ -1,9 +1,15 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import type { BookingSessionView } from '@/lib/booking-access';
 import type { MentorBriefingOutput } from '@/lib/types';
+import { formatSessionWhen } from '@/lib/format';
+import {
+  getMediaOriginSnapshot,
+  MEDIA_ORIGIN_SERVER_SNAPSHOT,
+  subscribeMediaOrigin,
+} from '@/lib/media-origin';
 
 const PROVISION_POLL_MS = 5000;
 const PROVISION_TIMEOUT_MS = 120_000;
@@ -21,18 +27,22 @@ function dashboardHref(role: BookingSessionView['sessionRole']): string {
   return '/dashboard/mentee';
 }
 
-function formatSessionWhen(iso: string): string {
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
+/** Centered gate card — w-full prevents flex-shrink from crushing text to one word per line. */
+function SessionGatePanel({
+  testId,
+  children,
+}: {
+  testId: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      data-testid={testId}
+      className="w-full max-w-md mx-auto rounded-xl border border-outline-variant bg-surface-container-lowest p-6 text-center shadow-sm sm:p-8"
+    >
+      {children}
+    </div>
+  );
 }
 
 export default function SessionRoomClient({ booking }: { booking: BookingSessionView }) {
@@ -41,6 +51,11 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
   const [elapsedMs, setElapsedMs] = useState(0);
   const [provisionLoading, setProvisionLoading] = useState(false);
   const [provisionError, setProvisionError] = useState<string | null>(null);
+  const { insecure: insecureMediaOrigin, httpsOrigin: httpsDevOrigin } = useSyncExternalStore(
+    subscribeMediaOrigin,
+    getMediaOriginSnapshot,
+    () => MEDIA_ORIGIN_SERVER_SNAPSHOT,
+  );
 
   const exitHref = dashboardHref(booking.sessionRole);
 
@@ -111,70 +126,76 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
         </span>
       </header>
 
-      <div className="flex-grow flex flex-col lg:flex-row">
-        <div className="flex-grow bg-surface-container flex items-center justify-center p-8 border-r border-outline-variant">
-          {booking.gate === 'pending_payment' && (
+      <div className="flex flex-1 flex-col min-h-0 lg:flex-row">
+        <div className="flex min-h-[min(24rem,60vh)] min-w-0 flex-1 flex-col border-outline-variant bg-surface-container lg:border-r">
+          <div className="flex flex-1 w-full flex-col items-center justify-center px-4 py-8 sm:px-8">
+          {insecureMediaOrigin && (
             <div
-              data-testid="session-pending-payment"
-              className="text-center max-w-md p-8 border border-outline-variant rounded-lg bg-surface-container-lowest"
+              data-testid="session-insecure-origin-warning"
+              className="mb-4 w-full max-w-4xl rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-body-md text-on-surface"
             >
+              Camera and microphone are blocked over plain HTTP on this address. On your Mac,{' '}
+              <a href="http://localhost:3000" className="font-semibold text-primary underline">
+                http://localhost:3000
+              </a>{' '}
+              works. For an iPhone or another device on your Wi‑Fi, stop the server and run{' '}
+              <code className="font-mono text-label-sm">npm run dev:lan</code>, then open{' '}
+              <a href={httpsDevOrigin} className="font-semibold text-primary underline">
+                {httpsDevOrigin}
+              </a>{' '}
+              and accept Safari&apos;s certificate warning.
+            </div>
+          )}
+          {booking.gate === 'pending_payment' && (
+            <SessionGatePanel testId="session-pending-payment">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Payment required</h3>
               <p className="text-body-md text-on-surface-variant mb-6">
                 Complete payment from your dashboard before joining the video room.
               </p>
               <Link
                 href={exitHref}
-                className="inline-block px-5 py-2.5 rounded-md bg-primary text-on-primary text-label-sm font-semibold hover:bg-primary-container"
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
               >
                 Back to dashboard
               </Link>
-            </div>
+            </SessionGatePanel>
           )}
 
           {booking.gate === 'too_early' && (
-            <div
-              data-testid="session-too-early"
-              className="text-center max-w-md p-8 border border-outline-variant rounded-lg bg-surface-container-lowest"
-            >
+            <SessionGatePanel testId="session-too-early">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Not open yet</h3>
-              <p className="text-body-md text-on-surface-variant mb-4">
+              <p className="text-body-md text-on-surface-variant mb-6 text-pretty">
                 The video room opens shortly before your scheduled session (
-                {formatSessionWhen(booking.scheduledAt)}). Check back a few minutes before start
-                time.
+                <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span>
+                ). Check back a few minutes before start time.
               </p>
               <Link
                 href={exitHref}
-                className="inline-block px-5 py-2.5 rounded-md bg-primary text-on-primary text-label-sm font-semibold hover:bg-primary-container"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container sm:w-auto"
               >
                 Back to dashboard
               </Link>
-            </div>
+            </SessionGatePanel>
           )}
 
           {booking.gate === 'expired' && (
-            <div
-              data-testid="session-expired"
-              className="text-center max-w-md p-8 border border-outline-variant rounded-lg bg-surface-container-lowest"
-            >
+            <SessionGatePanel testId="session-expired">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Join window closed</h3>
-              <p className="text-body-md text-on-surface-variant mb-4">
+              <p className="text-body-md text-on-surface-variant mb-6 text-pretty">
                 The scheduled join window for this session has ended. If you still need help, contact
                 support or book another session from your dashboard.
               </p>
               <Link
                 href={exitHref}
-                className="inline-block px-5 py-2.5 rounded-md bg-primary text-on-primary text-label-sm font-semibold hover:bg-primary-container"
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
               >
                 Back to dashboard
               </Link>
-            </div>
+            </SessionGatePanel>
           )}
 
           {booking.gate === 'provisioning' && (
-            <div
-              data-testid="session-provisioning"
-              className="text-center max-w-md p-8 border border-outline-variant rounded-lg bg-surface-container-lowest"
-            >
+            <SessionGatePanel testId="session-provisioning">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Room preparing</h3>
               <p className="text-body-md text-on-surface-variant mb-4">
                 Your private video room is being set up. This page refreshes automatically every few
@@ -203,13 +224,13 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
                   {provisionError}
                 </p>
               )}
-            </div>
+            </SessionGatePanel>
           )}
 
           {booking.gate === 'ready' && !ended && booking.dailyJoinUrl && !booking.tokenError && (
             <div
               data-testid="session-join-ready"
-              className="w-full max-w-4xl aspect-video rounded-lg border border-outline-variant overflow-hidden bg-surface-container-lowest shadow-sm"
+              className="mx-auto w-full max-w-4xl overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm aspect-video"
             >
               <iframe
                 data-testid="session-daily-iframe"
@@ -236,97 +257,86 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
           )}
 
           {booking.gate === 'ready' && !ended && booking.tokenError && (
-            <div
-              data-testid="session-token-error"
-              className="text-center max-w-md p-8 border border-outline-variant rounded-lg bg-surface-container-lowest"
-            >
+            <SessionGatePanel testId="session-token-error">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Could not join room</h3>
-              <p className="text-body-md text-on-surface-variant mb-4">{booking.tokenError}</p>
+              <p className="text-body-md text-on-surface-variant mb-6">{booking.tokenError}</p>
               <button
                 type="button"
                 onClick={() => window.location.reload()}
-                className="inline-block px-5 py-2.5 rounded-md bg-primary text-on-primary text-label-sm font-semibold hover:bg-primary-container"
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
               >
                 Try again
               </button>
-            </div>
+            </SessionGatePanel>
           )}
 
           {booking.gate === 'ready' && !ended && !booking.dailyJoinUrl && !booking.tokenError && (
-            <div
-              data-testid="session-no-join-url"
-              className="text-center max-w-md p-8 border border-outline-variant rounded-lg bg-surface-container-lowest"
-            >
-              <p className="text-body-md text-on-surface-variant mb-4">
+            <SessionGatePanel testId="session-no-join-url">
+              <p className="text-body-md text-on-surface-variant mb-6 text-pretty">
                 Video is unavailable — Daily is not configured for this environment.
               </p>
-              <Link href={exitHref} className="text-primary text-label-sm font-semibold">
+              <Link
+                href={exitHref}
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
+              >
                 Back to dashboard
               </Link>
-            </div>
+            </SessionGatePanel>
           )}
 
           {booking.gate === 'completed' && (
-            <div
-              data-testid="session-completed"
-              className="text-center max-w-md p-8 border border-outline-variant rounded-lg bg-surface-container-lowest"
-            >
+            <SessionGatePanel testId="session-completed">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Session completed</h3>
               <p className="text-body-md text-on-surface-variant mb-6">
                 Your recap and payment status are on your dashboard.
               </p>
               <Link
                 href={exitHref}
-                className="inline-block px-5 py-2.5 rounded-md bg-primary text-on-primary text-label-sm font-semibold hover:bg-primary-container"
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
               >
                 Back to dashboard
               </Link>
-            </div>
+            </SessionGatePanel>
           )}
 
           {(booking.gate === 'payment_failed' || booking.gate === 'unavailable') && (
-            <div
-              data-testid="session-unavailable"
-              className="text-center max-w-md p-8 border border-outline-variant rounded-lg bg-surface-container-lowest"
-            >
+            <SessionGatePanel testId="session-unavailable">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Session unavailable</h3>
               <p className="text-body-md text-on-surface-variant mb-6">
                 This booking cannot be joined right now ({booking.status}).
               </p>
               <Link
                 href={exitHref}
-                className="inline-block px-5 py-2.5 rounded-md bg-primary text-on-primary text-label-sm font-semibold hover:bg-primary-container"
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
               >
                 Back to dashboard
               </Link>
-            </div>
+            </SessionGatePanel>
           )}
 
           {booking.gate === 'ready' && ended && (
-            <div
-              data-testid="session-ended-local"
-              className="text-center max-w-md p-8 border border-outline-variant rounded-lg bg-surface-container-lowest"
-            >
+            <SessionGatePanel testId="session-ended-local">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Session ended</h3>
-              <p className="text-body-md text-on-surface-variant mb-6">
+              <p className="text-body-md text-on-surface-variant mb-6 text-pretty">
                 Post-session synthesis and payment capture run when everyone leaves the Daily call
                 (webhook). Check your dashboard in a minute for the summary.
               </p>
               <Link
                 href={exitHref}
-                className="inline-block px-5 py-2.5 rounded-md bg-primary text-on-primary text-label-sm font-semibold hover:bg-primary-container"
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
               >
                 Back to dashboard
               </Link>
-            </div>
+            </SessionGatePanel>
           )}
+          </div>
         </div>
 
-        <aside className="w-full lg:w-96 p-6 space-y-6 bg-surface-container-lowest border-outline-variant">
+        <aside className="w-full shrink-0 p-6 space-y-6 border-outline-variant bg-surface-container-lowest lg:w-96">
           <div>
             <h3 className="text-headline-md font-bold text-on-surface">Session briefing</h3>
             <p className="text-label-sm text-on-surface-variant mt-1">
-              {formatSessionWhen(booking.scheduledAt)}
+              <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span>
             </p>
           </div>
           {isSessionBriefing(booking.briefing) ? (

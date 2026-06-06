@@ -14,6 +14,7 @@ import {
 } from '@/lib/booking-partition';
 import type { BriefingPayload } from '@/lib/briefing-display';
 import { SERVICE_TYPE_LABELS } from '@/lib/types';
+import { formatSessionWhen } from '@/lib/format';
 
 interface SessionData {
   userId: string;
@@ -27,16 +28,6 @@ type BriefingApiResponse = {
   error?: string;
   data?: { briefing: BriefingPayload };
 };
-
-function formatSessionWhen(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
 
 export default function MenteeDashboardClient({
   session,
@@ -168,7 +159,8 @@ export default function MenteeDashboardClient({
           <div>
             <h3 className="text-base font-bold text-on-surface">{booking.mentorName}</h3>
             <p className="text-xs text-on-surface-variant mt-0.5">
-              {SERVICE_TYPE_LABELS[booking.serviceType]} · {formatSessionWhen(booking.scheduledAt)}
+              {SERVICE_TYPE_LABELS[booking.serviceType]} ·{' '}
+              <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span>
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -216,7 +208,8 @@ export default function MenteeDashboardClient({
         <div>
           <p className="text-sm font-semibold text-on-surface">{booking.mentorName}</p>
           <p className="text-[11px] text-on-surface-variant">
-            {formatSessionWhen(booking.scheduledAt)} · {booking.status}
+            <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span> ·{' '}
+            {booking.status}
           </p>
         </div>
         <div className="flex gap-2">
@@ -306,7 +299,9 @@ export default function MenteeDashboardClient({
                   </p>
                   <h2 className="text-xl font-bold text-on-surface mb-1">{nextUpcoming.mentorName}</h2>
                   <p className="text-sm text-on-surface-variant mb-4">
-                    {formatSessionWhen(nextUpcoming.scheduledAt)}
+                    <span suppressHydrationWarning>
+                      {formatSessionWhen(nextUpcoming.scheduledAt)}
+                    </span>
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {resolveBriefing(nextUpcoming) ? (

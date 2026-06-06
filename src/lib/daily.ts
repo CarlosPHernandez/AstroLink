@@ -157,9 +157,9 @@ export async function createDailyRoomForBooking(
     },
     body: JSON.stringify({
       name: roomName,
+      privacy: 'private',
       properties: {
         exp,
-        privacy: 'private',
         enable_chat: true,
         start_video_off: false,
         start_audio_off: false,

@@ -5,7 +5,7 @@ import {
   getSafeRedirectPath,
 } from '@/lib/auth-redirect';
 import { isAdminEmailAllowed, isDemoAuthEnabled } from '@/lib/app-mode';
-import { AUTH_PRESETS, resolvePresetLogin } from '@/lib/auth-presets';
+import { resolvePresetLogin } from '@/lib/auth-presets';
 import { createSession, deleteSession, getSession } from '@/lib/session';
 import { ensureMenteeUserRow } from '@/lib/user-profile';
 import { redirect } from 'next/navigation';
@@ -236,6 +236,3 @@ export async function logoutAction() {
   await deleteSession();
   redirect(isDemoAuthEnabled() ? '/auth' : '/early-access');
 }
-
-/** Server-only export for E2E session bootstrap. */
-export { AUTH_PRESETS };

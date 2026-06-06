@@ -233,8 +233,8 @@ describe('Daily helpers', () => {
       expect(fetchMock).toHaveBeenCalledOnce();
       const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       const body = JSON.parse(String(init.body)) as {
+        privacy: string;
         properties: {
-          privacy: string;
           exp: number;
           max_participants: number;
           enforce_unique_user_ids: boolean;
@@ -242,7 +242,7 @@ describe('Daily helpers', () => {
           eject_after_elapsed: number;
         };
       };
-      expect(body.properties.privacy).toBe('private');
+      expect(body.privacy).toBe('private');
       expect(body.properties.max_participants).toBe(2);
       expect(body.properties.enforce_unique_user_ids).toBe(true);
       expect(body.properties.eject_at_room_exp).toBe(true);
