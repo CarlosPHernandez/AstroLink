@@ -1,0 +1,29 @@
+# dependencies 
+node_modules
+npm-debug.log*
+
+# next.js 
+.next
+out
+
+# env (never bake secrets into the image)
+.env 
+.env.* 
+!.env.example
+
+# git / editor
+.git
+.gitignore
+.cursor
+.vscode
+
+# test / playwright (not needed in prod image)
+playwright-report
+test-results
+coverage
+
+# misc 
+README.md 
+docs
+*.md
+
