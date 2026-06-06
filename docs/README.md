@@ -8,6 +8,7 @@ Structured using [Diataxis](https://diataxis.fr/): tutorials teach, how-tos guid
 |-----|----------|----------|
 | [d1-implementation-plan.md](./d1-implementation-plan.md) | Explanation (status) | Engineers, demo prep |
 | [d2-next-steps.md](./d2-next-steps.md) | Explanation (roadmap) | Product + engineering |
+| [d3-transcript-translation-roadmap.md](./d3-transcript-translation-roadmap.md) | Explanation (roadmap) | Product + engineering — bilingual expert sessions |
 
 ## Video sessions (Daily.co)
 
@@ -18,6 +19,18 @@ Structured using [Diataxis](https://diataxis.fr/): tutorials teach, how-tos guid
 | [how-to/daily-live-account-guardrails-plan.md](./how-to/daily-live-account-guardrails-plan.md) | How-to | Live Daily account quota guardrails and demo approval plan |
 | [reference/video-session.md](./reference/video-session.md) | Reference | APIs, gates, env vars, module map |
 | [explanation/video-session-architecture.md](./explanation/video-session-architecture.md) | Explanation | Why private rooms, tokens, and webhooks |
+
+## Transcript translation (D3 wedge)
+
+| Doc | Quadrant | Description |
+|-----|----------|-------------|
+| [d3-transcript-translation-roadmap.md](./d3-transcript-translation-roadmap.md) | Explanation | Phased roadmap: capture → recap i18n → live captions |
+| [explanation/transcript-translation-architecture.md](./explanation/transcript-translation-architecture.md) | Explanation | Canonical English, Daily STT, APX-06 translation layer |
+| [explanation/transcript-translation-engineering-review.md](./explanation/transcript-translation-engineering-review.md) | Explanation | Token budgets, eng decisions, cost model |
+| [explanation/transcript-translation-ai-sdk-review.md](./explanation/transcript-translation-ai-sdk-review.md) | Explanation | Vercel AI SDK fit vs extending `llm.ts` |
+| [explanation/transcript-translation-case-studies.md](./explanation/transcript-translation-case-studies.md) | Explanation | Zoom, Teams, Meet, telehealth — differentiation |
+
+Agent skill: `skills/transcript-translation/SKILL.md` · Cursor rule: `.cursor/rules/transcript-translation.mdc`
 
 ## Team ops (3-person)
 

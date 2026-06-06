@@ -42,3 +42,7 @@ After `npm ci`, install Playwright browsers once if running E2E: `npx playwright
 ### Demo auth (local / E2E only)
 
 With `ENABLE_DEMO_AUTH=true`, sign in at `/auth` with seed emails (`carlos@astrolink.ai`, `chris@astrolink.ai`, `admin@astrolink.ai`) or call `POST /api/e2e/session` with `{ "role": "mentee" | "mentor" | "admin" }`. Seed UUIDs must exist in Supabase (`20260531140100_seed_d1_dev.sql`).
+
+### Transcript translation (D3)
+
+Bilingual expert sessions (live captions + localized recap) are documented in `docs/d3-transcript-translation-roadmap.md`. Before editing transcript/translation code, read `skills/transcript-translation/SKILL.md`. Use `src/lib/transcript-translation/token-budget.ts` before sending transcript text to LLMs. Extend `src/lib/llm.ts` for APX-06 — do not add Vercel AI SDK without updating the AI SDK review doc.
