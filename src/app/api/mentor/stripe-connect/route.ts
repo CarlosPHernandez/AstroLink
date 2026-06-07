@@ -54,13 +54,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, data: { mode: 'dashboard', url } });
     }
 
-    const url = await createMentorOnboardingLink(sessionOrResponse.userId);
+    const { url, accountId } = await createMentorOnboardingLink(sessionOrResponse.userId);
     return NextResponse.json({
       success: true,
       data: {
         mode: 'onboard',
         url,
-        accountId: mentor.stripe_connect_account_id,
+        accountId,
       },
     });
   } catch (error: unknown) {

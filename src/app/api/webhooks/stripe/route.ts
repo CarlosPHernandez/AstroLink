@@ -68,7 +68,17 @@ export async function POST(request: Request) {
 
     if (event.type === 'account.updated') {
       const account = event.data.object as Stripe.Account;
-      const mentorId = account.metadata?.mentor_id;
+      let mentorId = account.metadata?.mentor_id;
+
+      if (!mentorId && account.id) {
+        const { data: mentorRow } = await supabaseAdmin
+          .from('mentors')
+          .select('id')
+          .eq('stripe_connect_account_id', account.id)
+          .maybeSingle();
+        mentorId = mentorRow?.id;
+      }
+
       if (mentorId && account.id) {
         await syncMentorStripeAccountStatus(mentorId, account.id);
       }
