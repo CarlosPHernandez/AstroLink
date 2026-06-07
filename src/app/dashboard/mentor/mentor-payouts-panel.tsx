@@ -1,0 +1,283 @@
+'use client';
+
+import { useState } from 'react';
+import { formatMoney, formatSessionWhen } from '@/lib/format';
+import type { MentorEarningRow, MentorEarningsSummary } from '@/lib/mentor-earnings-types';
+
+const PLATFORM_FEE_RATE = 0.2;
+const MENTOR_SHARE_RATE = 0.8;
+
+function EarningsSummaryCards({ summary }: { summary: MentorEarningsSummary }) {
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="rounded-lg border border-outline-variant bg-surface p-4">
+        <p className="text-xs text-on-surface-variant">Total earned (your share)</p>
+        <p className="mt-1 text-xl font-semibold text-on-surface">
+          {formatMoney(summary.totalPayoutCents)}
+        </p>
+        <p className="mt-1 text-[11px] text-on-surface-variant">
+          {summary.sessionCount} paid session{summary.sessionCount === 1 ? '' : 's'}
+        </p>
+      </div>
+      <div className="rounded-lg border border-outline-variant bg-surface p-4">
+        <p className="text-xs text-on-surface-variant">Pending capture</p>
+        <p className="mt-1 text-xl font-semibold text-amber-700">
+          {formatMoney(summary.pendingPayoutCents)}
+        </p>
+        <p className="mt-1 text-[11px] text-on-surface-variant">
+          Authorized before session completes
+        </p>
+      </div>
+      <div className="rounded-lg border border-outline-variant bg-surface p-4">
+        <p className="text-xs text-on-surface-variant">Paid out</p>
+        <p className="mt-1 text-xl font-semibold text-emerald-700">
+          {formatMoney(summary.completedPayoutCents)}
+        </p>
+        <p className="mt-1 text-[11px] text-on-surface-variant">
+          After session capture (80% split)
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function EarningsLedger({ rows }: { rows: MentorEarningRow[] }) {
+  if (rows.length === 0) {
+    return (
+      <p className="text-sm text-on-surface-variant" data-testid="mentor-earnings-empty">
+        No earnings yet. When a buyer pays for a session, the split and status appear here.
+      </p>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-outline-variant" data-testid="mentor-earnings-ledger">
+      <table className="min-w-full text-left text-sm">
+        <thead className="border-b border-outline-variant bg-surface-container-low text-xs uppercase text-on-surface-variant">
+          <tr>
+            <th className="px-4 py-3 font-medium">Session</th>
+            <th className="px-4 py-3 font-medium">Buyer</th>
+            <th className="px-4 py-3 font-medium">Gross</th>
+            <th className="px-4 py-3 font-medium">Your payout</th>
+            <th className="px-4 py-3 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.id} className="border-b border-outline-variant/40 last:border-0">
+              <td className="px-4 py-3 text-on-surface">
+                <span suppressHydrationWarning>{formatSessionWhen(row.scheduledAt)}</span>
+              </td>
+              <td className="px-4 py-3 text-on-surface-variant">{row.menteeName}</td>
+              <td className="px-4 py-3 text-on-surface-variant">{formatMoney(row.grossCents)}</td>
+              <td className="px-4 py-3 font-medium text-on-surface">
+                {formatMoney(row.mentorPayoutCents)}
+              </td>
+              <td className="px-4 py-3">
+                <span
+                  className={`inline-flex rounded px-2 py-0.5 text-xs font-medium capitalize ${
+                    row.status === 'completed'
+                      ? 'bg-emerald-50 text-emerald-800'
+                      : row.status === 'pending'
+                        ? 'bg-amber-50 text-amber-800'
+                        : 'bg-surface-container text-on-surface-variant'
+                  }`}
+                >
+                  {row.status.replace(/_/g, ' ')}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function FeeEstimator({ hourlyRateDollars }: { hourlyRateDollars: number }) {
+  const [durationMinutes, setDurationMinutes] = useState(30);
+  const grossCents = Math.round(hourlyRateDollars * (durationMinutes / 60) * 100);
+  const platformFeeCents = Math.round(grossCents * PLATFORM_FEE_RATE);
+  const mentorPayoutCents = grossCents - platformFeeCents;
+
+  return (
+    <div className="rounded-lg border border-outline-variant bg-surface p-5">
+      <h3 className="text-sm font-semibold text-on-surface">Session payout estimator</h3>
+      <p className="mt-1 text-xs text-on-surface-variant">
+        AstroLink holds payment until the session ends, then captures and splits{' '}
+        {Math.round(MENTOR_SHARE_RATE * 100)}% to you / {Math.round(PLATFORM_FEE_RATE * 100)}%
+        platform fee. Rate: {formatMoney(hourlyRateDollars * 100)}/hr.
+      </p>
+
+      <div className="mt-4">
+        <div className="mb-2 flex items-center justify-between text-xs text-on-surface-variant">
+          <label htmlFor="session-duration">Session length</label>
+          <span className="font-medium text-on-surface">{durationMinutes} min</span>
+        </div>
+        <input
+          id="session-duration"
+          type="range"
+          min={15}
+          max={120}
+          step={15}
+          value={durationMinutes}
+          onChange={(e) => setDurationMinutes(Number(e.target.value))}
+          className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-surface-container accent-primary"
+        />
+      </div>
+
+      <dl className="mt-4 grid grid-cols-3 gap-3 text-center text-sm">
+        <div className="rounded-md bg-surface-container-low p-3">
+          <dt className="text-xs text-on-surface-variant">Buyer pays</dt>
+          <dd className="mt-1 font-semibold text-on-surface">{formatMoney(grossCents)}</dd>
+        </div>
+        <div className="rounded-md bg-surface-container-low p-3">
+          <dt className="text-xs text-on-surface-variant">Platform fee</dt>
+          <dd className="mt-1 font-semibold text-on-surface-variant">
+            {formatMoney(platformFeeCents)}
+          </dd>
+        </div>
+        <div className="rounded-md bg-surface-container-low p-3">
+          <dt className="text-xs text-on-surface-variant">You receive</dt>
+          <dd className="mt-1 font-semibold text-primary">{formatMoney(mentorPayoutCents)}</dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
+
+export function MentorPayoutsPanel({
+  summary,
+  rows,
+  hourlyRateDollars,
+  stripeOnboardingCompleted,
+  stripeConnectAccountId,
+  skipStripePayments,
+}: {
+  summary: MentorEarningsSummary;
+  rows: MentorEarningRow[];
+  hourlyRateDollars: number;
+  stripeOnboardingCompleted: boolean;
+  stripeConnectAccountId: string | null;
+  skipStripePayments: boolean;
+}) {
+  const [stripeLoading, setStripeLoading] = useState(false);
+  const [stripeError, setStripeError] = useState<string | null>(null);
+
+  async function openStripe(action: 'onboard' | 'dashboard') {
+    setStripeLoading(true);
+    setStripeError(null);
+    try {
+      const res = await fetch('/api/mentor/stripe-connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      const json = (await res.json()) as {
+        success?: boolean;
+        error?: string;
+        data?: { mode?: string; url?: string; message?: string };
+      };
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.error ?? 'Could not open Stripe');
+      }
+
+      if (json.data?.mode === 'dev_skip') {
+        setStripeError(json.data.message ?? 'Stripe is disabled in this environment.');
+        return;
+      }
+
+      if (json.data?.url) {
+        window.location.href = json.data.url;
+      }
+    } catch (err) {
+      setStripeError(err instanceof Error ? err.message : 'Could not open Stripe');
+    } finally {
+      setStripeLoading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-8" data-testid="mentor-earnings-tab">
+      <header>
+        <h2 className="text-lg font-semibold text-on-surface">Earnings & payouts</h2>
+        <p className="mt-1 text-sm text-on-surface-variant">
+          Track session revenue from AstroLink bookings and manage your Stripe payout account.
+        </p>
+      </header>
+
+      <section className="space-y-4">
+        <h3 className="text-sm font-medium text-on-surface">Income summary</h3>
+        <EarningsSummaryCards summary={summary} />
+        <EarningsLedger rows={rows} />
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-sm font-medium text-on-surface">Bank account</h3>
+        <div className="flex flex-col gap-4 rounded-lg border border-outline-variant bg-surface p-5 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-medium text-on-surface">Stripe Connect</p>
+            <p className="mt-1 max-w-xl text-sm text-on-surface-variant">
+              {skipStripePayments
+                ? 'Stripe is turned off in this environment. Earnings above reflect test bookings only.'
+                : 'Link your bank account to receive the 80% mentor share after each completed session. Payout timing follows your Stripe Express schedule.'}
+            </p>
+            {stripeConnectAccountId ? (
+              <p className="mt-2 font-mono text-xs text-on-surface-variant">
+                Account {stripeConnectAccountId.slice(0, 12)}…
+              </p>
+            ) : null}
+            {stripeError ? (
+              <p className="mt-2 text-xs text-amber-800" role="alert">
+                {stripeError}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {!stripeOnboardingCompleted && !skipStripePayments ? (
+              <button
+                type="button"
+                onClick={() => openStripe('onboard')}
+                disabled={stripeLoading}
+                data-testid="mentor-stripe-onboard"
+                className="rounded-md bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white hover:bg-primary-container disabled:opacity-50 cursor-pointer"
+              >
+                {stripeLoading ? 'Opening…' : 'Connect bank account'}
+              </button>
+            ) : null}
+            {stripeOnboardingCompleted && !skipStripePayments ? (
+              <button
+                type="button"
+                onClick={() => openStripe('dashboard')}
+                disabled={stripeLoading}
+                data-testid="mentor-stripe-dashboard"
+                className="rounded-md border border-outline-variant px-4 py-2 text-xs font-semibold uppercase tracking-wide text-on-surface hover:bg-surface-container-low disabled:opacity-50 cursor-pointer"
+              >
+                {stripeLoading ? 'Opening…' : 'Open Stripe dashboard'}
+              </button>
+            ) : null}
+            <span
+              className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${
+                stripeOnboardingCompleted || skipStripePayments
+                  ? 'bg-emerald-50 text-emerald-800'
+                  : 'bg-amber-50 text-amber-800'
+              }`}
+            >
+              {stripeOnboardingCompleted
+                ? 'Connected'
+                : skipStripePayments
+                  ? 'Dev mode'
+                  : 'Not connected'}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <FeeEstimator hourlyRateDollars={hourlyRateDollars} />
+      </section>
+    </div>
+  );
+}
