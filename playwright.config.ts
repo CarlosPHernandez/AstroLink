@@ -46,6 +46,7 @@ export default defineConfig({
       E2E_STUB_LLM: 'true',
       DAILY_API_KEY: '',
       DAILY_PROVISION_ENABLED: 'false',
+      DAILY_TRANSCRIPTION_ENABLED: 'false',
     },
   },
 });
