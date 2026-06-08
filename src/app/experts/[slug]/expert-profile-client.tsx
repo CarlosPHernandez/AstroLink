@@ -89,7 +89,7 @@ export default function ExpertProfileClient({
               className="aspect-[3/4] w-full max-w-[min(100%,340px)] sm:max-w-[360px] lg:max-w-[380px] mx-auto lg:mx-0"
               priority
             />
-            <p className="mt-3 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant/70">
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant">
               Watch the intro — tone, clarity, and real mission experience before you book.
             </p>
           </div>
@@ -109,7 +109,7 @@ export default function ExpertProfileClient({
               {expert.name}
             </h1>
             <p className="mt-1 text-lg text-on-surface-variant">{expert.role}</p>
-            <p className="text-on-surface-variant/80">{expert.employer}</p>
+            <p className="text-on-surface-variant">{expert.employer}</p>
 
             {/* Availability + rate */}
             <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -246,16 +246,16 @@ export default function ExpertProfileClient({
 
               <dl className="mt-5 pt-5 border-t border-outline-variant/60 space-y-3 text-sm">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-on-surface-variant/70 font-light shrink-0">Role</dt>
+                  <dt className="text-on-surface-variant font-light shrink-0">Role</dt>
                   <dd className="text-on-surface text-right">{expert.role}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-on-surface-variant/70 font-light shrink-0">Organization</dt>
+                  <dt className="text-on-surface-variant font-light shrink-0">Organization</dt>
                   <dd className="text-on-surface text-right">{expert.employer}</dd>
                 </div>
                 {expert.expertise.length > 0 && (
                   <div className="flex justify-between gap-4">
-                    <dt className="text-on-surface-variant/70 font-light shrink-0">Focus</dt>
+                    <dt className="text-on-surface-variant font-light shrink-0">Focus</dt>
                     <dd className="text-on-surface text-right">{expert.expertise.slice(0, 2).join(', ')}</dd>
                   </div>
                 )}
@@ -267,9 +267,6 @@ export default function ExpertProfileClient({
         {/* Expertise */}
         {expert.expertise.length > 0 && (
           <section className="mb-12">
-            <div className="uppercase tracking-[0.2em] text-[10px] font-mono font-semibold text-primary mb-2">
-              Expertise
-            </div>
             <h2 className="text-headline-md font-semibold tracking-tight mb-4">Core disciplines</h2>
             <div className="flex flex-wrap gap-2">
               {expert.expertise.map((item) => (
