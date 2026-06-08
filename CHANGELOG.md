@@ -2,6 +2,14 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.1.4.1] - 2026-06-08
+
+### Fixed
+
+- Post-ship eng review: Zod validation for recap `summary_json` (rejects partial or malformed shapes).
+- Session room recap polling stops when recap is ready and translation is not pending.
+- `RECAP_TRANSLATION_FAILED` audit path covered by unit test.
+
 ## [0.1.4.0] - 2026-06-07
 
 ### Added
