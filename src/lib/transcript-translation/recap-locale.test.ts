@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   localeFallbackChain,
+  parsePostSessionOutput,
   parseRecapLocaleQuery,
   resolveEffectiveRecapLocale,
 } from '@/lib/transcript-translation/recap-locale';
@@ -62,6 +63,30 @@ describe('parseRecapLocaleQuery', () => {
       expect(result.error).toContain('Unsupported locale');
       expect(result.error).toContain('pt-BR');
     }
+  });
+});
+
+describe('parsePostSessionOutput', () => {
+  it('accepts a full recap shape', () => {
+    expect(parsePostSessionOutput(englishRecap)).toEqual(englishRecap);
+  });
+
+  it('rejects partial recap objects missing required fields', () => {
+    expect(
+      parsePostSessionOutput({
+        session_summary: 'Summary only',
+        key_insights: ['one'],
+      }),
+    ).toBeNull();
+  });
+
+  it('rejects recap objects with invalid action item owners', () => {
+    expect(
+      parsePostSessionOutput({
+        ...englishRecap,
+        action_items: [{ task: 'x', owner: 'admin', deadline: 'soon' }],
+      }),
+    ).toBeNull();
   });
 });
 

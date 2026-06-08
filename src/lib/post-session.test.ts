@@ -357,6 +357,28 @@ describe('maybeRunTranslationIfNeeded', () => {
     expect(result).toEqual({ translationSkipped: true, reason: 'locale_english' });
     expect(mockTranslateSessionRecap).not.toHaveBeenCalled();
   });
+
+  it('writes RECAP_TRANSLATION_FAILED audit when translation throws', async () => {
+    mockUsersLookup.mockResolvedValueOnce({
+      data: { preferred_locale: 'pt-BR' },
+      error: null,
+    });
+    mockSessionsMaybeSingle.mockResolvedValueOnce({
+      data: { summary_json: englishRecap },
+      error: null,
+    });
+    mockTranslateSessionRecap.mockRejectedValueOnce(new Error('LLM timeout'));
+
+    const result = await maybeRunTranslationIfNeeded('booking-1');
+
+    expect(result).toEqual({ translationFailed: true });
+    expect(mockAuditInsert).toHaveBeenCalledWith({
+      agent_id: 'APX-06',
+      event: 'RECAP_TRANSLATION_FAILED',
+      ref_id: 'booking-1',
+      payload: { error: 'LLM timeout' },
+    });
+  });
 });
 
 describe('fulfillBookingAfterMeetingEnded transcription disabled', () => {

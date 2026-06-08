@@ -39,6 +39,14 @@ function SessionRecapPanel({ bookingId }: { bookingId: string }) {
 
   useEffect(() => {
     let cancelled = false;
+    let pollId: ReturnType<typeof setInterval> | null = null;
+
+    function stopPolling() {
+      if (pollId !== null) {
+        window.clearInterval(pollId);
+        pollId = null;
+      }
+    }
 
     async function loadRecap() {
       try {
@@ -56,6 +64,9 @@ function SessionRecapPanel({ bookingId }: { bookingId: string }) {
         if (data.ready && data.recap) {
           setRecap(data.recap);
           setState('ready');
+          if (!data.translationPending) {
+            stopPolling();
+          }
           return;
         }
         setState('pending');
@@ -69,13 +80,13 @@ function SessionRecapPanel({ bookingId }: { bookingId: string }) {
     }
 
     void loadRecap();
-    const id = window.setInterval(() => {
+    pollId = window.setInterval(() => {
       void loadRecap();
     }, 5000);
 
     return () => {
       cancelled = true;
-      window.clearInterval(id);
+      stopPolling();
     };
   }, [bookingId]);
 

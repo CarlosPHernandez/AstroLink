@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import type { SessionData } from '@/lib/session';
 import {
   SUPPORTED_TARGET_LOCALES,
@@ -5,6 +7,20 @@ import {
   type SupportedTargetLocale,
 } from '@/lib/transcript-translation/types';
 import type { PostSessionOutput } from '@/lib/types';
+
+export const PostSessionOutputSchema = z.object({
+  session_summary: z.string(),
+  key_insights: z.array(z.string()),
+  action_items: z.array(
+    z.object({
+      task: z.string(),
+      owner: z.enum(['mentor', 'mentee']),
+      deadline: z.string(),
+    }),
+  ),
+  mentor_feedback_prompt: z.string(),
+  recommended_next_session: z.string(),
+});
 
 export type RecapLocaleParseResult =
   | { ok: true; locale: SupportedTargetLocale }
@@ -60,15 +76,6 @@ export type EffectiveRecapResolution = {
   localized: boolean;
 };
 
-function isPostSessionOutput(value: unknown): value is PostSessionOutput {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'session_summary' in value &&
-    'key_insights' in value
-  );
-}
-
 /**
  * Pick the first locale in the fallback chain with stored content, else English canonical.
  */
@@ -109,5 +116,6 @@ export function resolveEffectiveRecapLocale(input: {
 }
 
 export function parsePostSessionOutput(value: unknown): PostSessionOutput | null {
-  return isPostSessionOutput(value) ? value : null;
+  const parsed = PostSessionOutputSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
 }

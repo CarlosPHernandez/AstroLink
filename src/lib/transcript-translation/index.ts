@@ -37,6 +37,7 @@ export {
   localeFallbackChain,
   parsePostSessionOutput,
   parseRecapLocaleQuery,
+  PostSessionOutputSchema,
   resolveEffectiveRecapLocale,
 } from '@/lib/transcript-translation/recap-locale';
 export type {
