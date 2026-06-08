@@ -39,7 +39,7 @@ function SessionRecapPanel({ bookingId }: { bookingId: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    let pollId: ReturnType<typeof setInterval> | null = null;
+    let pollId: number | null = null;
 
     function stopPolling() {
       if (pollId !== null) {
