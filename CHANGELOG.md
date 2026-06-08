@@ -2,6 +2,27 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.1.4.0] - 2026-06-07
+
+### Added
+
+- D3 Phase 2 localized post-session recap: `session_translations` table, APX-06 translation agent, mentee `preferred_locale` on profile, and recap API `locale` / `translationPending` / `translationFailed` fields.
+- Mentee settings dropdown for recap language (en, es, pt-BR, fr, ja).
+- Session room recap polling for translated content; E2E `localized-recap.spec.ts` (D13) with stubbed LLM recap + translation.
+- Unit tests for recap locale resolution, translation agent, user profile locale, and extended recap/post-session coverage.
+
+### Changed
+
+- Post-session fulfillment runs APX-06 after English synthesis when mentee locale differs; idempotent retry when booking already completed without a session row.
+- Dev `simulate_meeting_ended` fulfills by booking ID (no Daily room required); session synthesis skip only when valid `summary_json` exists.
+- Playwright webServer pins `DAILY_TRANSCRIPTION_ENABLED=false` so E2E synthesis runs on meeting end.
+
+### Fixed
+
+- E2E parallel cleanup uses spec-specific `E2E:` tags to avoid cross-spec booking deletion.
+- Golden path briefing assertion scoped to sidebar (strict mode).
+- Zod v4 enum validation on mentee settings `preferredLocale`.
+
 ## [0.1.3.0] - 2026-06-06
 
 ### Added
