@@ -29,8 +29,10 @@ Follow-on from [d1-implementation-plan.md](./d1-implementation-plan.md) after th
 
 ### 3. Expert profile v1
 
-- Public URL: bio, intro video, three product cards (Live · Recorded · Text) with expert-set prices.
-- Chris template first; onboard experts #2–#4 on same pipeline.
+- **Shipped (0.1.4.2)**: Public `/experts/[slug]` pages with redesigned layout (intro video hero via `ExpertIntroMedia`, full bio, expertise pills, modalities teaser matching landing, trust signals, direct booking CTAs to existing flow). Landing directory names now deep-link to profiles. `introVideoUrl` surfaced in public expert data.
+- Original spec (bio + intro video + product cards) delivered as the foundation; full three-modality cards will expand when modalities (D2.1) ship. Chris seed works via fallback; ready for additional experts like David with video/bio.
+
+(See CHANGELOG 0.1.4.2 and `src/app/experts/[slug]/` implementation.)
 
 ### 4. XPRIZE evidence (T8)
 
