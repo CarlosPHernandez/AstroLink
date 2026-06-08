@@ -85,7 +85,7 @@ export default function ExpertProfileClient({
               name={expert.name}
               imageUrl={expert.imageUrl}
               introVideoUrl={expert.introVideoUrl}
-              className="aspect-[9/16] w-full max-w-[min(100%,420px)] sm:max-w-[480px] lg:max-w-[540px] mx-auto lg:mx-0"
+              className="aspect-[3/4] w-full max-w-[min(100%,340px)] sm:max-w-[360px] lg:max-w-[380px] mx-auto lg:mx-0"
               priority
             />
             <p className="mt-3 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant/70">
