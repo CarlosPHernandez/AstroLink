@@ -4,9 +4,9 @@
 
 **Moat:** Domain-tuned translation (aerospace glossary, ITAR-aware moderation hooks, session context from APX-02 brief) layered on paid expert sessions — not commodity captions.
 
-**Last updated:** 2026-06-06  
-**Status:** Foundation (Phase 0) — docs, skill, types, eng review  
-**Depends on:** D1 video golden path shipped; D2 transcript fetch + moderation design
+**Last updated:** 2026-06-07  
+**Status:** Phase 2 shipped on `feat/d3-phase-2-recap-i18n` — localized post-session recap (APX-06); Phase 3 live captions next  
+**Depends on:** D1 video golden path shipped; D3 Phase 1 transcript capture shipped
 
 ---
 
@@ -53,37 +53,38 @@ See [transcript-translation-case-studies.md](./explanation/transcript-translatio
 
 ---
 
-### Phase 1 — Transcript capture
+### Phase 1 — Transcript capture ✅ shipped
 
 **Goal:** APX-03 receives real English transcript; `transcript_available = true`.
 
 | Task | Status | Notes |
 |------|--------|-------|
-| DB: `session_transcripts` table | Not started | `booking_id`, `source_locale`, `vtt_text`, `utterances_json`, `daily_transcript_id` |
-| Daily: enable transcription on domain | Not started | Deepgram via Daily; ~$0.0059/participant-minute |
-| Fetch WebVTT on `meeting.ended` | Not started | Extend `post-session.ts` before `synthesizeSession` |
-| Token window for APX-03 input | Not started | `selectTranscriptWindow()` — see engineering review |
-| Session recap UI (English) | Not started | Read `sessions.summary_json` on `/session/[id]` |
+| DB: `session_transcripts` table | Shipped | `20260606120000_session_transcripts.sql` |
+| Daily: enable transcription on domain | Shipped | Env-gated via `isDailyTranscriptionEnabled()` |
+| Fetch WebVTT on `transcript.ready` | Shipped | Dual-trigger gate in `post-session.ts` |
+| Token window for APX-03 input | Shipped | `selectTranscriptWindow()` |
+| Session recap UI (English) | Shipped | `GET /api/session/[id]/recap` + session room polling |
 
 **Exit criteria:** Post-session recap reflects actual call content in demo.
 
 ---
 
-### Phase 2 — Post-session recap translation
+### Phase 2 — Post-session recap translation ✅ shipped
 
 **Goal:** Buyer sees recap in `preferred_locale`.
 
 | Task | Status | Notes |
 |------|--------|-------|
-| DB: `users.preferred_locale` | Not started | BCP-47, default `en` |
-| DB: `session_translations` | Not started | `booking_id`, `locale`, `summary_json`, `translated_at` |
-| APX-06 TranslationAgent | Not started | Segment batch + glossary |
-| API: `GET /api/session/[id]/recap?locale=` | Not started | Falls back to English |
-| Booking flow: language preference | Not started | Optional picker at checkout |
+| DB: `users.preferred_locale` | Shipped | `20260607120000_session_translations.sql`; default `en` |
+| DB: `session_translations` | Shipped | `target_locale`, `summary_json`, RLS mirrors transcripts |
+| APX-06 TranslationAgent | Shipped | `translateSessionRecap()` — structured `PostSessionOutput` in one LLM call |
+| API: `GET /api/session/[id]/recap?locale=` | Shipped | Mentee default from profile; `translationPending` / `translationFailed` flags |
+| Mentee settings locale | Shipped | Server action on `/dashboard/mentee/settings` (no `PATCH /api/user/locale`) |
+| Booking flow: language preference | Deferred (2b) | Checkout picker out of Phase 2 scope |
 
 **Locales v1:** `en`, `es`, `pt-BR`, `fr`, `ja` (align with Zoom benchmark languages + LATAM wedge).
 
-**Exit criteria:** E2E stub shows Portuguese recap for seed mentee with `preferred_locale=pt-BR`.
+**Exit criteria:** E2E `e2e/localized-recap.spec.ts` — seed mentee `preferred_locale=pt-BR` sees `[pt-BR]` stub recap after `simulate_meeting_ended`.
 
 ---
 
@@ -188,7 +189,7 @@ Assumptions: 45-min session, 2 participants, 6,000 words transcript.
 ## Verify after each phase
 
 1. **Phase 1:** Complete live session → `session_transcripts` row → recap mentions call topics (not empty template).
-2. **Phase 2:** Set mentee `preferred_locale=es` → recap UI in Spanish; `audit_log` shows APX-06 jobs.
+2. **Phase 2:** Set mentee `preferred_locale=pt-BR` in settings → after session, recap UI shows localized stub (`[pt-BR]` prefix under `E2E_STUB_LLM`); `audit_log` shows `RECAP_TRANSLATED` on success.
 3. **Phase 3:** Enable captions → expert speaks → buyer sees translated lines within 2s.
 4. **Regression:** English-only users see no added latency or cost (translation skipped when `locale=en`).
 

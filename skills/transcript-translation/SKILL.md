@@ -62,11 +62,12 @@ AstroLink connects buyers with aerospace experts across language barriers. This 
 3. On `meeting.ended`, fetch WebVTT via Daily REST API → persist `session_transcripts` (migration in roadmap).
 4. Pass real transcript (truncated per token budget) to `SessionAgent.synthesizeSession`.
 
-### Phase 2 — Post-session translation
+### Phase 2 — Post-session translation ✅ shipped
 
-1. Add `users.preferred_locale` (BCP-47, default `en`).
-2. After APX-03 completes, enqueue `translateSessionRecap(bookingId, locale)` for non-`en` buyers.
-3. Store `session_translations.summary_json` per locale; UI reads localized recap when available.
+1. `users.preferred_locale` on mentee profile (settings server action; BCP-47, default `en`).
+2. After APX-03, `maybeRunTranslationIfNeeded()` runs APX-06 inline when English `summary_json` exists and mentee locale ≠ `en` (also on transcription-disabled `meeting.ended` path).
+3. `session_translations.summary_json` per `target_locale`; `GET /api/session/[bookingId]/recap` resolves locale server-side (`recap-locale.ts`); session room polls without `?locale=`.
+4. Checkout locale picker remains **Phase 2b** — not in this slice.
 
 ### Phase 3 — Live translated captions
 
@@ -101,6 +102,7 @@ Target: {target_locale}
 
 - Unit: `token-budget.ts` window selection, glossary term preservation mocks.
 - Contract: `translateSegment` returns stable output for E2E stub (`E2E_STUB_LLM=true`).
+- E2E Phase 2: `e2e/localized-recap.spec.ts` — book → `simulate_meeting_ended` → assert `[pt-BR]` recap stub.
 - E2E (Phase 3+): Playwright session with stubbed `transcription-message` events.
 
 ## Do not
@@ -116,4 +118,4 @@ Target: {target_locale}
 |-------|----------------------|
 | APX-03 SessionAgent | Consumes English transcript window for synthesis |
 | APX-04 ComplianceAgent | D2+: moderate English canonical transcript |
-| (new) APX-06 TranslationAgent | Segment translation + glossary (Phase 2+) |
+| APX-06 TranslationAgent | Post-session recap translation (`session_translations`) |

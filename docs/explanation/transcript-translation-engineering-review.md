@@ -3,7 +3,7 @@
 Structured eng review for D3: decisions, risks, token budgets, and implementation sequence.
 
 **Date:** 2026-06-06  
-**Status:** Approved for Phase 0 foundation; Phase 1+ requires migration PR  
+**Status:** Phase 1–2 implemented; Phase 3 (live captions) next  
 **Related:** [D3 roadmap](../d3-transcript-translation-roadmap.md), [architecture](./transcript-translation-architecture.md)
 
 ---
@@ -202,7 +202,7 @@ Phase 3           Daily transcription events in session UI
 | `GET /api/session/[bookingId]/recap` | 1 | English `summary_json` |
 | `GET /api/session/[bookingId]/recap?locale=pt-BR` | 2 | Localized recap |
 | `POST /api/session/[bookingId]/translate-segment` | 3 | Internal/streaming segment MT |
-| `PATCH /api/user/locale` | 2 | Set `preferred_locale` |
+| Mentee settings server action | 2 | Set `preferred_locale` (D19 — no `PATCH /api/user/locale`) |
 
 ---
 
@@ -214,7 +214,7 @@ Phase 3           Daily transcription events in session UI
 | `glossary.ts` | Vitest: terms present in prompt builder |
 | APX-06 | Contract test with `E2E_STUB_LLM` |
 | post-session | Integration: mock WebVTT → transcript row |
-| E2E | Phase 2+: locale recap renders |
+| E2E | `e2e/localized-recap.spec.ts` — pt-BR mentee recap stub |
 
 ---
 
@@ -233,7 +233,8 @@ Phase 3           Daily transcription events in session UI
 - [x] Token budget utilities specified
 - [x] AI SDK deferral documented
 - [x] Phase gates in roadmap
-- [ ] Phase 1 migration PR (next slice)
+- [x] Phase 1 migration + post-session gate
+- [x] Phase 2 APX-06 + `session_translations` + locale recap API/UI
 - [ ] Product answers to open questions
 
 ---
