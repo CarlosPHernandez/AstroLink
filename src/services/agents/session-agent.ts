@@ -1,5 +1,6 @@
 import type { Json } from '@/lib/database.types';
 import { callLlmWithBackoff, generateStructuredJson, llmFlashModel } from '@/lib/llm';
+import { parsePostSessionOutput } from '@/lib/transcript-translation/recap-locale';
 import { supabaseAdmin } from '@/lib/supabase';
 import { PostSessionOutput } from '@/lib/types';
 
@@ -24,13 +25,20 @@ export class SessionAgent {
       .maybeSingle();
 
     const hasTranscript = Boolean(transcript.trim());
+    const existingSummary = parsePostSessionOutput(existingSession?.summary_json ?? null);
 
     if (existingSession) {
-      if (existingSession.transcript_available || !hasTranscript) {
+      if (existingSession.transcript_available && existingSummary) {
         await this.logAudit('SESSION_SYNTHESIS_SKIPPED', bookingId, {
-          reason: existingSession.transcript_available ? 'already_synthesized' : 'fallback_exists',
+          reason: 'already_synthesized',
         });
-        return existingSession.summary_json as unknown as PostSessionOutput;
+        return existingSummary;
+      }
+      if (!hasTranscript && existingSummary) {
+        await this.logAudit('SESSION_SYNTHESIS_SKIPPED', bookingId, {
+          reason: 'fallback_exists',
+        });
+        return existingSummary;
       }
     }
 
