@@ -551,7 +551,7 @@ export default function LandingPageClient({
               <div className="hidden md:grid md:grid-cols-12 border-b border-outline-variant bg-surface-container-low font-mono text-[10px] font-bold text-on-surface uppercase tracking-wider py-4 px-6 md:px-8">
                 <div className="md:col-span-4">Comparison Dimension</div>
                 <div className="md:col-span-4 text-zinc-400">AI Language Models</div>
-                <div className="md:col-span-4 text-primary">AstralLink Mentors</div>
+                <div className="md:col-span-4 text-primary">AstroLink Mentors</div>
               </div>
 
               {/* Row 1 */}
@@ -570,7 +570,7 @@ export default function LandingPageClient({
                 <div className="md:col-span-4 text-xs text-on-surface font-light flex items-start">
                   <span className="material-symbols-outlined text-emerald-600 mr-2 text-[16px] flex-shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                   <div>
-                    <strong className="md:hidden text-primary block font-mono text-[9px] uppercase tracking-wider mb-1 font-bold">AstralLink Mentors</strong>
+                    <strong className="md:hidden text-primary block font-mono text-[9px] uppercase tracking-wider mb-1 font-bold">AstroLink Mentors</strong>
                     <span>Active flight directors, ISS commanders, and JPL systems engineers with current clearance and credentials.</span>
                   </div>
                 </div>
@@ -592,7 +592,7 @@ export default function LandingPageClient({
                 <div className="md:col-span-4 text-xs text-on-surface font-light flex items-start">
                   <span className="material-symbols-outlined text-emerald-600 mr-2 text-[16px] flex-shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                   <div>
-                    <strong className="md:hidden text-primary block font-mono text-[9px] uppercase tracking-wider mb-1 font-bold">AstralLink Mentors</strong>
+                    <strong className="md:hidden text-primary block font-mono text-[9px] uppercase tracking-wider mb-1 font-bold">AstroLink Mentors</strong>
                     <span>Highly customized code reviews, hardware diagnostic checks, and policy guidance tailored to your vehicle payload.</span>
                   </div>
                 </div>
@@ -614,7 +614,7 @@ export default function LandingPageClient({
                 <div className="md:col-span-4 text-xs text-on-surface font-light flex items-start">
                   <span className="material-symbols-outlined text-emerald-600 mr-2 text-[16px] flex-shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                   <div>
-                    <strong className="md:hidden text-primary block font-mono text-[9px] uppercase tracking-wider mb-1 font-bold">AstralLink Mentors</strong>
+                    <strong className="md:hidden text-primary block font-mono text-[9px] uppercase tracking-wider mb-1 font-bold">AstroLink Mentors</strong>
                     <span>1-on-1 direct audio/video calls where senior engineers back their operational recommendations with verified careers.</span>
                   </div>
                 </div>
@@ -628,7 +628,7 @@ export default function LandingPageClient({
       {/* Footer */}
       <footer className="border-t border-outline-variant bg-white">
         <div className="max-w-[1200px] mx-auto py-12 px-lg flex flex-col md:flex-row justify-between items-center gap-md">
-          <div className="font-bold text-on-surface tracking-tight">AstralLink</div>
+          <div className="font-bold text-on-surface tracking-tight">AstroLink</div>
           <div className="flex gap-lg items-center">
             <span className="text-[10px] font-mono text-on-surface-variant flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -636,7 +636,7 @@ export default function LandingPageClient({
             </span>
           </div>
           <div className="text-on-surface-variant font-mono text-[10px]">
-            © 2026 AstralLink. All rights reserved.
+            © 2026 AstroLink. All rights reserved.
           </div>
         </div>
       </footer>
