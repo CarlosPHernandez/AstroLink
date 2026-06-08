@@ -38,7 +38,7 @@ export function ExpertIntroMedia({
           poster={imageUrl}
           controls
           playsInline
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-contain"
           aria-label={`Introduction video for ${name}`}
           onError={() => setVideoFailed(true)}
         />
@@ -61,15 +61,6 @@ export function ExpertIntroMedia({
             <span className="material-symbols-outlined text-white/80 text-[20px]">person</span>
           </div>
         </>
-      )}
-
-      {showVideo && (
-        <div className="pointer-events-none absolute bottom-4 left-4 flex items-center gap-2 rounded-full border border-white/25 bg-black/45 px-3 py-1 backdrop-blur-md">
-          <span className="material-symbols-outlined text-white text-[16px]">play_circle</span>
-          <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-white">
-            Intro video
-          </span>
-        </div>
       )}
     </div>
   );
