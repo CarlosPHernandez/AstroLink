@@ -160,19 +160,82 @@ export default function ExpertProfileClient({
           </div>
         </div>
 
-        {/* About / Bio */}
-        <section className="mb-12">
-          <div className="uppercase tracking-[0.2em] text-[10px] font-mono font-semibold text-primary mb-2">
-            The pedigree
+        {/* About / Bio — two-column with sticky booking aside */}
+        <section className="mb-12 grid gap-8 lg:grid-cols-12 lg:gap-10 items-start">
+          {/* Bio (left) */}
+          <div className="lg:col-span-7">
+            <div className="uppercase tracking-[0.2em] text-[10px] font-mono font-semibold text-primary mb-2">
+              The pedigree
+            </div>
+            <h2 className="text-headline-md font-semibold tracking-tight mb-4">About {firstName}</h2>
+            <div className="prose prose-neutral max-w-prose text-body-md text-on-surface font-light leading-relaxed">
+              {expert.bio.split('\n').map((para, i) => (
+                <p key={i} className={i > 0 ? 'mt-4' : ''}>
+                  {para}
+                </p>
+              ))}
+            </div>
           </div>
-          <h2 className="text-headline-md font-semibold tracking-tight mb-4">About {firstName}</h2>
-          <div className="prose prose-neutral max-w-prose text-body-md text-on-surface font-light leading-relaxed">
-            {expert.bio.split('\n').map((para, i) => (
-              <p key={i} className={i > 0 ? 'mt-4' : ''}>
-                {para}
+
+          {/* Sticky booking + quick facts (right) */}
+          <aside className="lg:col-span-5">
+            <div className="lg:sticky lg:top-28 rounded-2xl border border-outline-variant bg-surface-container-lowest p-6">
+              <div className="flex items-baseline justify-between">
+                <span className="font-mono text-2xl font-semibold text-on-surface">${expert.rate}</span>
+                <span className="text-xs text-on-surface-variant font-light">per hour</span>
+              </div>
+
+              <div className="mt-3">
+                {expert.availability === 'Available Now' ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                    </span>
+                    <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+                      Available now
+                    </span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-outline-variant px-3 py-1.5">
+                    <span className="w-2 h-2 rounded-full bg-zinc-300" />
+                    <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
+                      Book a session
+                    </span>
+                  </span>
+                )}
+              </div>
+
+              <Link
+                href={bookHref}
+                className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-[11px] font-bold uppercase tracking-wider text-on-primary transition-colors hover:bg-primary-container active:scale-[0.985]"
+              >
+                <span className="material-symbols-outlined text-[20px]">videocam</span>
+                Book live 1:1 with {firstName}
+              </Link>
+
+              <p className="mt-3 text-[10px] text-on-surface-variant font-light leading-relaxed">
+                30-minute encrypted video session • AI briefing included • Payment held until call ends
               </p>
-            ))}
-          </div>
+
+              <dl className="mt-5 pt-5 border-t border-outline-variant/60 space-y-3 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-on-surface-variant/70 font-light shrink-0">Role</dt>
+                  <dd className="text-on-surface text-right">{expert.role}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-on-surface-variant/70 font-light shrink-0">Organization</dt>
+                  <dd className="text-on-surface text-right">{expert.employer}</dd>
+                </div>
+                {expert.expertise.length > 0 && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-on-surface-variant/70 font-light shrink-0">Focus</dt>
+                    <dd className="text-on-surface text-right">{expert.expertise.slice(0, 2).join(', ')}</dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+          </aside>
         </section>
 
         {/* Expertise */}
