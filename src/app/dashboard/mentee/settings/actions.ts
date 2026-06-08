@@ -1,6 +1,7 @@
 'use server';
 
 import { createSession, getSession } from '@/lib/session';
+import { SUPPORTED_TARGET_LOCALES } from '@/lib/transcript-translation/types';
 import {
   getMenteeProfile,
   updateMenteeProfile,
@@ -21,6 +22,9 @@ const ProfileSchema = z.object({
       message: 'Phone must be E.164 format (e.g. +14155552671)',
     }),
   bio: z.string().max(2000, 'Bio is too long'),
+  preferredLocale: z.enum(SUPPORTED_TARGET_LOCALES, {
+    message: 'Select a supported recap language',
+  }),
 });
 
 export type SettingsActionState = {
@@ -43,6 +47,7 @@ export async function updateProfileAction(
     email: formData.get('email'),
     phone: formData.get('phone'),
     bio: formData.get('bio'),
+    preferredLocale: formData.get('preferredLocale'),
   });
 
   if (!parsed.success) {
@@ -57,6 +62,7 @@ export async function updateProfileAction(
     email: parsed.data.email,
     phone: parsed.data.phone,
     bio: parsed.data.bio,
+    preferredLocale: parsed.data.preferredLocale,
   };
 
   const profile = await updateMenteeProfile(session.userId, update);

@@ -7,7 +7,16 @@ import {
   updateProfileAction,
   type SettingsActionState,
 } from '@/app/dashboard/mentee/settings/actions';
+import { SUPPORTED_TARGET_LOCALES } from '@/lib/transcript-translation/types';
 import type { MenteeProfile } from '@/lib/user-profile';
+
+const LOCALE_LABELS: Record<(typeof SUPPORTED_TARGET_LOCALES)[number], string> = {
+  en: 'English',
+  es: 'Español',
+  'pt-BR': 'Português (Brasil)',
+  fr: 'Français',
+  ja: '日本語',
+};
 
 interface SessionData {
   userId: string;
@@ -184,6 +193,34 @@ export default function MenteeSettingsClient({
                 {state?.errors?.phone ? (
                   <p className="mt-1 text-[11px] text-red-600">{state.errors.phone[0]}</p>
                 ) : null}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="preferredLocale"
+                  className="block text-[9px] font-mono text-on-surface-variant uppercase tracking-widest mb-1.5"
+                >
+                  Session recap language
+                </label>
+                <select
+                  id="preferredLocale"
+                  name="preferredLocale"
+                  defaultValue={profile.preferredLocale}
+                  data-testid="settings-preferred-locale"
+                  className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant focus:border-primary rounded-md text-sm text-on-surface focus:outline-none"
+                >
+                  {SUPPORTED_TARGET_LOCALES.map((locale) => (
+                    <option key={locale} value={locale}>
+                      {LOCALE_LABELS[locale]}
+                    </option>
+                  ))}
+                </select>
+                {state?.errors?.preferredLocale ? (
+                  <p className="mt-1 text-[11px] text-red-600">{state.errors.preferredLocale[0]}</p>
+                ) : null}
+                <p className="mt-1 text-[10px] text-on-surface-variant font-light">
+                  Applies to future session recaps. Past sessions are not re-translated.
+                </p>
               </div>
 
               <div>

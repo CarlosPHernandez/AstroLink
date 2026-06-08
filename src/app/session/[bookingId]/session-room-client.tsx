@@ -24,12 +24,18 @@ type SessionRecapResponse = {
   ready: boolean;
   recap: PostSessionOutput | null;
   transcriptAvailable: boolean;
+  locale?: string;
+  localized?: boolean;
+  translationPending?: boolean;
+  translationFailed?: boolean;
 };
 
 function SessionRecapPanel({ bookingId }: { bookingId: string }) {
   const [state, setState] = useState<'loading' | 'ready' | 'pending' | 'error'>('loading');
   const [recap, setRecap] = useState<PostSessionOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [translationPending, setTranslationPending] = useState(false);
+  const [translationFailed, setTranslationFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,6 +50,9 @@ function SessionRecapPanel({ bookingId }: { bookingId: string }) {
         if (cancelled) {
           return;
         }
+        setTranslationPending(Boolean(data.translationPending));
+        setTranslationFailed(Boolean(data.translationFailed));
+
         if (data.ready && data.recap) {
           setRecap(data.recap);
           setState('ready');
@@ -71,9 +80,16 @@ function SessionRecapPanel({ bookingId }: { bookingId: string }) {
   }, [bookingId]);
 
   if (state === 'loading' || state === 'pending') {
+    const pendingMessage =
+      state === 'loading'
+        ? 'Loading your recap…'
+        : translationPending
+          ? 'Translating recap… This refreshes automatically.'
+          : 'Recap is still generating. This refreshes automatically.';
+
     return (
       <p className="text-body-md text-on-surface-variant mb-6" data-testid="session-recap-pending">
-        {state === 'loading' ? 'Loading your recap…' : 'Recap is still generating. This refreshes automatically.'}
+        {pendingMessage}
       </p>
     );
   }
@@ -88,6 +104,14 @@ function SessionRecapPanel({ bookingId }: { bookingId: string }) {
 
   return (
     <div className="w-full text-left space-y-4 mb-6" data-testid="session-recap-content">
+      {translationFailed ? (
+        <p
+          className="text-label-sm text-on-surface-variant mb-2"
+          data-testid="session-recap-translation-failed"
+        >
+          Translation unavailable — showing English recap.
+        </p>
+      ) : null}
       <p className="text-body-md text-on-surface">{recap.session_summary}</p>
       {recap.key_insights.length > 0 && (
         <div>

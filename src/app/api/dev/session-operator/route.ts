@@ -12,7 +12,10 @@ import {
   isDailyTranscriptionEnabled,
   provisionDailyRoomForBooking,
 } from '@/lib/daily';
-import { fulfillBookingAfterMeetingEnded, ingestTranscriptVttForBooking } from '@/lib/post-session';
+import {
+  fulfillBookingAfterMeetingEndedForBooking,
+  ingestTranscriptVttForBooking,
+} from '@/lib/post-session';
 import { getSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -121,7 +124,7 @@ export async function POST(request: Request) {
         dailyRoomNameForBooking(bookingId);
 
       const now = Math.floor(Date.now() / 1000);
-      const result = await fulfillBookingAfterMeetingEnded({
+      const result = await fulfillBookingAfterMeetingEndedForBooking(bookingId, {
         room: roomName,
         start_ts: now - 1800,
         end_ts: now,
