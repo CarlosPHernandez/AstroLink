@@ -176,25 +176,27 @@ export default function ExpertProfileClient({
         </section>
 
         {/* Expertise */}
-        <section className="mb-12">
-          <div className="uppercase tracking-[0.2em] text-[10px] font-mono font-semibold text-primary mb-2">
-            Expertise
-          </div>
-          <h2 className="text-headline-md font-semibold tracking-tight mb-4">Core disciplines</h2>
-          <div className="flex flex-wrap gap-2">
-            {expert.expertise.map((item) => (
-              <span
-                key={item}
-                className="inline-flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-low px-4 py-1.5 text-sm text-on-surface-variant"
-              >
-                <span className="material-symbols-outlined text-primary/70 text-[16px]" style={{ fontVariationSettings: "'wght' 600" }}>
-                  check_circle
+        {expert.expertise.length > 0 && (
+          <section className="mb-12">
+            <div className="uppercase tracking-[0.2em] text-[10px] font-mono font-semibold text-primary mb-2">
+              Expertise
+            </div>
+            <h2 className="text-headline-md font-semibold tracking-tight mb-4">Core disciplines</h2>
+            <div className="flex flex-wrap gap-2">
+              {expert.expertise.map((item) => (
+                <span
+                  key={item}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-low px-4 py-1.5 text-sm text-on-surface-variant"
+                >
+                  <span className="material-symbols-outlined text-primary/70 text-[16px]" style={{ fontVariationSettings: "'wght' 600" }}>
+                    check_circle
+                  </span>
+                  {item}
                 </span>
-                {item}
-              </span>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Modalities — tie directly to landing hero promise */}
         <section className="mb-12">
