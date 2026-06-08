@@ -13,15 +13,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const expert = await getMentorBySlug(slug);
   if (!expert) {
     return {
-      title: 'Expert not found · AstralLink',
+      title: 'Expert not found · AstroLink',
       description: 'This profile is not in the verified directory.',
     };
   }
   return {
-    title: `${expert.name} · AstralLink`,
+    title: `${expert.name} · AstroLink`,
     description: expert.bio.slice(0, 160),
     openGraph: {
-      title: `${expert.name} — Verified Aerospace Expert | AstralLink`,
+      title: `${expert.name} — Verified Aerospace Expert | AstroLink`,
       description: expert.bio.slice(0, 160),
     },
   };

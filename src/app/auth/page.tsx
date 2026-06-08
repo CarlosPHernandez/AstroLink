@@ -45,7 +45,7 @@ function AuthPageContent() {
             href="/"
             className="font-headline-md text-headline-md font-bold text-on-surface tracking-tight mb-xs animate-reveal-up delay-300 hover:text-primary transition-colors"
           >
-            AstralLink
+            AstroLink
           </Link>
           <p className="font-body-md text-body-md text-on-surface-variant animate-reveal-up delay-400">
             {activeTab === 'login' ? 'Sign in to your account' : 'Create your credentials'}

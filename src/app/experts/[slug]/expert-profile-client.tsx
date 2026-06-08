@@ -31,7 +31,7 @@ export default function ExpertProfileClient({
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-outline-variant">
         <div className="max-w-[1200px] mx-auto px-md sm:px-lg h-20 flex justify-between items-center w-full">
           <Link href="/" className="font-bold text-lg text-on-surface tracking-tight">
-            AstralLink
+            AstroLink
           </Link>
 
           <div className="flex items-center gap-sm sm:gap-lg">
@@ -257,7 +257,7 @@ export default function ExpertProfileClient({
         {/* Trust / Why book (reused language from booking + landing) */}
         <section className="border border-outline-variant/60 rounded-2xl bg-surface-container-lowest p-6 md:p-8">
           <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-primary mb-2">
-            The AstralLink standard
+            The AstroLink standard
           </div>
           <h3 className="text-xl font-semibold tracking-tight mb-6">What you get with every session</h3>
 
