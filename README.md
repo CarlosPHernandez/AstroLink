@@ -58,9 +58,9 @@ Vitest covers D1 contract logic: booking pricing, `/api/book` request schema, Da
 
 ### E2E (Playwright)
 
-Automates the skip-Stripe D1 golden path: E2E session bootstrap → book Chris → APX-02 briefing → session room.
+Automates the skip-Stripe D1 golden path and D3 localized recap: E2E session bootstrap → book Chris → APX-02 briefing → session room; pt-BR mentee recap after `simulate_meeting_ended`.
 
-**Prerequisites:** `.env.local` with Supabase keys, `ENCRYPTION_KEY`, and seed data applied (`20260531140100_seed_d1_dev.sql`). Playwright sets `APP_MODE=full`, `ENABLE_DEMO_AUTH=true`, `SKIP_STRIPE_PAYMENTS=true`, and `E2E_STUB_LLM=true` on the dev server automatically.
+**Prerequisites:** `.env.local` with Supabase keys, `ENCRYPTION_KEY`, and seed data applied (`20260531140100_seed_d1_dev.sql`, plus `20260607120000_session_translations.sql` for D3 Phase 2). Playwright sets `APP_MODE=full`, `ENABLE_DEMO_AUTH=true`, `SKIP_STRIPE_PAYMENTS=true`, `E2E_STUB_LLM=true`, and `DAILY_TRANSCRIPTION_ENABLED=false` on the dev server automatically (so post-session synthesis runs without Daily transcription).
 
 Playwright starts its own Next.js dev server on `127.0.0.1:3000` — stop any other process on that port before running E2E.
 
@@ -69,7 +69,7 @@ npm run test:e2e      # headless
 npm run test:e2e:ui   # interactive UI mode
 ```
 
-E2E bookings are tagged with goals prefix `E2E:` and cleaned up before/after each golden-path run. Real Stripe checkout E2E is deferred to the real-Stripe feature branch.
+E2E bookings are tagged with spec-specific goals prefixes (`E2E:golden-path`, `E2E:localized-recap`, etc.) and cleaned up before/after each spec. Real Stripe checkout E2E is deferred to the real-Stripe feature branch.
 
 ## Getting Started
 

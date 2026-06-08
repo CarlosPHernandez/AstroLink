@@ -17,8 +17,15 @@ import {
 } from '@/lib/transcript-translation/persist-transcript';
 import { selectTranscriptWindow } from '@/lib/transcript-translation/token-budget';
 import type { TranscriptUtterance } from '@/lib/transcript-translation/types';
+import {
+  isSupportedTargetLocale,
+  shouldSkipTranslation,
+  TRANSLATION_AGENT_ID,
+} from '@/lib/transcript-translation/types';
+import { parsePostSessionOutput } from '@/lib/transcript-translation/recap-locale';
 import { PaymentAgent } from '@/services/agents/payment-agent';
 import { SessionAgent } from '@/services/agents/session-agent';
+import { TranslationAgent } from '@/services/agents/translation-agent';
 
 export type MeetingEndedPayload = {
   room: string;
@@ -206,12 +213,75 @@ export async function maybeRunSynthesisGate(params: {
     durationMinutes,
   });
 
+  const translation = await maybeRunTranslationIfNeeded(params.bookingId);
+
   return {
     gateRan: true as const,
     utteranceCount: utterances.length,
     transcriptTruncated: window.truncated,
     ...synthesis,
+    ...translation,
   };
+}
+
+/**
+ * APX-06: localize recap when English summary exists and mentee prefers a non-English locale.
+ */
+export async function maybeRunTranslationIfNeeded(bookingId: string) {
+  try {
+    const { data: booking, error: bookingError } = await supabaseAdmin
+      .from('bookings')
+      .select('mentee_id')
+      .eq('id', bookingId)
+      .single();
+
+    if (bookingError || !booking) {
+      return { translationSkipped: true as const, reason: 'booking_not_found' as const };
+    }
+
+    const { data: mentee, error: menteeError } = await supabaseAdmin
+      .from('users')
+      .select('preferred_locale')
+      .eq('id', booking.mentee_id)
+      .single();
+
+    if (menteeError || !mentee) {
+      return { translationSkipped: true as const, reason: 'mentee_not_found' as const };
+    }
+
+    const targetLocale = mentee.preferred_locale?.trim() ?? 'en';
+    if (!isSupportedTargetLocale(targetLocale) || shouldSkipTranslation('en', targetLocale)) {
+      return { translationSkipped: true as const, reason: 'locale_english' as const };
+    }
+
+    const { data: sessionRow, error: sessionError } = await supabaseAdmin
+      .from('sessions')
+      .select('summary_json')
+      .eq('booking_id', bookingId)
+      .maybeSingle();
+
+    if (sessionError) {
+      throw new Error(`sessions lookup failed: ${sessionError.message}`);
+    }
+
+    if (!parsePostSessionOutput(sessionRow?.summary_json ?? null)) {
+      return { translationSkipped: true as const, reason: 'english_summary_missing' as const };
+    }
+
+    const agent = new TranslationAgent();
+    await agent.translateSessionRecap(bookingId, targetLocale);
+
+    return { translationRan: true as const, targetLocale };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await supabaseAdmin.from('audit_log').insert({
+      agent_id: TRANSLATION_AGENT_ID,
+      event: 'RECAP_TRANSLATION_FAILED',
+      ref_id: bookingId,
+      payload: { error: message } as Json,
+    });
+    return { translationFailed: true as const };
+  }
 }
 
 /**
@@ -278,25 +348,14 @@ export async function ingestTranscriptVttForBooking(params: {
   };
 }
 
-/**
- * Idempotent D1 fulfillment after Daily reports meeting.ended:
- * escrow capture (always). APX-03 runs here only when transcription is disabled.
- */
-export async function fulfillBookingAfterMeetingEnded(payload: MeetingEndedPayload) {
-  const roomName = payload.room.trim();
-  if (!roomName) {
-    throw new Error('Daily meeting.ended missing room name');
-  }
-
-  const booking = await findBookingByDailyRoom(roomName);
-  if (!booking) {
-    return { processed: false, reason: 'booking_not_found' as const };
-  }
-
+async function fulfillBookingAfterMeetingEndedForRow(
+  booking: BookingRow,
+  payload: MeetingEndedPayload,
+) {
   const eligibility = assertBookingEligibleForPostSession(booking.status);
   if (!eligibility.eligible) {
     return {
-      processed: false,
+      processed: false as const,
       bookingId: booking.id,
       reason: eligibility.reason,
       status: eligibility.status,
@@ -317,9 +376,18 @@ export async function fulfillBookingAfterMeetingEnded(payload: MeetingEndedPaylo
         transcriptText: '',
         durationMinutes,
       });
+      await maybeRunTranslationIfNeeded(booking.id);
     }
 
     await captureOrCompleteBooking(booking);
+  } else if (!isDailyTranscriptionEnabled()) {
+    // Idempotent retry: booking may be completed without recap (e.g. prior partial run).
+    await runSessionSynthesisIfNeeded({
+      bookingId: booking.id,
+      transcriptText: '',
+      durationMinutes,
+    });
+    await maybeRunTranslationIfNeeded(booking.id);
   }
 
   const gateResult = isDailyTranscriptionEnabled()
@@ -327,12 +395,58 @@ export async function fulfillBookingAfterMeetingEnded(payload: MeetingEndedPaylo
     : null;
 
   return {
-    processed: true,
+    processed: true as const,
     bookingId: booking.id,
     alreadyProcessed: alreadyCompleted,
     transcriptionDeferred: isDailyTranscriptionEnabled(),
     ...(gateResult ?? {}),
   };
+}
+
+/**
+ * Idempotent D1 fulfillment after Daily reports meeting.ended:
+ * escrow capture (always). APX-03 runs here only when transcription is disabled.
+ */
+export async function fulfillBookingAfterMeetingEnded(payload: MeetingEndedPayload) {
+  const roomName = payload.room.trim();
+  if (!roomName) {
+    throw new Error('Daily meeting.ended missing room name');
+  }
+
+  const booking = await findBookingByDailyRoom(roomName);
+  if (!booking) {
+    return { processed: false, reason: 'booking_not_found' as const };
+  }
+
+  return fulfillBookingAfterMeetingEndedForRow(booking, payload);
+}
+
+/** Dev operator / tests: fulfill by booking id without Daily room URL lookup. */
+export async function fulfillBookingAfterMeetingEndedForBooking(
+  bookingId: string,
+  payload: Omit<MeetingEndedPayload, 'room'> & { room?: string },
+) {
+  const { data: booking, error } = await supabaseAdmin
+    .from('bookings')
+    .select('id, status, stripe_payment_intent_id, daily_room_url, mentee_id, mentor_id')
+    .eq('id', bookingId)
+    .single();
+
+  if (error || !booking) {
+    return { processed: false, reason: 'booking_not_found' as const };
+  }
+
+  const room =
+    payload.room?.trim() ||
+    (booking.daily_room_url ? booking.daily_room_url.split('/').pop() ?? '' : '') ||
+    '';
+
+  return fulfillBookingAfterMeetingEndedForRow(booking, {
+    room,
+    start_ts: payload.start_ts,
+    end_ts: payload.end_ts,
+    meeting_id: payload.meeting_id,
+  });
 }
 
 /**

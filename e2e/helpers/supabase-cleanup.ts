@@ -12,15 +12,21 @@ function getSupabaseAdmin() {
   return createClient(url, key);
 }
 
-/** Remove Carlos bookings tagged with the E2E goals prefix (transactions first — FK RESTRICT). */
-export async function deleteE2eBookingsForMentee() {
+/**
+ * Remove Carlos bookings whose match_reason starts with `matchReasonPrefix`
+ * (transactions first — FK RESTRICT). Use a spec-specific prefix so parallel
+ * Playwright workers do not delete each other's bookings.
+ */
+export async function deleteE2eBookingsForMentee(
+  matchReasonPrefix: string = E2E_GOALS_PREFIX,
+) {
   const supabase = getSupabaseAdmin();
 
   const { data: bookings, error } = await supabase
     .from('bookings')
     .select('id')
     .eq('mentee_id', MENTEE_ID)
-    .like('match_reason', `${E2E_GOALS_PREFIX}%`);
+    .like('match_reason', `${matchReasonPrefix}%`);
 
   if (error) {
     throw new Error(`E2E cleanup failed to list bookings: ${error.message}`);

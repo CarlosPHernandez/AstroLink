@@ -33,6 +33,7 @@ export default async function MenteeSettingsPage() {
           phone: null,
           bio: '',
           stripeCustomerId: null,
+          preferredLocale: 'en',
         }
       }
       skipPayments={isStripePaymentsSkipped()}

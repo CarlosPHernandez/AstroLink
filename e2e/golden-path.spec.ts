@@ -2,16 +2,17 @@ import { test, expect } from '@playwright/test';
 import { deleteE2eBookingsForMentee, E2E_GOALS_PREFIX } from './helpers/supabase-cleanup';
 import { futureDatetimeLocal } from './helpers/datetime';
 
-const E2E_GOALS = `${E2E_GOALS_PREFIX} lunar relay comms architecture review`;
+const E2E_GOALS_TAG = `${E2E_GOALS_PREFIX}golden-path`;
+const E2E_GOALS = `${E2E_GOALS_TAG} lunar relay comms architecture review`;
 const STUB_OBJECTIVE = 'Validate lunar relay architecture options';
 
 test.describe('D1 golden path (skip Stripe)', () => {
   test.beforeEach(async () => {
-    await deleteE2eBookingsForMentee();
+    await deleteE2eBookingsForMentee(E2E_GOALS_TAG);
   });
 
   test.afterEach(async () => {
-    await deleteE2eBookingsForMentee();
+    await deleteE2eBookingsForMentee(E2E_GOALS_TAG);
   });
 
   test('book Chris, see session brief, open session room', async ({ page }) => {
@@ -51,9 +52,11 @@ test.describe('D1 golden path (skip Stripe)', () => {
     await expect(bookingRow).toBeVisible();
     await expect(bookingRow.getByText('Chris Sembroski')).toBeVisible();
 
-    await expect(page.getByTestId('briefing-sidebar')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Pre-session brief' })).toBeVisible();
-    await expect(page.getByText('Session brief')).toBeVisible();
+    const briefingSidebar = page.getByTestId('briefing-sidebar');
+    await expect(briefingSidebar).toBeVisible();
+    await expect(briefingSidebar.getByRole('heading', { name: 'Pre-session brief' })).toBeVisible();
+    // exact: true — "Pre-session brief" contains substring "Session brief"
+    await expect(briefingSidebar.getByText('Session brief', { exact: true })).toBeVisible();
     await expect(page.getByText(STUB_OBJECTIVE)).toBeVisible();
 
     await page.getByRole('button', { name: 'Close briefing panel' }).click();

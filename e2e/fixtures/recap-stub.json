@@ -1,0 +1,16 @@
+{
+  "session_summary": "E2E stub session recap — expert and buyer aligned on lunar relay architecture next steps.",
+  "key_insights": [
+    "Commercial relay options need early spectrum coordination",
+    "Payload comms integration risks are manageable with phased testing"
+  ],
+  "action_items": [
+    {
+      "task": "Draft architecture one-pager for mentor review",
+      "owner": "mentee",
+      "deadline": "Next week"
+    }
+  ],
+  "mentor_feedback_prompt": "How clear was the mentee's technical framing?",
+  "recommended_next_session": "Deep dive on ground segment interfaces"
+}

@@ -303,6 +303,38 @@ export type Database = {
           },
         ]
       }
+      session_translations: {
+        Row: {
+          booking_id: string
+          id: string
+          summary_json: Json | null
+          target_locale: string
+          translated_at: string
+        }
+        Insert: {
+          booking_id: string
+          id?: string
+          summary_json?: Json | null
+          target_locale: string
+          translated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          id?: string
+          summary_json?: Json | null
+          target_locale?: string
+          translated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_translations_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_transcripts: {
         Row: {
           booking_id: string
@@ -396,6 +428,7 @@ export type Database = {
           full_name: string
           id: string
           phone: string | null
+          preferred_locale: string
           stripe_customer_id: string | null
           updated_at: string
         }
@@ -406,6 +439,7 @@ export type Database = {
           full_name: string
           id?: string
           phone?: string | null
+          preferred_locale?: string
           stripe_customer_id?: string | null
           updated_at?: string
         }
@@ -416,6 +450,7 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string | null
+          preferred_locale?: string
           stripe_customer_id?: string | null
           updated_at?: string
         }
@@ -429,7 +464,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      agent_id: "APX-01" | "APX-02" | "APX-03" | "APX-04" | "APX-05"
+      agent_id: "APX-01" | "APX-02" | "APX-03" | "APX-04" | "APX-05" | "APX-06"
       bio_risk_rating: "low" | "medium" | "high"
       booking_status:
         | "pending_payment"
@@ -557,7 +592,7 @@ export type Enums<
 export const Constants = {
   public: {
     Enums: {
-      agent_id: ["APX-01", "APX-02", "APX-03", "APX-04", "APX-05"],
+      agent_id: ["APX-01", "APX-02", "APX-03", "APX-04", "APX-05", "APX-06"],
       bio_risk_rating: ["low", "medium", "high"],
       booking_status: [
         "pending_payment",

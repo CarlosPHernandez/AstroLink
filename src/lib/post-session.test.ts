@@ -7,6 +7,10 @@ const mockBookingUpdate = vi.hoisted(() => vi.fn());
 const mockSynthesizeSession = vi.hoisted(() => vi.fn());
 const mockFetchVtt = vi.hoisted(() => vi.fn());
 const mockPersistTranscript = vi.hoisted(() => vi.fn());
+const mockTranslateSessionRecap = vi.hoisted(() => vi.fn());
+const mockUsersLookup = vi.hoisted(() => vi.fn());
+const mockSessionsMaybeSingle = vi.hoisted(() => vi.fn());
+const mockAuditInsert = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/supabase', () => ({
   supabaseAdmin: {
@@ -27,13 +31,34 @@ vi.mock('@/lib/supabase', () => ({
           })),
         };
       }
-      if (table === 'users' || table === 'mentors') {
+      if (table === 'users') {
+        return {
+          select: vi.fn(() => ({
+            in: vi.fn(() => ({ data: [], error: null })),
+            eq: vi.fn(() => ({
+              maybeSingle: mockUsersLookup,
+              single: mockUsersLookup,
+            })),
+          })),
+        };
+      }
+      if (table === 'mentors') {
         return {
           select: vi.fn(() => ({
             in: vi.fn(() => ({ data: [], error: null })),
             eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }) })),
           })),
         };
+      }
+      if (table === 'sessions') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({ maybeSingle: mockSessionsMaybeSingle })),
+          })),
+        };
+      }
+      if (table === 'audit_log') {
+        return { insert: mockAuditInsert };
       }
       return {
         select: vi.fn(() => ({
@@ -55,6 +80,12 @@ vi.mock('@/lib/daily', () => ({
 vi.mock('@/services/agents/session-agent', () => ({
   SessionAgent: vi.fn(() => ({
     synthesizeSession: mockSynthesizeSession,
+  })),
+}));
+
+vi.mock('@/services/agents/translation-agent', () => ({
+  TranslationAgent: vi.fn(() => ({
+    translateSessionRecap: mockTranslateSessionRecap,
   })),
 }));
 
@@ -81,6 +112,7 @@ import {
   fulfillBookingAfterTranscriptError,
   fulfillBookingAfterTranscriptReady,
   maybeRunSynthesisGate,
+  maybeRunTranslationIfNeeded,
 } from '@/lib/post-session';
 
 const bookingRow = {
@@ -263,6 +295,10 @@ describe('maybeRunSynthesisGate', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSynthesizeSession.mockResolvedValue({});
+    mockTranslateSessionRecap.mockResolvedValue({});
+    mockBookingSingle.mockResolvedValue({ data: { mentee_id: 'mentee-1' }, error: null });
+    mockUsersLookup.mockResolvedValue({ data: { preferred_locale: 'en' }, error: null });
+    mockSessionsMaybeSingle.mockResolvedValue({ data: null, error: null });
     vi.mocked(isDailyTranscriptionEnabled).mockReturnValue(true);
   });
 
@@ -272,5 +308,112 @@ describe('maybeRunSynthesisGate', () => {
     const result = await maybeRunSynthesisGate({ bookingId: 'booking-1' });
 
     expect(result).toEqual({ gateWaiting: true, reason: 'capture_pending' });
+  });
+});
+
+describe('maybeRunTranslationIfNeeded', () => {
+  const englishRecap = {
+    session_summary: 'Summary',
+    key_insights: ['one'],
+    action_items: [],
+    mentor_feedback_prompt: 'feedback',
+    recommended_next_session: 'next',
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockTranslateSessionRecap.mockResolvedValue(englishRecap);
+    mockAuditInsert.mockResolvedValue({ error: null });
+    mockBookingSingle.mockResolvedValue({
+      data: { mentee_id: 'mentee-1' },
+      error: null,
+    });
+  });
+
+  it('runs APX-06 when English summary exists and mentee prefers pt-BR (D8)', async () => {
+    mockUsersLookup.mockResolvedValueOnce({
+      data: { preferred_locale: 'pt-BR' },
+      error: null,
+    });
+    mockSessionsMaybeSingle.mockResolvedValueOnce({
+      data: { summary_json: englishRecap },
+      error: null,
+    });
+
+    const result = await maybeRunTranslationIfNeeded('booking-1');
+
+    expect(result).toEqual({ translationRan: true, targetLocale: 'pt-BR' });
+    expect(mockTranslateSessionRecap).toHaveBeenCalledWith('booking-1', 'pt-BR');
+  });
+
+  it('skips when mentee locale is English', async () => {
+    mockUsersLookup.mockResolvedValueOnce({
+      data: { preferred_locale: 'en' },
+      error: null,
+    });
+
+    const result = await maybeRunTranslationIfNeeded('booking-1');
+
+    expect(result).toEqual({ translationSkipped: true, reason: 'locale_english' });
+    expect(mockTranslateSessionRecap).not.toHaveBeenCalled();
+  });
+
+  it('writes RECAP_TRANSLATION_FAILED audit when translation throws', async () => {
+    mockUsersLookup.mockResolvedValueOnce({
+      data: { preferred_locale: 'pt-BR' },
+      error: null,
+    });
+    mockSessionsMaybeSingle.mockResolvedValueOnce({
+      data: { summary_json: englishRecap },
+      error: null,
+    });
+    mockTranslateSessionRecap.mockRejectedValueOnce(new Error('LLM timeout'));
+
+    const result = await maybeRunTranslationIfNeeded('booking-1');
+
+    expect(result).toEqual({ translationFailed: true });
+    expect(mockAuditInsert).toHaveBeenCalledWith({
+      agent_id: 'APX-06',
+      event: 'RECAP_TRANSLATION_FAILED',
+      ref_id: 'booking-1',
+      payload: { error: 'LLM timeout' },
+    });
+  });
+});
+
+describe('fulfillBookingAfterMeetingEnded transcription disabled', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockBookingUpdate.mockResolvedValue({ error: null });
+    mockSynthesizeSession.mockResolvedValue({});
+    mockTranslateSessionRecap.mockResolvedValue({});
+    mockBookingSingle.mockResolvedValue({ data: { mentee_id: 'mentee-1' }, error: null });
+    mockUsersLookup.mockResolvedValue({ data: { preferred_locale: 'pt-BR' }, error: null });
+    mockSessionsMaybeSingle.mockResolvedValue({
+      data: {
+        summary_json: {
+          session_summary: 'Summary',
+          key_insights: [],
+          action_items: [],
+          mentor_feedback_prompt: 'f',
+          recommended_next_session: 'n',
+        },
+      },
+      error: null,
+    });
+    vi.mocked(isDailyTranscriptionEnabled).mockReturnValue(false);
+  });
+
+  it('runs translation after synthesis when transcription is disabled (D16)', async () => {
+    mockBookingMaybeSingle.mockResolvedValueOnce({ data: bookingRow, error: null });
+
+    await fulfillBookingAfterMeetingEnded({
+      room: 'astrolink-booking1',
+      start_ts: 1000,
+      end_ts: 1900,
+    });
+
+    expect(mockSynthesizeSession).toHaveBeenCalled();
+    expect(mockTranslateSessionRecap).toHaveBeenCalledWith('booking-1', 'pt-BR');
   });
 });

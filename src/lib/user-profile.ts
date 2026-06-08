@@ -1,5 +1,9 @@
 import 'server-only';
 
+import {
+  isSupportedTargetLocale,
+  type SupportedTargetLocale,
+} from '@/lib/transcript-translation/types';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export interface MenteeProfile {
@@ -8,6 +12,7 @@ export interface MenteeProfile {
   fullName: string;
   phone: string | null;
   bio: string;
+  preferredLocale: SupportedTargetLocale;
   stripeCustomerId: string | null;
 }
 
@@ -16,6 +21,7 @@ export interface MenteeProfileUpdate {
   email: string;
   phone: string | null;
   bio: string;
+  preferredLocale: SupportedTargetLocale;
 }
 
 /**
@@ -73,7 +79,7 @@ export async function ensureMenteeUserRow(params: {
 export async function getMenteeProfile(userId: string): Promise<MenteeProfile | null> {
   const { data, error } = await supabaseAdmin
     .from('users')
-    .select('id, email, full_name, phone, bio, stripe_customer_id')
+    .select('id, email, full_name, phone, bio, preferred_locale, stripe_customer_id')
     .eq('id', userId)
     .maybeSingle();
 
@@ -84,12 +90,17 @@ export async function getMenteeProfile(userId: string): Promise<MenteeProfile | 
     return null;
   }
 
+  const preferredLocale = isSupportedTargetLocale(data.preferred_locale)
+    ? data.preferred_locale
+    : 'en';
+
   return {
     id: data.id,
     email: data.email,
     fullName: data.full_name,
     phone: data.phone,
     bio: data.bio ?? '',
+    preferredLocale,
     stripeCustomerId: data.stripe_customer_id,
   };
 }
@@ -105,10 +116,11 @@ export async function updateMenteeProfile(
       email: update.email.trim().toLowerCase(),
       phone: update.phone,
       bio: update.bio,
+      preferred_locale: update.preferredLocale,
       updated_at: new Date().toISOString(),
     })
     .eq('id', userId)
-    .select('id, email, full_name, phone, bio, stripe_customer_id')
+    .select('id, email, full_name, phone, bio, preferred_locale, stripe_customer_id')
     .single();
 
   if (error || !data) {
@@ -116,12 +128,17 @@ export async function updateMenteeProfile(
     return null;
   }
 
+  const preferredLocale = isSupportedTargetLocale(data.preferred_locale)
+    ? data.preferred_locale
+    : 'en';
+
   return {
     id: data.id,
     email: data.email,
     fullName: data.full_name,
     phone: data.phone,
     bio: data.bio ?? '',
+    preferredLocale,
     stripeCustomerId: data.stripe_customer_id,
   };
 }

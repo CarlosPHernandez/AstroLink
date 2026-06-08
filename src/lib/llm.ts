@@ -53,9 +53,21 @@ function isE2eStubLlmEnabled(): boolean {
   return process.env.NODE_ENV !== 'production' && process.env.E2E_STUB_LLM === 'true';
 }
 
-function loadE2eBriefingStub<T>(): T {
-  const stubPath = path.join(process.cwd(), 'e2e/fixtures/briefing-stub.json');
+function loadE2eStub<T>(filename: string): T {
+  const stubPath = path.join(process.cwd(), 'e2e/fixtures', filename);
   return JSON.parse(readFileSync(stubPath, 'utf8')) as T;
+}
+
+function loadE2eBriefingStub<T>(): T {
+  return loadE2eStub<T>('briefing-stub.json');
+}
+
+function loadE2eRecapStub<T>(): T {
+  return loadE2eStub<T>('recap-stub.json');
+}
+
+function isPostSessionRecapSchema(schema: LlmJsonSchema): boolean {
+  return schema.required?.includes('session_summary') ?? false;
 }
 
 let openaiClient: OpenAI | null = null;
@@ -199,6 +211,9 @@ async function generateStructuredJsonGemini<T>(req: StructuredJsonRequest): Prom
 
 export async function generateStructuredJson<T>(req: StructuredJsonRequest): Promise<T> {
   if (isE2eStubLlmEnabled()) {
+    if (isPostSessionRecapSchema(req.schema)) {
+      return loadE2eRecapStub<T>();
+    }
     return loadE2eBriefingStub<T>();
   }
 

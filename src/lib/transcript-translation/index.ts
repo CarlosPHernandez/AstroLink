@@ -33,3 +33,14 @@ export { mapSpeakersToRoles } from '@/lib/transcript-translation/map-speakers';
 export type { SpeakerMappingContext } from '@/lib/transcript-translation/map-speakers';
 export { fetchDailyTranscriptVtt } from '@/lib/transcript-translation/fetch-daily-transcript';
 export { persistSessionTranscript } from '@/lib/transcript-translation/persist-transcript';
+export {
+  localeFallbackChain,
+  parsePostSessionOutput,
+  parseRecapLocaleQuery,
+  PostSessionOutputSchema,
+  resolveEffectiveRecapLocale,
+} from '@/lib/transcript-translation/recap-locale';
+export type {
+  EffectiveRecapResolution,
+  RecapLocaleParseResult,
+} from '@/lib/transcript-translation/recap-locale';
