@@ -32,7 +32,7 @@ Cloud Agent VMs often inject only `NEXT_PUBLIC_SUPABASE_URL`. **`NEXT_PUBLIC_SUP
 ### Running services
 
 - **Only required process:** Next.js dev server (`npm run dev`). Use tmux for long-running dev (e.g. session `next-dev-server`).
-- **E2E:** Playwright `webServer` runs `npm run dev -- --hostname 127.0.0.1` with `APP_MODE=full`, `ENABLE_DEMO_AUTH=true`, `SKIP_STRIPE_PAYMENTS=true`, and `E2E_STUB_LLM=true`. Auth uses `POST /api/e2e/session`, not `/auth` presets.
+- **E2E:** Playwright `webServer` runs `npm run dev -- --hostname 127.0.0.1` with `APP_MODE=full`, `ENABLE_DEMO_AUTH=true`, `SKIP_STRIPE_PAYMENTS=true`, `E2E_STUB_LLM=true`, and `DAILY_TRANSCRIPTION_ENABLED=false` (pins synthesis-on-meeting-end even if `.env.local` enables Daily transcription). Auth uses `POST /api/e2e/session`, not `/auth` presets.
 - **Not in-repo:** Stripe CLI (`stripe listen --forward-to localhost:3000/api/webhooks/stripe`) and Daily webhooks are optional for full payment/video flows.
 
 ### First-run tooling
