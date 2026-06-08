@@ -164,11 +164,16 @@ export default function ExpertProfileClient({
         <section className="mb-12 grid gap-8 lg:grid-cols-12 lg:gap-10 items-start">
           {/* Bio (left) */}
           <div className="lg:col-span-7">
-            <div className="uppercase tracking-[0.2em] text-[10px] font-mono font-semibold text-primary mb-2">
-              The pedigree
+            <div className="flex items-center gap-2 mb-2">
+              <div className="uppercase tracking-[0.2em] text-[10px] font-mono font-semibold text-primary">
+                The pedigree
+              </div>
+              <span className="font-mono text-[9px] uppercase tracking-wider text-on-surface-variant border border-outline-variant rounded px-1.5 py-0.5">
+                Bio · ES
+              </span>
             </div>
             <h2 className="text-headline-md font-semibold tracking-tight mb-4">About {firstName}</h2>
-            <div className="prose prose-neutral max-w-prose text-body-md text-on-surface font-light leading-relaxed">
+            <div lang="es" className="prose prose-neutral max-w-prose text-body-md text-on-surface font-light leading-relaxed">
               {expert.bio.split('\n').map((para, i) => (
                 <p key={i} className={i > 0 ? 'mt-4' : ''}>
                   {para}
