@@ -380,7 +380,7 @@ export default function ExpertProfileClient({
       <div className="border-t border-outline-variant bg-surface-container-low py-6">
         <div className="max-w-[1200px] mx-auto px-lg flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-on-surface-variant">
-            Ready to get time with {expert.name}?
+            30 minutes with {firstName}. Real pedigree, clear pricing.
           </p>
           <Link
             href={bookHref}
