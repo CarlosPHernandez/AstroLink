@@ -284,7 +284,7 @@ export default function ExpertProfileClient({
                   href={bookHref}
                   className="text-[10px] font-bold uppercase tracking-wider bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-container transition-colors"
                 >
-                  Book now
+                  Book 1:1 with {firstName}
                 </Link>
               </div>
             </div>
@@ -355,7 +355,8 @@ export default function ExpertProfileClient({
             href={bookHref}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-on-primary hover:bg-primary-container transition-colors"
           >
-            Book the session
+            <span className="material-symbols-outlined text-[18px]">videocam</span>
+            Book 1:1 with {firstName}
           </Link>
         </div>
       </div>
