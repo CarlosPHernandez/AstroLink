@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
 import type { ListedExpert } from '@/lib/mentor-directory';
@@ -19,6 +19,7 @@ export default function ExpertProfileClient({
   expert: ListedExpert;
   session: SessionData | null;
 }) {
+  const [bioExpanded, setBioExpanded] = useState(false);
   const bookHref = session
     ? `/booking?mentor=${encodeURIComponent(expert.slug)}`
     : `/auth?redirect=${encodeURIComponent(`/booking?mentor=${expert.slug}`)}`;
@@ -173,13 +174,33 @@ export default function ExpertProfileClient({
               </span>
             </div>
             <h2 className="text-headline-md font-semibold tracking-tight mb-4">About {firstName}</h2>
-            <div lang="es" className="prose prose-neutral max-w-prose text-body-md text-on-surface font-light leading-relaxed">
-              {expert.bio.split('\n').map((para, i) => (
-                <p key={i} className={i > 0 ? 'mt-4' : ''}>
-                  {para}
-                </p>
-              ))}
-            </div>
+            {(() => {
+              const paragraphs = expert.bio.split('\n').filter(Boolean);
+              const COLLAPSE_AT = 3;
+              const visible = bioExpanded ? paragraphs : paragraphs.slice(0, COLLAPSE_AT);
+              return (
+                <>
+                  <div lang="es" className="prose prose-neutral max-w-prose text-body-md text-on-surface font-light leading-relaxed">
+                    {visible.map((para, i) => (
+                      <p key={i} className={i > 0 ? 'mt-4' : ''}>
+                        {para}
+                      </p>
+                    ))}
+                  </div>
+                  {paragraphs.length > COLLAPSE_AT && (
+                    <button
+                      onClick={() => setBioExpanded((v) => !v)}
+                      className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold uppercase tracking-wider text-primary hover:text-primary/70 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">
+                        {bioExpanded ? 'expand_less' : 'expand_more'}
+                      </span>
+                      {bioExpanded ? 'Read less' : 'Read more'}
+                    </button>
+                  )}
+                </>
+              );
+            })()}
           </div>
 
           {/* Sticky booking + quick facts (right) */}
