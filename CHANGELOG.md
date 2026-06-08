@@ -2,6 +2,20 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.1.4.2] - 2026-06-09
+
+### Added
+
+- Public expert profile pages (`/experts/[slug]`): redesigned premium layout featuring prominent intro video (with graceful portrait fallback), full bio, all expertise tags as pills, "How to work with [Expert]" modalities section (echoing the landing hero's three modalities, with live 1:1 active and priced), trust signals, and multiple CTAs that feed the existing booking flow (`/booking?mentor=slug`).
+- Landing page directory cards now deep-link expert **names** to their profile pages while preserving the "Book session" fast-path button.
+- `ListedExpert` interface and `mentorToListedExpert` mapper now expose `introVideoUrl` (sourced from the existing `mentors.intro_video_url` column) for rich profile media.
+- New reusable `ExpertIntroMedia` component for consistent hero video/image treatment on profiles.
+- Dedicated route group with server-side data fetching (`getMentorBySlug`), dynamic metadata, and friendly not-found page.
+
+### Changed
+
+- Small updates to `src/app/landing-page-client.tsx` and `src/lib/mentor-directory.ts` to wire profile links and surface the new video field (additive, fully backward compatible).
+
 ## [0.1.4.1] - 2026-06-08
 
 ### Fixed

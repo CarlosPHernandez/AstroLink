@@ -436,7 +436,13 @@ export default function LandingPageClient({
                       <div className="flex-grow">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="text-sm font-bold text-on-surface group-hover:text-black transition-colors">{expert.name}</h3>
+                            <Link
+                              href={`/experts/${expert.slug}`}
+                              className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors hover:underline underline-offset-2"
+                              data-testid={`expert-profile-link-${expert.slug}`}
+                            >
+                              {expert.name}
+                            </Link>
                             <p className="text-[10px] text-on-surface-variant font-mono leading-none mb-1 uppercase mt-0.5">{expert.role}</p>
                             <p className="text-[10px] text-zinc-450 leading-none">{expert.employer}</p>
                           </div>
