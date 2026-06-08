@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 type ExpertIntroMediaProps = {
   name: string;
@@ -26,22 +26,62 @@ export function ExpertIntroMedia({
   priority = false,
 }: ExpertIntroMediaProps) {
   const [videoFailed, setVideoFailed] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const showVideo = Boolean(introVideoUrl) && !videoFailed;
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (playing) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play().catch(() => setVideoFailed(true));
+    }
+  };
 
   return (
     <div
       className={`relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container-low shadow-sm ${className}`}
     >
       {showVideo ? (
-        <video
-          src={introVideoUrl!}
-          poster={imageUrl}
-          controls
-          playsInline
-          className="absolute inset-0 h-full w-full object-contain"
-          aria-label={`Introduction video for ${name}`}
-          onError={() => setVideoFailed(true)}
-        />
+        <>
+          <video
+            ref={videoRef}
+            src={introVideoUrl!}
+            poster={imageUrl}
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+            aria-label={`Introduction video for ${name}`}
+            onError={() => setVideoFailed(true)}
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+            onEnded={() => setPlaying(false)}
+          />
+          {/* Custom play / pause overlay */}
+          <button
+            onClick={togglePlay}
+            className="absolute inset-0 flex flex-col items-center justify-center transition-colors group"
+            style={{ background: playing ? 'transparent' : 'rgba(0,0,0,0.18)' }}
+            aria-label={playing ? 'Pause introduction video' : 'Play introduction video'}
+          >
+            {!playing && (
+              <>
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 shadow-lg group-hover:scale-105 transition-transform">
+                  <span
+                    className="material-symbols-outlined text-[34px] text-black/80 ml-1"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    play_arrow
+                  </span>
+                </div>
+                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-lg border border-white/20 bg-black/50 px-4 py-2 backdrop-blur-md">
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-white/90">Watch intro</span>
+                  <span className="material-symbols-outlined text-white/70 text-[16px]">videocam</span>
+                </div>
+              </>
+            )}
+          </button>
+        </>
       ) : (
         <>
           <Image
