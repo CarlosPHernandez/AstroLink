@@ -10,6 +10,8 @@ Structured using [Diataxis](https://diataxis.fr/): tutorials teach, how-tos guid
 | [d2-next-steps.md](./d2-next-steps.md) | Explanation (roadmap) | Product + engineering |
 | [d3-transcript-translation-roadmap.md](./d3-transcript-translation-roadmap.md) | Explanation (roadmap) | Product + engineering — bilingual expert sessions |
 
+**Public expert discovery (shipped 0.1.4.2):** Landing directory + `/experts/[slug]` profile pages (reference + how-to entry points in README and CHANGELOG). See "Expert profile v1" in d2-next-steps.md (now shipped).
+
 ## Video sessions (Daily.co)
 
 | Doc | Quadrant | Description |

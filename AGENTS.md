@@ -6,7 +6,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Cursor Cloud specific instructions
 
-**Product:** AstroLink — single Next.js 16 app (`npm`, Node ≥ 20). Hosted Supabase project `vwoizjesyyygmokfqpyy` (no local Supabase stack in-repo).
+**Product:** AstroLink — single Next.js 16 app (`npm`, Node ≥ 20). Hosted Supabase project `vwoizjesyyygmokfqpyy` (no local Supabase stack in-repo). Public surfaces include the expert directory on landing (approved+listed mentors from DB) and dedicated profile pages at `/experts/[slug]` (bio, intro video via `ExpertIntroMedia`, modalities teaser, booking CTAs).
 
 ### Environment
 

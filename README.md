@@ -29,7 +29,8 @@ Paid aerospace expert network (live 1:1 sessions, Stripe, Daily, Gemini agents).
 
 1. Set in `.env.local`: Supabase keys, `OPENAI_API_KEY` (or `GEMINI_API_KEY`), `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `DAILY_API_KEY`, and `SKIP_STRIPE_PAYMENTS=true` for local booking without Stripe.
 2. Run `npm run dev`, sign in as **Carlos** (`carlos@astrolink.ai` on `/auth` with demo auth enabled).
-3. Landing loads Chris from DB → **Book** → `/booking?mentor=chris-sembroski` → pay with Stripe test card `4242…`.
+3. Landing renders the public directory of approved + listed experts (from Supabase, filtered by category). Click an expert's name to view their full profile page (`/experts/[slug]`) — rich bio, intro video (or portrait fallback), expertise, and booking CTAs. Or use the "Book session" button on cards for the fast path.
+4. Profile or card → **Book** → `/booking?mentor=chris-sembroski` → pay with Stripe test card `4242…`.
 4. After authorize, either:
    - Forward webhooks: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`, or
    - Dev fulfill: `POST /api/book/fulfill` with `{ "bookingId": "<uuid>" }` (development only).
