@@ -295,51 +295,59 @@ export default function ExpertProfileClient({
           <h2 className="text-headline-md font-semibold tracking-tight mb-6">Session options</h2>
 
           <div className="grid md:grid-cols-3 gap-4">
-            {/* Live — active */}
-            <div className="rounded-xl border-2 border-primary bg-primary-fixed/10 p-5 flex flex-col">
+            {/* Live — dominant, spans 2 cols */}
+            <div className="md:col-span-2 rounded-xl border-2 border-primary bg-primary-fixed/10 p-6 flex flex-col">
               <div className="flex items-center gap-2 mb-3">
                 <span className="material-symbols-outlined text-primary text-[22px]">call</span>
-                <span className="font-headline-md text-on-surface">Live 1:1 Call</span>
+                <span className="font-headline-md text-on-surface font-semibold">Live 1:1 Call</span>
+                <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-primary border border-primary/30 bg-primary/5 rounded px-2 py-0.5">
+                  Available now
+                </span>
               </div>
               <p className="text-body-md text-on-surface-variant font-light flex-1">
-                Direct face-to-face time. Book a 30-minute encrypted video session. Clear pricing, AI briefing prepared in advance.
+                Direct face-to-face time with {firstName}. 30-minute encrypted video session, AI briefing prepared in advance, payment held until the call ends.
               </p>
-              <div className="mt-4 pt-4 border-t border-outline-variant/60 flex items-baseline justify-between">
-                <span className="font-mono text-sm font-semibold text-on-surface">${expert.rate}/hr</span>
+              <div className="mt-5 flex items-center justify-between gap-4">
+                <div>
+                  <span className="font-mono text-2xl font-semibold text-on-surface">${expert.rate}</span>
+                  <span className="font-mono text-xs text-on-surface-variant font-light ml-1">/hr</span>
+                </div>
                 <Link
                   href={bookHref}
-                  className="text-[10px] font-bold uppercase tracking-wider bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-container transition-colors"
+                  className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider bg-primary text-on-primary px-5 py-3 rounded-lg hover:bg-primary-container transition-colors"
                 >
+                  <span className="material-symbols-outlined text-[18px]">videocam</span>
                   Book 1:1 with {firstName}
                 </Link>
               </div>
             </div>
 
-            {/* Video reply — teaser */}
-            <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 flex flex-col opacity-60">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-on-surface-variant text-[22px]">videocam</span>
-                <span className="font-headline-md text-on-surface">Request a Video</span>
+            {/* Teasers — stacked in right column */}
+            <div className="flex flex-col gap-4">
+              <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 flex flex-col opacity-50 flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined text-on-surface-variant text-[18px]">videocam</span>
+                  <span className="text-sm font-medium text-on-surface">Video Reply</span>
+                </div>
+                <p className="text-xs text-on-surface-variant font-light flex-1">
+                  Send a prompt, receive a recorded reply.
+                </p>
+                <div className="mt-2 text-[10px] font-mono uppercase tracking-wider text-on-surface-variant">
+                  Coming soon
+                </div>
               </div>
-              <p className="text-body-md text-on-surface-variant font-light flex-1">
-                Drop a question or custom prompt. Receive a personalized recorded video reply. (Coming soon)
-              </p>
-              <div className="mt-auto pt-4 text-[10px] font-mono uppercase tracking-wider text-on-surface-variant">
-                In development — join early access
-              </div>
-            </div>
 
-            {/* Text — teaser */}
-            <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 flex flex-col opacity-60">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-on-surface-variant text-[22px]">chat_bubble</span>
-                <span className="font-headline-md text-on-surface">Text a Question</span>
-              </div>
-              <p className="text-body-md text-on-surface-variant font-light flex-1">
-                Send a direct question. Get a real audio or text response from the expert. (Coming soon)
-              </p>
-              <div className="mt-auto pt-4 text-[10px] font-mono uppercase tracking-wider text-on-surface-variant">
-                In development — join early access
+              <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 flex flex-col opacity-50 flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined text-on-surface-variant text-[18px]">chat_bubble</span>
+                  <span className="text-sm font-medium text-on-surface">Text Q&A</span>
+                </div>
+                <p className="text-xs text-on-surface-variant font-light flex-1">
+                  Drop a question, get a direct response.
+                </p>
+                <div className="mt-2 text-[10px] font-mono uppercase tracking-wider text-on-surface-variant">
+                  Coming soon
+                </div>
               </div>
             </div>
           </div>
