@@ -28,7 +28,7 @@ npm run dev
 4. Send a test webhook from Daily or complete one dry-run call and confirm app logs show `received: true`.
 5. If using Stripe: `stripe listen --forward-to localhost:3000/api/webhooks/stripe` running.
 6. Two browsers (or profiles): mentee `carlos@astrolink.ai`, mentor `chris@astrolink.ai` (seed users).
-7. **Phone / second device on Wi‑Fi:** run `npm run dev:lan` and open `https://<LAN-IP>:3000` (accept Safari's cert warning). Plain `http://192.168.x.x:3000` blocks camera/mic. **Mac mentor:** `http://localhost:3000` is fine.
+7. **Phone / second device on Wi‑Fi:** run `npm run dev:lan` and open the **Phone** URL it prints (e.g. `https://10.0.0.49:3000` — not `https://0.0.0.0:3000`). Accept Safari's cert warning. Plain `http://<LAN-IP>:3000` blocks camera/mic. **Mac mentor:** `https://localhost:3000` while `dev:lan` is running.
 8. Allow camera/microphone for your Daily domain when the call UI loads.
 
 ## Standard demo script (&lt;15 min)
