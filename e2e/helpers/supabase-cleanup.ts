@@ -53,3 +53,19 @@ async function deleteBookingsByIds(
     throw new Error(`E2E cleanup failed to delete bookings: ${bookingError.message}`);
   }
 }
+
+/** Fake Daily room + in-window schedule so session gate is `ready` without DAILY_API_KEY. */
+export async function setE2eDailyRoomStub(bookingId: string) {
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase
+    .from('bookings')
+    .update({
+      daily_room_url: `https://e2e.astrolink.test/${bookingId}`,
+      scheduled_at: new Date().toISOString(),
+    })
+    .eq('id', bookingId);
+
+  if (error) {
+    throw new Error(`E2E failed to set daily room stub: ${error.message}`);
+  }
+}

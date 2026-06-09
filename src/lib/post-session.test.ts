@@ -231,7 +231,8 @@ describe('fulfillBookingAfterTranscriptReady', () => {
       durationSeconds: 1200,
     });
 
-    expect(result.transcriptFetchSkipped).toBe(true);
+    expect(result.processed).toBe(true);
+    expect('transcriptFetchSkipped' in result && result.transcriptFetchSkipped).toBe(true);
     expect(mockFetchVtt).not.toHaveBeenCalled();
     expect(mockPersistTranscript).not.toHaveBeenCalled();
   });
