@@ -1,10 +1,18 @@
 import 'server-only';
 
+import { randomUUID } from 'crypto';
 import {
   isSupportedTargetLocale,
   type SupportedTargetLocale,
 } from '@/lib/transcript-translation/types';
 import { supabaseAdmin } from '@/lib/supabase';
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function resolveUserId(candidate: string): string {
+  return UUID_RE.test(candidate) ? candidate : randomUUID();
+}
 
 export interface MenteeProfile {
   id: string;
@@ -62,8 +70,10 @@ export async function ensureMenteeUserRow(params: {
     return existing.id;
   }
 
+  const insertId = resolveUserId(params.userId);
+
   const { error: insertErr } = await supabaseAdmin.from('users').insert({
-    id: params.userId,
+    id: insertId,
     email,
     full_name: params.fullName,
   });
@@ -73,7 +83,7 @@ export async function ensureMenteeUserRow(params: {
     throw new Error('Could not create user profile.');
   }
 
-  return params.userId;
+  return insertId;
 }
 
 export async function getMenteeProfile(userId: string): Promise<MenteeProfile | null> {

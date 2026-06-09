@@ -15,6 +15,14 @@ export function isWaitlistMode(): boolean {
   return getAppMode() === 'waitlist';
 }
 
+/** Supabase publishable credentials present (required for real sign-up/sign-in). */
+export function isSupabaseAuthConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim(),
+  );
+}
+
 /**
  * Mock cookie auth (presets, email heuristics). Off in waitlist production;
  * enable on preview/staging for ops (`ENABLE_DEMO_AUTH=true`).
@@ -28,6 +36,19 @@ export function isDemoAuthEnabled(): boolean {
     return false;
   }
   return !isWaitlistMode();
+}
+
+/** Production mentee accounts via Supabase Auth (demo auth takes precedence when enabled). */
+export function isSupabaseAuthEnabled(): boolean {
+  if (!isSupabaseAuthConfigured()) {
+    return false;
+  }
+  return !isDemoAuthEnabled();
+}
+
+/** Whether login/register server actions should accept submissions. */
+export function isAccountAuthAvailable(): boolean {
+  return isDemoAuthEnabled() || isSupabaseAuthEnabled();
 }
 
 /** Optional allowlist for admin sessions when demo auth is on (comma-separated emails). */

@@ -4,10 +4,21 @@ import {
   getDefaultPathAfterAuth,
   getSafeRedirectPath,
 } from '@/lib/auth-redirect';
-import { isAdminEmailAllowed, isDemoAuthEnabled } from '@/lib/app-mode';
+import {
+  isAccountAuthAvailable,
+  isAdminEmailAllowed,
+  isDemoAuthEnabled,
+  isSupabaseAuthEnabled,
+} from '@/lib/app-mode';
 import { resolvePresetLogin } from '@/lib/auth-presets';
+import {
+  signInMenteeWithSupabase,
+  signOutSupabaseIfConfigured,
+  signUpMenteeWithSupabase,
+} from '@/lib/supabase-auth';
 import { createSession, deleteSession, getSession } from '@/lib/session';
 import { ensureMenteeUserRow } from '@/lib/user-profile';
+import { randomUUID } from 'crypto';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
@@ -35,7 +46,7 @@ export type ActionState = {
   success?: boolean;
 };
 
-function demoAuthDisabledState(): ActionState {
+function authUnavailableState(): ActionState {
   return {
     message: 'Sign-in is not available on this deployment. Join the waitlist instead.',
     success: false,
@@ -46,8 +57,8 @@ export async function loginAction(
   prevState: ActionState | undefined,
   formData: FormData,
 ): Promise<ActionState> {
-  if (!isDemoAuthEnabled()) {
-    return demoAuthDisabledState();
+  if (!isAccountAuthAvailable()) {
+    return authUnavailableState();
   }
 
   const result = LoginSchema.safeParse({
@@ -62,12 +73,23 @@ export async function loginAction(
     };
   }
 
-  const { email } = result.data;
+  const { email, password } = result.data;
+
+  if (isSupabaseAuthEnabled()) {
+    const authResult = await signInMenteeWithSupabase({ email, password, formData });
+    if (!authResult.ok) {
+      return { message: authResult.message, success: false };
+    }
+    if (authResult.needsEmailConfirmation) {
+      return { message: authResult.message, success: true };
+    }
+    redirect(authResult.redirectTo);
+  }
 
   const preset = resolvePresetLogin(email);
   let role: 'mentor' | 'mentee' | 'admin' = 'mentee';
   let fullName = '';
-  let userId = `usr-${Math.random().toString(36).substring(2, 9)}`;
+  let userId: string = randomUUID();
   let isPreset = false;
 
   if (preset) {
@@ -122,8 +144,8 @@ export async function registerAction(
   prevState: ActionState | undefined,
   formData: FormData,
 ): Promise<ActionState> {
-  if (!isDemoAuthEnabled()) {
-    return demoAuthDisabledState();
+  if (!isAccountAuthAvailable()) {
+    return authUnavailableState();
   }
 
   const result = RegisterSchema.safeParse({
@@ -140,7 +162,32 @@ export async function registerAction(
     };
   }
 
-  const { fullName, email, role } = result.data;
+  const { fullName, email, role, password } = result.data;
+
+  if (isSupabaseAuthEnabled()) {
+    if (role !== 'mentee') {
+      return {
+        message:
+          'Expert applications are not open for self-serve signup yet. Choose Apply to Learn for a mentee account.',
+        success: false,
+      };
+    }
+
+    const authResult = await signUpMenteeWithSupabase({
+      fullName,
+      email,
+      password,
+      formData,
+    });
+
+    if (!authResult.ok) {
+      return { message: authResult.message, success: false };
+    }
+    if (authResult.needsEmailConfirmation) {
+      return { message: authResult.message, success: true };
+    }
+    redirect(authResult.redirectTo);
+  }
 
   if (role === 'admin' && !isAdminEmailAllowed(email)) {
     return {
@@ -149,7 +196,7 @@ export async function registerAction(
     };
   }
 
-  let userId = `usr-${Math.random().toString(36).substring(2, 9)}`;
+  let userId: string = randomUUID();
   const preset = resolvePresetLogin(email);
   if (preset) {
     userId = preset.userId;
@@ -233,6 +280,7 @@ export async function onboardMentorAction(
 }
 
 export async function logoutAction() {
+  await signOutSupabaseIfConfigured();
   await deleteSession();
-  redirect(isDemoAuthEnabled() ? '/auth' : '/early-access');
+  redirect(isDemoAuthEnabled() || isSupabaseAuthEnabled() ? '/auth' : '/early-access');
 }
