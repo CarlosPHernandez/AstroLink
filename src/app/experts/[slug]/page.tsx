@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import { getMentorBySlug } from '@/lib/mentor-directory';
-import { getSession } from '@/lib/session';
 import ExpertProfileClient from './expert-profile-client';
+import ExpertProfileShell from './expert-profile-shell';
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
+
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -29,14 +32,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ExpertProfilePage({ params }: PageProps) {
   const { slug } = await params;
-  const [expert, session] = await Promise.all([
-    getMentorBySlug(slug),
-    getSession(),
-  ]);
+  const expert = await getMentorBySlug(slug);
 
   if (!expert) {
     notFound();
   }
 
-  return <ExpertProfileClient expert={expert} session={session} />;
+  return (
+    <Suspense fallback={<ExpertProfileClient expert={expert} session={null} />}>
+      <ExpertProfileShell expert={expert} />
+    </Suspense>
+  );
 }

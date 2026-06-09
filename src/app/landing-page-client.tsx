@@ -3,24 +3,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { logoutAction } from '@/app/auth/actions';
 import type { ListedExpert } from '@/lib/mentor-directory';
-
-interface SessionData {
-  userId: string;
-  email: string;
-  role: 'mentor' | 'mentee' | 'admin';
-  fullName: string;
-}
 
 const HERO_MODALITIES = ['text', 'video', 'call'] as const;
 
 export default function LandingPageClient({
-  session,
   experts,
+  authNav,
 }: {
-  session: SessionData | null;
   experts: ListedExpert[];
+  authNav: React.ReactNode;
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [heroState, setHeroState] = useState<'text' | 'video' | 'call'>('text');
@@ -101,48 +93,7 @@ export default function LandingPageClient({
         <div className="max-w-[1200px] mx-auto px-md sm:px-lg h-20 flex justify-between items-center w-full">
           <span className="font-bold text-lg text-on-surface tracking-tight">Astrolink</span>
 
-          <div className="flex items-center gap-sm sm:gap-lg">
-            {session ? (
-              <>
-                <span className="text-sm text-on-surface-variant font-medium hidden sm:inline">
-                  Welcome, {session.fullName.split(' ')[0]}
-                </span>
-                <button
-                  onClick={() => logoutAction()}
-                  className="text-on-surface-variant font-label-md text-xs sm:text-label-md hover:text-primary transition-colors cursor-pointer"
-                >
-                  Sign Out
-                </button>
-                <Link
-                  href={
-                    session.role === 'admin'
-                      ? '/dashboard/admin'
-                      : session.role === 'mentor'
-                      ? '/dashboard/mentor'
-                      : '/dashboard/mentee'
-                  }
-                  className="bg-primary text-on-primary px-3 py-2 sm:px-lg sm:py-sm rounded-md font-label-md text-xs sm:text-label-md hover:bg-primary-container active:scale-95 transition-all shadow-sm"
-                >
-                  Dashboard
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/auth"
-                  className="text-on-surface-variant font-label-md text-xs sm:text-label-md hover:text-primary transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/auth"
-                  className="bg-primary text-on-primary px-3.5 py-2 sm:px-lg sm:py-sm rounded-md font-label-md text-xs sm:text-label-md hover:bg-primary-container active:scale-95 transition-all shadow-sm"
-                >
-                  Launch Mission
-                </Link>
-              </>
-            )}
-          </div>
+          {authNav}
         </div>
       </header>
 
@@ -492,11 +443,7 @@ export default function LandingPageClient({
                       ${expert.rate}/hr
                     </span>
                     <Link
-                      href={
-                        session
-                          ? `/booking?mentor=${encodeURIComponent(expert.slug)}`
-                          : '/auth'
-                      }
+                      href={`/booking?mentor=${encodeURIComponent(expert.slug)}`}
                       data-testid={`expert-book-${expert.slug}`}
                       className={`px-3.5 py-2 border text-center text-[10px] font-bold uppercase tracking-wider transition-all duration-150 rounded-md ${
                         expert.availability === 'Available Now'

@@ -58,7 +58,7 @@ function ChrisPortrait({
   );
 }
 
-export default function EarlyAccessClient() {
+export default function EarlyAccessClient({ copyrightYear }: { copyrightYear: number }) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState<string | null>(null);
@@ -361,7 +361,7 @@ export default function EarlyAccessClient() {
 
       <footer className="border-t border-outline-variant py-lg">
         <div className="max-w-[1200px] mx-auto px-md sm:px-lg flex flex-col sm:flex-row justify-between items-center gap-sm text-label-sm text-on-surface-variant">
-          <span>© {new Date().getFullYear()} AstroLink</span>
+          <span>© {copyrightYear} AstroLink</span>
           <Link href="/" className="hover:text-primary transition-colors">
             Back to home
           </Link>

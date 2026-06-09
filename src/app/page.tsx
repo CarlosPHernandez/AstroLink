@@ -1,10 +1,22 @@
-import React from 'react';
+import React, { Suspense } from 'react';
+import { LandingAuthNav, LandingAuthNavFallback } from '@/components/server/landing-auth-nav';
 import { listPublicMentors } from '@/lib/mentor-directory';
-import { getSession } from '@/lib/session';
 import LandingPageClient from './landing-page-client';
 
-export default async function Home() {
-  const [session, experts] = await Promise.all([getSession(), listPublicMentors()]);
+/** Mentor directory is cached; auth nav streams in via Suspense. */
+export const revalidate = 300;
 
-  return <LandingPageClient session={session} experts={experts} />;
+export default async function Home() {
+  const experts = await listPublicMentors();
+
+  return (
+    <LandingPageClient
+      experts={experts}
+      authNav={
+        <Suspense fallback={<LandingAuthNavFallback />}>
+          <LandingAuthNav />
+        </Suspense>
+      }
+    />
+  );
 }
