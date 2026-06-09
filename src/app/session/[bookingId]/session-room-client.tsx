@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
+import { DailyCallRoom } from '@/components/session/daily-call-room';
 import type { BookingSessionView } from '@/lib/booking-access';
 import type { MentorBriefingOutput, PostSessionOutput } from '@/lib/types';
 import { formatSessionWhen } from '@/lib/format';
@@ -251,12 +252,22 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             Session with {booking.mentorName}
           </span>
         </div>
-        <span
-          data-testid="session-status-badge"
-          className="text-label-sm font-mono text-on-surface-variant uppercase"
-        >
-          {booking.status}
-        </span>
+        <div className="flex items-center gap-3">
+          {booking.showCaptionsForBuyer ? (
+            <span
+              data-testid="session-captions-indicator"
+              className="text-label-sm text-on-surface-variant"
+            >
+              Captions on for buyer ({booking.menteePreferredLocale})
+            </span>
+          ) : null}
+          <span
+            data-testid="session-status-badge"
+            className="text-label-sm font-mono text-on-surface-variant uppercase"
+          >
+            {booking.status}
+          </span>
+        </div>
       </header>
 
       <div className="flex flex-1 flex-col min-h-0 lg:flex-row">
@@ -360,32 +371,16 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             </SessionGatePanel>
           )}
 
-          {booking.gate === 'ready' && !ended && booking.dailyJoinUrl && !booking.tokenError && (
-            <div
-              data-testid="session-join-ready"
-              className="mx-auto w-full max-w-4xl overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm aspect-video"
-            >
-              <iframe
-                data-testid="session-daily-iframe"
-                src={booking.dailyJoinUrl}
-                allow="camera; microphone; fullscreen; display-capture"
-                className="w-full h-full min-h-[360px]"
-                title="AstroLink video session"
-              />
-              <div className="p-4 bg-surface-container-lowest border-t border-outline-variant flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <p className="text-label-sm text-on-surface-variant">
-                  Leave the call in the video panel above to finish billing. The button below only
-                  hides the video on this page.
-                </p>
-                <button
-                  type="button"
-                  data-testid="session-end-local"
-                  onClick={() => setEnded(true)}
-                  className="px-6 py-2 rounded-md bg-error text-on-error text-label-sm font-semibold hover:opacity-90 shrink-0"
-                >
-                  End session
-                </button>
-              </div>
+          {booking.gate === 'ready' &&
+            !ended &&
+            !booking.tokenError &&
+            (booking.dailyJoinUrl || booking.e2eCaptionsStub) && (
+            <div data-testid="session-join-ready" className="w-full">
+              <DailyCallRoom booking={booking} onEnded={() => setEnded(true)} />
+              <p className="mt-3 text-center text-label-sm text-on-surface-variant">
+                Leave the call with the End session control to finish billing. Post-session synthesis
+                runs when everyone leaves the Daily room (webhook).
+              </p>
             </div>
           )}
 
