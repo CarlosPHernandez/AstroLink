@@ -6,7 +6,7 @@ All notable changes to AstroLink are documented in this file.
 
 ### Added
 
-- D3 Phase 3 live translated captions: custom Daily `createCallObject()` session UI (replaces iframe), mobile-first caption rail, and mentor “Captions on for buyer” indicator when the mentee’s `preferred_locale` differs from English.
+- You can now read expert speech in your language during a live call: custom Daily `createCallObject()` UI, mobile-first caption rail, and mentor “Captions on for buyer” when the mentee’s `preferred_locale` differs from English. Enable `DAILY_TRANSCRIPTION_ENABLED=true` locally; see [video session demo](./docs/how-to/video-session-demo.md#live-captions-demo-d3-phase-3).
 - `POST /api/session/[bookingId]/translate-segment` — per-utterance APX-06 translation with server-enforced target locale, per-booking LRU segment cache, token budget guards, and `SEGMENT_TRANSLATED` audit events.
 - `use-live-captions` hook wires Daily `transcription-message` events to the translate API with client-side cache, abort/stale-sequence handling, and English fallback on error.
 - Unit tests for segment cache, translate-segment, daily transcription helpers, and translate-segment API route; E2E `live-captions.spec.ts` with stubbed LLM.

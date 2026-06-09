@@ -8,6 +8,7 @@ Live 1:1 sessions use [Daily.co](https://www.daily.co/) for WebRTC video. AstroL
 |----------|----------|-------------|
 | `DAILY_API_KEY` | Yes (live sessions) | Daily REST API key. Creates rooms and meeting tokens. |
 | `DAILY_WEBHOOK_HMAC` | Yes (production capture) | Base64 HMAC secret from Daily dashboard. Verifies `POST /api/webhooks/daily`. |
+| `DAILY_TRANSCRIPTION_ENABLED` | Phase 3 captions | When `true`, mentor join auto-starts Daily transcription; required for live caption rail in dev. E2E pins `false` and stubs translation via `E2E_STUB_LLM`. |
 | `SKIP_STRIPE_PAYMENTS` | Local dev | When `true`, skips Stripe; use dev fulfill instead of card checkout. |
 
 See [.env.example](../../.env.example) for the full list.
@@ -18,10 +19,10 @@ See [.env.example](../../.env.example) for the full list.
 
 | Gate | Booking status | Room URL | User sees |
 |------|----------------|----------|-----------|
-| `pending_payment` | `pending_payment` | any | Payment required; no iframe |
+| `pending_payment` | `pending_payment` | any | Payment required; no call UI |
 | `payment_failed` | `payment_failed` | any | Payment failed message |
 | `provisioning` | `confirmed` | missing | "Room preparing" + auto-retry |
-| `ready` | `confirmed` | present | Daily iframe with tokenized URL |
+| `ready` | `confirmed` | present | `DailyCallRoom` (`createCallObject`) with tokenized join |
 | `completed` | `completed` | any | Session ended; link to recap |
 | `unavailable` | other | any | Generic unavailable state |
 
@@ -39,7 +40,7 @@ Anyone else gets `forbidden: true` (redirect to dashboard).
 
 ### `GET /session/[bookingId]`
 
-Server page. Calls `getBookingForSession()`, renders `SessionRoomClient` with gate, role, and optional `dailyJoinUrl`.
+Server page. Calls `getBookingForSession()`, renders `SessionRoomClient` with gate, role, caption flags, and optional `dailyJoinUrl`.
 
 ### `POST /api/webhooks/daily`
 
@@ -75,6 +76,39 @@ Retry room creation for a `confirmed` booking missing `daily_room_url`.
 ```
 
 **Errors:** `401` unauthorized, `403` forbidden, `400` wrong status, `503` missing `DAILY_API_KEY`.
+
+### `POST /api/session/[bookingId]/translate-segment`
+
+Live caption segment translation (D3 Phase 3). Server enforces target locale from mentee `preferred_locale`; client may pass `targetLocale` for validation only.
+
+**Auth:** Logged-in mentee, mentor, or admin on that booking.
+
+**Body:**
+
+```json
+{
+  "segmentId": "utterance-id",
+  "text": "spoken caption line",
+  "sourceLocale": "en",
+  "targetLocale": "es"
+}
+```
+
+**Success (200):**
+
+```json
+{
+  "segmentId": "utterance-id",
+  "translatedText": "…",
+  "sourceLocale": "en",
+  "targetLocale": "es",
+  "cacheHit": false,
+  "estimatedInputTokens": 12,
+  "latencyMs": 340
+}
+```
+
+**Errors:** `401` unauthorized, `403` forbidden, `400` missing fields or locale mismatch, `422` translation failure.
 
 ### `POST /api/dev/session-operator` (non-production only)
 
@@ -140,11 +174,26 @@ Development operator for demo rehearsal. Returns `404` in production.
 | `bookings` | `mentee_token`, `mentor_token` | Legacy; cleared on provision (tokens minted per request) |
 | `sessions` | `booking_id`, `duration_minutes` | Written on `meeting.ended` |
 
-## UI test IDs (`session-room-client.tsx`)
+## Session UI modules (Phase 3)
+
+| Path | Role |
+|------|------|
+| `src/components/session/daily-call-room.tsx` | `createCallObject()` join, video tiles, transcription events |
+| `src/components/session/use-daily-call.ts` | Daily lifecycle, `startTranscription()` on owner join |
+| `src/components/session/use-live-captions.ts` | Caption state, translate-segment fetch, abort handling |
+| `src/components/session/caption-rail.tsx` | Mentee caption overlay + toggle |
+| `src/components/session/call-controls.tsx` | Mic, camera, local leave |
+
+`getBookingForSession()` also returns `menteePreferredLocale`, `captionsAvailable`, and `showTranslatedCaptionsForBuyer` for the session shell.
+
+## UI test IDs
 
 | `data-testid` | When visible |
 |---------------|--------------|
-| `session-join-ready` | Gate `ready`, iframe loaded |
+| `session-join-ready` | Gate `ready`, call object mounted |
+| `session-daily-call` | Active Daily call surface |
+| `session-captions-indicator` | Mentor header when buyer has non-English captions |
+| `caption-rail` | Mentee with captions enabled |
 | `session-provisioning` | Gate `provisioning` |
 | `session-payment-required` | Gate `pending_payment` |
 | `session-completed` | Gate `completed` |

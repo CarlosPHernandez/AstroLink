@@ -16,10 +16,10 @@ Without guardrails, a video session product has three failure modes:
 Pay / fulfill          Provision room           Open session page          Call ends
 ─────────────          ──────────────           ─────────────────          ─────────
 
-Stripe webhook   →    post-payment.ts    →    GET /session/[id]    →    Daily iframe
+Stripe webhook   →    post-payment.ts    →    GET /session/[id]    →    DailyCallRoom
 or dev fulfill        provisionDailyRoom       getBookingForSession       hang up in Daily
                       (private room)           mint meeting token
-                      save daily_room_url      iframe ?t=token
+                      save daily_room_url      createCallObject + ?t=
                                                       │
                                                       ▼
                                                POST /api/webhooks/daily
@@ -70,15 +70,22 @@ Room creation runs async after payment. The session page shows `provisioning` wh
 
 ### Light theme session shell
 
-The session iframe uses Daily's UI inside AstroLink's light shell (`globals.css` tokens). Dark chrome was deferred so the demo matches the public landing aesthetic.
+The session room uses AstroLink's light shell (`globals.css` tokens) around a custom Daily call object. Dark chrome was deferred so the demo matches the public landing aesthetic.
+
+## Phase 3 update (v0.1.5.0)
+
+As of D3 Phase 3, `/session/[id]` uses `@daily-co/daily-js` `createCallObject()` instead of a Daily iframe embed:
+
+- `DailyCallRoom` renders participant video tiles and call controls.
+- When `DAILY_TRANSCRIPTION_ENABLED=true`, the mentor (owner) join starts transcription; `transcription-message` events feed `POST /api/session/[bookingId]/translate-segment`.
+- Mentees with `preferred_locale` ≠ `en` see a caption rail; mentors see a "Captions on for buyer" header indicator.
+
+Private rooms, per-load meeting tokens, and webhook-driven completion are unchanged from D1.
 
 ## What D1 explicitly does not do
 
-- Daily Prebuilt SDK or custom tracks (iframe embed only)
-- Transcript fetch from Daily API (recap uses booking context; transcript hook is D2)
-- HIPAA BAA or stored recording review
+- HIPAA BAA or stored recording review (unchanged)
 - Escrow reconciliation job for missed webhooks (D2)
-
 ## Alternatives considered
 
 | Approach | Why not for D1 |

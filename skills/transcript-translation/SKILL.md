@@ -27,12 +27,11 @@ AstroLink connects buyers with aerospace experts across language barriers. This 
 - `mobile-first-design-practices` — live caption overlay and recap UI on 320px viewports.
 - Existing `src/lib/llm.ts` — structured JSON and flash/pro model tiers (do **not** add AI SDK for D3 Phase 0–2 without eng review).
 
-## Current state (D1)
+## Current state (v0.1.5.0)
 
-- `SessionAgent` (APX-03) accepts transcript text but receives `''` from `post-session.ts`.
-- `sessions.transcript_available` boolean exists; no raw transcript table yet.
-- No user `preferred_locale`; UI is English-only.
-- Daily iframe only — no `startTranscription()` or caption UI.
+- **Phase 1:** `session_transcripts` populated from Daily WebVTT; APX-03 receives truncated English window.
+- **Phase 2:** `users.preferred_locale`; APX-06 recap translation; `GET /api/session/[id]/recap?locale=`.
+- **Phase 3:** `DailyCallRoom` (`createCallObject`), `use-live-captions`, `CaptionRail`, `POST /api/session/[bookingId]/translate-segment`, LRU segment cache, mentor captions indicator.
 
 ## Architecture principles
 
@@ -50,7 +49,10 @@ AstroLink connects buyers with aerospace experts across language barriers. This 
 | Post-session hook | `src/lib/post-session.ts` |
 | Synthesis agent | `src/services/agents/session-agent.ts` |
 | Session UI | `src/app/session/[bookingId]/session-room-client.tsx` |
-| Daily integration | `src/lib/daily.ts` |
+| Call object + captions | `src/components/session/` (`daily-call-room`, `use-live-captions`, `caption-rail`) |
+| Segment translate API | `src/app/api/session/[bookingId]/translate-segment/route.ts` |
+| Segment lib + cache | `src/lib/transcript-translation/translate-segment.ts`, `segment-cache.ts` |
+| Daily integration | `src/lib/daily.ts`, `daily-transcription.ts` |
 | LLM core | `src/lib/llm.ts` |
 
 ## Implementation workflow
@@ -69,11 +71,11 @@ AstroLink connects buyers with aerospace experts across language barriers. This 
 3. `session_translations.summary_json` per `target_locale`; `GET /api/session/[bookingId]/recap` resolves locale server-side (`recap-locale.ts`); session room polls without `?locale=`.
 4. Checkout locale picker remains **Phase 2b** — not in this slice.
 
-### Phase 3 — Live translated captions
+### Phase 3 — Live translated captions ✅ shipped
 
-1. Migrate session page from iframe-only to Daily Prebuilt/custom with `transcription-message` listener.
-2. Pipe segments through `translateSegment()` with in-memory LRU cache (same text hash → skip LLM).
-3. Render caption rail per participant; mentee sees expert speech in `preferred_locale`.
+1. `createCallObject()` replaces iframe; `transcription-message` → `translate-segment` API.
+2. Per-booking LRU segment cache (`segment-cache.ts`); server enforces mentee `preferred_locale`.
+3. `CaptionRail` for mentee; mentor sees `session-captions-indicator` when buyer locale ≠ `en`.
 
 ## Token optimization checklist
 
@@ -103,7 +105,7 @@ Target: {target_locale}
 - Unit: `token-budget.ts` window selection, glossary term preservation mocks.
 - Contract: `translateSegment` returns stable output for E2E stub (`E2E_STUB_LLM=true`).
 - E2E Phase 2: `e2e/localized-recap.spec.ts` — book → `simulate_meeting_ended` → assert `[pt-BR]` recap stub.
-- E2E (Phase 3+): Playwright session with stubbed `transcription-message` events.
+- E2E Phase 3: `e2e/live-captions.spec.ts` — stubbed translate-segment + caption rail assertions.
 
 ## Do not
 

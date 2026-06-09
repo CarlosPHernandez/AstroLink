@@ -45,14 +45,15 @@ Follow-on from [d1-implementation-plan.md](./d1-implementation-plan.md) after th
 - Landing copy pass: expert-network positioning, optional $1,600 event comparison.
 - Scale roster toward 10 experts max, then shift to sales.
 
-### 6. Transcript translation (D3 — foundation shipped)
+### 6. Transcript translation (D3 — Phases 1–3 shipped)
 
 Cross-language expert sessions: live captions + localized recap. **Wedge/moat** — aerospace glossary, APX-02 context, canonical English audit trail.
 
 - **Phase 0 (done):** Skill, cursor rule, roadmap, architecture, eng review, AI SDK review, case studies, `src/lib/transcript-translation/` types + token budget.
-- **Phase 1 (next):** Daily WebVTT capture → `session_transcripts` → real APX-03 input via `selectTranscriptWindow()`.
-- **Phase 2:** `preferred_locale` + APX-06 recap translation (`es`, `pt-BR`, `fr`, `ja`).
-- **Phase 3:** Live translated captions in session UI.
+- **Phase 1 (done):** Daily WebVTT capture → `session_transcripts` → real APX-03 input via `selectTranscriptWindow()`.
+- **Phase 2 (done):** `preferred_locale` + APX-06 recap translation (`es`, `pt-BR`, `fr`, `ja`).
+- **Phase 3 (done, v0.1.5.0):** Live translated captions — `createCallObject()` UI, caption rail, `translate-segment` API.
+- **Phase 4 (next):** Glossary expansion, APX-04 moderation, human interpreter escalation.
 
 See [d3-transcript-translation-roadmap.md](./d3-transcript-translation-roadmap.md).
 
