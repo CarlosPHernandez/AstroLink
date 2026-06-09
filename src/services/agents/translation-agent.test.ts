@@ -42,11 +42,15 @@ vi.mock('@/lib/supabase', () => ({
   },
 }));
 
-vi.mock('@/lib/llm', () => ({
-  callLlmWithBackoff: (fn: () => Promise<unknown>) => fn(),
-  generateStructuredJson: (...args: unknown[]) => mockGenerateStructuredJson(...args),
-  llmFlashModel: 'test-model',
-}));
+vi.mock('@/lib/llm', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/llm')>();
+  return {
+    ...actual,
+    callLlmWithBackoff: (fn: () => Promise<unknown>) => fn(),
+    generateStructuredJson: (...args: unknown[]) => mockGenerateStructuredJson(...args),
+    llmFlashModel: 'test-model',
+  };
+});
 
 import { TranslationAgent } from '@/services/agents/translation-agent';
 
@@ -76,7 +80,7 @@ describe('TranslationAgent.translateSessionRecap', () => {
   });
 
   afterEach(() => {
-    delete process.env.E2E_STUB_LLM;
+    vi.unstubAllEnvs();
   });
 
   it('skips when target locale is English', async () => {
@@ -108,8 +112,8 @@ describe('TranslationAgent.translateSessionRecap', () => {
   });
 
   it('uses deterministic E2E stub with locale prefix (D10)', async () => {
-    process.env.E2E_STUB_LLM = 'true';
-    process.env.NODE_ENV = 'test';
+    vi.stubEnv('E2E_STUB_LLM', 'true');
+    vi.stubEnv('NODE_ENV', 'test');
 
     const agent = new TranslationAgent();
     const result = await agent.translateSessionRecap('booking-1', 'pt-BR');

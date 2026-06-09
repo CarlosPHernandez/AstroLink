@@ -110,7 +110,7 @@ if (buyerLocale !== 'en') {
 
 ### `session-room-client.tsx`
 
-D1: Daily iframe only. Phase 3 requires subscribing to transcription events — likely Daily Prebuilt with caption overlay or custom `daily-js` call object alongside the iframe.
+**Shipped (Phase 3):** `DailyCallRoom` uses `createCallObject()` (not iframe). `use-daily-call` starts transcription on owner join when `DAILY_TRANSCRIPTION_ENABLED=true`. `use-live-captions` listens for `transcription-message`, calls `POST /api/session/[bookingId]/translate-segment`, and renders `CaptionRail` for mentees with non-English `preferred_locale`.
 
 ### `SessionAgent` (APX-03)
 

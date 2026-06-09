@@ -78,7 +78,7 @@ test.describe('D1 golden path (skip Stripe)', () => {
     const tokenError = page.getByTestId('session-token-error');
 
     if (await joinReady.isVisible()) {
-      await expect(page.locator('[data-testid="session-daily-iframe"]')).toBeVisible();
+      await expect(page.locator('[data-testid="session-daily-call"]')).toBeVisible();
     } else if (await provisioning.isVisible()) {
       await expect(provisioning).toContainText(/Room preparing|Preparing room/i);
     } else if (await tokenError.isVisible()) {

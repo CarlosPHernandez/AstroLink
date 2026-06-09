@@ -29,18 +29,26 @@ npm run dev
 5. If using Stripe: `stripe listen --forward-to localhost:3000/api/webhooks/stripe` running.
 6. Two browsers (or profiles): mentee `carlos@astrolink.ai`, mentor `chris@astrolink.ai` (seed users).
 7. **Phone / second device on Wi‑Fi:** run `npm run dev:lan` and open `https://<LAN-IP>:3000` (accept Safari's cert warning). Plain `http://192.168.x.x:3000` blocks camera/mic. **Mac mentor:** `http://localhost:3000` is fine.
-8. Allow camera/microphone for your Daily domain when the iframe loads.
+8. Allow camera/microphone for your Daily domain when the call UI loads.
 
 ## Standard demo script (&lt;15 min)
 
 1. Sign in as mentee → book Chris → pay (test card) **or** book with skip-Stripe and `POST /api/book/fulfill` with `{ "bookingId": "..." }`.
 2. Mentee dashboard: confirm status `confirmed`, **View brief**, **Join room**.
 3. Second browser: sign in as mentor → mentor dashboard → **Join room** for the same booking.
-4. Both land on `/session/[id]` with light shell + Daily iframe (tokenized private room).
+4. Both land on `/session/[id]` with light shell + `DailyCallRoom` (tokenized private room via `createCallObject`).
 5. **End the call inside Daily’s UI** (hang up). The header **End session** button only updates local UI; it does **not** capture payment.
 6. Within ~1 minute: booking `completed`, mentee sees English recap on `/session/[id]` and dashboard.
 7. With transcription enabled: recap content should reference call topics (RPO, delta-V, etc.) after `transcript.ready-to-download`, not the empty-transcript apology template.
 8. Stripe (if used): payment intent `requires_capture` → captured after step 5 (`meeting.ended`).
+
+## Live captions demo (D3 Phase 3)
+
+1. Set `DAILY_TRANSCRIPTION_ENABLED=true` in `.env.local` and enable transcription on your Daily domain.
+2. Set mentee `preferred_locale` to a non-English value (e.g. `es`) via `/dashboard/mentee/settings`.
+3. Run the two-user join script above. Mentor should see **Captions on for buyer** in the session header.
+4. Mentee toggles the caption rail; speak English on the mentor side — translated lines should appear within ~2s.
+5. E2E coverage: `npm run test:e2e -- e2e/live-captions.spec.ts` (stubs LLM; pins `DAILY_TRANSCRIPTION_ENABLED=false`).
 
 ## Two-user join proof
 
@@ -54,8 +62,8 @@ npm run dev
 |---------|--------------|----------|
 | No **Join room** / “Room preparing” | Room not provisioned yet | Wait 30s and refresh; use **Retry room setup** on session page; or `POST /api/book/fulfill` |
 | Session page “Payment required” | `pending_payment` | Fulfill payment or dev fulfill |
-| Iframe blank / denied | Missing token or Daily outage | Check server logs for `bookingId`; reprovision via dev operator (below) |
-| Iframe “something went wrong” / no camera on phone | Plain HTTP on LAN IP blocks camera/mic | `npm run dev:lan` → `https://<LAN-IP>:3000` on phone; session page shows steps |
+| Call UI blank / denied | Missing token or Daily outage | Check server logs for `bookingId`; reprovision via dev operator (below) |
+| Call UI “something went wrong” / no camera on phone | Plain HTTP on LAN IP blocks camera/mic | `npm run dev:lan` → `https://<LAN-IP>:3000` on phone; session page shows steps |
 | Booking stuck `confirmed`, no recap | `meeting.ended` webhook missed | Re-end call in Daily, or dev simulate (below) |
 | Booking `completed` but recap is generic apology | Transcription off or `transcript.ready` missed | Set `DAILY_TRANSCRIPTION_ENABLED=true`; subscribe webhook; or `simulate_transcript_ready` |
 | Escrow not captured | Webhook never ran | Same as above; escrow stays authorized until capture |

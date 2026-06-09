@@ -49,7 +49,7 @@ Open [http://localhost:3000](http://localhost:3000).
 2. In a second browser profile, sign in as **Chris** (`chris@astrolink.ai`).
 3. Mentor dashboard → **Join room** for the same booking.
 
-**What you should see:** Light session shell, Daily iframe, both sides in the call. The join URL includes a token (`?t=…`); the room is not joinable without it.
+**What you should see:** Light session shell, Daily call UI (`DailyCallRoom`), both sides in the call. The join URL includes a token (`?t=…`); the room is not joinable without it.
 
 **Verification:** Page contains `[data-testid="session-join-ready"]` when the gate is `ready`.
 

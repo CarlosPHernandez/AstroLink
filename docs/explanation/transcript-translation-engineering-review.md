@@ -3,7 +3,7 @@
 Structured eng review for D3: decisions, risks, token budgets, and implementation sequence.
 
 **Date:** 2026-06-06  
-**Status:** Phase 1–2 implemented; Phase 3 (live captions) next  
+**Status:** Phase 1–3 implemented on `translation-p3-4`; Phase 4 moat hardening next  
 **Related:** [D3 roadmap](../d3-transcript-translation-roadmap.md), [architecture](./transcript-translation-architecture.md)
 
 ---
@@ -187,7 +187,7 @@ Phase 3           Daily transcription events in session UI
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Daily iframe cannot receive `transcription-message` | Blocks Phase 3 | Spike Prebuilt/custom in week 1 of Phase 3 |
+| Daily iframe cannot receive `transcription-message` | ~~Blocks Phase 3~~ Resolved | Migrated to `createCallObject()` in v0.1.5.0 |
 | Glossary misses new program names | Buyer trust | Expert onboarding form: "terms to preserve" |
 | LLM translates ITAR-adjacent content incorrectly | Compliance | English canonical + APX-04 flag; never auto-redact in v1 |
 | Rate limits on burst translation | Recap delay | Queue with concurrency 5; show "Translating recap…" |

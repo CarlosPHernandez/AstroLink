@@ -28,6 +28,24 @@ export {
   selectTranscriptWindow,
   stripFillerForSynthesis,
 } from '@/lib/transcript-translation/token-budget';
+export {
+  parseTranscriptionMessage,
+  transcriptionDedupeKey,
+} from '@/lib/transcript-translation/daily-transcription';
+export type { DailyTranscriptionMessagePayload } from '@/lib/transcript-translation/daily-transcription';
+export {
+  SegmentTranslationCache,
+  buildSegmentCacheKey,
+  clearAllSegmentCaches,
+  getSegmentCacheForBooking,
+  hashSegmentText,
+} from '@/lib/transcript-translation/segment-cache';
+export {
+  translateSegment,
+  validateTranslateSegmentInput,
+  TranslateSegmentError,
+} from '@/lib/transcript-translation/translate-segment';
+export type { TranslateSegmentErrorCode } from '@/lib/transcript-translation/translate-segment';
 export { parseWebVtt } from '@/lib/transcript-translation/parse-webvtt';
 export { mapSpeakersToRoles } from '@/lib/transcript-translation/map-speakers';
 export type { SpeakerMappingContext } from '@/lib/transcript-translation/map-speakers';

@@ -5,7 +5,7 @@
 **Moat:** Domain-tuned translation (aerospace glossary, ITAR-aware moderation hooks, session context from APX-02 brief) layered on paid expert sessions — not commodity captions.
 
 **Last updated:** 2026-06-07  
-**Status:** Phase 2 shipped on `feat/d3-phase-2-recap-i18n` — localized post-session recap (APX-06); Phase 3 live captions next  
+**Status:** Phase 3 live translated captions shipped on `translation-p3-4` — custom Daily call object + caption rail; Phase 4 moat next  
 **Depends on:** D1 video golden path shipped; D3 Phase 1 transcript capture shipped
 
 ---
@@ -94,11 +94,11 @@ See [transcript-translation-case-studies.md](./explanation/transcript-translatio
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Session UI: Daily transcription events | Not started | Likely migrate from iframe-only to Prebuilt/custom |
-| `translateSegment()` streaming | Not started | Flash model, LRU cache by text hash |
-| Caption rail component | Not started | Mobile-first; toggle on/off |
-| Latency budget | Not started | Target p95 &lt; 2s segment-to-display |
-| Mentor UX: "Captions on for buyer" indicator | Not started | |
+| Session UI: Daily transcription events | Shipped | `@daily-co/daily-js` `createCallObject()` replaces iframe |
+| `translateSegment()` + LRU cache | Shipped | `POST /api/session/[bookingId]/translate-segment`, E7 cache |
+| Caption rail component | Shipped | `CaptionRail` + `use-live-captions`; mentee toggle |
+| Latency budget | Shipped | `latencyMs` / audit `durationMs`; dev console timing |
+| Mentor UX: "Captions on for buyer" indicator | Shipped | `session-captions-indicator` in session header |
 
 **Exit criteria:** Dual-device demo — expert English, buyer Spanish captions.
 

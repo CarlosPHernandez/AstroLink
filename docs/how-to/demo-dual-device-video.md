@@ -37,7 +37,10 @@ APP_MODE=full
 ENABLE_DEMO_AUTH=true
 SKIP_STRIPE_PAYMENTS=true
 DAILY_API_KEY=...
+DAILY_TRANSCRIPTION_ENABLED=true
 ```
+
+For live translated captions (D3 Phase 3), set mentee `preferred_locale` to `es` (or `pt-BR`, `fr`, `ja`) in `/dashboard/mentee/settings` before joining. Mentor speaks English; mentee sees the caption rail.
 
 Ensure `next.config.ts` `allowedDevOrigins` includes your Mac's LAN IP if HMR/actions fail from the phone (see comment in that file).
 
