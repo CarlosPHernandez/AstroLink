@@ -8,6 +8,7 @@ import { loginAction, registerAction } from './actions';
 function AuthPageContent() {
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get('redirect') ?? '';
+  const authError = searchParams.get('error');
 
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [role, setRole] = useState<'mentee' | 'mentor' | 'admin'>('mentee');
@@ -78,6 +79,12 @@ function AuthPageContent() {
             </button>
           </div>
 
+          {authError && (
+            <div className="mb-4 p-3 bg-error-container text-on-error-container text-xs rounded-lg">
+              {authError}
+            </div>
+          )}
+
           {socialAlert && (
             <div className="mb-4 p-3 bg-primary-container/10 border border-primary-container/20 text-primary text-xs rounded-lg animate-fade-in">
               {socialAlert}
@@ -85,12 +92,24 @@ function AuthPageContent() {
           )}
 
           {activeTab === 'login' && loginState?.message && (
-            <div className="mb-4 p-3 bg-error-container text-on-error-container text-xs rounded-lg">
+            <div
+              className={`mb-4 p-3 text-xs rounded-lg ${
+                loginState.success
+                  ? 'bg-primary-container/10 border border-primary-container/20 text-primary'
+                  : 'bg-error-container text-on-error-container'
+              }`}
+            >
               {loginState.message}
             </div>
           )}
           {activeTab === 'signup' && registerState?.message && (
-            <div className="mb-4 p-3 bg-error-container text-on-error-container text-xs rounded-lg">
+            <div
+              className={`mb-4 p-3 text-xs rounded-lg ${
+                registerState.success
+                  ? 'bg-primary-container/10 border border-primary-container/20 text-primary'
+                  : 'bg-error-container text-on-error-container'
+              }`}
+            >
               {registerState.message}
             </div>
           )}
