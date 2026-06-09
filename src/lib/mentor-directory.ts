@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { unstable_cache } from 'next/cache';
 import { supabase } from '@/lib/supabase';
 import type { Mentor } from '@/lib/types';
 
@@ -20,6 +21,13 @@ export interface ListedExpert {
   availability: 'Available Now' | 'Book Session';
   liveSessionPriceCents: number;
   stripeOnboardingCompleted: boolean;
+}
+
+function hasPublicSupabaseConfig(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim(),
+  );
 }
 
 const CATEGORY_KEYWORDS: Record<ExpertCategory, string[]> = {
@@ -59,7 +67,11 @@ export function mentorToListedExpert(mentor: Mentor): ListedExpert {
   };
 }
 
-export async function listPublicMentors(): Promise<ListedExpert[]> {
+async function fetchPublicMentorsFromDb(): Promise<ListedExpert[]> {
+  if (!hasPublicSupabaseConfig()) {
+    return [];
+  }
+
   const { data, error } = await supabase
     .from('mentors')
     .select('*')
@@ -75,7 +87,11 @@ export async function listPublicMentors(): Promise<ListedExpert[]> {
   return (data ?? []).map((row) => mentorToListedExpert(row as Mentor));
 }
 
-export async function getMentorBySlug(slug: string): Promise<ListedExpert | null> {
+async function fetchMentorBySlugFromDb(slug: string): Promise<ListedExpert | null> {
+  if (!hasPublicSupabaseConfig()) {
+    return null;
+  }
+
   const { data, error } = await supabase
     .from('mentors')
     .select('*')
@@ -91,7 +107,11 @@ export async function getMentorBySlug(slug: string): Promise<ListedExpert | null
   return mentorToListedExpert(data as Mentor);
 }
 
-export async function getMentorById(id: string): Promise<ListedExpert | null> {
+async function fetchMentorByIdFromDb(id: string): Promise<ListedExpert | null> {
+  if (!hasPublicSupabaseConfig()) {
+    return null;
+  }
+
   const { data, error } = await supabase
     .from('mentors')
     .select('*')
@@ -105,4 +125,28 @@ export async function getMentorById(id: string): Promise<ListedExpert | null> {
   }
 
   return mentorToListedExpert(data as Mentor);
+}
+
+const MENTOR_CACHE_SECONDS = 300;
+
+/** Data cache — avoids Supabase on every homepage visit (Vercel Data Cache). */
+export async function listPublicMentors(): Promise<ListedExpert[]> {
+  return unstable_cache(fetchPublicMentorsFromDb, ['list-public-mentors'], {
+    revalidate: MENTOR_CACHE_SECONDS,
+    tags: ['mentors'],
+  })();
+}
+
+export async function getMentorBySlug(slug: string): Promise<ListedExpert | null> {
+  return unstable_cache(() => fetchMentorBySlugFromDb(slug), ['mentor-by-slug', slug], {
+    revalidate: MENTOR_CACHE_SECONDS,
+    tags: ['mentors', `mentor-slug-${slug}`],
+  })();
+}
+
+export async function getMentorById(id: string): Promise<ListedExpert | null> {
+  return unstable_cache(() => fetchMentorByIdFromDb(id), ['mentor-id', id], {
+    revalidate: MENTOR_CACHE_SECONDS,
+    tags: ['mentors', `mentor-id-${id}`],
+  })();
 }

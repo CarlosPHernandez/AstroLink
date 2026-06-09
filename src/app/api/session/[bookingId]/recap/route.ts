@@ -168,5 +168,3 @@ export async function GET(request: Request, context: RouteContext) {
   });
 }
 
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';

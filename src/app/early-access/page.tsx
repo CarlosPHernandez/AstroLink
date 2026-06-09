@@ -13,5 +13,5 @@ export const metadata: Metadata = {
 };
 
 export default function EarlyAccessPage() {
-  return <EarlyAccessClient />;
+  return <EarlyAccessClient copyrightYear={new Date().getFullYear()} />;
 }
