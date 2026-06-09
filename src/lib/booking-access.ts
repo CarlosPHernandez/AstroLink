@@ -2,8 +2,14 @@ import 'server-only';
 
 import {
   buildAuthorizedDailyJoinUrl,
+  isDailyTranscriptionEnabled,
   resolveSessionJoinPhase,
 } from '@/lib/daily';
+import { isE2eStubLlmEnabled } from '@/lib/llm';
+import {
+  isSupportedTargetLocale,
+  type SupportedTargetLocale,
+} from '@/lib/transcript-translation/types';
 import { getSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { MentorBriefingOutput, PreCallBriefOutput } from '@/lib/types';
@@ -28,6 +34,13 @@ export interface BookingSessionView {
   dailyRoomUrl: string | null;
   dailyJoinUrl: string | null;
   mentorName: string;
+  mentorId: string;
+  menteeId: string;
+  menteePreferredLocale: SupportedTargetLocale;
+  captionsAvailable: boolean;
+  showCaptionsForBuyer: boolean;
+  /** Dev/E2E: skip Daily WebRTC; inject transcription via window.__ASTROLINK_E2E_CAPTIONS__ */
+  e2eCaptionsStub: boolean;
   scheduledAt: string;
   briefing: MentorBriefingOutput | PreCallBriefOutput | null;
   tokenError: string | null;
@@ -96,7 +109,7 @@ export async function getBookingForSession(
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .select(
-      'id, status, daily_room_url, mentee_id, mentor_id, scheduled_at, briefing_json, mentors(full_name)',
+      'id, status, daily_room_url, mentee_id, mentor_id, scheduled_at, briefing_json, mentors(full_name), users!bookings_mentee_id_fkey(preferred_locale)',
     )
     .eq('id', bookingId)
     .single();
@@ -142,6 +155,19 @@ export async function getBookingForSession(
     }
   }
 
+  const menteeUser = data.users as { preferred_locale: string | null } | null;
+  const menteePreferredLocale: SupportedTargetLocale =
+    menteeUser?.preferred_locale && isSupportedTargetLocale(menteeUser.preferred_locale)
+      ? menteeUser.preferred_locale
+      : 'en';
+
+  const e2eCaptionsStub = isE2eStubLlmEnabled();
+
+  const captionsAvailable =
+    gate === 'ready' && (isDailyTranscriptionEnabled() || e2eCaptionsStub);
+  const showCaptionsForBuyer =
+    captionsAvailable && menteePreferredLocale !== 'en';
+
   return {
     booking: {
       id: data.id,
@@ -151,6 +177,12 @@ export async function getBookingForSession(
       dailyRoomUrl: data.daily_room_url,
       dailyJoinUrl,
       mentorName: mentor?.full_name ?? 'Expert',
+      mentorId: data.mentor_id,
+      menteeId: data.mentee_id,
+      menteePreferredLocale,
+      captionsAvailable,
+      showCaptionsForBuyer,
+      e2eCaptionsStub,
       scheduledAt: data.scheduled_at,
       briefing: (data.briefing_json as MentorBriefingOutput | PreCallBriefOutput | null) ?? null,
       tokenError,

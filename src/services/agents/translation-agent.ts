@@ -1,18 +1,26 @@
 import type { Json } from '@/lib/database.types';
-import { callLlmWithBackoff, generateStructuredJson, llmFlashModel } from '@/lib/llm';
+import {
+  callLlmWithBackoff,
+  generateStructuredJson,
+  isE2eStubLlmEnabled,
+  llmFlashModel,
+} from '@/lib/llm';
 import { supabaseAdmin } from '@/lib/supabase';
 import { buildTranslationSystemPrompt } from '@/lib/transcript-translation/glossary';
+import {
+  translateSegment as translateSegmentCore,
+  TranslateSegmentError,
+  validateTranslateSegmentInput,
+} from '@/lib/transcript-translation/translate-segment';
 import {
   TRANSLATION_AGENT_ID,
   shouldSkipTranslation,
   type SupportedTargetLocale,
+  type TranslateSegmentInput,
+  type TranslateSegmentResult,
 } from '@/lib/transcript-translation/types';
 import { parsePostSessionOutput } from '@/lib/transcript-translation/recap-locale';
 import type { PostSessionOutput } from '@/lib/types';
-
-function isE2eStubLlmEnabled(): boolean {
-  return process.env.NODE_ENV !== 'production' && process.env.E2E_STUB_LLM === 'true';
-}
 
 function localizeRecapStub(english: PostSessionOutput, targetLocale: SupportedTargetLocale): PostSessionOutput {
   const tag = `[${targetLocale}]`;
@@ -169,6 +177,53 @@ export class TranslationAgent {
     });
 
     return translated;
+  }
+
+  /** Live caption segment translation (Phase 3). */
+  async translateSegment(input: TranslateSegmentInput): Promise<TranslateSegmentResult> {
+    const started = Date.now();
+
+    try {
+      validateTranslateSegmentInput(input);
+    } catch (error) {
+      if (error instanceof TranslateSegmentError && error.code === 'same_language') {
+        await this.logAudit('SEGMENT_TRANSLATION_SKIPPED', input.bookingId, {
+          segmentId: input.segmentId,
+          targetLocale: input.targetLocale,
+          reason: 'same_language',
+        });
+        return {
+          segmentId: input.segmentId,
+          translatedText: input.text.trim(),
+          sourceLocale: input.sourceLocale,
+          targetLocale: input.targetLocale,
+          cacheHit: false,
+          estimatedInputTokens: 0,
+        };
+      }
+      throw error;
+    }
+
+    try {
+      const result = await translateSegmentCore(input);
+      await this.logAudit('SEGMENT_TRANSLATED', input.bookingId, {
+        segmentId: input.segmentId,
+        targetLocale: input.targetLocale,
+        cacheHit: result.cacheHit,
+        estimatedInputTokens: result.estimatedInputTokens,
+        durationMs: Date.now() - started,
+        stub: isE2eStubLlmEnabled(),
+      });
+      return result;
+    } catch (error) {
+      await this.logAudit('SEGMENT_TRANSLATION_FAILED', input.bookingId, {
+        segmentId: input.segmentId,
+        targetLocale: input.targetLocale,
+        message: error instanceof Error ? error.message : String(error),
+        durationMs: Date.now() - started,
+      });
+      throw error;
+    }
   }
 
   private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {

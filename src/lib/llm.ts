@@ -49,7 +49,7 @@ export const llmProModel =
     ? process.env.OPENAI_PRO_MODEL?.trim() || 'gpt-4o'
     : process.env.GEMINI_PRO_MODEL?.trim() || 'gemini-2.0-flash';
 
-function isE2eStubLlmEnabled(): boolean {
+export function isE2eStubLlmEnabled(): boolean {
   return process.env.NODE_ENV !== 'production' && process.env.E2E_STUB_LLM === 'true';
 }
 
@@ -207,6 +207,69 @@ async function generateStructuredJsonGemini<T>(req: StructuredJsonRequest): Prom
   });
 
   return JSON.parse(response.text || '{}') as T;
+}
+
+export type PlainTextRequest = {
+  model: string;
+  systemInstruction: string;
+  prompt: string;
+  rateLimitKey?: string;
+};
+
+function localizePlainTextStub(prompt: string, systemInstruction: string): string {
+  const haystack = `${systemInstruction}\n${prompt}`;
+  const localeMatch =
+    haystack.match(/\bto ([a-z]{2}(?:-[A-Z]{2})?)\b/i) ??
+    haystack.match(/only the ([a-z]{2}(?:-[A-Z]{2})?) translation/i);
+  const locale = localeMatch?.[1] ?? 'stub';
+  const line = prompt.split('\n').pop()?.trim() ?? prompt.trim();
+  return `[${locale}] ${line}`;
+}
+
+async function generatePlainTextOpenAI(req: PlainTextRequest): Promise<string> {
+  const response = await getOpenAI().chat.completions.create({
+    model: req.model,
+    messages: [
+      { role: 'system', content: req.systemInstruction },
+      { role: 'user', content: req.prompt },
+    ],
+  });
+
+  const text = response.choices[0]?.message?.content?.trim();
+  if (!text) {
+    throw new Error('OpenAI returned an empty text response');
+  }
+  return text;
+}
+
+async function generatePlainTextGemini(req: PlainTextRequest): Promise<string> {
+  const response = await getGenAI().models.generateContent({
+    model: req.model,
+    contents: req.prompt,
+    config: {
+      systemInstruction: req.systemInstruction,
+    },
+  });
+
+  const text = response.text?.trim();
+  if (!text) {
+    throw new Error('Gemini returned an empty text response');
+  }
+  return text;
+}
+
+/** Plain-text LLM completion for APX-06 live segment translation. */
+export async function generatePlainText(req: PlainTextRequest): Promise<string> {
+  if (isE2eStubLlmEnabled()) {
+    return localizePlainTextStub(req.prompt, req.systemInstruction);
+  }
+
+  assertLlmRateLimit(req.rateLimitKey);
+
+  if (getLlmProvider() === 'openai') {
+    return generatePlainTextOpenAI(req);
+  }
+  return generatePlainTextGemini(req);
 }
 
 export async function generateStructuredJson<T>(req: StructuredJsonRequest): Promise<T> {
