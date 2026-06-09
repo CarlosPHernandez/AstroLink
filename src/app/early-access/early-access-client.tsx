@@ -11,7 +11,7 @@ const CHRIS = {
   employer: 'Inspiration4 · Lockheed Martin · Starfish Space',
   bio: 'Commercial astronaut who flew on Inspiration4. Expert in payload integration and flight mechanics for private astronaut operations.',
   expertise: ['Commercial Spaceflight', 'Payload Integration', 'Flight Mechanics'],
-  imageSrc: '/chris_sembroski.jpeg',
+  imageSrc: '/chris_sembroski.webp',
 };
 
 const fieldClass =

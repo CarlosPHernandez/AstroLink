@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { unstable_cache } from 'next/cache';
+import { DEFAULT_MENTOR_IMAGE } from '@/lib/public-images';
 import { supabase } from '@/lib/supabase';
 import type { Mentor } from '@/lib/types';
 
@@ -59,7 +60,7 @@ export function mentorToListedExpert(mentor: Mentor): ListedExpert {
     category: inferCategory(mentor.expertise),
     expertise: mentor.expertise,
     bio: mentor.bio,
-    imageUrl: mentor.image_url ?? '/chris_sembroski.jpeg',
+    imageUrl: mentor.image_url ?? DEFAULT_MENTOR_IMAGE,
     introVideoUrl: mentor.intro_video_url ?? null,
     availability: mentor.stripe_onboarding_completed ? 'Available Now' : 'Book Session',
     liveSessionPriceCents: mentor.live_session_price_cents,

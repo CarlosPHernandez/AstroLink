@@ -1,28 +1,39 @@
-import Link from 'next/link';
-import { logoutAction } from '@/app/auth/actions';
-import { getSession } from '@/lib/session';
+'use client';
 
-function dashboardPath(role: 'mentor' | 'mentee' | 'admin') {
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { logoutAction } from '@/app/auth/actions';
+
+type SessionData = {
+  userId: string;
+  email: string;
+  role: 'mentor' | 'mentee' | 'admin';
+  fullName: string;
+};
+
+function dashboardPath(role: SessionData['role']) {
   if (role === 'admin') return '/dashboard/admin';
   if (role === 'mentor') return '/dashboard/mentor';
   return '/dashboard/mentee';
 }
 
-export function LandingAuthNavFallback() {
-  return (
-    <div className="flex items-center gap-sm sm:gap-lg">
-      <span className="text-on-surface-variant font-label-md text-xs sm:text-label-md opacity-60">
-        Sign In
-      </span>
-      <span className="bg-primary/70 text-on-primary px-3.5 py-2 sm:px-lg sm:py-sm rounded-md font-label-md text-xs sm:text-label-md shadow-sm">
-        Launch Mission
-      </span>
-    </div>
-  );
-}
+export function LandingAuthNavClient() {
+  const [session, setSession] = useState<SessionData | null>(null);
 
-export async function LandingAuthNav() {
-  const session = await getSession();
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/auth/session', { credentials: 'same-origin' })
+      .then((res) => res.json())
+      .then((data: { session: SessionData | null }) => {
+        if (!cancelled) setSession(data.session);
+      })
+      .catch(() => {
+        if (!cancelled) setSession(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (session) {
     return (
