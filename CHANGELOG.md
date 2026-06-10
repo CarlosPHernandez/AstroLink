@@ -6,7 +6,7 @@ All notable changes to AstroLink are documented in this file.
 
 ### Added
 
-- Dedicated experts directory at `/experts`: full roster with category filters, visual cards, and inline preview (desktop modal with blurred backdrop, mobile bottom sheet). Landing directory is now a six-card teaser with “View all experts.”
+- Browse the full mentor roster at `/experts`: category filters, visual cards, and inline preview (desktop modal with blurred backdrop, mobile bottom sheet). The landing page shows a six-card teaser with “View all experts.”
 - Shared `getExpertBookHref` helper and `expert-bio` preview utilities (truncation + Read more for long bios); unit tests and `e2e/experts-directory.spec.ts`.
 
 ### Changed
