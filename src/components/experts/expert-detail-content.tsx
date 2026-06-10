@@ -129,7 +129,8 @@ export function ExpertDetailContent({
   }
 
   return (
-    <div className="flex max-h-[calc(92vh-4rem)] min-h-0 flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* Media — always visible at top of sheet */}
       <div className="w-full shrink-0">
         <ExpertIntroMedia
           name={expert.name}
@@ -141,17 +142,22 @@ export function ExpertDetailContent({
         />
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col">
-        <ExpertDetailMeta expert={expert} onClose={onClose} />
-        <ExpertBioPreview bio={expert.bio} variant="sheet" />
-        <div className="mt-6 shrink-0 border-t border-outline-variant/60 pt-6">
-          <ExpertDetailActions
-            bookHref={bookHref}
-            firstName={firstName}
-            rate={expert.rate}
-            slug={expert.slug}
-          />
+      {/* Scrollable content region (meta + bio). The outer scroller owns variable height. */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="flex flex-col gap-6 pb-8">
+          <ExpertDetailMeta expert={expert} onClose={onClose} />
+          <ExpertBioPreview bio={expert.bio} variant="sheet" />
         </div>
+      </div>
+
+      {/* Docked actions footer — primary CTA is always reachable with safe-area padding */}
+      <div className="shrink-0 border-t border-outline-variant/60 bg-background pt-6 pb-[max(2rem,env(safe-area-inset-bottom))]">
+        <ExpertDetailActions
+          bookHref={bookHref}
+          firstName={firstName}
+          rate={expert.rate}
+          slug={expert.slug}
+        />
       </div>
     </div>
   );
