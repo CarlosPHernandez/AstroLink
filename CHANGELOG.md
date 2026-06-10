@@ -2,6 +2,18 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.1.6.0] - 2026-06-09
+
+### Added
+
+- Dedicated experts directory at `/experts`: full roster with category filters, visual cards, and inline preview (desktop modal with blurred backdrop, mobile bottom sheet). Landing directory is now a six-card teaser with “View all experts.”
+- Shared `getExpertBookHref` helper and `expert-bio` preview utilities (truncation + Read more for long bios); unit tests and `e2e/experts-directory.spec.ts`.
+
+### Changed
+
+- `ExpertIntroMedia` supports `autoPlayMuted` for directory preview context.
+- Profile, booking, and not-found flows link back to `/experts` instead of `/#directory`.
+
 ## [0.1.5.0] - 2026-06-09
 
 ### Added

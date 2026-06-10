@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
+import { getExpertBookHref } from '@/lib/expert-book-href';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 interface SessionData {
@@ -20,9 +21,7 @@ export default function ExpertProfileClient({
   session: SessionData | null;
 }) {
   const [bioExpanded, setBioExpanded] = useState(false);
-  const bookHref = session
-    ? `/booking?mentor=${encodeURIComponent(expert.slug)}`
-    : `/auth?redirect=${encodeURIComponent(`/booking?mentor=${expert.slug}`)}`;
+  const bookHref = getExpertBookHref(expert.slug, Boolean(session));
 
   const firstName = expert.name.split(' ')[0];
 
@@ -37,7 +36,7 @@ export default function ExpertProfileClient({
 
           <div className="flex items-center gap-sm sm:gap-lg">
             <Link
-              href="/#directory"
+              href="/experts"
               className="text-on-surface-variant font-label-md text-xs sm:text-label-md hover:text-primary transition-colors inline-flex items-center gap-1.5"
             >
               <span className="material-symbols-outlined text-[18px]">arrow_back</span>
@@ -148,7 +147,7 @@ export default function ExpertProfileClient({
               </Link>
 
               <Link
-                href="/#directory"
+                href="/experts"
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-lg border border-outline-variant px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-on-surface-variant hover:border-primary hover:text-primary transition-colors"
               >
                 Explore other experts

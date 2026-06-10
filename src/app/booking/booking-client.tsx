@@ -427,7 +427,7 @@ export default function BookingClient({
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-8">
           <Link
-            href="/#directory"
+            href="/experts"
             className="inline-flex items-center gap-0.5 text-label-md text-on-surface-variant hover:text-primary mb-5 transition-colors"
           >
             <span className="material-symbols-outlined text-[18px]">chevron_left</span>
@@ -457,7 +457,7 @@ export default function BookingClient({
                   </div>
                 </div>
                 <Link
-                  href="/#directory"
+                  href="/experts"
                   className="shrink-0 pt-5 text-label-sm text-on-surface-variant hover:text-primary transition-colors hidden sm:block"
                 >
                   Change expert
@@ -479,7 +479,7 @@ export default function BookingClient({
               </h1>
               <p className="mt-2 text-label-md text-on-surface-variant">
                 No expert selected.{' '}
-                <Link href="/#directory" className="text-primary hover:underline">
+                <Link href="/experts" className="text-primary hover:underline">
                   Browse the directory →
                 </Link>
               </p>
