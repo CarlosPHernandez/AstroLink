@@ -22,6 +22,11 @@ test.describe('Experts directory', () => {
     const panel = page.getByTestId('expert-detail-panel');
     await expect(sheet.or(panel)).toBeVisible({ timeout: 10_000 });
 
+    // On mobile the sheet must allow the primary CTA (book button) to be visible
+    // and reachable after the slide-up, even for long bios (the previous implementation
+    // clipped content with no outer scroller and only an internal bio cap).
+    await expect(page.getByTestId('expert-detail-book')).toBeVisible();
+
     await page.getByTestId('expert-detail-book').click();
     await expect(page).toHaveURL(/\/auth\?redirect=/);
     const url = new URL(page.url());

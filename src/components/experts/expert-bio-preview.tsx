@@ -5,7 +5,10 @@ import { getBioPreview, isBioLong } from '@/lib/expert-bio';
 
 type ExpertBioPreviewProps = {
   bio: string;
-  /** Panel uses flex growth; sheet uses a fixed scroll cap on small screens. */
+  /** Panel uses flex growth + internal scroll for the bio region.
+   *  Sheet provides an outer scroll region in ExpertDetailContent (the sheet itself
+   *  owns scrolling for variable-length content + a docked primary action footer).
+   *  "Read more" simply expands the preview text inside that scroller. */
   variant: 'panel' | 'sheet';
 };
 
@@ -32,7 +35,7 @@ export function ExpertBioPreview({ bio, variant }: ExpertBioPreviewProps) {
   const expandedScrollClass =
     variant === 'panel'
       ? 'min-h-0 flex-1 overflow-y-auto pr-1'
-      : 'max-h-40 overflow-y-auto pr-1 sm:max-h-48';
+      : ''; // sheet: no internal height cap — parent scroll region owns length and scrolling
 
   return (
     <div className={wrapperClass}>

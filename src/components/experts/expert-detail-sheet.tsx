@@ -47,7 +47,7 @@ export function ExpertDetailSheet({ expert, isSignedIn, onClose }: ExpertDetailS
         role="dialog"
         aria-modal="true"
         aria-label={`Preview for ${expert.name}`}
-        className="absolute inset-x-0 bottom-0 flex max-h-[92vh] flex-col overflow-hidden rounded-t-2xl border border-outline-variant bg-background px-5 pt-4 pb-8 shadow-2xl"
+        className="absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col overflow-hidden rounded-t-2xl border border-outline-variant bg-background px-5 pt-4 pb-0 shadow-2xl"
         style={{ animation: 'revealUp 0.3s ease-out forwards' }}
       >
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-outline-variant" aria-hidden />

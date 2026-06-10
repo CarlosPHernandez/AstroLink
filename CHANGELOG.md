@@ -2,6 +2,12 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.1.6.1] - 2026-06-10
+
+### Fixed
+
+- Mobile expert detail bottom sheet: long bios and the primary "Book" CTA were clipped / unreachable after slide-up (the sheet used `max-h-[92vh] overflow-hidden` with no dedicated outer scroller and an internal bio cap). Restructured `ExpertDetailContent` (sheet variant) to a `min-h-0 flex-1 overflow-y-auto` content region + docked `ExpertDetailActions` footer with `pb-[max(2rem,env(safe-area-inset-bottom))]`. Switched sheet to `max-h-[92dvh]` and removed the sheet-variant height cap from `ExpertBioPreview`. Added E2E regression assertion that the book button is visible after the sheet opens.
+
 ## [0.1.6.0] - 2026-06-09
 
 ### Added
