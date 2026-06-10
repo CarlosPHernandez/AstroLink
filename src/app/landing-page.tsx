@@ -1,10 +1,11 @@
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import ExpertDirectory from '@/components/landing/expert-directory';
 import { LandingAuthNavClient } from '@/components/landing/landing-auth-nav-client';
 import { LandingComparison } from '@/components/landing/landing-comparison';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 const LandingHero = dynamic(() => import('@/components/landing/landing-hero'));
-const ExpertDirectory = dynamic(() => import('@/components/landing/expert-directory'));
 
 export default function LandingPage({ experts }: { experts: ListedExpert[] }) {
   return (
@@ -12,7 +13,15 @@ export default function LandingPage({ experts }: { experts: ListedExpert[] }) {
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-outline-variant">
         <div className="max-w-[1200px] mx-auto px-md sm:px-lg h-20 flex justify-between items-center w-full">
           <span className="font-bold text-lg text-on-surface tracking-tight">Astrolink</span>
-          <LandingAuthNavClient />
+          <div className="flex items-center gap-sm sm:gap-lg">
+            <Link
+              href="/experts"
+              className="text-on-surface-variant font-label-md text-xs sm:text-label-md hover:text-primary transition-colors"
+            >
+              Experts
+            </Link>
+            <LandingAuthNavClient />
+          </div>
         </div>
       </header>
 

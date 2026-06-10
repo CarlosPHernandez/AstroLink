@@ -29,10 +29,11 @@ Follow-on from [d1-implementation-plan.md](./d1-implementation-plan.md) after th
 
 ### 3. Expert profile v1
 
+- **Shipped (0.1.6.0)**: Dedicated `/experts` directory — full roster, category filters, card grid, inline preview (desktop modal, mobile sheet), long-bio Read more. Landing shows a six-card teaser with “View all experts.” Shared `getExpertBookHref` and `expert-bio` helpers; `e2e/experts-directory.spec.ts`.
 - **Shipped (0.1.4.2)**: Public `/experts/[slug]` pages with redesigned layout (intro video hero via `ExpertIntroMedia`, full bio, expertise pills, modalities teaser matching landing, trust signals, direct booking CTAs to existing flow). Landing directory names now deep-link to profiles. `introVideoUrl` surfaced in public expert data.
 - Original spec (bio + intro video + product cards) delivered as the foundation; full three-modality cards will expand when modalities (D2.1) ship. Chris seed works via fallback; ready for additional experts like David with video/bio.
 
-(See CHANGELOG 0.1.4.2 and `src/app/experts/[slug]/` implementation.)
+(See CHANGELOG 0.1.6.0 / 0.1.4.2 and `src/app/experts/`.)
 
 ### 4. XPRIZE evidence (T8)
 

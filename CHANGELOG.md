@@ -2,6 +2,18 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.1.6.0] - 2026-06-09
+
+### Added
+
+- Browse the full mentor roster at `/experts`: category filters, visual cards, and inline preview (desktop modal with blurred backdrop, mobile bottom sheet). The landing page shows a six-card teaser with “View all experts.”
+- Shared `getExpertBookHref` helper and `expert-bio` preview utilities (truncation + Read more for long bios); unit tests and `e2e/experts-directory.spec.ts`.
+
+### Changed
+
+- `ExpertIntroMedia` supports `autoPlayMuted` for directory preview context.
+- Profile, booking, and not-found flows link back to `/experts` instead of `/#directory`.
+
 ## [0.1.5.0] - 2026-06-09
 
 ### Added

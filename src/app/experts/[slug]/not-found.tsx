@@ -13,7 +13,7 @@ export default function ExpertNotFound() {
         The expert may not be listed yet or the link may be outdated.
       </p>
       <Link
-        href="/#directory"
+        href="/experts"
         className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-on-primary transition-colors hover:bg-primary-container"
       >
         <span className="material-symbols-outlined text-[18px]">arrow_back</span>
