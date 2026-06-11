@@ -2,6 +2,26 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.2.0.0] - 2026-06-11
+
+### Added
+
+- Bidirectional live captions: Daily `multi` + `nova-3` transcription, speaker resolution, and per-viewer translate direction so mentees and mentors each see speech in their preferred locale during a call.
+- Translation queue with in-flight cap, dropped-queue finalization as raw text, and a paused banner when rate limits or token budget are hit (auto-resume when the window clears).
+- Post-call transcript panel with batch translation API (`GET/POST /api/session/[bookingId]/transcript`) and localized recap toggle.
+- Session join-url helper API and `daily-join-url` lib for secure room entry.
+- Dedicated `caption` LLM rate-limit scope (`LLM_MAX_CAPTION_*` in `.env.example`).
+
+### Changed
+
+- Caption rail sits below the video band; `use-daily-call` guards duplicate `startTranscription` on rejoin.
+- `translate-segment` returns structured `rate_limited` / `budget_exceeded` codes; `callLlmWithBackoff` preserves `LlmRateLimitError` type for correct HTTP mapping.
+
+### Fixed
+
+- Persistent red "Translation unavailable" badge when mentor speech triggered shared mentee rate limits (graceful fallback + separate caption budget).
+- Translation queue slot leak on duplicate `speech_id` handoff.
+
 ## [0.1.6.1] - 2026-06-10
 
 ### Fixed
