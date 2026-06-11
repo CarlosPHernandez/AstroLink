@@ -72,13 +72,16 @@ Room creation runs async after payment. The session page shows `provisioning` wh
 
 The session room uses AstroLink's light shell (`globals.css` tokens) around a custom Daily call object. Dark chrome was deferred so the demo matches the public landing aesthetic.
 
-## Phase 3 update (v0.1.5.0)
+## Phase 3 update (v0.2.0.0 — bidirectional captions)
 
 As of D3 Phase 3, `/session/[id]` uses `@daily-co/daily-js` `createCallObject()` instead of a Daily iframe embed:
 
 - `DailyCallRoom` renders participant video tiles and call controls.
-- When `DAILY_TRANSCRIPTION_ENABLED=true`, the mentor (owner) join starts transcription; `transcription-message` events feed `POST /api/session/[bookingId]/translate-segment`.
-- Mentees with `preferred_locale` ≠ `en` see a caption rail; mentors see a "Captions on for buyer" header indicator.
+- When `DAILY_TRANSCRIPTION_ENABLED=true`, the mentor (owner) join starts Daily transcription (`language: 'multi'`, `model: 'nova-3'`). Rejoin does not call `startTranscription` twice.
+- `transcription-message` events resolve the speaker, pick translate direction per viewer (`caption-direction.ts`), and enqueue segment translation (`translation-queue.ts` → `translate-segment`).
+- Each participant with a non-matching locale sees a caption rail below the video. Rate limits surface a paused banner with original text, not a fatal error.
+- Mentors see **Captions on for buyer** when the mentee locale ≠ `en`.
+- After `completed`, `SessionTranscriptPanel` loads utterances via `GET .../transcript` and optional batch localize.
 
 Private rooms, per-load meeting tokens, and webhook-driven completion are unchanged from D1.
 

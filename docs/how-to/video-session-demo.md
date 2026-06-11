@@ -42,13 +42,16 @@ npm run dev
 7. With transcription enabled: recap content should reference call topics (RPO, delta-V, etc.) after `transcript.ready-to-download`, not the empty-transcript apology template.
 8. Stripe (if used): payment intent `requires_capture` → captured after step 5 (`meeting.ended`).
 
-## Live captions demo (D3 Phase 3)
+## Live captions demo (D3 Phase 3 — bidirectional)
 
 1. Set `DAILY_TRANSCRIPTION_ENABLED=true` in `.env.local` and enable transcription on your Daily domain.
-2. Set mentee `preferred_locale` to a non-English value (e.g. `es`) via `/dashboard/mentee/settings`.
-3. Run the two-user join script above. Mentor should see **Captions on for buyer** in the session header.
-4. Mentee toggles the caption rail; speak English on the mentor side — translated lines should appear within ~2s.
-5. E2E coverage: `npm run test:e2e -- e2e/live-captions.spec.ts` (stubs LLM; pins `DAILY_TRANSCRIPTION_ENABLED=false`).
+2. Set mentee `preferred_locale` to a non-English value (e.g. `es`) via `/dashboard/mentee/settings`. Mentor can stay on `en`.
+3. For phone + laptop: `npm run dev:lan` → open `https://<LAN-IP>:3000` on both devices (camera/mic require HTTPS on mobile).
+4. Run the two-user join script above. Mentor should see **Captions on for buyer** when locales differ.
+5. Mentee toggles the caption rail below the video. Speak English on the mentor side — Spanish lines should appear within ~2s. If the mentor’s locale differs from the mentee’s, mentor captions translate the other way too.
+6. If you hit LLM rate limits, the rail shows **Live translation paused** with original speech until the window clears (not a hard error).
+7. After the call completes, the session page shows a **transcript panel** with optional localized toggle.
+8. E2E coverage: `npm run test:e2e -- e2e/live-captions.spec.ts` (stubs LLM; pins `DAILY_TRANSCRIPTION_ENABLED=false`). Real dual-device caption flow is manual.
 
 ## Two-user join proof
 

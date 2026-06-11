@@ -49,4 +49,4 @@ After plan reviews, critiques, or feature planning, read `skills/engineering-dis
 
 ### Transcript translation (D3)
 
-Bilingual expert sessions (live captions + localized recap) are documented in `docs/d3-transcript-translation-roadmap.md`. Before editing transcript/translation code, read `skills/transcript-translation/SKILL.md`. Use `src/lib/transcript-translation/token-budget.ts` before sending transcript text to LLMs. Extend `src/lib/llm.ts` for APX-06 — do not add Vercel AI SDK without updating the AI SDK review doc.
+Bilingual expert sessions (bidirectional live captions, post-call transcript panel, localized recap) are documented in `docs/d3-transcript-translation-roadmap.md`. Before editing transcript/translation code, read `skills/transcript-translation/SKILL.md`. Use `src/lib/transcript-translation/token-budget.ts` before sending transcript text to LLMs. Live captions use a dedicated `caption` LLM rate-limit scope (`LLM_MAX_CAPTION_*` in `.env.example`). Extend `src/lib/llm.ts` for APX-06 — do not add Vercel AI SDK without updating the AI SDK review doc.

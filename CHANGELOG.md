@@ -6,7 +6,7 @@ All notable changes to AstroLink are documented in this file.
 
 ### Added
 
-- Bidirectional live captions: Daily `multi` + `nova-3` transcription, speaker resolution, and per-viewer translate direction so mentees and mentors each see speech in their preferred locale during a call.
+- Bidirectional live captions during calls: each participant sees the other’s speech in their own language (Daily `multi` + `nova-3`, speaker resolution, per-viewer translate direction).
 - Translation queue with in-flight cap, dropped-queue finalization as raw text, and a paused banner when rate limits or token budget are hit (auto-resume when the window clears).
 - Post-call transcript panel with batch translation API (`GET/POST /api/session/[bookingId]/transcript`) and localized recap toggle.
 - Session join-url helper API and `daily-join-url` lib for secure room entry.
