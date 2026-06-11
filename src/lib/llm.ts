@@ -214,6 +214,8 @@ export type PlainTextRequest = {
   systemInstruction: string;
   prompt: string;
   rateLimitKey?: string;
+  /** Live caption segments use higher per-booking limits (see llm-rate-limit). */
+  rateLimitScope?: 'default' | 'caption';
 };
 
 function localizePlainTextStub(prompt: string, systemInstruction: string): string {
@@ -264,7 +266,7 @@ export async function generatePlainText(req: PlainTextRequest): Promise<string> 
     return localizePlainTextStub(req.prompt, req.systemInstruction);
   }
 
-  assertLlmRateLimit(req.rateLimitKey);
+  assertLlmRateLimit(req.rateLimitKey, { scope: req.rateLimitScope ?? 'default' });
 
   if (getLlmProvider() === 'openai') {
     return generatePlainTextOpenAI(req);
@@ -334,6 +336,9 @@ export async function callLlmWithBackoff<T>(
     return await apiFn();
   } catch (error) {
     if (retries === 0 || !isRetryableLlmError(error)) {
+      if (isLlmRateLimitError(error)) {
+        throw error;
+      }
       throw new Error(formatLlmError(error));
     }
     console.warn(`LLM error. Retrying in ${delay}ms... (Retries left: ${retries})`, error);

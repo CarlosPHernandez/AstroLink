@@ -27,3 +27,22 @@ describe('getLlmProvider', () => {
     expect(getLlmProvider()).toBe('gemini');
   });
 });
+
+describe('callLlmWithBackoff', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it('rethrows LlmRateLimitError without wrapping it as a generic Error', async () => {
+    vi.stubEnv('LLM_RATE_LIMIT_ENABLED', 'false');
+    const { callLlmWithBackoff, LlmRateLimitError } = await import('@/lib/llm');
+    const rateLimitError = new LlmRateLimitError('Caption translation rate limit reached', 5_000);
+
+    await expect(
+      callLlmWithBackoff(async () => {
+        throw rateLimitError;
+      }, 0),
+    ).rejects.toBe(rateLimitError);
+  });
+});

@@ -27,11 +27,12 @@ AstroLink connects buyers with aerospace experts across language barriers. This 
 - `mobile-first-design-practices` — live caption overlay and recap UI on 320px viewports.
 - Existing `src/lib/llm.ts` — structured JSON and flash/pro model tiers (do **not** add AI SDK for D3 Phase 0–2 without eng review).
 
-## Current state (v0.1.5.0)
+## Current state (v0.2.0.0)
 
 - **Phase 1:** `session_transcripts` populated from Daily WebVTT; APX-03 receives truncated English window.
-- **Phase 2:** `users.preferred_locale`; APX-06 recap translation; `GET /api/session/[id]/recap?locale=`.
-- **Phase 3:** `DailyCallRoom` (`createCallObject`), `use-live-captions`, `CaptionRail`, `POST /api/session/[bookingId]/translate-segment`, LRU segment cache, mentor captions indicator.
+- **Phase 2:** `users.preferred_locale`; APX-06 recap translation; `GET /api/session/[bookingId]/recap` resolves locale server-side.
+- **Phase 3 (bidirectional):** `DailyCallRoom` with Daily `multi` + `nova-3` transcription; `resolve-speaker`, `caption-direction`, and `translation-queue`; both participants see captions in their preferred locale via `translate-segment`; `CaptionRail` below video; mentor captions indicator; graceful pause on `rate_limited` / `budget_exceeded`.
+- **Phase 3b (post-call transcript):** `GET /api/session/[bookingId]/transcript`, `POST .../transcript/translate`, `SessionTranscriptPanel` with localized toggle after `completed`.
 
 ## Architecture principles
 
@@ -46,14 +47,18 @@ AstroLink connects buyers with aerospace experts across language barriers. This 
 | Area | Path |
 |------|------|
 | Types & constants | `src/lib/transcript-translation/` |
+| Speaker + direction + queue | `resolve-speaker.ts`, `caption-direction.ts`, `translation-queue.ts` |
+| Batch post-call translate | `batch-translate.ts` |
 | Post-session hook | `src/lib/post-session.ts` |
 | Synthesis agent | `src/services/agents/session-agent.ts` |
 | Session UI | `src/app/session/[bookingId]/session-room-client.tsx` |
-| Call object + captions | `src/components/session/` (`daily-call-room`, `use-live-captions`, `caption-rail`) |
+| Call object + captions | `src/components/session/` (`daily-call-room`, `use-daily-call`, `use-live-captions`, `caption-rail`, `session-transcript-panel`) |
 | Segment translate API | `src/app/api/session/[bookingId]/translate-segment/route.ts` |
-| Segment lib + cache | `src/lib/transcript-translation/translate-segment.ts`, `segment-cache.ts` |
+| Transcript APIs | `src/app/api/session/[bookingId]/transcript/` (GET + POST translate) |
+| Join URL helper | `src/app/api/session/[bookingId]/join-url/route.ts`, `src/lib/daily-join-url.ts` |
+| Segment lib + cache | `translate-segment.ts`, `segment-cache.ts` |
 | Daily integration | `src/lib/daily.ts`, `daily-transcription.ts` |
-| LLM core | `src/lib/llm.ts` |
+| LLM core + caption limits | `src/lib/llm.ts`, `src/lib/llm-rate-limit.ts` (`caption` scope; `LLM_MAX_CAPTION_*`) |
 
 ## Implementation workflow
 
@@ -71,11 +76,19 @@ AstroLink connects buyers with aerospace experts across language barriers. This 
 3. `session_translations.summary_json` per `target_locale`; `GET /api/session/[bookingId]/recap` resolves locale server-side (`recap-locale.ts`); session room polls without `?locale=`.
 4. Checkout locale picker remains **Phase 2b** — not in this slice.
 
-### Phase 3 — Live translated captions ✅ shipped
+### Phase 3 — Live translated captions ✅ shipped (v0.2.0.0 bidirectional)
 
-1. `createCallObject()` replaces iframe; `transcription-message` → `translate-segment` API.
-2. Per-booking LRU segment cache (`segment-cache.ts`); server enforces mentee `preferred_locale`.
-3. `CaptionRail` for mentee; mentor sees `session-captions-indicator` when buyer locale ≠ `en`.
+1. `createCallObject()` with `startTranscription({ language: 'multi', model: 'nova-3' })` on owner join; guard duplicate starts on rejoin.
+2. `transcription-message` → resolve speaker → `shouldTranslateForViewer()` → `translation-queue` → `translate-segment` API.
+3. Per-booking LRU segment cache; server enforces target locale per viewer (mentee and mentor each see their preferred language).
+4. `CaptionRail` below video band; paused banner on rate limit (shows original speech, auto-resumes).
+5. Post-call: `SessionTranscriptPanel` + batch translate for completed bookings.
+
+### Phase 3b — Post-call transcript panel ✅ shipped
+
+1. `GET /api/session/[bookingId]/transcript` returns utterances with speaker roles.
+2. `POST /api/session/[bookingId]/transcript/translate` batch-translates for mentee locale.
+3. UI toggle on completed session page ("View in {locale}").
 
 ## Token optimization checklist
 

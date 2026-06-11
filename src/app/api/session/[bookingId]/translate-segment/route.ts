@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { isLlmRateLimitError } from '@/lib/llm-rate-limit';
 import { TranslationAgent } from '@/services/agents/translation-agent';
 import { TranslateSegmentError } from '@/lib/transcript-translation/translate-segment';
 import {
@@ -19,6 +20,18 @@ type TranslateSegmentBody = {
   sourceLocale?: string;
   targetLocale?: string;
 };
+
+function resolveServerTargetLocale(params: {
+  sessionUserId: string;
+  sessionRole: string;
+  menteeId: string;
+  menteePreferredLocale: SupportedTargetLocale;
+}): SupportedTargetLocale {
+  if (params.sessionUserId === params.menteeId) {
+    return params.menteePreferredLocale;
+  }
+  return 'en';
+}
 
 export async function POST(request: Request, context: RouteContext) {
   const session = await getSession();
@@ -69,10 +82,17 @@ export async function POST(request: Request, context: RouteContext) {
     .eq('id', booking.mentee_id)
     .maybeSingle();
 
-  const serverTargetLocale: SupportedTargetLocale =
+  const menteePreferredLocale: SupportedTargetLocale =
     menteeProfile?.preferred_locale && isSupportedTargetLocale(menteeProfile.preferred_locale)
       ? menteeProfile.preferred_locale
       : 'en';
+
+  const serverTargetLocale = resolveServerTargetLocale({
+    sessionUserId: session.userId,
+    sessionRole: session.role,
+    menteeId: booking.mentee_id,
+    menteePreferredLocale,
+  });
 
   const requestedLocale = body.targetLocale?.trim();
   if (requestedLocale && requestedLocale !== serverTargetLocale) {
@@ -102,6 +122,16 @@ export async function POST(request: Request, context: RouteContext) {
       const status =
         error.code === 'text_too_short' || error.code === 'budget_exceeded' ? 400 : 422;
       return NextResponse.json({ error: error.message, code: error.code }, { status });
+    }
+    if (isLlmRateLimitError(error)) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          code: 'rate_limited',
+          retryAfterMs: error.retryAfterMs,
+        },
+        { status: 429 },
+      );
     }
     const message = error instanceof Error ? error.message : 'Translation failed';
     return NextResponse.json({ error: message }, { status: 500 });

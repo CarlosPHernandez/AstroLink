@@ -88,19 +88,20 @@ See [transcript-translation-case-studies.md](./explanation/transcript-translatio
 
 ---
 
-### Phase 3 — Live translated captions
+### Phase 3 — Live translated captions ✅ shipped (v0.2.0.0 bidirectional)
 
-**Goal:** Mentee reads expert speech in their language during the call.
+**Goal:** Each participant reads the other’s speech in their own language during the call.
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Session UI: Daily transcription events | Shipped | `@daily-co/daily-js` `createCallObject()` replaces iframe |
-| `translateSegment()` + LRU cache | Shipped | `POST /api/session/[bookingId]/translate-segment`, E7 cache |
-| Caption rail component | Shipped | `CaptionRail` + `use-live-captions`; mentee toggle |
-| Latency budget | Shipped | `latencyMs` / audit `durationMs`; dev console timing |
+| Session UI: Daily transcription events | Shipped | `createCallObject()`; `multi` + `nova-3` on owner join |
+| Speaker resolution + caption direction | Shipped | `resolve-speaker.ts`, `caption-direction.ts` |
+| `translateSegment()` + LRU cache + queue | Shipped | `translation-queue.ts` (cap=3); dedicated `caption` LLM rate scope |
+| Caption rail component | Shipped | `CaptionRail` below video; pause banner on rate limit |
 | Mentor UX: "Captions on for buyer" indicator | Shipped | `session-captions-indicator` in session header |
+| Post-call transcript panel | Shipped | `GET/POST .../transcript`; `SessionTranscriptPanel` on `completed` |
 
-**Exit criteria:** Dual-device demo — expert English, buyer Spanish captions.
+**Exit criteria:** Dual-device demo on `npm run dev:lan` — expert English, buyer Spanish (or pt-BR) captions; mentor sees buyer speech translated when locales differ.
 
 ---
 

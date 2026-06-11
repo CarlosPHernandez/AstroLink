@@ -19,6 +19,8 @@ export interface TranscriptUtterance {
   endMs: number;
   text: string;
   isFinal: boolean;
+  /** BCP-47 tag from Deepgram when available (live captions only). */
+  detectedLocale?: string;
 }
 
 /** Persisted canonical transcript (Phase 1 migration). */

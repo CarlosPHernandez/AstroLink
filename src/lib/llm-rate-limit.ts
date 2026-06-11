@@ -16,7 +16,9 @@ type RateLimitWindow = {
   label: string;
 };
 
-type RateLimitScope = 'global' | 'user';
+type RateLimitScope = 'global' | 'user' | 'caption';
+
+export type LlmRateLimitScope = 'default' | 'caption';
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value?.trim()) {
@@ -69,6 +71,27 @@ function getUserWindows(): RateLimitWindow[] {
   ];
 }
 
+/** Higher per-booking limits for live caption segment translation (keyed to mentee_id). */
+function getCaptionUserWindows(): RateLimitWindow[] {
+  return [
+    {
+      label: 'minute',
+      limit: parsePositiveInt(process.env.LLM_MAX_CAPTION_REQUESTS_PER_MINUTE, 60),
+      windowMs: 60_000,
+    },
+    {
+      label: 'hour',
+      limit: parsePositiveInt(process.env.LLM_MAX_CAPTION_REQUESTS_PER_HOUR, 300),
+      windowMs: 60 * 60_000,
+    },
+    {
+      label: 'day',
+      limit: parsePositiveInt(process.env.LLM_MAX_CAPTION_REQUESTS_PER_DAY, 1000),
+      windowMs: 24 * 60 * 60_000,
+    },
+  ];
+}
+
 const hitTimestamps = new Map<string, number[]>();
 
 function bucketKey(scope: RateLimitScope, windowLabel: string, subjectKey: string): string {
@@ -111,10 +134,18 @@ function tryConsumeWindows(
   return { allowed: true };
 }
 
+type AssertLlmRateLimitOptions = {
+  scope?: LlmRateLimitScope;
+};
+
 /**
  * Enforces global and optional per-user LLM request limits before provider calls.
+ * Caption segment calls use dedicated higher per-booking windows (scope: caption).
  */
-export function assertLlmRateLimit(rateLimitKey?: string): void {
+export function assertLlmRateLimit(
+  rateLimitKey?: string,
+  options?: AssertLlmRateLimitOptions,
+): void {
   if (!isRateLimitEnabled()) {
     return;
   }
@@ -130,6 +161,23 @@ export function assertLlmRateLimit(rateLimitKey?: string): void {
   }
 
   if (!rateLimitKey?.trim()) {
+    return;
+  }
+
+  const scope = options?.scope ?? 'default';
+  if (scope === 'caption') {
+    const captionResult = tryConsumeWindows(
+      'caption',
+      rateLimitKey.trim(),
+      getCaptionUserWindows(),
+      now,
+    );
+    if (!captionResult.allowed) {
+      throw new LlmRateLimitError(
+        `Caption translation rate limit reached (${captionResult.limit} requests per ${captionResult.label}). Try again in ${Math.ceil(captionResult.retryAfterMs / 1000)}s.`,
+        captionResult.retryAfterMs,
+      );
+    }
     return;
   }
 

@@ -41,6 +41,7 @@ vi.mock('@/services/agents/translation-agent', () => ({
 }));
 
 import { POST } from '@/app/api/session/[bookingId]/translate-segment/route';
+import { LlmRateLimitError } from '@/lib/llm-rate-limit';
 
 const bookingId = '00000000-0000-4000-8000-000000000099';
 
@@ -100,7 +101,7 @@ describe('POST /api/session/[bookingId]/translate-segment', () => {
     expect(res.status).toBe(403);
   });
 
-  it('translates segment for participant using server locale', async () => {
+  it('translates segment for mentee using server locale', async () => {
     const res = await POST(
       new Request('http://localhost', {
         method: 'POST',
@@ -124,5 +125,69 @@ describe('POST /api/session/[bookingId]/translate-segment', () => {
         rateLimitKey: 'mentee-uuid',
       }),
     );
+  });
+
+  it('allows mentor viewer to target English with non-en sourceLocale', async () => {
+    mockGetSession.mockResolvedValueOnce({
+      userId: 'mentor-uuid',
+      role: 'mentor',
+    });
+    mockUserMaybeSingle.mockResolvedValueOnce({
+      data: { preferred_locale: 'es' },
+      error: null,
+    });
+    mockTranslateSegment.mockResolvedValueOnce({
+      segmentId: 'seg-es',
+      translatedText: 'We should review the architecture.',
+      sourceLocale: 'es',
+      targetLocale: 'en',
+      cacheHit: false,
+      estimatedInputTokens: 4,
+    });
+
+    const res = await POST(
+      new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          segmentId: 'seg-es',
+          text: 'Debemos revisar la arquitectura.',
+          sourceLocale: 'es',
+          targetLocale: 'en',
+        }),
+      }),
+      { params: Promise.resolve({ bookingId }) },
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockTranslateSegment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceLocale: 'es',
+        targetLocale: 'en',
+      }),
+    );
+  });
+
+  it('returns 429 with rate_limited code when LLM rate limit is hit', async () => {
+    mockTranslateSegment.mockRejectedValueOnce(
+      new LlmRateLimitError('Caption translation rate limit reached', 12_000),
+    );
+
+    const res = await POST(
+      new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          segmentId: 'seg-rate',
+          text: 'Debemos revisar la arquitectura.',
+          sourceLocale: 'es',
+          targetLocale: 'es',
+        }),
+      }),
+      { params: Promise.resolve({ bookingId }) },
+    );
+
+    expect(res.status).toBe(429);
+    const body = await res.json();
+    expect(body.code).toBe('rate_limited');
+    expect(body.retryAfterMs).toBe(12_000);
   });
 });

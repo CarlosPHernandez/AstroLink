@@ -110,7 +110,7 @@ if (buyerLocale !== 'en') {
 
 ### `session-room-client.tsx`
 
-**Shipped (Phase 3):** `DailyCallRoom` uses `createCallObject()` (not iframe). `use-daily-call` starts transcription on owner join when `DAILY_TRANSCRIPTION_ENABLED=true`. `use-live-captions` listens for `transcription-message`, calls `POST /api/session/[bookingId]/translate-segment`, and renders `CaptionRail` for mentees with non-English `preferred_locale`.
+**Shipped (Phase 3, v0.2.0.0):** `DailyCallRoom` uses `createCallObject()` (not iframe). `use-daily-call` starts `multi` + `nova-3` transcription on owner join when `DAILY_TRANSCRIPTION_ENABLED=true`. `use-live-captions` resolves speakers, picks per-viewer translate direction, queues segment calls to `translate-segment`, and renders `CaptionRail` below video for any participant whose locale differs from the detected speech. Post-call `SessionTranscriptPanel` batch-translates stored utterances.
 
 ### `SessionAgent` (APX-03)
 

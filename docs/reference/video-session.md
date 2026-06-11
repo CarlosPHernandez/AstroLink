@@ -8,7 +8,10 @@ Live 1:1 sessions use [Daily.co](https://www.daily.co/) for WebRTC video. AstroL
 |----------|----------|-------------|
 | `DAILY_API_KEY` | Yes (live sessions) | Daily REST API key. Creates rooms and meeting tokens. |
 | `DAILY_WEBHOOK_HMAC` | Yes (production capture) | Base64 HMAC secret from Daily dashboard. Verifies `POST /api/webhooks/daily`. |
-| `DAILY_TRANSCRIPTION_ENABLED` | Phase 3 captions | When `true`, mentor join auto-starts Daily transcription; required for live caption rail in dev. E2E pins `false` and stubs translation via `E2E_STUB_LLM`. |
+| `DAILY_TRANSCRIPTION_ENABLED` | Phase 3 captions | When `true`, mentor join auto-starts Daily transcription (`multi` + `nova-3`); required for live captions in dev. E2E pins `false` and stubs translation via `E2E_STUB_LLM`. |
+| `LLM_MAX_CAPTION_REQUESTS_PER_MINUTE` | Optional | Caption-scoped LLM rate limit (default 60). Separate from general `LLM_MAX_*` buckets. |
+| `LLM_MAX_CAPTION_REQUESTS_PER_HOUR` | Optional | Default 300. |
+| `LLM_MAX_CAPTION_REQUESTS_PER_DAY` | Optional | Default 1000. |
 | `SKIP_STRIPE_PAYMENTS` | Local dev | When `true`, skips Stripe; use dev fulfill instead of card checkout. |
 
 See [.env.example](../../.env.example) for the full list.
@@ -108,7 +111,27 @@ Live caption segment translation (D3 Phase 3). Server enforces target locale fro
 }
 ```
 
-**Errors:** `401` unauthorized, `403` forbidden, `400` missing fields or locale mismatch, `422` translation failure.
+**Errors:** `401` unauthorized, `403` forbidden, `400` missing fields or locale mismatch, `422` translation failure, `429` `rate_limited` or `budget_exceeded` (client shows paused banner + original text).
+
+### `GET /api/session/[bookingId]/transcript`
+
+Post-call transcript for a completed booking. Returns utterances with speaker roles mapped to mentee/mentor.
+
+**Auth:** Logged-in participant on that booking.
+
+**Success (200):** `{ utterances: TranscriptUtterance[], sourceLocale, speakers }`
+
+### `POST /api/session/[bookingId]/transcript/translate`
+
+Batch-translates transcript utterances to the mentee’s `preferred_locale` (APX-06 segment batch).
+
+**Auth:** Logged-in participant on that booking.
+
+### `GET /api/session/[bookingId]/join-url`
+
+Returns a fresh authorized Daily join URL for the current user (server-minted meeting token).
+
+**Auth:** Logged-in participant via `getBookingForSession()`.
 
 ### `POST /api/dev/session-operator` (non-production only)
 
@@ -179,9 +202,10 @@ Development operator for demo rehearsal. Returns `404` in production.
 | Path | Role |
 |------|------|
 | `src/components/session/daily-call-room.tsx` | `createCallObject()` join, video tiles, transcription events |
-| `src/components/session/use-daily-call.ts` | Daily lifecycle, `startTranscription()` on owner join |
-| `src/components/session/use-live-captions.ts` | Caption state, translate-segment fetch, abort handling |
-| `src/components/session/caption-rail.tsx` | Mentee caption overlay + toggle |
+| `src/components/session/use-daily-call.ts` | Daily lifecycle, `startTranscription({ language: 'multi' })` on owner join |
+| `src/components/session/use-live-captions.ts` | Bidirectional caption state, translation queue, pause/resume |
+| `src/components/session/caption-rail.tsx` | Caption band below video + toggle + paused banner |
+| `src/components/session/session-transcript-panel.tsx` | Post-call transcript + localized toggle (`completed` gate) |
 | `src/components/session/call-controls.tsx` | Mic, camera, local leave |
 
 `getBookingForSession()` also returns `menteePreferredLocale`, `captionsAvailable`, and `showTranslatedCaptionsForBuyer` for the session shell.

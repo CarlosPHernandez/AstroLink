@@ -55,7 +55,7 @@ npm test          # Vitest unit/contract tests
 npm run test:e2e  # Playwright D1 golden path (requires .env.local + Supabase seed)
 ```
 
-Vitest covers D1 contract logic: booking pricing, `/api/book` request schema, Daily webhook parsing, LLM rate limits, dev payment skip helpers, D3 translate-segment / segment-cache paths, and public expert helpers (`expert-book-href`, `expert-bio`).
+Vitest covers D1 contract logic: booking pricing, `/api/book` request schema, Daily webhook parsing, LLM rate limits (including caption scope), dev payment skip helpers, D3 translate-segment / segment-cache / translation-queue / caption-direction paths, transcript APIs, and public expert helpers (`expert-book-href`, `expert-bio`).
 
 ### E2E (Playwright)
 

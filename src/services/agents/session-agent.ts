@@ -117,9 +117,10 @@ export class SessionAgent {
   }): Promise<PostSessionOutput> {
     const systemInstruction = `
       You are AstroLink's post-session synthesis engine. Process the transcription of a paid aerospace expert session and extract the most valuable, actionable takeaways for the buyer.
+      The transcript may mix English and Spanish (or other languages) from a bilingual session — read all lines and synthesize in English.
       Distinguish technical advice from small talk. Draft realistic action items with concrete responsibilities.
       If the transcript is empty or unavailable, generate a friendly template apologizing for the lack of audio telemetry and outlining standard recovery steps based on the service type.
-      Return valid JSON only.
+      Return valid JSON only. All recap fields must be in English.
     `;
 
     const prompt = `
