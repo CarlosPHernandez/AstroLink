@@ -2,8 +2,8 @@
 
 Structured eng review for D3: decisions, risks, token budgets, and implementation sequence.
 
-**Date:** 2026-06-06  
-**Status:** Phase 1–3 implemented on `translation-p3-4`; Phase 4 moat hardening next  
+**Date:** 2026-06-06 (updated 2026-06-11 for v0.2.0.0)  
+**Status:** Phase 1–3b shipped (bidirectional captions + post-call transcript); Phase 4 moat hardening next  
 **Related:** [D3 roadmap](../d3-transcript-translation-roadmap.md), [architecture](./transcript-translation-architecture.md)
 
 ---
@@ -117,6 +117,21 @@ Do **not** strip from `session_transcripts` canonical store.
 | Empty transcript | APX-03 template path (existing); skip translation |
 | Segment `text.length < 3` | Skip (noise) |
 | Cache hit | Skip LLM call |
+
+---
+
+### T6b — Bidirectional caption queue and rate scope (v0.2.0.0)
+
+Live captions now translate **per viewer** when `detectedLocale ≠ viewerLocale`. Sustained two-speaker dialogue can double segment volume versus one-way mentee-only captions.
+
+| Control | Value | Purpose |
+|---------|-------|---------|
+| `caption` LLM scope | `LLM_MAX_CAPTION_*` env | Isolate caption traffic from briefing/synthesis limits |
+| In-flight cap | 3 (`translation-queue.ts`) | Bound parallel LLM calls per client |
+| Graceful pause | `rate_limited` / `budget_exceeded` → banner | Original speech continues; auto-resume after window |
+| LRU segment cache | 500 entries / booking | Dedup repeated phrases |
+
+Full rationale and tuning guide: [live-caption-rate-limits.md](./live-caption-rate-limits.md).
 
 ---
 

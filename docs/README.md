@@ -17,6 +17,7 @@ Structured using [Diataxis](https://diataxis.fr/): tutorials teach, how-tos guid
 | Doc | Quadrant | Description |
 |-----|----------|-------------|
 | [tutorial/first-video-session.md](./tutorial/first-video-session.md) | Tutorial | First local video call from install to recap |
+| [tutorial/bidirectional-live-captions.md](./tutorial/bidirectional-live-captions.md) | Tutorial | Two-device bidirectional live captions + post-call transcript |
 | [how-to/video-session-demo.md](./how-to/video-session-demo.md) | How-to | Investor demo runbook, cheatsheet, dev operator |
 | [how-to/daily-live-account-guardrails-plan.md](./how-to/daily-live-account-guardrails-plan.md) | How-to | Live Daily account quota guardrails and demo approval plan |
 | [reference/video-session.md](./reference/video-session.md) | Reference | APIs, gates, env vars, module map |
@@ -29,6 +30,7 @@ Structured using [Diataxis](https://diataxis.fr/): tutorials teach, how-tos guid
 | [d3-transcript-translation-roadmap.md](./d3-transcript-translation-roadmap.md) | Explanation | D3 roadmap — Phases 1–3 shipped (capture, localized recap, bidirectional live captions + post-call transcript); Phase 4 moat next |
 | [explanation/transcript-translation-architecture.md](./explanation/transcript-translation-architecture.md) | Explanation | Canonical English, Daily STT, APX-06 translation layer |
 | [explanation/transcript-translation-engineering-review.md](./explanation/transcript-translation-engineering-review.md) | Explanation | Token budgets, eng decisions, cost model |
+| [explanation/live-caption-rate-limits.md](./explanation/live-caption-rate-limits.md) | Explanation | Caption LLM scope, queue cap, pause banner, sustained-speech cost |
 | [explanation/transcript-translation-ai-sdk-review.md](./explanation/transcript-translation-ai-sdk-review.md) | Explanation | Vercel AI SDK fit vs extending `llm.ts` |
 | [explanation/transcript-translation-case-studies.md](./explanation/transcript-translation-case-studies.md) | Explanation | Zoom, Teams, Meet, telehealth — differentiation |
 

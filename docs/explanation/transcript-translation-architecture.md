@@ -18,26 +18,32 @@ AstroLink's expert network is English-centric today, but buyers are global (LATA
 
 ---
 
-## End-to-end flow (target state)
+## End-to-end flow (v0.2.0.0 — bidirectional)
 
 ```
-Pre-call                    During call                      Post-call
-────────                    ───────────                      ─────────
+Pre-call                    During call                           Post-call
+────────                    ───────────                           ─────────
 
-APX-02 brief          →     Daily transcription        →     Fetch WebVTT
-(buyer locale stored)       (Deepgram, English ASR)          session_transcripts
-                            │                                │
-                            ▼                                ▼
-                      transcription-message            APX-03 synthesis
-                            │                          (English window)
-                            ▼                                │
-                      translateSegment()                     ▼
-                      (flash, cached)                  APX-06 recap translate
-                            │                          (if locale ≠ en)
-                            ▼                                │
-                      Caption rail UI                      ▼
-                      (buyer preferred_locale)       Localized recap page
+users.preferred_locale  →   Daily transcription (multi, nova-3)  →  Fetch WebVTT
+on mentee profile           on mentor owner join                    session_transcripts
+                            │                                       │
+                            ▼                                       ▼
+                      transcription-message                 APX-03 synthesis
+                            │                               (English window)
+                            ▼                                       │
+                      resolveSpeaker +                              ▼
+                      resolveCaptionDirection                 APX-06 recap translate
+                      (per viewer locale)                     (if locale ≠ en)
+                            │
+                            ▼
+                      translation-queue (cap=3)
+                            │
+                            ▼
+                      translateSegment() ──► caption rail (each participant)
+                      (flash, LRU cache)       SessionTranscriptPanel (completed)
 ```
+
+Each viewer gets their own translate direction: when detected speech locale ≠ viewer locale, the segment is translated to the viewer's language. English mentors still see a captions indicator when the buyer locale is not English.
 
 ---
 
@@ -48,8 +54,8 @@ APX-02 brief          →     Daily transcription        →     Fetch WebVTT
 Daily owns ASR. AstroLink does **not** run its own STT in D3 v1.
 
 - Enable `enable_transcription` on Daily domain.
-- Start via `auto_start_transcription` on mentor meeting token or `startTranscription()` from custom UI.
-- Receive `transcription-message` events during call (Phase 3).
+- Mentor owner join calls `startTranscription({ language: 'multi', model: 'nova-3' })` when `DAILY_TRANSCRIPTION_ENABLED=true` (guarded against duplicate starts on rejoin).
+- Receive `transcription-message` events with per-utterance `detectedLocale` during call (Phase 3).
 - After `meeting.ended`, fetch WebVTT via Daily REST API (Phase 1).
 
 **Why not AI SDK `transcribe`?** See [AI SDK review](./transcript-translation-ai-sdk-review.md). Daily already bundles Deepgram; adding a parallel STT path increases cost and complexity without wedge value.
@@ -80,7 +86,8 @@ Both inject `AEROSPACE_GLOSSARY` and optionally APX-02 objective keywords into t
 
 | Surface | Phase | Data source |
 |---------|-------|-------------|
-| Live caption rail | 3 | Streaming `translateSegment` |
+| Live caption rail | 3 | Streaming `translateSegment` per viewer |
+| Post-call transcript panel | 3b | `GET .../transcript` + batch `POST .../transcript/translate` |
 | Session recap page | 1–2 | `summary_json` or `session_translations` |
 | Mentee dashboard card | 2 | Recap API with locale |
 
@@ -160,5 +167,7 @@ No schema change required. Receives truncated English text. Optionally pass `buy
 ## Related
 
 - [Video session architecture](./video-session-architecture.md)
+- [Live caption rate limits](./live-caption-rate-limits.md)
+- [Tutorial: bidirectional live captions](../tutorial/bidirectional-live-captions.md)
 - [D3 roadmap](../d3-transcript-translation-roadmap.md)
 - [Case studies](./transcript-translation-case-studies.md)

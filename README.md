@@ -43,6 +43,7 @@ Index: [docs/README.md](docs/README.md)
 | Topic | Start here |
 |-------|------------|
 | First local video call | [docs/tutorial/first-video-session.md](docs/tutorial/first-video-session.md) |
+| Bidirectional live captions | [docs/tutorial/bidirectional-live-captions.md](docs/tutorial/bidirectional-live-captions.md) |
 | Investor demo runbook | [docs/how-to/video-session-demo.md](docs/how-to/video-session-demo.md) |
 | Video APIs & gates | [docs/reference/video-session.md](docs/reference/video-session.md) |
 | Why private rooms + webhooks | [docs/explanation/video-session-architecture.md](docs/explanation/video-session-architecture.md) |
