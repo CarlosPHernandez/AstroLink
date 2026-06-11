@@ -48,6 +48,28 @@ export {
 export type { TranslateSegmentErrorCode } from '@/lib/transcript-translation/translate-segment';
 export { parseWebVtt } from '@/lib/transcript-translation/parse-webvtt';
 export { mapSpeakersToRoles } from '@/lib/transcript-translation/map-speakers';
+export { resolveCaptionDirection, resolveViewerLocale } from '@/lib/transcript-translation/caption-direction';
+export type { CaptionDirection, CaptionViewerRole } from '@/lib/transcript-translation/caption-direction';
+export { resolveSpeakerUserId } from '@/lib/transcript-translation/resolve-speaker';
+export type { DailyParticipantRecord, DailyParticipantsMap } from '@/lib/transcript-translation/resolve-speaker';
+export {
+  MAX_IN_FLIGHT_TRANSLATIONS,
+  admitTranslationRequest,
+  buildTranslationCacheKey,
+  dequeueNextTranslationWork,
+  isGracefulTranslationFallback,
+  releaseTranslationSlot,
+} from '@/lib/transcript-translation/translation-queue';
+export type { TranslationQueueSnapshot } from '@/lib/transcript-translation/translation-queue';
+export {
+  BATCH_CHUNK_SIZE,
+  buildTranscriptTranslationCacheKey,
+  chunkUtterances,
+  clearTranscriptTranslationCache,
+  getCachedTranscriptTranslation,
+  setCachedTranscriptTranslation,
+  translateTranscriptUtterances,
+} from '@/lib/transcript-translation/batch-translate';
 export type { SpeakerMappingContext } from '@/lib/transcript-translation/map-speakers';
 export { fetchDailyTranscriptVtt } from '@/lib/transcript-translation/fetch-daily-transcript';
 export { persistSessionTranscript } from '@/lib/transcript-translation/persist-transcript';

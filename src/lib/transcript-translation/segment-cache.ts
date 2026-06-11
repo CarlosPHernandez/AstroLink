@@ -12,12 +12,14 @@ export function hashSegmentText(text: string): string {
 export function buildSegmentCacheKey(params: {
   bookingId: string;
   text: string;
+  sourceLocale: string;
   targetLocale: SupportedTargetLocale;
   glossaryVersion?: number;
 }): string {
   const glossaryVersion = params.glossaryVersion ?? GLOSSARY_VERSION;
   const textHash = hashSegmentText(params.text);
-  return `${params.bookingId}:${textHash}:${params.targetLocale}:g${glossaryVersion}`;
+  const source = params.sourceLocale.trim() || 'en';
+  return `${params.bookingId}:${textHash}:${source}:${params.targetLocale}:g${glossaryVersion}`;
 }
 
 type CacheEntry = {

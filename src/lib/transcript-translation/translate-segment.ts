@@ -58,6 +58,7 @@ export async function translateSegment(
   const cacheKey = buildSegmentCacheKey({
     bookingId: input.bookingId,
     text,
+    sourceLocale: input.sourceLocale,
     targetLocale: input.targetLocale,
   });
   const cache = getSegmentCacheForBooking(input.bookingId);
@@ -85,6 +86,7 @@ export async function translateSegment(
     generatePlainText({
       model: llmFlashModel,
       rateLimitKey: input.rateLimitKey,
+      rateLimitScope: 'caption',
       systemInstruction,
       prompt,
     }),

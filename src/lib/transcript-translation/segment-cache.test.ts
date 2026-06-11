@@ -19,6 +19,7 @@ describe('SegmentTranslationCache', () => {
     const key = buildSegmentCacheKey({
       bookingId: 'booking-1',
       text: 'Hello',
+      sourceLocale: 'en',
       targetLocale: 'es',
     });
     cache.set(key, 'Hola');
@@ -26,9 +27,9 @@ describe('SegmentTranslationCache', () => {
   });
 
   it('evicts oldest entry when over capacity', () => {
-    const k1 = buildSegmentCacheKey({ bookingId: 'b', text: 'one', targetLocale: 'es' });
-    const k2 = buildSegmentCacheKey({ bookingId: 'b', text: 'two', targetLocale: 'es' });
-    const k3 = buildSegmentCacheKey({ bookingId: 'b', text: 'three', targetLocale: 'es' });
+    const k1 = buildSegmentCacheKey({ bookingId: 'b', text: 'one', sourceLocale: 'en', targetLocale: 'es' });
+    const k2 = buildSegmentCacheKey({ bookingId: 'b', text: 'two', sourceLocale: 'en', targetLocale: 'es' });
+    const k3 = buildSegmentCacheKey({ bookingId: 'b', text: 'three', sourceLocale: 'en', targetLocale: 'es' });
 
     cache.set(k1, 'uno');
     cache.set(k2, 'dos');
@@ -42,7 +43,7 @@ describe('SegmentTranslationCache', () => {
   it('scopes caches per booking id', () => {
     const bookingA = getSegmentCacheForBooking('a');
     const bookingB = getSegmentCacheForBooking('b');
-    const key = buildSegmentCacheKey({ bookingId: 'ignored', text: 'x', targetLocale: 'fr' });
+    const key = buildSegmentCacheKey({ bookingId: 'ignored', text: 'x', sourceLocale: 'en', targetLocale: 'fr' });
 
     bookingA.set(key, 'fr-a');
     bookingB.set(key, 'fr-b');
@@ -55,12 +56,14 @@ describe('SegmentTranslationCache', () => {
     const base = buildSegmentCacheKey({
       bookingId: 'b',
       text: 'LEO',
+      sourceLocale: 'en',
       targetLocale: 'ja',
       glossaryVersion: 1,
     });
     const bumped = buildSegmentCacheKey({
       bookingId: 'b',
       text: 'LEO',
+      sourceLocale: 'en',
       targetLocale: 'ja',
       glossaryVersion: 2,
     });

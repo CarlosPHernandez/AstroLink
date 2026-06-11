@@ -216,14 +216,6 @@ export async function createMeetingToken(params: {
         user_name: params.userName,
         is_owner: params.isOwner,
         exp,
-        ...(params.isOwner && isDailyTranscriptionEnabled()
-          ? {
-              auto_start_transcription: true,
-              auto_transcription_settings: {
-                language: 'en',
-              },
-            }
-          : {}),
         ...(tokenWindow
           ? {
               nbf: params.nbf,
