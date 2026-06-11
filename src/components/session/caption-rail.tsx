@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
+
 import type { CaptionLine } from '@/components/session/use-live-captions';
 
 type CaptionRailProps = {
@@ -8,6 +10,8 @@ type CaptionRailProps = {
   onToggleCaptions?: () => void;
   showToggle?: boolean;
   targetLocale?: string;
+  translationPaused?: boolean;
+  transcriptionUnavailable?: boolean;
 };
 
 export function CaptionRail({
@@ -16,14 +20,26 @@ export function CaptionRail({
   onToggleCaptions,
   showToggle = false,
   targetLocale,
+  translationPaused = false,
+  transcriptionUnavailable = false,
 }: CaptionRailProps) {
-  if (!captionsOn && !showToggle) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) {
+      return;
+    }
+    el.scrollTop = el.scrollHeight;
+  }, [lines]);
+
+  if (!captionsOn && !showToggle && !transcriptionUnavailable) {
     return null;
   }
 
   return (
     <div
-      className="flex flex-col gap-2 border-t border-outline-variant bg-surface-container-lowest/95 p-3 lg:absolute lg:bottom-20 lg:right-4 lg:z-10 lg:max-h-32 lg:w-80 lg:overflow-y-auto lg:rounded-lg lg:border lg:shadow-md"
+      className="flex max-h-36 min-h-[5.5rem] flex-col gap-2 border-t border-outline-variant bg-surface-container-lowest p-3"
       data-testid="caption-rail"
     >
       {showToggle && onToggleCaptions ? (
@@ -38,8 +54,20 @@ export function CaptionRail({
         </button>
       ) : null}
 
-      {captionsOn ? (
-        <div className="space-y-2 max-h-32 overflow-y-auto">
+      {transcriptionUnavailable ? (
+        <p className="text-label-sm text-on-surface-variant" data-testid="caption-rail-unavailable">
+          Live captions are unavailable for this session.
+        </p>
+      ) : null}
+
+      {translationPaused ? (
+        <p className="text-label-sm text-on-surface-variant" data-testid="caption-rail-paused">
+          Live translation paused — showing original speech.
+        </p>
+      ) : null}
+
+      {captionsOn && !transcriptionUnavailable ? (
+        <div ref={scrollRef} className="max-h-28 space-y-2 overflow-y-auto">
           {lines.length === 0 ? (
             <p className="text-label-sm text-on-surface-variant" data-testid="caption-rail-empty">
               Live captions will appear here.

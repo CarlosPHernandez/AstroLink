@@ -6,6 +6,7 @@ import { CallControls } from '@/components/session/call-controls';
 import { CaptionRail } from '@/components/session/caption-rail';
 import { useDailyCall } from '@/components/session/use-daily-call';
 import { useLiveCaptions } from '@/components/session/use-live-captions';
+import { resolveViewerLocale } from '@/lib/transcript-translation/caption-direction';
 import type { BookingSessionView } from '@/lib/booking-access';
 import type { TranscriptUtterance } from '@/lib/transcript-translation/types';
 
@@ -64,33 +65,35 @@ function VideoTile({
 
 export function DailyCallRoom({ booking, onEnded }: DailyCallRoomProps) {
   const isOwner = booking.sessionRole === 'mentor' || booking.sessionRole === 'admin';
-  const showEnglishRail =
-    booking.captionsAvailable &&
-    !booking.showCaptionsForBuyer &&
-    booking.sessionRole !== 'admin';
+  const viewerLocale = resolveViewerLocale(
+    booking.sessionRole,
+    booking.menteePreferredLocale,
+  );
+
+  const handleUtteranceRef = useRef<(utterance: TranscriptUtterance) => void>(() => {});
+
+  const daily = useDailyCall({
+    bookingId: booking.id,
+    isOwner,
+    transcriptionEnabled: booking.captionsAvailable,
+    e2eCaptionsStub: booking.e2eCaptionsStub,
+    onFinalTranscription: (utterance) => {
+      void handleUtteranceRef.current(utterance);
+    },
+    onLeftMeeting: onEnded,
+  });
 
   const captions = useLiveCaptions({
     bookingId: booking.id,
     mentorId: booking.mentorId,
     menteeId: booking.menteeId,
     sessionRole: booking.sessionRole,
-    targetLocale: booking.menteePreferredLocale,
-    showTranslatedForBuyer: booking.showCaptionsForBuyer,
+    menteePreferredLocale: booking.menteePreferredLocale,
     captionsEnabled: booking.captionsAvailable,
+    transcriptionUnavailable: daily.transcriptionUnavailable,
   });
 
-  const onUtterance = (utterance: TranscriptUtterance) => {
-    void captions.handleUtterance(utterance);
-  };
-
-  const daily = useDailyCall({
-    joinUrl: booking.dailyJoinUrl ?? '',
-    isOwner,
-    transcriptionEnabled: booking.captionsAvailable,
-    e2eCaptionsStub: booking.e2eCaptionsStub,
-    onFinalTranscription: onUtterance,
-    onLeftMeeting: onEnded,
-  });
+  handleUtteranceRef.current = captions.handleUtterance;
 
   const local = daily.participants.find((p) => p.local);
   const remotes = daily.participants.filter((p) => !p.local);
@@ -127,17 +130,17 @@ export function DailyCallRoom({ booking, onEnded }: DailyCallRoomProps) {
         ) : null}
       </div>
 
-      {(booking.showCaptionsForBuyer || showEnglishRail) && (
+      {booking.captionsAvailable ? (
         <CaptionRail
           lines={captions.lines}
           captionsOn={captions.captionsOn}
           onToggleCaptions={() => captions.setCaptionsOn((v) => !v)}
-          showToggle={booking.showCaptionsForBuyer && booking.sessionRole === 'mentee'}
-          targetLocale={
-            booking.showCaptionsForBuyer ? booking.menteePreferredLocale : undefined
-          }
+          showToggle={booking.sessionRole === 'mentee'}
+          targetLocale={viewerLocale}
+          translationPaused={captions.translationPaused}
+          transcriptionUnavailable={captions.transcriptionUnavailable}
         />
-      )}
+      ) : null}
 
       <CallControls
         micEnabled={daily.micEnabled}

@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { DailyCallRoom } from '@/components/session/daily-call-room';
+import { SessionTranscriptPanel } from '@/components/session/session-transcript-panel';
 import type { BookingSessionView } from '@/lib/booking-access';
 import type { MentorBriefingOutput, PostSessionOutput } from '@/lib/types';
 import { formatSessionWhen } from '@/lib/format';
@@ -416,6 +417,7 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             <SessionGatePanel testId="session-completed">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Session completed</h3>
               <SessionRecapPanel bookingId={booking.id} />
+              <SessionTranscriptPanel bookingId={booking.id} />
               <Link
                 href={exitHref}
                 className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
