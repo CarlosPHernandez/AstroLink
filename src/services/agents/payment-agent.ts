@@ -1,4 +1,5 @@
 import type { Json } from '@/lib/database.types';
+import { isStripeBookingTestMode } from '@/lib/booking-payments';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -27,8 +28,7 @@ export class PaymentAgent {
     // 1. Validate platform split math (platform fee must be exactly 20% of gross)
     const expectedPlatformFee = Math.round(params.grossAmountCents * 0.20);
     const splitCheckValid =
-      params.platformFeeCents === expectedPlatformFee ||
-      process.env.STRIPE_BOOKING_TEST_MODE === 'true';
+      params.platformFeeCents === expectedPlatformFee || isStripeBookingTestMode();
 
     if (!splitCheckValid) {
       await this.logAudit('SPLIT_FEE_MISMATCH_ESCALATED', params.metadata.booking_id, {

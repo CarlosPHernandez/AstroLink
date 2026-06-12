@@ -1,5 +1,6 @@
 import 'server-only';
 import { cookies } from 'next/headers';
+import { isProtectedAppSurfaceEnabled } from '@/lib/app-mode';
 import { encrypt, decrypt } from './crypto';
 
 export interface SessionData {
@@ -26,6 +27,9 @@ export async function createSession(data: Omit<SessionData, 'expiresAt'>) {
 }
 
 export async function getSession(): Promise<SessionData | null> {
+  if (!isProtectedAppSurfaceEnabled()) {
+    return null;
+  }
   const cookieStore = await cookies();
   const encrypted = cookieStore.get('astrolink_session')?.value;
   if (!encrypted) return null;
