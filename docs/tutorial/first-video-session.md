@@ -83,6 +83,7 @@ You ran the full D1 golden path:
 
 ## Next steps
 
+- [Tutorial: bidirectional live captions](./bidirectional-live-captions.md) — two-device es↔en captions (requires `DAILY_TRANSCRIPTION_ENABLED=true`)
 - [How to: investor demo runbook](../how-to/video-session-demo.md) — preflight, cheatsheet, talking points
 - [Reference: APIs and gates](../reference/video-session.md) — full module and route listing
 - [Explanation: why this architecture](../explanation/video-session-architecture.md)
