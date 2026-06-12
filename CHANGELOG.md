@@ -2,6 +2,14 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.2.0.1] - 2026-06-12
+
+### Fixed
+
+- Session-authenticated APIs now respect waitlist mode via `getSession()` — invalid cookies no longer bypass `APP_MODE` when demo auth is off.
+- `STRIPE_BOOKING_TEST_MODE` cannot weaken Connect checkout or platform-fee validation in production.
+- Expert matching rejects LLM-hallucinated mentor IDs before booking creation, with a clear error instead of an opaque lookup failure.
+
 ## [0.2.0.0] - 2026-06-11
 
 ### Added
