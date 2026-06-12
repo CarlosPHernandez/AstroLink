@@ -13,8 +13,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 1. Copy `.env.example` → `.env.local` and fill Supabase keys from the [project API settings](https://supabase.com/dashboard/project/vwoizjesyyygmokfqpyy/settings/api).
 2. Set **`ENCRYPTION_KEY`** (`openssl rand -hex 32`) for session cookies (required in production). The app reads `ENCRYPTION_KEY` in `src/lib/crypto.ts`.
 3. Local dev: `APP_MODE=full` and `ENABLE_DEMO_AUTH=true` (defaults in `.env.example`). Production waitlist: `APP_MODE=waitlist`; enable `ENABLE_DEMO_AUTH=true` only on preview/staging for ops admin access.
-4. For local booking without Stripe: keep `SKIP_STRIPE_PAYMENTS=true` (default in `.env.example`).
+4. For local booking without Stripe: keep `SKIP_STRIPE_PAYMENTS=true` (default in `.env.example`). `SKIP_STRIPE_PAYMENTS` and `STRIPE_BOOKING_TEST_MODE` are hard-disabled in production builds.
 5. Optional: `E2E_STUB_LLM=true` for stubbed briefings; `OPENAI_API_KEY` / `GEMINI_API_KEY` for real APX-02.
+6. Waitlist production (`APP_MODE=waitlist`, demo auth off): proxy blocks protected pages; `getSession()` also returns null for API routes so stale cookies cannot reach booking or dashboards.
 
 Cloud Agent VMs often inject only `NEXT_PUBLIC_SUPABASE_URL`. **`NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are required** for the landing page, demo auth, booking APIs, and Playwright E2E.
 
