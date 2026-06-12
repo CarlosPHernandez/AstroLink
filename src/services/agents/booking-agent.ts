@@ -2,6 +2,7 @@ import type { Json } from '@/lib/database.types';
 import { computeBookingTotalCents } from '@/lib/booking-pricing';
 import {
   createDevSkippedPaymentIntentId,
+  isStripeBookingTestMode,
   isStripePaymentsSkipped,
 } from '@/lib/booking-payments';
 import { callLlmWithBackoff, generateStructuredJson, llmFlashModel } from '@/lib/llm';
@@ -70,13 +71,15 @@ export class BookingAgent {
     });
 
     const skipPayments = isStripePaymentsSkipped();
-    const testMode = process.env.STRIPE_BOOKING_TEST_MODE === 'true';
+    const testMode = isStripeBookingTestMode();
     const connectAccountId = mentor.stripe_connect_account_id;
 
     if (!skipPayments && !connectAccountId && !testMode) {
-      throw new Error(
-        'This expert has not finished Stripe payouts setup yet. Set STRIPE_BOOKING_TEST_MODE=true for local checkout without Connect.'
-      );
+      const message =
+        process.env.NODE_ENV === 'production'
+          ? 'This expert has not finished payout setup yet. Please try another expert.'
+          : 'This expert has not finished Stripe payouts setup yet. Set STRIPE_BOOKING_TEST_MODE=true for local checkout without Connect.';
+      throw new Error(message);
     }
 
     let paymentIntentId: string;
@@ -208,7 +211,7 @@ export class BookingAgent {
       ${JSON.stringify(mentors, null, 2)}
     `;
 
-    return callLlmWithBackoff(() =>
+    const result = await callLlmWithBackoff(() =>
       generateStructuredJson<MatchingOutput>({
         model: llmFlashModel,
         rateLimitKey: input.menteeId,
@@ -225,6 +228,13 @@ export class BookingAgent {
         },
       }),
     );
+
+    const mentorInPool = mentors.some((mentor) => mentor.id === result.mentor_id);
+    if (!mentorInPool) {
+      throw new Error('Matching engine returned an unknown expert');
+    }
+
+    return result;
   }
 
   private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {

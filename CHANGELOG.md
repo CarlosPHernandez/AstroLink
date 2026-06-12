@@ -2,6 +2,14 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.2.0.1] - 2026-06-12
+
+### Fixed
+
+- Waitlist production (demo auth off): session cookies no longer unlock booking or dashboard APIs — behavior matches the public landing gate via `getSession()`.
+- Production checkout always requires mentor Connect setup and enforces the 20% platform fee split; `STRIPE_BOOKING_TEST_MODE` cannot bypass either.
+- Bookings fail fast when the matching engine picks an expert outside the approved pool, with a clear error instead of an opaque lookup failure.
+
 ## [0.2.0.0] - 2026-06-11
 
 ### Added

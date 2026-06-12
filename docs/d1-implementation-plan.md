@@ -14,7 +14,7 @@ Paid **live 1:1** golden path only. Defer text threads, recorded video, full tri
 | Task | Status | Notes |
 |------|--------|--------|
 | **T1** — DB roster (seed mentors; landing from Supabase) | Done | `mentor-directory.ts`, seed migration, landing props |
-| **T2** — Checkout (`/api/book` + Stripe Elements + server price) | Done | `booking-client.tsx`, `STRIPE_BOOKING_TEST_MODE` for dev without Connect |
+| **T2** — Checkout (`/api/book` + Stripe Elements + server price) | Done | `booking-client.tsx`, `STRIPE_BOOKING_TEST_MODE` for dev without Connect (ignored in production via `isStripeBookingTestMode()`) |
 | **T3** — Briefs (`briefing_json` + webhook APX-02) | Done | `post-payment.ts`, stripe webhook, mentee dashboard |
 | **T4** — Daily (room + session page + capture) | Done (D1) | Private rooms, per-load meeting tokens, session gates. Webhook HMAC + `meeting.ended` → `post-session.ts`. See [reference/video-session.md](./reference/video-session.md). |
 | **T5** — Tests (Vitest + contract tests + E2E golden path) | Done (skip-Stripe) | `npm test`, `npm run test:e2e` — Stripe/Daily webhook E2E deferred |
