@@ -34,11 +34,16 @@ export default function ExpertDirectory({ experts }: { experts: ListedExpert[] }
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-label="Filter featured experts by category"
+          >
             {['all', 'systems', 'propulsion', 'spacecraft', 'policy'].map((cat) => (
               <button
                 key={cat}
                 type="button"
+                aria-pressed={selectedCategory === cat}
                 onClick={() => setSelectedCategory(cat)}
                 className={`touch-manipulation px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border rounded-md transition-all cursor-pointer ${
                   selectedCategory === cat
@@ -62,7 +67,7 @@ export default function ExpertDirectory({ experts }: { experts: ListedExpert[] }
             {teaserExperts.map((expert, index) => (
               <Link
                 key={expert.id}
-                href="/experts"
+                href={`/experts/${expert.slug}`}
                 data-testid={`expert-card-${expert.slug}`}
                 className="group flex flex-col overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest hover:border-outline hover:shadow-md transition-all duration-300"
               >

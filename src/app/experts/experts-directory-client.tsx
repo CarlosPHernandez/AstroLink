@@ -1,43 +1,37 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ExpertCard } from '@/components/experts/expert-card';
-import { ExpertDetailPanel } from '@/components/experts/expert-detail-panel';
-import { ExpertDetailSheet } from '@/components/experts/expert-detail-sheet';
 import { LandingAuthNavClient } from '@/components/landing/landing-auth-nav-client';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
+const ExpertDetailPanel = dynamic(
+  () =>
+    import('@/components/experts/expert-detail-panel').then((mod) => mod.ExpertDetailPanel),
+  { loading: () => null },
+);
+
+const ExpertDetailSheet = dynamic(
+  () =>
+    import('@/components/experts/expert-detail-sheet').then((mod) => mod.ExpertDetailSheet),
+  { loading: () => null },
+);
+
 const CATEGORIES = ['all', 'systems', 'propulsion', 'spacecraft', 'policy'] as const;
 
-type SessionData = {
-  userId: string;
-  email: string;
-  role: 'mentor' | 'mentee' | 'admin';
-  fullName: string;
-};
-
-export default function ExpertsDirectoryClient({ experts }: { experts: ListedExpert[] }) {
+export default function ExpertsDirectoryClient({
+  experts,
+  isSignedIn,
+}: {
+  experts: ListedExpert[];
+  isSignedIn: boolean;
+}) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
-  const [session, setSession] = useState<SessionData | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/auth/session', { credentials: 'same-origin' })
-      .then((res) => res.json())
-      .then((data: { session: SessionData | null }) => {
-        if (!cancelled) setSession(data.session);
-      })
-      .catch(() => {
-        if (!cancelled) setSession(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -98,12 +92,17 @@ export default function ExpertsDirectoryClient({ experts }: { experts: ListedExp
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div
+          className="flex flex-wrap gap-2 mb-8"
+          role="group"
+          aria-label="Filter experts by category"
+        >
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => handleCategoryChange(cat)}
+              aria-pressed={selectedCategory === cat}
               className={`touch-manipulation px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border rounded-md transition-all cursor-pointer ${
                 selectedCategory === cat
                   ? 'bg-primary text-white border-primary'
@@ -138,7 +137,7 @@ export default function ExpertsDirectoryClient({ experts }: { experts: ListedExp
         {selectedExpert && isDesktop ? (
           <ExpertDetailPanel
             expert={selectedExpert}
-            isSignedIn={Boolean(session)}
+            isSignedIn={isSignedIn}
             onClose={handleClose}
           />
         ) : null}
@@ -146,7 +145,7 @@ export default function ExpertsDirectoryClient({ experts }: { experts: ListedExp
         {selectedExpert && !isDesktop ? (
           <ExpertDetailSheet
             expert={selectedExpert}
-            isSignedIn={Boolean(session)}
+            isSignedIn={isSignedIn}
             onClose={handleClose}
           />
         ) : null}

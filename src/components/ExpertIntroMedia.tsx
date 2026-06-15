@@ -1,7 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { toOptimizedImageUrl } from '@/lib/public-images';
 
 type ExpertIntroMediaProps = {
   name: string;
@@ -31,6 +32,7 @@ export function ExpertIntroMedia({
   const [muted, setMuted] = useState(autoPlayMuted);
   const videoRef = useRef<HTMLVideoElement>(null);
   const showVideo = Boolean(introVideoUrl) && !videoFailed;
+  const optimizedImageUrl = useMemo(() => toOptimizedImageUrl(imageUrl), [imageUrl]);
 
   useEffect(() => {
     if (!autoPlayMuted || !showVideo || !videoRef.current) return;
@@ -63,7 +65,7 @@ export function ExpertIntroMedia({
           <video
             ref={videoRef}
             src={introVideoUrl!}
-            poster={imageUrl}
+            poster={optimizedImageUrl}
             playsInline
             muted={muted}
             autoPlay={autoPlayMuted}
@@ -118,7 +120,7 @@ export function ExpertIntroMedia({
       ) : (
         <>
           <Image
-            src={imageUrl}
+            src={optimizedImageUrl}
             alt={name}
             fill
             className="object-cover"

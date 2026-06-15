@@ -1,4 +1,6 @@
 import 'server-only';
+
+import { unstable_cache } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export type WaitlistDailyPoint = {
@@ -27,13 +29,13 @@ function computeWowPercent(last7d: number, prev7d: number): number | null {
   return Math.round(((last7d - prev7d) / prev7d) * 1000) / 10;
 }
 
-export async function getAdminWaitlistMetrics(): Promise<AdminWaitlistMetrics> {
-  const { count: total, error: totalError } = await supabaseAdmin
+async function fetchAdminWaitlistMetricsFromDb(): Promise<AdminWaitlistMetrics> {
+  const { data: rows, error } = await supabaseAdmin
     .from('early_access_signups')
-    .select('*', { count: 'exact', head: true });
+    .select('created_at, referrer');
 
-  if (totalError) {
-    throw new Error(totalError.message);
+  if (error) {
+    throw new Error(error.message);
   }
 
   const sevenDaysAgo = new Date();
@@ -41,44 +43,25 @@ export async function getAdminWaitlistMetrics(): Promise<AdminWaitlistMetrics> {
   const fourteenDaysAgo = new Date();
   fourteenDaysAgo.setUTCDate(fourteenDaysAgo.getUTCDate() - 14);
 
-  const { data: recentRows, error: recentError } = await supabaseAdmin
-    .from('early_access_signups')
-    .select('created_at, referrer')
-    .gte('created_at', fourteenDaysAgo.toISOString());
-
-  if (recentError) {
-    throw new Error(recentError.message);
-  }
-
-  const rows = recentRows ?? [];
+  const allRows = rows ?? [];
   let last7d = 0;
   let prev7d = 0;
   const dayCounts = new Map<string, number>();
   const referrerCounts = new Map<string, number>();
 
-  for (const row of rows) {
+  for (const row of allRows) {
+    const referrerKey =
+      row.referrer && row.referrer.trim() ? row.referrer.trim() : '(direct)';
+    referrerCounts.set(referrerKey, (referrerCounts.get(referrerKey) ?? 0) + 1);
+
     const created = new Date(row.created_at);
     if (created >= sevenDaysAgo) {
       last7d += 1;
       const dayKey = created.toISOString().slice(0, 10);
       dayCounts.set(dayKey, (dayCounts.get(dayKey) ?? 0) + 1);
-    } else {
+    } else if (created >= fourteenDaysAgo) {
       prev7d += 1;
     }
-  }
-
-  const { data: allReferrerRows, error: referrerError } = await supabaseAdmin
-    .from('early_access_signups')
-    .select('referrer');
-
-  if (referrerError) {
-    throw new Error(referrerError.message);
-  }
-
-  for (const row of allReferrerRows ?? []) {
-    const key =
-      row.referrer && row.referrer.trim() ? row.referrer.trim() : '(direct)';
-    referrerCounts.set(key, (referrerCounts.get(key) ?? 0) + 1);
   }
 
   const dailyTrend: WaitlistDailyPoint[] = [...dayCounts.entries()]
@@ -91,11 +74,18 @@ export async function getAdminWaitlistMetrics(): Promise<AdminWaitlistMetrics> {
     .slice(0, 10);
 
   return {
-    total: total ?? 0,
+    total: allRows.length,
     last7d,
     prev7d,
     wowPercent: computeWowPercent(last7d, prev7d),
     dailyTrend,
     topReferrers,
   };
+}
+
+/** Cached 60s — admin metrics do not need real-time precision. */
+export async function getAdminWaitlistMetrics(): Promise<AdminWaitlistMetrics> {
+  return unstable_cache(fetchAdminWaitlistMetricsFromDb, ['admin-waitlist-metrics'], {
+    revalidate: 60,
+  })();
 }

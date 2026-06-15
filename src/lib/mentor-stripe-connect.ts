@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { revalidateMentorDirectory } from '@/lib/revalidate-mentors';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { ComplianceStatus } from '@/lib/types';
@@ -101,6 +102,8 @@ export async function createMentorOnboardingLink(
           : {}),
       })
       .eq('id', mentorId);
+
+    revalidateMentorDirectory();
   }
 
   const base = appBaseUrl();
@@ -147,6 +150,8 @@ export async function syncMentorStripeAccountStatus(
       resolveStripeOnboardingMentorUpdate(mentor.compliance_status, onboardingComplete),
     )
     .eq('id', mentorId);
+
+  revalidateMentorDirectory();
 
   return { chargesEnabled, payoutsEnabled };
 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { DailyCallRoom } from '@/components/session/daily-call-room';
 import { SessionTranscriptPanel } from '@/components/session/session-transcript-panel';
 import type { BookingSessionView } from '@/lib/booking-access';
+import { getDashboardPathForRole } from '@/lib/dashboard-paths';
 import type { MentorBriefingOutput, PostSessionOutput } from '@/lib/types';
 import { formatSessionWhen } from '@/lib/format';
 import {
@@ -155,13 +156,6 @@ function SessionRecapPanel({ bookingId }: { bookingId: string }) {
   );
 }
 
-function dashboardHref(role: BookingSessionView['sessionRole']): string {
-  if (role === 'mentor') {
-    return '/dashboard/mentor';
-  }
-  return '/dashboard/mentee';
-}
-
 /** Centered gate card — w-full prevents flex-shrink from crushing text to one word per line. */
 function SessionGatePanel({
   testId,
@@ -192,7 +186,7 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
     () => MEDIA_ORIGIN_SERVER_SNAPSHOT,
   );
 
-  const exitHref = dashboardHref(booking.sessionRole);
+  const exitHref = getDashboardPathForRole(booking.sessionRole);
 
   useEffect(() => {
     if (booking.gate !== 'provisioning') {

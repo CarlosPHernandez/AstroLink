@@ -72,6 +72,6 @@ test.describe('Auth and landing smoke', () => {
     await page.goto('/');
     await expect(page.getByTestId('expert-card-chris-sembroski')).toBeVisible();
     await expect(page.getByText('Chris Sembroski')).toBeVisible();
-    await expect(page.getByText('$320/hr')).toBeVisible();
+    await expect(page.getByText('$250/hr')).toBeVisible();
   });
 });
