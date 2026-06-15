@@ -2,6 +2,19 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.3.0.2] - 2026-06-15
+
+Mobile load-time and first-paint polish on public routes.
+
+### Fixed
+- Material icons no longer flash raw ligature names (e.g. `chat_bubble`) before fonts load on landing, experts, auth, and early-access pages.
+
+### Changed
+- Inline SVG icons for common public-route symbols with font stylesheet preloaded in the document head.
+- Landing hero and expert directory load statically for faster above-fold paint; comparison section stays lazy-loaded with a skeleton.
+- Root route loading shell mirrors the landing layout while data streams in.
+- Capped Next.js image `deviceSizes` and tightened `sizes` / LCP `priority` on public expert grids to reduce mobile bandwidth.
+
 ## [0.3.0.1] - 2026-06-15
 
 Platform bug-and-polish pass across public surfaces, booking, dashboards, and admin metrics.
