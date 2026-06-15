@@ -12,16 +12,16 @@ import { z } from 'zod';
 const E164_REGEX = /^\+[1-9]\d{6,14}$/;
 
 const ProfileSchema = z.object({
-  fullName: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
+  fullName: z.string().min(2, 'Enter your full name.'),
+  email: z.string().email('Enter a valid email address.'),
   phone: z
     .string()
     .trim()
     .transform((v) => (v === '' ? null : v))
     .refine((v) => v === null || E164_REGEX.test(v), {
-      message: 'Phone must be E.164 format (e.g. +14155552671)',
+      message: 'Use international format, e.g. +14155552671.',
     }),
-  bio: z.string().max(2000, 'Bio is too long'),
+  bio: z.string().max(2000, 'Bio must be 2,000 characters or fewer.'),
   preferredLocale: z.enum(SUPPORTED_TARGET_LOCALES, {
     message: 'Select a supported recap language',
   }),

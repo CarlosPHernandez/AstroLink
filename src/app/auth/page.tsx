@@ -3,6 +3,9 @@
 import React, { Suspense, useState, useActionState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { FieldError } from '@/components/forms/field-error';
+import { FormAlert } from '@/components/forms/form-alert';
+import { fieldErrorInputClass } from '@/lib/zod-field-errors';
 import { loginAction, registerAction } from './actions';
 
 function AuthPageContent() {
@@ -84,16 +87,16 @@ function AuthPageContent() {
             </div>
           )}
 
-          {activeTab === 'login' && loginState?.message && (
-            <div className="mb-4 p-3 bg-error-container text-on-error-container text-xs rounded-lg">
-              {loginState.message}
+          {activeTab === 'login' && loginState?.message ? (
+            <div className="mb-4">
+              <FormAlert message={loginState.message} />
             </div>
-          )}
-          {activeTab === 'signup' && registerState?.message && (
-            <div className="mb-4 p-3 bg-error-container text-on-error-container text-xs rounded-lg">
-              {registerState.message}
+          ) : null}
+          {activeTab === 'signup' && registerState?.message ? (
+            <div className="mb-4">
+              <FormAlert message={registerState.message} />
             </div>
-          )}
+          ) : null}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm mb-lg animate-reveal-up delay-500">
             <button
@@ -133,17 +136,20 @@ function AuthPageContent() {
               <div>
                 <label className="block font-label-sm text-label-sm text-on-surface mb-xs" htmlFor="email">Email address</label>
                 <input
-                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+                  className={fieldErrorInputClass(
+                    !!loginState?.errors?.email,
+                    'w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow',
+                  )}
                   id="email"
                   name="email"
                   placeholder="name@company.com"
                   required
                   type="email"
                   disabled={isPending}
+                  aria-invalid={loginState?.errors?.email ? true : undefined}
+                  aria-describedby={loginState?.errors?.email ? 'login-email-error' : undefined}
                 />
-                {loginState?.errors?.email && (
-                  <p className="text-error text-[10px] mt-1">{loginState.errors.email[0]}</p>
-                )}
+                <FieldError id="login-email-error" message={loginState?.errors?.email?.[0]} />
               </div>
               <div>
                 <div className="flex justify-between items-center mb-xs">
@@ -151,17 +157,22 @@ function AuthPageContent() {
                   <a className="font-label-sm text-label-sm text-primary hover:text-on-primary-fixed-variant transition-colors" href="#">Forgot password?</a>
                 </div>
                 <input
-                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+                  className={fieldErrorInputClass(
+                    !!loginState?.errors?.password,
+                    'w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow',
+                  )}
                   id="password"
                   name="password"
                   placeholder="••••••••"
                   required
                   type="password"
                   disabled={isPending}
+                  aria-invalid={loginState?.errors?.password ? true : undefined}
+                  aria-describedby={
+                    loginState?.errors?.password ? 'login-password-error' : undefined
+                  }
                 />
-                {loginState?.errors?.password && (
-                  <p className="text-error text-[10px] mt-1">{loginState.errors.password[0]}</p>
-                )}
+                <FieldError id="login-password-error" message={loginState?.errors?.password?.[0]} />
               </div>
               <button
                 className="mt-xs w-full py-sm px-md bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:bg-on-primary-fixed-variant transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex justify-center items-center gap-xs group/btn cursor-pointer disabled:opacity-50"
@@ -216,49 +227,68 @@ function AuthPageContent() {
               <div>
                 <label className="block font-label-sm text-label-sm text-on-surface mb-xs" htmlFor="fullName">Full Identity Name</label>
                 <input
-                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+                  className={fieldErrorInputClass(
+                    !!registerState?.errors?.fullName,
+                    'w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow',
+                  )}
                   id="fullName"
                   name="fullName"
                   placeholder="e.g. Carlos Hernandez"
                   required
                   type="text"
                   disabled={isPending}
+                  aria-invalid={registerState?.errors?.fullName ? true : undefined}
+                  aria-describedby={
+                    registerState?.errors?.fullName ? 'register-fullname-error' : undefined
+                  }
                 />
-                {registerState?.errors?.fullName && (
-                  <p className="text-error text-[10px] mt-1">{registerState.errors.fullName[0]}</p>
-                )}
+                <FieldError
+                  id="register-fullname-error"
+                  message={registerState?.errors?.fullName?.[0]}
+                />
               </div>
 
               <div>
                 <label className="block font-label-sm text-label-sm text-on-surface mb-xs" htmlFor="regEmail">Official Email address</label>
                 <input
-                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+                  className={fieldErrorInputClass(
+                    !!registerState?.errors?.email,
+                    'w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow',
+                  )}
                   id="regEmail"
                   name="email"
                   placeholder="name@company.com"
                   required
                   type="email"
                   disabled={isPending}
+                  aria-invalid={registerState?.errors?.email ? true : undefined}
+                  aria-describedby={registerState?.errors?.email ? 'register-email-error' : undefined}
                 />
-                {registerState?.errors?.email && (
-                  <p className="text-error text-[10px] mt-1">{registerState.errors.email[0]}</p>
-                )}
+                <FieldError id="register-email-error" message={registerState?.errors?.email?.[0]} />
               </div>
 
               <div>
                 <label className="block font-label-sm text-label-sm text-on-surface mb-xs" htmlFor="regPassword">Access Key (Password)</label>
                 <input
-                  className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+                  className={fieldErrorInputClass(
+                    !!registerState?.errors?.password,
+                    'w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow',
+                  )}
                   id="regPassword"
                   name="password"
                   placeholder="Min 6 characters"
                   required
                   type="password"
                   disabled={isPending}
+                  aria-invalid={registerState?.errors?.password ? true : undefined}
+                  aria-describedby={
+                    registerState?.errors?.password ? 'register-password-error' : undefined
+                  }
                 />
-                {registerState?.errors?.password && (
-                  <p className="text-error text-[10px] mt-1">{registerState.errors.password[0]}</p>
-                )}
+                <FieldError
+                  id="register-password-error"
+                  message={registerState?.errors?.password?.[0]}
+                />
               </div>
 
               <button

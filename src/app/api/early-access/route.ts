@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { EarlyAccessBodySchema } from '@/lib/early-access-schema';
+import { formLevelSummary, toFieldErrors } from '@/lib/zod-field-errors';
 import {
   assertEarlyAccessRateLimit,
   getEarlyAccessClientKey,
@@ -11,7 +11,18 @@ import { supabaseAdmin } from '@/lib/supabase';
 export async function POST(request: Request) {
   try {
     assertEarlyAccessRateLimit(getEarlyAccessClientKey(request));
-    const body = EarlyAccessBodySchema.parse(await request.json());
+    const parsed = EarlyAccessBodySchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: formLevelSummary(),
+          fieldErrors: toFieldErrors(parsed.error),
+        },
+        { status: 400 },
+      );
+    }
+    const body = parsed.data;
 
     const { error } = await supabaseAdmin.from('early_access_signups').insert({
       email: body.email,
@@ -48,8 +59,7 @@ export async function POST(request: Request) {
       );
     }
     const message = error instanceof Error ? error.message : 'Signup failed';
-    const status = error instanceof z.ZodError ? 400 : 500;
-    return NextResponse.json({ success: false, error: message }, { status });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
