@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { MaterialIcon } from '@/components/ui/material-icon';
 
 export default function ExpertNotFound() {
   return (
@@ -16,7 +17,7 @@ export default function ExpertNotFound() {
         href="/experts"
         className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-on-primary transition-colors hover:bg-primary-container"
       >
-        <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+        <MaterialIcon name="arrow_back" size={18} />
         Back to directory
       </Link>
     </div>

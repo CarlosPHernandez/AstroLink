@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
+import { MaterialIcon } from '@/components/ui/material-icon';
 import { getExpertBookHref } from '@/lib/expert-book-href';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
@@ -39,7 +40,7 @@ export default function ExpertProfileClient({
               href="/experts"
               className="text-on-surface-variant font-label-md text-xs sm:text-label-md hover:text-primary transition-colors inline-flex items-center gap-1.5"
             >
-              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              <MaterialIcon name="arrow_back" size={18} />
               <span className="hidden sm:inline">Directory</span>
             </Link>
 
@@ -142,7 +143,7 @@ export default function ExpertProfileClient({
                 href={bookHref}
                 className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-[11px] font-bold uppercase tracking-wider text-on-primary transition-colors hover:bg-primary-container active:scale-[0.985]"
               >
-                <span className="material-symbols-outlined text-[20px]">videocam</span>
+                <MaterialIcon name="videocam" size={20} />
                 Book live 1:1 with {firstName}
               </Link>
 
@@ -191,9 +192,10 @@ export default function ExpertProfileClient({
                       onClick={() => setBioExpanded((v) => !v)}
                       className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold uppercase tracking-wider text-primary hover:text-primary/70 transition-colors"
                     >
-                      <span className="material-symbols-outlined text-[16px]">
-                        {bioExpanded ? 'expand_less' : 'expand_more'}
-                      </span>
+                      <MaterialIcon
+                        name={bioExpanded ? 'expand_less' : 'expand_more'}
+                        size={16}
+                      />
                       {bioExpanded ? 'Read less' : 'Read more'}
                     </button>
                   )}
@@ -235,7 +237,7 @@ export default function ExpertProfileClient({
                 href={bookHref}
                 className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-[11px] font-bold uppercase tracking-wider text-on-primary transition-colors hover:bg-primary-container active:scale-[0.985]"
               >
-                <span className="material-symbols-outlined text-[20px]">videocam</span>
+                <MaterialIcon name="videocam" size={20} />
                 Book live 1:1 with {firstName}
               </Link>
 
@@ -273,9 +275,7 @@ export default function ExpertProfileClient({
                   key={item}
                   className="inline-flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-low px-4 py-1.5 text-sm text-on-surface-variant"
                 >
-                  <span className="material-symbols-outlined text-primary/70 text-[16px]" style={{ fontVariationSettings: "'wght' 600" }}>
-                    check_circle
-                  </span>
+                  <MaterialIcon name="check_circle" className="text-primary/70" size={16} fill />
                   {item}
                 </span>
               ))}
@@ -294,7 +294,7 @@ export default function ExpertProfileClient({
             {/* Live — dominant, spans 2 cols */}
             <div className="md:col-span-2 rounded-xl border-2 border-primary bg-primary-fixed/10 p-6 flex flex-col">
               <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-primary text-[22px]">call</span>
+                <MaterialIcon name="call" className="text-primary" size={22} />
                 <span className="font-headline-md text-on-surface font-semibold">Live 1:1 Call</span>
                 <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-primary border border-primary/30 bg-primary/5 rounded px-2 py-0.5">
                   Available now
@@ -312,7 +312,7 @@ export default function ExpertProfileClient({
                   href={bookHref}
                   className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider bg-primary text-on-primary px-5 py-3 rounded-lg hover:bg-primary-container transition-colors"
                 >
-                  <span className="material-symbols-outlined text-[18px]">videocam</span>
+                  <MaterialIcon name="videocam" size={18} />
                   Book 1:1 with {firstName}
                 </Link>
               </div>
@@ -322,7 +322,7 @@ export default function ExpertProfileClient({
             <div className="flex flex-col gap-4">
               <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 flex flex-col opacity-50 flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="material-symbols-outlined text-on-surface-variant text-[18px]">videocam</span>
+                  <MaterialIcon name="videocam" className="text-on-surface-variant" size={18} />
                   <span className="text-sm font-medium text-on-surface">Video Reply</span>
                 </div>
                 <p className="text-xs text-on-surface-variant font-light flex-1">
@@ -335,7 +335,7 @@ export default function ExpertProfileClient({
 
               <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 flex flex-col opacity-50 flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="material-symbols-outlined text-on-surface-variant text-[18px]">chat_bubble</span>
+                  <MaterialIcon name="chat_bubble" className="text-on-surface-variant" size={18} />
                   <span className="text-sm font-medium text-on-surface">Text Q&A</span>
                 </div>
                 <p className="text-xs text-on-surface-variant font-light flex-1">
@@ -363,7 +363,7 @@ export default function ExpertProfileClient({
               { icon: 'lock', text: 'Private, encrypted Daily video room with per-participant tokens' },
             ].map((item, idx) => (
               <li key={idx} className="flex gap-3">
-                <span className="material-symbols-outlined text-primary mt-0.5">{item.icon}</span>
+                <MaterialIcon name={item.icon} className="text-primary mt-0.5" size={20} />
                 <span>{item.text}</span>
               </li>
             ))}
@@ -385,7 +385,7 @@ export default function ExpertProfileClient({
             href={bookHref}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-on-primary hover:bg-primary-container transition-colors"
           >
-            <span className="material-symbols-outlined text-[18px]">videocam</span>
+            <MaterialIcon name="videocam" size={18} />
             Book 1:1 with {firstName}
           </Link>
         </div>

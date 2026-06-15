@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { ListedExpert } from '@/lib/mentor-directory';
+import { MaterialIcon } from '@/components/ui/material-icon';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 
 const TEASER_COUNT = 6;
@@ -76,9 +77,9 @@ export default function ExpertDirectory({ experts }: { experts: ListedExpert[] }
                     src={toOptimizedImageUrl(expert.imageUrl)}
                     alt={expert.name}
                     fill
-                    priority={index < 3}
+                    priority={index === 0}
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 768px) 50vw, 33vw"
+                    sizes="(max-width: 768px) 45vw, 220px"
                   />
                 </div>
                 <div className="p-4 border-t border-outline-variant/50">
@@ -101,7 +102,7 @@ export default function ExpertDirectory({ experts }: { experts: ListedExpert[] }
             className="inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-on-surface hover:border-primary hover:text-primary transition-colors"
           >
             View all experts
-            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            <MaterialIcon name="arrow_forward" size={18} />
           </Link>
         </div>
       </div>

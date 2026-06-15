@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
+import { MaterialIcon } from '@/components/ui/material-icon';
 import { fieldErrorInputClass } from '@/lib/zod-field-errors';
 import { loginAction, registerAction } from './actions';
 
@@ -42,7 +43,7 @@ function AuthPageContent() {
             <div className="absolute top-[132px] left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-inverse-surface text-inverse-on-surface text-[10px] px-3 py-1.5 rounded-lg shadow-lg z-10 flex">
               <span className="typewriter-text font-mono inline-block">Welcome to the future, Voyager</span>
             </div>
-            <span className="material-symbols-outlined text-on-primary" style={{ fontSize: '28px' }}>satellite_alt</span>
+            <MaterialIcon name="satellite_alt" className="text-on-primary" size={28} />
           </Link>
           <Link
             href="/"
@@ -190,7 +191,7 @@ function AuthPageContent() {
                 ) : (
                   <>
                     Sign In
-                    <span className="material-symbols-outlined group-hover/btn:translate-x-1 transition-transform" style={{ fontSize: '18px' }}>arrow_forward</span>
+                    <MaterialIcon name="arrow_forward" className="group-hover/btn:translate-x-1 transition-transform" size={18} />
                   </>
                 )}
               </button>
@@ -307,7 +308,7 @@ function AuthPageContent() {
                 ) : (
                   <>
                     Create Account
-                    <span className="material-symbols-outlined group-hover/btn:translate-x-1 transition-transform" style={{ fontSize: '18px' }}>arrow_forward</span>
+                    <MaterialIcon name="arrow_forward" className="group-hover/btn:translate-x-1 transition-transform" size={18} />
                   </>
                 )}
               </button>

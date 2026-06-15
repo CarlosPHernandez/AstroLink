@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { MaterialIcon } from '@/components/ui/material-icon';
 import { getBioPreview, isBioLong } from '@/lib/expert-bio';
 
 type ExpertBioPreviewProps = {
@@ -48,9 +49,7 @@ export function ExpertBioPreview({ bio, variant }: ExpertBioPreviewProps) {
         className="mt-2 inline-flex shrink-0 items-center gap-1.5 self-start text-[11px] font-mono font-semibold uppercase tracking-wider text-primary transition-colors hover:text-primary/70"
         aria-expanded={expanded}
       >
-        <span className="material-symbols-outlined text-[16px]">
-          {expanded ? 'expand_less' : 'expand_more'}
-        </span>
+        <MaterialIcon name={expanded ? 'expand_less' : 'expand_more'} size={16} />
         {expanded ? 'Read less' : 'Read more'}
       </button>
     </div>

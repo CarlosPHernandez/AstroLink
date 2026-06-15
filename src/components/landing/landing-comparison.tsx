@@ -1,3 +1,5 @@
+import { MaterialIcon } from '@/components/ui/material-icon';
+
 export function LandingComparison() {
   return (
     <section id="pipeline" className="bg-background py-24 scroll-mt-20 border-t border-outline-variant/30 relative overflow-hidden">
@@ -27,14 +29,14 @@ export function LandingComparison() {
               <p className="text-[11px] text-on-surface-variant font-light mt-1">Where the knowledge originates and how it is updated.</p>
             </div>
             <div className="md:col-span-4 pr-6 mb-5 md:mb-0 text-xs text-on-surface-variant font-light flex items-start">
-              <span className="material-symbols-outlined text-zinc-450 mr-2 text-[16px] flex-shrink-0 mt-0.5">cancel</span>
+              <MaterialIcon name="cancel" className="text-zinc-450 mr-2 flex-shrink-0 mt-0.5" size={16} />
               <div>
                 <strong className="md:hidden text-zinc-400 block font-mono text-[9px] uppercase tracking-wider mb-1 font-bold">AI Language Models</strong>
                 <span>Scraped manual archives, training textbooks, and general public forums. No direct engineering experience.</span>
               </div>
             </div>
             <div className="md:col-span-4 text-xs text-on-surface font-light flex items-start">
-              <span className="material-symbols-outlined text-emerald-600 mr-2 text-[16px] flex-shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              <MaterialIcon name="check_circle" className="text-emerald-600 mr-2 flex-shrink-0 mt-0.5" size={16} fill />
               <div>
                 <strong className="md:hidden text-primary block font-mono text-[9px] uppercase tracking-wider mb-1 font-bold">AstroLink Mentors</strong>
                 <span>Active flight directors, ISS commanders, and JPL systems engineers with current clearance and credentials.</span>
@@ -48,14 +50,14 @@ export function LandingComparison() {
               <p className="text-[11px] text-on-surface-variant font-light mt-1">How responses are tailored to complex aerospace problems.</p>
             </div>
             <div className="md:col-span-4 pr-6 mb-5 md:mb-0 text-xs text-on-surface-variant font-light flex items-start">
-              <span className="material-symbols-outlined text-zinc-450 mr-2 text-[16px] flex-shrink-0 mt-0.5">cancel</span>
+              <MaterialIcon name="cancel" className="text-zinc-450 mr-2 flex-shrink-0 mt-0.5" size={16} />
               <div>
                 <strong className="md:hidden text-zinc-400 block font-mono text-[9px] uppercase tracking-wider mb-1 font-bold">AI Language Models</strong>
                 <span>Statistical autocompletion. Generates generic, standardized rules, ignoring operational limits and budget rules.</span>
               </div>
             </div>
             <div className="md:col-span-4 text-xs text-on-surface font-light flex items-start">
-              <span className="material-symbols-outlined text-emerald-600 mr-2 text-[16px] flex-shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              <MaterialIcon name="check_circle" className="text-emerald-600 mr-2 flex-shrink-0 mt-0.5" size={16} fill />
               <div>
                 <strong className="md:hidden text-primary block font-mono text-[9px] uppercase tracking-wider mb-1 font-bold">AstroLink Mentors</strong>
                 <span>Highly customized code reviews, hardware diagnostic checks, and policy guidance tailored to your vehicle payload.</span>
@@ -69,14 +71,14 @@ export function LandingComparison() {
               <p className="text-[11px] text-on-surface-variant font-light mt-1">The liability and reliability of critical data outputs.</p>
             </div>
             <div className="md:col-span-4 pr-6 mb-5 md:mb-0 text-xs text-on-surface-variant font-light flex items-start">
-              <span className="material-symbols-outlined text-zinc-450 mr-2 text-[16px] flex-shrink-0 mt-0.5">cancel</span>
+              <MaterialIcon name="cancel" className="text-zinc-450 mr-2 flex-shrink-0 mt-0.5" size={16} />
               <div>
                 <strong className="md:hidden text-zinc-400 block font-mono text-[9px] uppercase tracking-wider mb-1 font-bold">AI Language Models</strong>
                 <span>Strict liability disclaimers. Hallucinations are common, and errors can result in mission-ending launch failures.</span>
               </div>
             </div>
             <div className="md:col-span-4 text-xs text-on-surface font-light flex items-start">
-              <span className="material-symbols-outlined text-emerald-600 mr-2 text-[16px] flex-shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              <MaterialIcon name="check_circle" className="text-emerald-600 mr-2 flex-shrink-0 mt-0.5" size={16} fill />
               <div>
                 <strong className="md:hidden text-primary block font-mono text-[9px] uppercase tracking-wider mb-1 font-bold">AstroLink Mentors</strong>
                 <span>1-on-1 direct audio/video calls where senior engineers back their operational recommendations with verified careers.</span>

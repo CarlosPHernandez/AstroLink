@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { MaterialIcon } from '@/components/ui/material-icon';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 
 type ExpertIntroMediaProps = {
@@ -86,9 +87,7 @@ export function ExpertIntroMedia({
               className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-black/50 text-white backdrop-blur-md transition-colors hover:bg-black/70"
               aria-label={muted ? 'Unmute introduction video' : 'Mute introduction video'}
             >
-              <span className="material-symbols-outlined text-[18px]">
-                {muted ? 'volume_off' : 'volume_up'}
-              </span>
+              <MaterialIcon name={muted ? 'volume_off' : 'volume_up'} size={18} />
             </button>
           ) : (
             <button
@@ -101,16 +100,11 @@ export function ExpertIntroMedia({
               {!playing && (
                 <>
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 shadow-lg group-hover:scale-105 transition-transform">
-                    <span
-                      className="material-symbols-outlined text-[34px] text-black/80 ml-1"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      play_arrow
-                    </span>
+                    <MaterialIcon name="play_arrow" className="text-black/80 ml-1" size={34} fill />
                   </div>
                   <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-lg border border-white/20 bg-black/50 px-4 py-2 backdrop-blur-md">
                     <span className="font-mono text-[10px] uppercase tracking-widest text-white/90">Watch intro</span>
-                    <span className="material-symbols-outlined text-white/70 text-[16px]">videocam</span>
+                    <MaterialIcon name="videocam" className="text-white/70" size={16} />
                   </div>
                 </>
               )}
@@ -124,7 +118,7 @@ export function ExpertIntroMedia({
             alt={name}
             fill
             className="object-cover"
-            sizes="(max-width: 768px) 100vw, 720px"
+            sizes="(max-width: 768px) 100vw, 480px"
             priority={priority}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10" />
@@ -132,7 +126,7 @@ export function ExpertIntroMedia({
             <span className="font-mono text-[10px] uppercase tracking-widest text-white/90">
               Intro portrait
             </span>
-            <span className="material-symbols-outlined text-white/80 text-[20px]">person</span>
+            <MaterialIcon name="person" className="text-white/80" size={20} />
           </div>
         </>
       )}

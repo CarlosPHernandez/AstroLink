@@ -1,6 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
-import { DeferredMaterialSymbols } from "@/components/landing/deferred-material-symbols";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,6 +18,9 @@ const inter = Inter({
   display: "swap",
 });
 
+const MATERIAL_SYMBOLS_HREF =
+  "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap";
+
 export const metadata: Metadata = {
   title: {
     default: "AstroLink",
@@ -26,6 +28,11 @@ export const metadata: Metadata = {
   },
   description:
     "Book verified aerospace experts for live 1:1 video sessions — astronauts, flight controllers, and operators.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#faf9fe",
+  colorScheme: "light",
 };
 
 export default function RootLayout({
@@ -38,8 +45,16 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link rel="stylesheet" href={MATERIAL_SYMBOLS_HREF} />
+      </head>
       <body className="min-h-full flex flex-col">
-        <DeferredMaterialSymbols />
         {children}
       </body>
     </html>

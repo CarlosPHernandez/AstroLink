@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { MaterialIcon } from '@/components/ui/material-icon';
 
 const HERO_MODALITIES = ['text', 'video', 'call'] as const;
 
@@ -69,7 +70,7 @@ export default function LandingHero() {
                   <div className="flex flex-col h-full animate-fade-in justify-between">
                     <div>
                       <div className="flex items-center gap-sm mb-lg">
-                        <span className="material-symbols-outlined text-primary text-[28px] font-light">chat_bubble</span>
+                        <MaterialIcon name="chat_bubble" className="text-primary" size={28} />
                         <span className="font-headline-md text-headline-md font-medium tracking-tight">Text a Question</span>
                       </div>
                       
@@ -82,7 +83,7 @@ export default function LandingHero() {
                         <div className="flex items-start gap-sm justify-end">
                           <div className="bg-primary-container text-white p-md rounded-2xl rounded-br-sm max-w-[85%] self-end">
                             <div className="flex items-center gap-sm">
-                              <span className="material-symbols-outlined text-white cursor-pointer" style={{ fontVariationSettings: "'FILL' 1" }}>play_circle</span>
+                              <MaterialIcon name="play_circle" className="text-white cursor-pointer" size={24} fill />
                               <div className="h-1 w-24 bg-white/30 rounded-full relative overflow-hidden">
                                 <div className="absolute top-0 left-0 h-full w-2/3 bg-white"></div>
                               </div>
@@ -108,7 +109,7 @@ export default function LandingHero() {
                   <div className="flex flex-col h-full animate-fade-in justify-between">
                     <div>
                       <div className="flex items-center gap-sm mb-lg">
-                        <span className="material-symbols-outlined text-primary text-[28px] font-light">videocam</span>
+                        <MaterialIcon name="videocam" className="text-primary" size={28} />
                         <span className="font-headline-md text-headline-md font-medium tracking-tight">Request a Video</span>
                       </div>
                       
@@ -119,17 +120,17 @@ export default function LandingHero() {
                           alt="Chris Sembroski"
                           fill
                           className="object-cover"
-                          sizes="360px"
+                          sizes="(max-width: 480px) 90vw, 360px"
                         />
                         <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                           <div className="w-12 h-12 rounded-full bg-white/95 flex items-center justify-center shadow-lg transition-transform group-hover:scale-105">
-                            <span className="material-symbols-outlined text-primary text-[28px]">play_arrow</span>
+                            <MaterialIcon name="play_arrow" className="text-primary" size={28} />
                           </div>
                         </div>
                         
                         <div className="absolute bottom-lg left-lg right-lg bg-surface-container-lowest/90 backdrop-blur-xl px-lg py-md rounded-xl flex items-center justify-between border border-surface-variant/50">
                           <span className="font-label-md text-label-md text-on-surface font-medium">Video Response Ready</span>
-                          <span className="material-symbols-outlined text-primary">play_arrow</span>
+                          <MaterialIcon name="play_arrow" className="text-primary" size={24} />
                         </div>
                       </div>
                     </div>
@@ -146,7 +147,7 @@ export default function LandingHero() {
                   <div className="flex flex-col h-full animate-fade-in justify-between">
                     <div>
                       <div className="flex items-center gap-sm mb-lg">
-                        <span className="material-symbols-outlined text-primary text-[28px] font-light">call</span>
+                        <MaterialIcon name="call" className="text-primary" size={28} />
                         <span className="font-headline-md text-headline-md font-medium tracking-tight">Live 1:1 Calls</span>
                       </div>
                       
