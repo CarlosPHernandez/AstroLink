@@ -2,6 +2,29 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.3.0.0] - 2026-06-13
+
+### Added
+- Real Stripe payments (immediate-capture PaymentIntents on the platform-only path). Dedicated AstroLink sandbox for dev/preview + production guidance using a Restricted API Key (RAK) and live webhook on the same Helios Nexus account.
+- Variable-duration live sessions via a slider in the booking summary card (15 min minimum, up to 2 hours). Price is now prorated in real time from the mentor's hourly rate (`live_session_price_cents` treated as hourly). Duration is stored on the booking.
+- `POST /api/bookings/[id]/cancel` with policy-based refunds (`src/lib/refunds.ts`).
+- Booking and cancel rate limiting (sliding-window, per-user, configurable via `BOOKING_*` env vars).
+- Hardened Stripe webhook: `payment_intent.payment_failed`, `charge.refunded`, `charge.dispute.created`, plus defensive `metadata.app = 'astrolink'` filtering for the shared account.
+
+### Changed
+- Removed `STRIPE_BOOKING_TEST_MODE` and all manual-capture / escrow paths. `SKIP_STRIPE_PAYMENTS` remains only for E2E and extreme local AI testing (hard-disabled in production).
+- `pending_payment` bookings are now treated as "upcoming" in dashboards so they appear immediately after the user pays. Auto-refresh + friendly labels ("Awaiting confirmation") were added so the transition to `confirmed` + room provisioning is visible without manual reloads.
+- Mentor pre-session briefing (APX-02) is now always included with every live 1:1 session (no separate optional add-on).
+
+### Fixed
+- Join room button now reliably appears once the webhook-driven fulfillment completes (status → `confirmed` + `daily_room_url` provisioned). The previous race (client success but DB still `pending_payment`) is mitigated by polling on the just-booked flow and clearer UI states.
+- Production checkout no longer requires mentor Connect (deferred); platform collects 100% at launch with 80/20 bookkeeping recorded for future payouts.
+- Several edge cases around close-to-call bookings, manual Supabase deletes, and webhook idempotency.
+
+### Documentation
+- New `docs/how-to/stripe-production-cutover.md` with exact steps for moving from the AstroLink sandbox (test keys + listen or sandbox webhook) to production (RAK + live webhook on the same account).
+- Updated `.env.example`, `AGENTS.md`, and related references with clear sandbox vs. production guidance and warnings never to mix live keys into preview/local.
+
 ## [0.2.0.1] - 2026-06-12
 
 ### Fixed
