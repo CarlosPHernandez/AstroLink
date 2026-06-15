@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { getMentorBySlug } from '@/lib/mentor-directory';
-import ExpertProfileClient from './expert-profile-client';
+import { ExpertProfileSkeleton } from '@/components/loading/route-loading';
 import ExpertProfileShell from './expert-profile-shell';
 
 type PageProps = {
@@ -39,7 +39,7 @@ export default async function ExpertProfilePage({ params }: PageProps) {
   }
 
   return (
-    <Suspense fallback={<ExpertProfileClient expert={expert} session={null} />}>
+    <Suspense fallback={<ExpertProfileSkeleton />}>
       <ExpertProfileShell expert={expert} />
     </Suspense>
   );

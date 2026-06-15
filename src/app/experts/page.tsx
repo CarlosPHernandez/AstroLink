@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { listPublicMentors } from '@/lib/mentor-directory';
-import ExpertsDirectoryClient from './experts-directory-client';
+import ExpertsDirectoryShell from './experts-directory-shell';
 
 export const revalidate = 300;
 
@@ -17,5 +17,5 @@ export const metadata: Metadata = {
 
 export default async function ExpertsDirectoryPage() {
   const experts = await listPublicMentors();
-  return <ExpertsDirectoryClient experts={experts} />;
+  return <ExpertsDirectoryShell experts={experts} />;
 }

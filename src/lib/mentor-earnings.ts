@@ -74,21 +74,6 @@ export async function listMentorEarnings(mentorId: string): Promise<{
   summary: MentorEarningsSummary;
   rows: MentorEarningRow[];
 }> {
-  const { data: mentorBookings, error: bookingsError } = await supabaseAdmin
-    .from('bookings')
-    .select('id')
-    .eq('mentor_id', mentorId);
-
-  if (bookingsError) {
-    console.error('listMentorEarnings bookings:', bookingsError.message);
-    return { summary: summarizeMentorEarnings([]), rows: [] };
-  }
-
-  const bookingIds = (mentorBookings ?? []).map((row) => row.id);
-  if (bookingIds.length === 0) {
-    return { summary: summarizeMentorEarnings([]), rows: [] };
-  }
-
   const { data, error } = await supabaseAdmin
     .from('transactions')
     .select(
@@ -100,14 +85,15 @@ export async function listMentorEarnings(mentorId: string): Promise<{
       mentor_payout_cents,
       status,
       created_at,
-      bookings (
+      bookings!inner (
         scheduled_at,
         status,
+        mentor_id,
         users ( full_name )
       )
     `,
     )
-    .in('booking_id', bookingIds)
+    .eq('bookings.mentor_id', mentorId)
     .order('created_at', { ascending: false });
 
   if (error || !data) {

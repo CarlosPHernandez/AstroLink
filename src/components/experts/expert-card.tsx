@@ -27,6 +27,7 @@ export function ExpertCard({
     <button
       type="button"
       data-testid={`expert-card-${expert.slug}`}
+      aria-pressed={isSelected}
       onClick={onSelect}
       onMouseEnter={() => onHover(true)}
       onMouseLeave={() => onHover(false)}
