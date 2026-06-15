@@ -5,7 +5,7 @@ export const EarlyAccessBodySchema = z.object({
     .string()
     .trim()
     .toLowerCase()
-    .email({ message: 'Enter a valid email address' }),
+    .email({ message: 'Enter a valid email address.' }),
   referrer: z.string().trim().max(500).optional(),
 });
 

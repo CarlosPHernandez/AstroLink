@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { BookBodySchema } from '@/lib/book-request-schema';
+import { formLevelSummary, toFieldErrors } from '@/lib/zod-field-errors';
 import {
   assertBookingRateLimit,
   getBookingClientKey,
@@ -34,7 +34,18 @@ export async function POST(request: Request) {
       throw rateErr;
     }
 
-    const body = BookBodySchema.parse(await request.json());
+    const parsed = BookBodySchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: formLevelSummary(),
+          fieldErrors: toFieldErrors(parsed.error),
+        },
+        { status: 400 },
+      );
+    }
+    const body = parsed.data;
 
     const moderation = await screenBookingIntake({
       goals: body.goals,
@@ -80,9 +91,8 @@ export async function POST(request: Request) {
         },
       );
     }
-    const message = error instanceof Error ? error.message : 'Booking failed';
-    const status = error instanceof z.ZodError ? 400 : 500;
-    return NextResponse.json({ success: false, error: message }, { status });
+    const message = error instanceof Error ? error.message : "We couldn't complete your booking. Try again.";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 

@@ -8,7 +8,10 @@ import {
   type SettingsActionState,
 } from '@/app/dashboard/mentee/settings/actions';
 import { SUPPORTED_TARGET_LOCALES } from '@/lib/transcript-translation/types';
+import { FieldError } from '@/components/forms/field-error';
+import { FormAlert } from '@/components/forms/form-alert';
 import type { MenteeProfile } from '@/lib/user-profile';
+import { fieldErrorInputClass } from '@/lib/zod-field-errors';
 
 const LOCALE_LABELS: Record<(typeof SUPPORTED_TARGET_LOCALES)[number], string> = {
   en: 'English',
@@ -126,9 +129,9 @@ export default function MenteeSettingsClient({
               </p>
             ) : null}
             {state?.message && !state.success ? (
-              <p className="mb-4 text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-                {state.message}
-              </p>
+              <div className="mb-4">
+                <FormAlert message={state.message} />
+              </div>
             ) : null}
 
             <form action={formAction} className="space-y-5" data-testid="settings-profile-form">
@@ -144,11 +147,14 @@ export default function MenteeSettingsClient({
                   name="fullName"
                   required
                   defaultValue={profile.fullName}
-                  className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant focus:border-primary rounded-md text-sm text-on-surface focus:outline-none"
+                  className={fieldErrorInputClass(
+                    !!state?.errors?.fullName,
+                    'w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant focus:border-primary rounded-md text-sm text-on-surface focus:outline-none',
+                  )}
+                  aria-invalid={state?.errors?.fullName ? true : undefined}
+                  aria-describedby={state?.errors?.fullName ? 'settings-fullname-error' : undefined}
                 />
-                {state?.errors?.fullName ? (
-                  <p className="mt-1 text-[11px] text-red-600">{state.errors.fullName[0]}</p>
-                ) : null}
+                <FieldError id="settings-fullname-error" message={state?.errors?.fullName?.[0]} />
               </div>
 
               <div>
@@ -164,11 +170,14 @@ export default function MenteeSettingsClient({
                   type="email"
                   required
                   defaultValue={profile.email}
-                  className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant focus:border-primary rounded-md text-sm text-on-surface focus:outline-none"
+                  className={fieldErrorInputClass(
+                    !!state?.errors?.email,
+                    'w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant focus:border-primary rounded-md text-sm text-on-surface focus:outline-none',
+                  )}
+                  aria-invalid={state?.errors?.email ? true : undefined}
+                  aria-describedby={state?.errors?.email ? 'settings-email-error' : undefined}
                 />
-                {state?.errors?.email ? (
-                  <p className="mt-1 text-[11px] text-red-600">{state.errors.email[0]}</p>
-                ) : null}
+                <FieldError id="settings-email-error" message={state?.errors?.email?.[0]} />
                 <p className="mt-1 text-[10px] text-on-surface-variant font-light">
                   Email updates apply to your account immediately. Verification is not required in
                   this preview build.
@@ -188,11 +197,14 @@ export default function MenteeSettingsClient({
                   type="tel"
                   placeholder="+14155552671"
                   defaultValue={profile.phone ?? ''}
-                  className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant focus:border-primary rounded-md text-sm text-on-surface focus:outline-none"
+                  className={fieldErrorInputClass(
+                    !!state?.errors?.phone,
+                    'w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant focus:border-primary rounded-md text-sm text-on-surface focus:outline-none',
+                  )}
+                  aria-invalid={state?.errors?.phone ? true : undefined}
+                  aria-describedby={state?.errors?.phone ? 'settings-phone-error' : undefined}
                 />
-                {state?.errors?.phone ? (
-                  <p className="mt-1 text-[11px] text-red-600">{state.errors.phone[0]}</p>
-                ) : null}
+                <FieldError id="settings-phone-error" message={state?.errors?.phone?.[0]} />
               </div>
 
               <div>
@@ -215,9 +227,10 @@ export default function MenteeSettingsClient({
                     </option>
                   ))}
                 </select>
-                {state?.errors?.preferredLocale ? (
-                  <p className="mt-1 text-[11px] text-red-600">{state.errors.preferredLocale[0]}</p>
-                ) : null}
+                <FieldError
+                  id="settings-locale-error"
+                  message={state?.errors?.preferredLocale?.[0]}
+                />
                 <p className="mt-1 text-[10px] text-on-surface-variant font-light">
                   Applies to future session recaps. Past sessions are not re-translated.
                 </p>
@@ -238,9 +251,7 @@ export default function MenteeSettingsClient({
                   placeholder="A short note experts can use to understand your background."
                   className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant focus:border-primary rounded-md text-sm text-on-surface focus:outline-none resize-none leading-relaxed"
                 />
-                {state?.errors?.bio ? (
-                  <p className="mt-1 text-[11px] text-red-600">{state.errors.bio[0]}</p>
-                ) : null}
+                <FieldError id="settings-bio-error" message={state?.errors?.bio?.[0]} />
               </div>
 
               <button
@@ -279,9 +290,7 @@ export default function MenteeSettingsClient({
                     No saved card yet. Open the portal to add one before your next booking.
                   </p>
                 )}
-                {portalError ? (
-                  <p className="text-xs text-red-600">{portalError}</p>
-                ) : null}
+                <FormAlert message={portalError} />
                 <button
                   type="button"
                   onClick={() => openBillingPortal()}

@@ -2,6 +2,9 @@
 
 import React, { useState, useActionState } from 'react';
 import { onboardMentorAction } from '@/app/auth/actions';
+import { FieldError } from '@/components/forms/field-error';
+import { FormAlert } from '@/components/forms/form-alert';
+import { fieldErrorInputClass } from '@/lib/zod-field-errors';
 
 interface SessionData {
   userId: string;
@@ -37,11 +40,11 @@ export default function OnboardClient({ session }: { session: SessionData }) {
         <div className="bg-surface-container-lowest border border-outline-variant p-5 sm:p-8 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.015)] animate-reveal-up delay-300">
           
           {/* General Message */}
-          {state?.message && (
-            <div className="mb-6 p-4 bg-error-container text-on-error-container text-xs rounded-lg animate-fade-in font-medium">
-              {state.message}
+          {state?.message ? (
+            <div className="mb-6 animate-fade-in">
+              <FormAlert message={state.message} />
             </div>
-          )}
+          ) : null}
 
           <form action={formAction} className="space-y-5">
             {/* Identity Group (Pre-populated, read-only to show they are tied to session) */}
@@ -71,16 +74,19 @@ export default function OnboardClient({ session }: { session: SessionData }) {
             <div>
               <label className="block font-label-sm text-label-sm text-on-surface mb-1.5" htmlFor="employer">Employer / Institution</label>
               <input
-                className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+                className={fieldErrorInputClass(
+                  !!state?.errors?.employer,
+                  'w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow',
+                )}
                 id="employer"
                 name="employer"
                 required
                 placeholder="e.g. NASA JSC, SpaceX, Lockheed Martin, MIT"
                 disabled={isPending}
+                aria-invalid={state?.errors?.employer ? true : undefined}
+                aria-describedby={state?.errors?.employer ? 'onboard-employer-error' : undefined}
               />
-              {state?.errors?.employer && (
-                <p className="text-error text-[10px] mt-1">{state.errors.employer[0]}</p>
-              )}
+              <FieldError id="onboard-employer-error" message={state?.errors?.employer?.[0]} />
             </div>
 
             {/* Civil Servant Status Box */}
@@ -119,9 +125,7 @@ export default function OnboardClient({ session }: { session: SessionData }) {
                   disabled={isPending}
                   className="w-full text-xs text-on-surface-variant file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-outline-variant file:border file:text-[9px] file:font-bold file:uppercase file:bg-white file:text-on-surface hover:file:bg-surface-container-low file:cursor-pointer transition-colors"
                 />
-                {state?.errors?.file && (
-                  <p className="text-error text-[10px] mt-1 font-medium">{state.errors.file[0]}</p>
-                )}
+                <FieldError id="onboard-file-error" message={state?.errors?.file?.[0]} />
               </div>
             )}
 
@@ -129,33 +133,39 @@ export default function OnboardClient({ session }: { session: SessionData }) {
             <div>
               <label className="block font-label-sm text-label-sm text-on-surface mb-1.5" htmlFor="expertise">Expertise Fields (comma-separated)</label>
               <input
-                className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow"
+                className={fieldErrorInputClass(
+                  !!state?.errors?.expertise,
+                  'w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow',
+                )}
                 id="expertise"
                 name="expertise"
                 required
                 placeholder="e.g. Orbital Operations, EVA Protocols, Propulsion Systems"
                 disabled={isPending}
+                aria-invalid={state?.errors?.expertise ? true : undefined}
+                aria-describedby={state?.errors?.expertise ? 'onboard-expertise-error' : undefined}
               />
-              {state?.errors?.expertise && (
-                <p className="text-error text-[10px] mt-1">{state.errors.expertise[0]}</p>
-              )}
+              <FieldError id="onboard-expertise-error" message={state?.errors?.expertise?.[0]} />
             </div>
 
             {/* Biography */}
             <div>
               <label className="block font-label-sm text-label-sm text-on-surface mb-1.5" htmlFor="bio">Professional Biography</label>
               <textarea
-                className="w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow resize-none leading-relaxed font-light"
+                className={fieldErrorInputClass(
+                  !!state?.errors?.bio,
+                  'w-full py-sm px-md font-body-md text-body-md bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow resize-none leading-relaxed font-light',
+                )}
                 id="bio"
                 name="bio"
                 required
                 rows={4}
                 placeholder="Describe your background and mission control/space systems pedigree. Our audit loops run bio-risk analysis checks on civil servant profiles."
                 disabled={isPending}
+                aria-invalid={state?.errors?.bio ? true : undefined}
+                aria-describedby={state?.errors?.bio ? 'onboard-bio-error' : undefined}
               />
-              {state?.errors?.bio && (
-                <p className="text-error text-[10px] mt-1">{state.errors.bio[0]}</p>
-              )}
+              <FieldError id="onboard-bio-error" message={state?.errors?.bio?.[0]} />
             </div>
 
             {/* Submit Button */}

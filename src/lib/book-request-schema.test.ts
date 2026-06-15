@@ -16,13 +16,30 @@ describe('BookBodySchema', () => {
     expect(BookBodySchema.parse(validBody)).toEqual(validBody);
   });
 
-  it('rejects goals shorter than 10 characters', () => {
-    expect(() =>
-      BookBodySchema.parse({
-        ...validBody,
-        goals: 'too short',
-      }),
-    ).toThrow();
+  it('rejects goals shorter than 10 characters with a human message', () => {
+    const result = BookBodySchema.safeParse({
+      ...validBody,
+      goals: 'too short',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.goals?.[0]).toBe(
+        'Add at least 10 characters so your expert can prepare.',
+      );
+    }
+  });
+
+  it('rejects background shorter than 10 characters with a human message', () => {
+    const result = BookBodySchema.safeParse({
+      ...validBody,
+      background: 'short',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.background?.[0]).toBe(
+        'Add at least 10 characters about your background.',
+      );
+    }
   });
 
   it('rejects invalid mentor UUID', () => {

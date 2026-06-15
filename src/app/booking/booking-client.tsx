@@ -11,7 +11,17 @@ import {
   PRE_CALL_BRIEF_ADDON_CENTS,
   computeBookingTotalCents,
 } from '@/lib/booking-pricing';
+import { FieldError } from '@/components/forms/field-error';
+import { FormAlert } from '@/components/forms/form-alert';
+import { BookBodySchema } from '@/lib/book-request-schema';
 import type { SessionData } from '@/lib/session';
+import {
+  type FieldErrors,
+  fieldErrorInputClass,
+  firstFieldError,
+  formLevelSummary,
+  toFieldErrors,
+} from '@/lib/zod-field-errors';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
 
@@ -321,12 +331,7 @@ function PaymentStep({
         <PaymentElement options={{ layout: 'tabs' }} />
       </div>
 
-      {error ? (
-        <p className="text-error text-label-md flex items-center gap-2" role="alert">
-          <span className="material-symbols-outlined text-[18px]">error</span>
-          {error}
-        </p>
-      ) : null}
+      <FormAlert message={error} />
 
       <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
         <button
@@ -362,6 +367,7 @@ export default function BookingClient({
   const [loading, setLoading] = useState(false);
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [form, setForm] = useState<BookingFormState>({
     serviceType: 'session_1on1',
     goals: '',
@@ -384,33 +390,57 @@ export default function BookingClient({
 
   const submitBooking = async () => {
     if (!mentor && form.serviceType === 'session_1on1') {
+      setFieldErrors({});
       setError('Choose an expert from the directory before booking a live session.');
+      return;
+    }
+
+    const payload = {
+      mentorId: mentor?.id,
+      serviceType: form.serviceType,
+      includePreCallBrief: false,
+      scheduledAt: new Date(form.scheduledAt).toISOString(),
+      goals: form.goals,
+      background: form.background,
+      durationMinutes: form.durationMinutes,
+    };
+
+    const parsed = BookBodySchema.safeParse(payload);
+    if (!parsed.success) {
+      setFieldErrors(toFieldErrors(parsed.error));
+      setError(formLevelSummary());
       return;
     }
 
     setLoading(true);
     setError(null);
+    setFieldErrors({});
 
     try {
       const res = await fetch('/api/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mentorId: mentor?.id,
-          serviceType: form.serviceType,
-          // Briefing is always included for live sessions; the optional add-on has been removed.
-          includePreCallBrief: false,
-          scheduledAt: new Date(form.scheduledAt).toISOString(),
-          goals: form.goals,
-          background: form.background,
-          // Variable duration from summary slider (15min min). Backend prorates using mentor hourly rate.
-          durationMinutes: form.durationMinutes,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const json = await res.json();
+      const json = (await res.json()) as {
+        success?: boolean;
+        error?: string;
+        fieldErrors?: FieldErrors;
+        data?: CheckoutState & { skipPayment?: boolean };
+      };
+
       if (!res.ok || !json.success) {
-        throw new Error(json.error ?? 'Booking failed');
+        if (json.fieldErrors) {
+          setFieldErrors(json.fieldErrors);
+          setError(json.error ?? formLevelSummary());
+          return;
+        }
+        throw new Error(json.error ?? "We couldn't complete your booking. Try again.");
+      }
+
+      if (!json.data) {
+        throw new Error("We couldn't complete your booking. Try again.");
       }
 
       if (json.data.skipPayment) {
@@ -426,7 +456,7 @@ export default function BookingClient({
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Booking failed');
+      setError(err instanceof Error ? err.message : "We couldn't complete your booking. Try again.");
     } finally {
       setLoading(false);
     }
@@ -574,9 +604,26 @@ export default function BookingClient({
                           required
                           rows={5}
                           placeholder="e.g. Review our comms architecture for a lunar relay mission…"
-                          className={`${fieldClass} resize-none`}
+                          className={`${fieldErrorInputClass(!!firstFieldError(fieldErrors, 'goals'), fieldClass)} resize-none`}
                           value={form.goals}
-                          onChange={(e) => setForm({ ...form, goals: e.target.value })}
+                          aria-invalid={firstFieldError(fieldErrors, 'goals') ? true : undefined}
+                          aria-describedby={
+                            firstFieldError(fieldErrors, 'goals') ? 'booking-goals-error' : undefined
+                          }
+                          onChange={(e) => {
+                            setForm({ ...form, goals: e.target.value });
+                            if (fieldErrors.goals) {
+                              setFieldErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.goals;
+                                return next;
+                              });
+                            }
+                          }}
+                        />
+                        <FieldError
+                          id="booking-goals-error"
+                          message={firstFieldError(fieldErrors, 'goals')}
                         />
                       </div>
                       <div>
@@ -592,20 +639,34 @@ export default function BookingClient({
                           required
                           rows={5}
                           placeholder="Role, organization, and what you have already tried…"
-                          className={`${fieldClass} resize-none`}
+                          className={`${fieldErrorInputClass(!!firstFieldError(fieldErrors, 'background'), fieldClass)} resize-none`}
                           value={form.background}
-                          onChange={(e) => setForm({ ...form, background: e.target.value })}
+                          aria-invalid={firstFieldError(fieldErrors, 'background') ? true : undefined}
+                          aria-describedby={
+                            firstFieldError(fieldErrors, 'background')
+                              ? 'booking-background-error'
+                              : undefined
+                          }
+                          onChange={(e) => {
+                            setForm({ ...form, background: e.target.value });
+                            if (fieldErrors.background) {
+                              setFieldErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.background;
+                                return next;
+                              });
+                            }
+                          }}
+                        />
+                        <FieldError
+                          id="booking-background-error"
+                          message={firstFieldError(fieldErrors, 'background')}
                         />
                       </div>
                     </div>
                   </section>
 
-                  {error ? (
-                    <p className="text-error text-label-md flex items-center gap-2" role="alert">
-                      <span className="material-symbols-outlined text-[18px]">error</span>
-                      {error}
-                    </p>
-                  ) : null}
+                  <FormAlert message={error} />
 
                   <div className="pt-6 border-t border-outline-variant/50 flex flex-col items-start gap-2">
                     <button

@@ -3,7 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { FieldError } from '@/components/forms/field-error';
+import { FormAlert } from '@/components/forms/form-alert';
 import { parseEarlyAccessReferrer } from '@/lib/early-access-referrer';
+import { type FieldErrors, fieldErrorInputClass, firstFieldError } from '@/lib/zod-field-errors';
 
 const CHRIS = {
   name: 'Chris Sembroski',
@@ -72,7 +75,7 @@ export default function EarlyAccessClient({ copyrightYear }: { copyrightYear: nu
 
     const trimmed = email.trim();
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setFieldError('Enter a valid email address');
+      setFieldError('Enter a valid email address.');
       return;
     }
 
@@ -97,11 +100,18 @@ export default function EarlyAccessClient({ copyrightYear }: { copyrightYear: nu
         success?: boolean;
         message?: string;
         error?: string;
+        fieldErrors?: FieldErrors;
       };
 
       if (!response.ok || !data.success) {
         setStatus('error');
-        setMessage(data.error ?? 'Something went wrong. Please try again.');
+        const emailError = firstFieldError(data.fieldErrors, 'email');
+        if (emailError) {
+          setFieldError(emailError);
+          setMessage(data.error ?? null);
+        } else {
+          setMessage(data.error ?? 'Something went wrong. Try again.');
+        }
         return;
       }
 
@@ -326,22 +336,16 @@ export default function EarlyAccessClient({ copyrightYear }: { copyrightYear: nu
                             setFieldError(null);
                           }}
                           disabled={status === 'loading'}
-                          className={fieldClass}
+                          className={fieldErrorInputClass(!!fieldError, fieldClass)}
                           aria-invalid={fieldError ? true : undefined}
                           aria-describedby={fieldError ? 'early-access-email-error' : undefined}
                         />
-                        {fieldError && (
-                          <p id="early-access-email-error" className="mt-xs text-label-sm text-error">
-                            {fieldError}
-                          </p>
-                        )}
+                        <FieldError id="early-access-email-error" message={fieldError} />
                       </div>
 
-                      {status === 'error' && message && (
-                        <p className="text-label-sm text-error" role="alert">
-                          {message}
-                        </p>
-                      )}
+                      {status === 'error' && message && !fieldError ? (
+                        <FormAlert message={message} />
+                      ) : null}
 
                       <button
                         type="submit"

@@ -12,21 +12,21 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 const LoginSchema = z.object({
-  email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+  email: z.string().email({ message: 'Enter a valid email address.' }),
+  password: z.string().min(6, { message: 'Use at least 6 characters.' }),
 });
 
 const RegisterSchema = z.object({
-  fullName: z.string().min(2, { message: 'Name must be at least 2 characters' }),
-  email: z.string().email({ message: 'Invalid email address' }),
+  fullName: z.string().min(2, { message: 'Enter your full name.' }),
+  email: z.string().email({ message: 'Enter a valid email address.' }),
   role: z.enum(['mentee', 'mentor', 'admin']),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+  password: z.string().min(6, { message: 'Use at least 6 characters.' }),
 });
 
 const OnboardSchema = z.object({
-  employer: z.string().min(2, { message: 'Employer name must be at least 2 characters' }),
-  expertise: z.string().min(2, { message: 'Please specify expertise fields' }),
-  bio: z.string().min(10, { message: 'Bio must be at least 10 characters' }),
+  employer: z.string().min(2, { message: 'Enter your employer or organization.' }),
+  expertise: z.string().min(2, { message: 'List at least one area of expertise.' }),
+  bio: z.string().min(10, { message: 'Add at least 10 characters to your bio.' }),
 });
 
 export type ActionState = {
