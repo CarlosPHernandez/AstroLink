@@ -19,17 +19,21 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
-  images: supabaseHostname
-    ? {
-        remotePatterns: [
-          {
-            protocol: 'https',
-            hostname: supabaseHostname,
-            pathname: '/storage/v1/object/public/expert-intro-videos/**',
-          },
-        ],
-      }
-    : undefined,
+  images: {
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    ...(supabaseHostname
+      ? {
+          remotePatterns: [
+            {
+              protocol: 'https',
+              hostname: supabaseHostname,
+              pathname: '/storage/v1/object/public/expert-intro-videos/**',
+            },
+          ],
+        }
+      : {}),
+  },
 };
 
 export default nextConfig;

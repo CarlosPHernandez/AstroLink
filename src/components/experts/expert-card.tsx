@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { MaterialIcon } from '@/components/ui/material-icon';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 
@@ -52,7 +53,7 @@ export function ExpertCard({
         />
         {expert.introVideoUrl ? (
           <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full border border-white/25 bg-black/45 px-2.5 py-1 backdrop-blur-sm">
-            <span className="material-symbols-outlined text-white text-[14px]">play_circle</span>
+            <MaterialIcon name="play_circle" className="text-white" size={14} fill />
             <span className="font-mono text-[9px] uppercase tracking-wider text-white/90">Intro</span>
           </div>
         ) : null}

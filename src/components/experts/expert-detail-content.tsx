@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
 import { ExpertBioPreview } from '@/components/experts/expert-bio-preview';
+import { MaterialIcon } from '@/components/ui/material-icon';
 import { getExpertBookHref } from '@/lib/expert-book-href';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
@@ -31,7 +32,7 @@ function ExpertDetailActions({
         data-testid="expert-detail-book"
         className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-on-primary transition-colors hover:bg-primary-container active:scale-[0.985]"
       >
-        <span className="material-symbols-outlined text-[20px]">videocam</span>
+        <MaterialIcon name="videocam" size={20} />
         Book live 1:1 with {firstName} · ${rate}/hr
       </Link>
       <Link
@@ -69,7 +70,7 @@ function ExpertDetailMeta({
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-outline-variant text-on-surface-variant transition-colors hover:border-outline hover:text-on-surface"
             aria-label="Close expert preview"
           >
-            <span className="material-symbols-outlined text-[20px]">close</span>
+            <MaterialIcon name="close" size={20} />
           </button>
         ) : null}
       </div>

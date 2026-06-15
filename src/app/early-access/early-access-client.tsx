@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { FieldError } from '@/components/forms/field-error';
+import { MaterialIcon } from '@/components/ui/material-icon';
 import { FormAlert } from '@/components/forms/form-alert';
 import { parseEarlyAccessReferrer } from '@/lib/early-access-referrer';
 import { type FieldErrors, fieldErrorInputClass, firstFieldError } from '@/lib/zod-field-errors';
@@ -38,9 +39,7 @@ function ChrisPortrait({
       <div
         className={`${className} flex flex-col items-center justify-center bg-gradient-to-br from-primary-fixed via-primary-container/30 to-tertiary-container/40`}
       >
-        <span className="material-symbols-outlined text-primary mb-sm" style={{ fontSize: 56 }}>
-          rocket_launch
-        </span>
+        <MaterialIcon name="rocket_launch" className="text-primary mb-sm" size={56} />
         <span className="text-headline-md font-bold text-on-primary-fixed">CS</span>
       </div>
     );
@@ -162,9 +161,7 @@ export default function EarlyAccessClient({ copyrightYear }: { copyrightYear: nu
                 className="inline-flex mt-lg items-center gap-xs bg-primary text-on-primary px-lg py-sm rounded-md font-label-md font-semibold hover:bg-primary-container transition-all active:scale-[0.99] shadow-sm animate-reveal-up delay-300"
               >
                 Join the waitlist
-                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-                  arrow_downward
-                </span>
+                <MaterialIcon name="arrow_downward" size={18} />
               </a>
             </div>
 
@@ -182,9 +179,7 @@ export default function EarlyAccessClient({ copyrightYear }: { copyrightYear: nu
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/85 via-inverse-surface/20 to-transparent pointer-events-none" />
                 <div className="absolute top-md left-md flex items-center gap-xs bg-surface-container-lowest/95 backdrop-blur-sm border border-outline-variant/50 rounded-full px-3 py-1.5 shadow-sm">
-                  <span className="material-symbols-outlined text-primary" style={{ fontSize: 18 }}>
-                    verified
-                  </span>
+                  <MaterialIcon name="verified" className="text-primary" size={18} />
                   <span className="text-label-sm font-semibold text-on-surface uppercase tracking-wide">
                     Verified astronaut
                   </span>
@@ -224,9 +219,7 @@ export default function EarlyAccessClient({ copyrightYear }: { copyrightYear: nu
                 key={item.title}
                 className="bg-surface-container-low border border-outline-variant/60 rounded-lg p-md"
               >
-                <span className="material-symbols-outlined text-primary mb-sm" style={{ fontSize: 28 }}>
-                  {item.icon}
-                </span>
+                <MaterialIcon name={item.icon} className="text-primary mb-sm" size={28} />
                 <h2 className="text-label-md font-semibold text-on-surface mb-xs">{item.title}</h2>
                 <p className="text-body-md text-on-surface-variant">{item.body}</p>
               </li>
@@ -301,9 +294,7 @@ export default function EarlyAccessClient({ copyrightYear }: { copyrightYear: nu
                       role="status"
                     >
                       <div className="flex gap-sm items-start">
-                        <span className="material-symbols-outlined text-primary" style={{ fontSize: 24 }}>
-                          check_circle
-                        </span>
+                        <MaterialIcon name="check_circle" className="text-primary" size={24} fill />
                         <p className="text-body-md text-on-surface font-medium">{message}</p>
                       </div>
                       <button

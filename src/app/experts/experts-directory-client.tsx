@@ -128,7 +128,7 @@ export default function ExpertsDirectoryClient({
                 isHovered={hoveredSlug === expert.slug}
                 onSelect={() => handleSelect(expert.slug)}
                 onHover={(hovered) => setHoveredSlug(hovered ? expert.slug : null)}
-                priority={index < 4}
+                priority={index === 0}
               />
             ))}
           </div>

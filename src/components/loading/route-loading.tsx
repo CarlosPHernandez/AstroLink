@@ -100,6 +100,33 @@ export function ExpertProfileSkeleton() {
   );
 }
 
+export function HomePageSkeleton() {
+  return (
+    <div
+      className="min-h-screen bg-background text-on-surface font-sans"
+      aria-busy="true"
+      aria-label="Loading home"
+    >
+      <header className="sticky top-0 z-50 border-b border-outline-variant bg-background/80 backdrop-blur-lg">
+        <div className="mx-auto flex h-20 max-w-[1200px] items-center justify-between px-md sm:px-lg">
+          <Pulse className="h-6 w-24" />
+          <div className="flex items-center gap-3">
+            <Pulse className="h-4 w-16" />
+            <Pulse className="h-9 w-28" />
+          </div>
+        </div>
+      </header>
+      <main className="mx-auto max-w-[1200px] px-md py-12 sm:px-lg">
+        <div className="mx-auto mb-10 max-w-3xl space-y-4 text-center">
+          <Pulse className="mx-auto h-12 w-full max-w-2xl" />
+          <Pulse className="mx-auto h-6 w-full max-w-xl" />
+        </div>
+        <Pulse className="mx-auto aspect-[4/5] w-full max-w-[480px] rounded-2xl" />
+      </main>
+    </div>
+  );
+}
+
 export function SettingsPageSkeleton() {
   return (
     <div
