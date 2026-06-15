@@ -55,7 +55,6 @@ vi.mock('@/lib/booking-payments', async (importOriginal) => {
   return {
     ...actual,
     isStripePaymentsSkipped: vi.fn(() => true),
-    isStripeBookingTestMode: vi.fn(() => false),
   };
 });
 
@@ -78,7 +77,7 @@ const approvedMentor = {
   compliance_status: 'approved',
 };
 
-describe('BookingAgent.matchMentor', () => {
+describe('BookingAgent (immediate-capture payments, platform-only)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuditInsert.mockResolvedValue({ error: null });
@@ -104,7 +103,7 @@ describe('BookingAgent.matchMentor', () => {
     const agent = new BookingAgent();
     const result = await agent.bookSession({
       menteeId: 'mentee-1',
-      serviceType: 'live_session',
+      serviceType: 'session_1on1',
       scheduledAt: new Date().toISOString(),
       menteeGoals: 'Learn about propulsion',
       menteeBackground: 'Early-career engineer',
@@ -125,7 +124,7 @@ describe('BookingAgent.matchMentor', () => {
     await expect(
       agent.bookSession({
         menteeId: 'mentee-1',
-        serviceType: 'live_session',
+        serviceType: 'session_1on1',
         scheduledAt: new Date().toISOString(),
         menteeGoals: 'Learn about propulsion',
         menteeBackground: 'Early-career engineer',
@@ -140,7 +139,7 @@ describe('BookingAgent.matchMentor', () => {
     await expect(
       agent.bookSession({
         menteeId: 'mentee-1',
-        serviceType: 'live_session',
+        serviceType: 'session_1on1',
         scheduledAt: new Date().toISOString(),
         menteeGoals: 'Learn about propulsion',
         menteeBackground: 'Early-career engineer',

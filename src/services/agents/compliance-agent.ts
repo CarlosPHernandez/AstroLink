@@ -1,14 +1,14 @@
 import type { Json } from '@/lib/database.types';
 import { callLlmWithBackoff, generateStructuredJson, llmFlashModel, llmProModel } from '@/lib/llm';
-import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
-import { ComplianceReviewOutput } from '@/lib/types';
+import { ComplianceReviewOutput, type ComplianceStatus } from '@/lib/types';
 
 export class ComplianceAgent {
   private agentId = 'APX-04' as const;
 
   /**
-   * Scans profile and sets up Stripe Connect Express onboarding.
+   * Scans profile for compliance (civil servant signals, docs). Stripe Connect provisioning is
+   * deferred (platform-only at launch; manual payouts). One deferred path lives in mentor-stripe-connect.ts.
    */
   async onboardMentor(mentorDbId: string, params: {
     fullName: string;
@@ -25,10 +25,9 @@ export class ComplianceAgent {
     const bioCheck = await this.scanBioForCivilServantSignal(mentorDbId, params.bio);
     const isCivilServant = params.isCivilServantDeclared || bioCheck.is_civil_servant_flag;
 
-    let complianceStatus: 'stripe_incomplete' | 'document_required' = 'stripe_incomplete';
+    let complianceStatus: ComplianceStatus = isCivilServant ? 'document_required' : 'awaiting_human_approval';
 
     if (isCivilServant) {
-      complianceStatus = 'document_required';
       await this.logAudit('CIVIL_SERVANT_DETECTED', mentorDbId, { bioCheck });
       
       // If PDF document buffer is uploaded, perform multimodal parsing
@@ -48,75 +47,33 @@ export class ComplianceAgent {
       }
     }
 
-    // Step 2: Provision Stripe Express Identity
-    const account = await stripe.accounts.create({
-      type: 'express',
-      country: 'US',
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-      },
-      business_type: 'individual',
-      metadata: { mentor_id: mentorDbId },
-    });
-
-    // Step 3: Generate Account Onboarding Link
-    const accountLink = await stripe.accountLinks.create({
-      account: account.id,
-      refresh_url: 'https://astralink.ai/onboard/stripe-retry',
-      return_url: 'https://astralink.ai/onboard/stripe-success',
-      type: 'account_onboarding',
-    });
-
-    // Update database record for Mentor
+    // No Stripe Connect account creation here (deferred per launch plan).
     await supabaseAdmin
       .from('mentors')
       .update({
-        stripe_connect_account_id: account.id,
         is_civil_servant: isCivilServant,
         compliance_status: complianceStatus,
       })
       .eq('id', mentorDbId);
 
-    await this.logAudit('STRIPE_ACCOUNT_PROVISIONED', mentorDbId, {
-      stripe_account_id: account.id,
+    await this.logAudit('COMPLIANCE_REVIEW_RECORDED', mentorDbId, {
+      is_civil_servant: isCivilServant,
+      compliance_status: complianceStatus,
     });
 
     return {
-      stripeConnectUrl: accountLink.url,
       isCivilServant,
+      // stripeConnectUrl omitted (Connect deferred; payouts manual at launch)
     };
   }
 
   /**
-   * Validates Stripe Connect Express integration credentials on redirection.
+   * Stripe Connect verification is part of the deferred Connect fast-follow.
+   * At launch this is a no-op (payouts manual).
    */
   async verifyStripeOnboarding(mentorDbId: string, stripeConnectAccountId: string) {
-    const stripeAccount = await stripe.accounts.retrieve(stripeConnectAccountId);
-    
-    if (stripeAccount.charges_enabled && stripeAccount.payouts_enabled) {
-      // Transition status to awaiting human admin approval
-      await supabaseAdmin
-        .from('mentors')
-        .update({
-          stripe_onboarding_completed: true,
-          compliance_status: 'awaiting_human_approval',
-        })
-        .eq('id', mentorDbId);
-
-      await this.logAudit('STRIPE_ONBOARDING_COMPLETED', mentorDbId, {});
-      return { success: true };
-    } else {
-      await supabaseAdmin
-        .from('mentors')
-        .update({
-          compliance_status: 'stripe_incomplete',
-        })
-        .eq('id', mentorDbId);
-
-      await this.logAudit('STRIPE_ONBOARDING_INCOMPLETE', mentorDbId, {});
-      return { success: false };
-    }
+    await this.logAudit('STRIPE_ONBOARDING_VERIFICATION_DEFERRED', mentorDbId, { stripeConnectAccountId });
+    return { success: false, deferred: true as const };
   }
 
   /**

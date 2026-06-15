@@ -1,6 +1,4 @@
 import type { Json } from '@/lib/database.types';
-import { isStripeBookingTestMode } from '@/lib/booking-payments';
-import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export class PaymentAgent {
@@ -25,37 +23,25 @@ export class PaymentAgent {
       intent_id: params.paymentIntentId,
     });
 
-    // 1. Validate platform split math (platform fee must be exactly 20% of gross)
+    // 1. Bookkeeping split (80/20 recorded for future Connect payouts; platform collects 100% at launch)
     const expectedPlatformFee = Math.round(params.grossAmountCents * 0.20);
-    const splitCheckValid =
-      params.platformFeeCents === expectedPlatformFee || isStripeBookingTestMode();
+    // Accept provided fee or fall back to computed 20% (no longer test-mode bypass)
+    const platformFeeCents =
+      params.platformFeeCents && params.platformFeeCents > 0
+        ? params.platformFeeCents
+        : expectedPlatformFee;
 
-    if (!splitCheckValid) {
-      await this.logAudit('SPLIT_FEE_MISMATCH_ESCALATED', params.metadata.booking_id, {
-        received_fee: params.platformFeeCents,
-        expected_fee: expectedPlatformFee,
-      });
-      
-      // Mark booking status as pending_review for administrative reconciliation
-      await supabaseAdmin
-        .from('bookings')
-        .update({ status: 'pending_review' })
-        .eq('id', params.metadata.booking_id);
-        
-      throw new Error(`Split fee calculation error: expected ${expectedPlatformFee}, received ${params.platformFeeCents}.`);
-    }
+    const mentorPayoutCents = params.grossAmountCents - platformFeeCents;
 
-    const mentorPayoutCents = params.grossAmountCents - params.platformFeeCents;
-
-    // 2. Insert transaction state with idempotency guard using postgres unique constraints
+    // 2. Insert transaction state with idempotency guard (UNIQUE on stripe_event_id now enforced at DB)
     const { error: txErr } = await supabaseAdmin.from('transactions').insert({
       booking_id: params.metadata.booking_id,
       stripe_payment_intent_id: params.paymentIntentId,
       gross_amount_cents: params.grossAmountCents,
-      platform_fee_cents: params.platformFeeCents,
+      platform_fee_cents: platformFeeCents,
       mentor_payout_cents: mentorPayoutCents,
-      mentor_stripe_account: params.destinationStripeAccount,
-      status: 'pending',
+      mentor_stripe_account: params.destinationStripeAccount || 'platform',
+      status: 'completed', // immediate capture: funds taken at booking time
       stripe_event_id: params.stripeEventId,
     });
 
@@ -68,22 +54,23 @@ export class PaymentAgent {
       throw new Error(`Failed to log transaction: ${txErr.message}`);
     }
 
-    // 3. Update booking status to confirmed (funds are securely escrowed in Stripe)
+    // 3. Update booking status to confirmed (payment captured; ready for session)
     await supabaseAdmin
       .from('bookings')
       .update({ status: 'confirmed' })
       .eq('id', params.metadata.booking_id);
 
-    await this.logAudit('ESCROW_CONFIRMED', params.metadata.booking_id, {
+    await this.logAudit('PAYMENT_CONFIRMED', params.metadata.booking_id, {
       gross: params.grossAmountCents,
-      payout: mentorPayoutCents,
+      payout_bookkeeping: mentorPayoutCents,
     });
 
     return { success: true };
   }
 
   /**
-   * Captures the funds from Stripe manual capture hold after meeting concludes successfully.
+   * Marks a booking completed at session end.
+   * (Capture now happens at booking time via immediate-capture PaymentIntent; this is post-session fulfillment only.)
    */
   async captureEscrowPayment(bookingId: string, stripePaymentIntentId: string) {
     if (stripePaymentIntentId.startsWith('dev_skip_')) {
@@ -91,54 +78,22 @@ export class PaymentAgent {
       return { success: true, skipped: true };
     }
 
-    await this.logAudit('CAPTURE_REQUESTED', bookingId, { stripePaymentIntentId });
+    await this.logAudit('SESSION_COMPLETION_RECORDED', bookingId, { stripePaymentIntentId });
 
-    try {
-      const capturedIntent = await stripe.paymentIntents.capture(stripePaymentIntentId);
+    // Immediate-capture flow: funds already taken. Just advance booking + tx bookkeeping.
+    await supabaseAdmin
+      .from('bookings')
+      .update({ status: 'completed' })
+      .eq('id', bookingId);
 
-      if (capturedIntent.status === 'succeeded') {
-        // Update booking status to completed
-        await supabaseAdmin
-          .from('bookings')
-          .update({ status: 'completed' })
-          .eq('id', bookingId);
+    await supabaseAdmin
+      .from('transactions')
+      .update({ status: 'completed' })
+      .eq('booking_id', bookingId);
 
-        // Update transaction status to completed
-        await supabaseAdmin
-          .from('transactions')
-          .update({ status: 'completed' })
-          .eq('booking_id', bookingId);
+    await this.logAudit('BOOKING_COMPLETED', bookingId, {});
 
-        await this.logAudit('ESCROW_CAPTURED', bookingId, {
-          stripe_status: capturedIntent.status,
-        });
-
-        return { success: true };
-      } else {
-        // Escalate status to pending_review for administrator attention
-        await supabaseAdmin
-          .from('bookings')
-          .update({ status: 'pending_review' })
-          .eq('id', bookingId);
-
-        await this.logAudit('CAPTURE_FAILED_ESCALATED', bookingId, {
-          stripe_status: capturedIntent.status,
-        });
-
-        return { success: false, status: capturedIntent.status };
-      }
-    } catch (err: any) {
-      await supabaseAdmin
-        .from('bookings')
-        .update({ status: 'pending_review' })
-        .eq('id', bookingId);
-
-      await this.logAudit('CAPTURE_ERROR_ESCALATED', bookingId, {
-        error: err.message,
-      });
-
-      throw err;
-    }
+    return { success: true };
   }
 
   /**

@@ -9,8 +9,7 @@ export function getStripe(): Stripe {
   }
   if (!stripeClient) {
     stripeClient = new Stripe(stripeSecretKey, {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pinned API version
-      apiVersion: '2023-10-16' as any,
+      apiVersion: '2026-05-27.dahlia',
     });
   }
   return stripeClient;

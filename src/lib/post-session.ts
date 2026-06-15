@@ -1,7 +1,6 @@
 import 'server-only';
 
 import type { Json } from '@/lib/database.types';
-import { isDevSkippedPaymentIntent } from '@/lib/booking-payments';
 import {
   isDailyTranscriptionEnabled,
   type TranscriptErrorPayload,
@@ -23,7 +22,6 @@ import {
   TRANSLATION_AGENT_ID,
 } from '@/lib/transcript-translation/types';
 import { parsePostSessionOutput } from '@/lib/transcript-translation/recap-locale';
-import { PaymentAgent } from '@/services/agents/payment-agent';
 import { SessionAgent } from '@/services/agents/session-agent';
 import { TranslationAgent } from '@/services/agents/translation-agent';
 
@@ -149,12 +147,8 @@ function durationMinutesFromUtterances(
 }
 
 async function captureOrCompleteBooking(booking: BookingRow) {
-  if (!isDevSkippedPaymentIntent(booking.stripe_payment_intent_id)) {
-    const paymentAgent = new PaymentAgent();
-    await paymentAgent.captureEscrowPayment(booking.id, booking.stripe_payment_intent_id);
-    return;
-  }
-
+  // Immediate-capture model: payment already captured at booking time.
+  // Session end only advances status to completed (tx bookkeeping already recorded at success).
   await supabaseAdmin.from('bookings').update({ status: 'completed' }).eq('id', booking.id);
 }
 
@@ -405,7 +399,7 @@ async function fulfillBookingAfterMeetingEndedForRow(
 
 /**
  * Idempotent D1 fulfillment after Daily reports meeting.ended:
- * escrow capture (always). APX-03 runs here only when transcription is disabled.
+ * session completion only (capture is immediate at booking time). APX-03 runs here only when transcription is disabled.
  */
 export async function fulfillBookingAfterMeetingEnded(payload: MeetingEndedPayload) {
   const roomName = payload.room.trim();

@@ -2,7 +2,6 @@ import type { Json } from '@/lib/database.types';
 import { computeBookingTotalCents } from '@/lib/booking-pricing';
 import {
   createDevSkippedPaymentIntentId,
-  isStripeBookingTestMode,
   isStripePaymentsSkipped,
 } from '@/lib/booking-payments';
 import { callLlmWithBackoff, generateStructuredJson, llmFlashModel } from '@/lib/llm';
@@ -16,7 +15,7 @@ export class BookingAgent {
   private agentId = 'APX-01' as const;
 
   /**
-   * Orchestrates the scheduling and initiates manual-capture checkout.
+   * Orchestrates the scheduling and creates an immediate-capture PaymentIntent.
    */
   async bookSession(params: {
     menteeId: string;
@@ -26,6 +25,7 @@ export class BookingAgent {
     menteeGoals: string;
     menteeBackground: string;
     includePreCallBrief?: boolean;
+    durationMinutes?: number; // from slider for variable 1:1; used for prorated price + persisted
   }) {
     // 1. Audit Log: BOOKING_INITIATED
     await this.logAudit('BOOKING_INITIATED', null, { params });
@@ -63,24 +63,17 @@ export class BookingAgent {
       throw new Error('This expert is not available for booking.');
     }
 
-    const includePreCallBrief = Boolean(params.includePreCallBrief);
+    // Briefing (APX-02) is always included for live sessions as part of the standard offering.
+    // Duration (slider) makes 1:1 price variable (prorated hourly rate from live_session_price_cents).
+    const includePreCallBrief = params.serviceType === 'session_1on1';
     const servicePriceCents = computeBookingTotalCents({
       serviceType: params.serviceType,
       liveSessionPriceCents: mentor.live_session_price_cents,
       includePreCallBrief,
+      durationMinutes: params.durationMinutes,
     });
 
     const skipPayments = isStripePaymentsSkipped();
-    const testMode = isStripeBookingTestMode();
-    const connectAccountId = mentor.stripe_connect_account_id;
-
-    if (!skipPayments && !connectAccountId && !testMode) {
-      const message =
-        process.env.NODE_ENV === 'production'
-          ? 'This expert has not finished payout setup yet. Please try another expert.'
-          : 'This expert has not finished Stripe payouts setup yet. Set STRIPE_BOOKING_TEST_MODE=true for local checkout without Connect.';
-      throw new Error(message);
-    }
 
     let paymentIntentId: string;
     let stripeClientSecret: string | null = null;
@@ -88,27 +81,24 @@ export class BookingAgent {
     if (skipPayments) {
       paymentIntentId = createDevSkippedPaymentIntentId();
     } else {
-      const platformFee = Math.round(servicePriceCents * 0.2);
       const stripeCustomerId = await getOrCreateStripeCustomerForMentee(params.menteeId);
 
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: servicePriceCents,
-        currency: 'usd',
-        payment_method_types: ['card'],
-        capture_method: 'manual',
-        ...(stripeCustomerId ? { customer: stripeCustomerId } : {}),
-        ...(connectAccountId && !testMode
-          ? {
-              application_fee_amount: platformFee,
-              transfer_data: { destination: connectAccountId },
-            }
-          : {}),
-        metadata: {
-          mentor_id: finalMentorId,
-          mentee_id: params.menteeId,
-          service_type: params.serviceType,
+      const idempotencyKey = `astrolink_book_${params.menteeId}_${finalMentorId}_${params.scheduledAt}`;
+
+      const paymentIntent = await stripe.paymentIntents.create(
+        {
+          amount: servicePriceCents,
+          currency: 'usd',
+          ...(stripeCustomerId ? { customer: stripeCustomerId } : {}),
+          metadata: {
+            app: 'astrolink',
+            mentor_id: finalMentorId,
+            mentee_id: params.menteeId,
+            service_type: params.serviceType,
+          },
         },
-      });
+        { idempotencyKey },
+      );
 
       paymentIntentId = paymentIntent.id;
       stripeClientSecret = paymentIntent.client_secret;
@@ -126,6 +116,9 @@ export class BookingAgent {
         stripe_payment_intent_id: paymentIntentId,
         match_reason: params.menteeGoals || matchReason,
         intake_background: params.menteeBackground || null,
+        // Persist chosen duration for variable sessions (prorated price already used for PI).
+        // Defaults via migration for legacy rows; new bookings always provide from slider.
+        duration_minutes: params.durationMinutes ?? (params.serviceType === 'session_1on1' ? 30 : 15),
       })
       .select()
       .single();
@@ -153,6 +146,7 @@ export class BookingAgent {
 
     await stripe.paymentIntents.update(paymentIntentId, {
       metadata: {
+        app: 'astrolink',
         mentor_id: finalMentorId,
         mentee_id: params.menteeId,
         service_type: params.serviceType,

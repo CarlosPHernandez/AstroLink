@@ -179,7 +179,7 @@ describe('fulfillBookingAfterMeetingEnded', () => {
     expect(mockSynthesizeSession).toHaveBeenCalled();
   });
 
-  it('waits for transcript when capture completes first', async () => {
+  it('waits for transcript when booking is already completed (immediate capture)', async () => {
     mockBookingMaybeSingle.mockResolvedValueOnce({ data: bookingRow, error: null });
     mockBookingSingle.mockResolvedValueOnce({ data: { status: 'completed' }, error: null });
     mockTranscriptMaybeSingle.mockResolvedValueOnce({ data: null, error: null });
@@ -303,12 +303,12 @@ describe('maybeRunSynthesisGate', () => {
     vi.mocked(isDailyTranscriptionEnabled).mockReturnValue(true);
   });
 
-  it('waits when booking capture is not completed', async () => {
+  it('waits when booking is not yet completed (post immediate-capture)', async () => {
     mockBookingSingle.mockResolvedValueOnce({ data: { status: 'confirmed' }, error: null });
 
     const result = await maybeRunSynthesisGate({ bookingId: 'booking-1' });
 
-    expect(result).toEqual({ gateWaiting: true, reason: 'capture_pending' });
+    expect(result).toEqual({ gateWaiting: true, reason: 'capture_pending' }); // capture_pending kept for gate semantics (booking not yet completed)
   });
 });
 

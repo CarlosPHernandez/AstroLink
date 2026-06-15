@@ -25,7 +25,9 @@ export type BookingStatus =
   | 'confirmed'
   | 'completed'
   | 'pending_review'
-  | 'payment_failed';
+  | 'payment_failed'
+  | 'cancelled'
+  | 'refunded';
 
 export type TransactionStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 
@@ -82,6 +84,7 @@ export interface Booking {
   status: BookingStatus;
   scheduled_at: string;
   stripe_payment_intent_id: string;
+  duration_minutes?: number | null; // variable length from slider (prorated price)
   daily_room_url: string | null;
   mentor_token: string | null;
   mentee_token: string | null;
@@ -112,6 +115,7 @@ export interface Transaction {
   mentor_stripe_account: string;
   status: TransactionStatus;
   stripe_event_id: string;
+  stripe_refund_id?: string | null;
   created_at: string;
 }
 

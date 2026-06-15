@@ -7,7 +7,10 @@ import { useRouter } from 'next/navigation';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import type { ListedExpert } from '@/lib/mentor-directory';
-import { PRE_CALL_BRIEF_ADDON_CENTS } from '@/lib/booking-pricing';
+import {
+  PRE_CALL_BRIEF_ADDON_CENTS,
+  computeBookingTotalCents,
+} from '@/lib/booking-pricing';
 import type { SessionData } from '@/lib/session';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
@@ -26,10 +29,11 @@ interface CheckoutState {
 
 type BookingFormState = {
   serviceType: 'session_1on1' | 'pre_call_brief';
-  includePreCallBrief: boolean;
   goals: string;
   background: string;
   scheduledAt: string;
+  // Variable duration for live sessions (slider in price summary). 15min min, up to 120.
+  durationMinutes: number;
 };
 
 function formatMoney(cents: number) {
@@ -96,7 +100,7 @@ function SessionFormatPicker({
     {
       id: 'session_1on1',
       title: 'Live 1:1 session',
-      description: '30-minute video call with your expert.',
+      description: 'Video call with your expert (15 min minimum, adjustable up to 2 hours).',
       icon: 'videocam',
       priceHint: 'Expert rate applies',
     },
@@ -162,12 +166,14 @@ function CheckoutSummary({
   totalCents,
   step,
   checkoutAmount,
+  onDurationChange,
 }: {
   mentor: ListedExpert | null;
   form: BookingFormState;
   totalCents: number;
   step: 1 | 2;
   checkoutAmount?: number;
+  onDurationChange?: (minutes: number) => void;
 }) {
   const displayTotal = checkoutAmount ?? totalCents;
   const isLive = form.serviceType === 'session_1on1';
@@ -188,7 +194,9 @@ function CheckoutSummary({
               </div>
               <div className="min-w-0">
                 <p className="text-label-md font-semibold text-on-surface truncate">{mentor.name}</p>
-                <p className="text-label-sm text-on-surface-variant">Live session · 30 min</p>
+                <p className="text-label-sm text-on-surface-variant">
+                Live session · {form.durationMinutes} min
+              </p>
               </div>
             </div>
           ) : null}
@@ -202,15 +210,32 @@ function CheckoutSummary({
                 {isLive && mentor ? formatMoney(mentor.liveSessionPriceCents) : formatMoney(PRE_CALL_BRIEF_ADDON_CENTS)}
               </dd>
             </div>
-            {isLive && form.includePreCallBrief ? (
-              <div className="flex justify-between gap-3">
-                <dt className="text-on-surface-variant">Brief add-on</dt>
-                <dd className="font-mono text-on-surface tabular-nums shrink-0">
-                  {formatMoney(PRE_CALL_BRIEF_ADDON_CENTS)}
-                </dd>
-              </div>
-            ) : null}
+            {/* Brief is now included in the base mentor session price for live sessions (no separate add-on) */}
           </dl>
+
+          {/* Variable duration slider (real-time price in summary card, per new direction).
+              Prorates the mentor hourly rate (liveSessionPriceCents). 15min min enforced in compute. */}
+          {isLive && onDurationChange && (
+            <div className="pt-3 border-t border-outline-variant/60">
+              <div className="flex items-center justify-between text-label-sm mb-1">
+                <span className="text-on-surface-variant">Call length</span>
+                <span className="font-mono text-on-surface">{form.durationMinutes} min</span>
+              </div>
+              <input
+                type="range"
+                min={15}
+                max={120}
+                step={5}
+                value={form.durationMinutes}
+                onChange={(e) => onDurationChange(Number(e.target.value))}
+                className="w-full accent-primary cursor-pointer"
+                aria-label="Call duration in minutes (15 to 120)"
+              />
+              <p className="text-[10px] text-on-surface-variant mt-0.5">
+                15 min minimum • up to 2 hours • price updates live
+              </p>
+            </div>
+          )}
 
           <div className="pt-4 border-t border-outline-variant flex justify-between items-baseline">
             <span className="text-body-md font-semibold text-on-surface">
@@ -339,17 +364,21 @@ export default function BookingClient({
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<BookingFormState>({
     serviceType: 'session_1on1',
-    includePreCallBrief: false,
     goals: '',
     background: '',
     scheduledAt: '',
+    durationMinutes: 30, // default; slider will adjust (min 15 enforced in pricing)
   });
 
   const baseCents = mentor?.liveSessionPriceCents ?? 0;
-  const totalCents =
-    form.serviceType === 'pre_call_brief'
-      ? PRE_CALL_BRIEF_ADDON_CENTS
-      : baseCents + (form.includePreCallBrief ? PRE_CALL_BRIEF_ADDON_CENTS : 0);
+  // Duration slider (in summary card) makes live 1:1 price dynamic (prorated hourly rate).
+  // Briefing always bundled. pre_call_brief remains fixed.
+  const totalCents = computeBookingTotalCents({
+    serviceType: form.serviceType,
+    liveSessionPriceCents: baseCents,
+    includePreCallBrief: false,
+    durationMinutes: form.serviceType === 'session_1on1' ? form.durationMinutes : undefined,
+  });
 
   const step: 1 | 2 = checkout?.clientSecret ? 2 : 1;
 
@@ -369,10 +398,13 @@ export default function BookingClient({
         body: JSON.stringify({
           mentorId: mentor?.id,
           serviceType: form.serviceType,
-          includePreCallBrief: form.includePreCallBrief,
+          // Briefing is always included for live sessions; the optional add-on has been removed.
+          includePreCallBrief: false,
           scheduledAt: new Date(form.scheduledAt).toISOString(),
           goals: form.goals,
           background: form.background,
+          // Variable duration from summary slider (15min min). Backend prorates using mentor hourly rate.
+          durationMinutes: form.durationMinutes,
         }),
       });
 
@@ -507,40 +539,7 @@ export default function BookingClient({
                     />
                   </section>
 
-                  {form.serviceType === 'session_1on1' ? (
-                    <section>
-                      <div className="flex items-center justify-between gap-4 mb-4">
-                        <div>
-                          <h2 className={sectionTitleClass}>Pre-call brief</h2>
-                          <p className="text-label-sm text-on-surface-variant">
-                            Optional AI-prepared objectives for you and your expert.
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={form.includePreCallBrief}
-                          onClick={() =>
-                            setForm({ ...form, includePreCallBrief: !form.includePreCallBrief })
-                          }
-                          className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
-                            form.includePreCallBrief ? 'bg-primary' : 'bg-outline-variant'
-                          }`}
-                        >
-                          <span
-                            className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                              form.includePreCallBrief ? 'translate-x-5' : 'translate-x-0'
-                            }`}
-                          />
-                        </button>
-                      </div>
-                      {form.includePreCallBrief ? (
-                        <p className="text-label-md text-primary font-mono">
-                          +{formatMoney(PRE_CALL_BRIEF_ADDON_CENTS)} added to total
-                        </p>
-                      ) : null}
-                    </section>
-                  ) : null}
+                  {/* Pre-call briefing for the expert is now included by default with every live session (no extra charge or toggle). The intake below feeds the briefing generation. */}
 
                   <section>
                     <h2 className={sectionTitleClass}>Schedule</h2>
@@ -641,6 +640,7 @@ export default function BookingClient({
             totalCents={totalCents}
             step={step}
             checkoutAmount={checkout?.amountCents}
+            onDurationChange={(m) => setForm({ ...form, durationMinutes: m })}
           />
         </div>
       </main>

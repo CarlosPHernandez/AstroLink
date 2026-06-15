@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { BookBodySchema } from '@/lib/book-request-schema';
+import {
+  assertBookingRateLimit,
+  getBookingClientKey,
+  isBookingRateLimitError,
+} from '@/lib/booking-rate-limit';
 import { screenBookingIntake } from '@/lib/intake-moderation';
 import { isLlmRateLimitError } from '@/lib/llm';
 import { getSession } from '@/lib/session';
@@ -11,6 +16,22 @@ export async function POST(request: Request) {
     const session = await getSession();
     if (!session || session.role !== 'mentee') {
       return NextResponse.json({ success: false, error: 'Sign in as a buyer to book.' }, { status: 401 });
+    }
+
+    const clientKey = getBookingClientKey(request, session.userId);
+    try {
+      assertBookingRateLimit(clientKey);
+    } catch (rateErr) {
+      if (isBookingRateLimitError(rateErr)) {
+        return NextResponse.json(
+          { success: false, error: rateErr.message },
+          {
+            status: 429,
+            headers: { 'Retry-After': String(Math.ceil(rateErr.retryAfterMs / 1000)) },
+          },
+        );
+      }
+      throw rateErr;
     }
 
     const body = BookBodySchema.parse(await request.json());
@@ -36,6 +57,7 @@ export async function POST(request: Request) {
       scheduledAt,
       menteeGoals: body.goals,
       menteeBackground: body.background,
+      durationMinutes: body.durationMinutes,
     });
 
     return NextResponse.json({

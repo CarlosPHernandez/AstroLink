@@ -1,0 +1,49 @@
+{
+  "date": "2026-06-06",
+  "window": "7d",
+  "metrics": {
+    "commits": 44,
+    "contributors": 2,
+    "prs_merged": 15,
+    "insertions": 3383,
+    "deletions": 79,
+    "net_loc": 3304,
+    "test_loc": 764,
+    "test_ratio": 0.226,
+    "active_days": 8,
+    "sessions": 15,
+    "deep_sessions": 0,
+    "avg_session_minutes": 7,
+    "loc_per_session_hour": 1900,
+    "feat_pct": 0.32,
+    "fix_pct": 0.09,
+    "peak_hour": 18,
+    "ai_assisted_commits": 6
+  },
+  "authors": {
+    "CarlosPHernandez": {
+      "commits": 38,
+      "insertions": 2800,
+      "deletions": 70,
+      "test_ratio": 0.23,
+      "top_area": "src/lib"
+    },
+    "Cursor Agent": {
+      "commits": 6,
+      "insertions": 1541,
+      "deletions": 0,
+      "test_ratio": 0.12,
+      "top_area": "docs/"
+    }
+  },
+  "version_range": ["0.1.0.1", "0.1.3.0"],
+  "streak_days": 10,
+  "personal_streak_days": 3,
+  "tweetable": "Week of May 30: 44 commits, 3.3k LOC, 23% tests, 15 PRs merged, peak: 6pm | Streak: 10d",
+  "test_health": {
+    "total_test_files": 25,
+    "tests_added_this_period": 8,
+    "regression_test_commits": 2,
+    "test_files_changed": 8
+  }
+}
