@@ -2,6 +2,26 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.3.0.1] - 2026-06-15
+
+Platform bug-and-polish pass across public surfaces, booking, dashboards, and admin metrics.
+
+### Fixed
+- Landing expert cards now link to `/experts/[slug]` profile pages instead of dead ends.
+- Mentor profile edits persist to the database and revalidate the public expert directory after save.
+- Booking, session exit, and settings redirects respect the signed-in role (mentee vs mentor vs admin).
+- Custom `not-found` page with navigation back to home and the expert directory.
+- Removed the dead "Forgot password?" link on the auth page.
+- E2E smoke test expects Chris Sembroski at **$250/hr** (matches production data).
+
+### Changed
+- Route-level loading skeletons for dashboard, booking, expert profile, and mentee settings.
+- Lazy-loaded experts detail panel/sheet, Stripe payment step, and below-the-fold landing sections.
+- Mentor earnings and admin waitlist metrics use fewer database round-trips (single join + 60s cache).
+- AstroLink metadata title template, accessible tab/filter controls, and unified image URL helper.
+- Removed the placeholder Reports tab from the mentor dashboard.
+- Synced `package.json` version with `VERSION` (was stuck at 0.2.0.1 after the 0.3.0.0 release).
+
 ## [0.3.0.0] - 2026-06-13
 
 **Real Stripe Payments + Variable Duration Live Sessions**
