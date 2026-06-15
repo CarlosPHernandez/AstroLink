@@ -1,7 +1,14 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useActionState, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { logoutAction } from '@/app/auth/actions';
+import {
+  updateMentorProfileAction,
+  uploadMentorNf1860Action,
+  type MentorProfileActionState,
+} from '@/app/dashboard/mentor/actions';
+import { FormAlert } from '@/components/forms/form-alert';
 import { MentorConsultationCard } from '@/app/dashboard/mentor/mentor-consultation-card';
 import {
   MentorDashboardNav,
@@ -65,6 +72,7 @@ export default function MentorDashboardClient({
   earningsRows: MentorEarningRow[];
   skipStripePayments?: boolean;
 }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<MentorDashboardTab>('sessions');
   const [profile, setProfile] = useState<MentorProfileState>(
     mentorProfile ?? emptyProfileFromSession(session),
@@ -72,32 +80,57 @@ export default function MentorDashboardClient({
   const profileNeedsOnboarding = mentorProfile === null;
   const { upcoming, past } = useMemo(() => partitionMentorBookings(bookings), [bookings]);
 
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [pdfUploaded, setPdfUploaded] = useState(false);
+  const [profileState, profileAction, profilePending] = useActionState<
+    MentorProfileActionState | undefined,
+    FormData
+  >(updateMentorProfileAction, undefined);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const [uploadState, uploadAction, uploadPending] = useActionState<
+    MentorProfileActionState | undefined,
+    FormData
+  >(uploadMentorNf1860Action, undefined);
+
+  useEffect(() => {
+    if (mentorProfile) {
+      setProfile(mentorProfile);
+    }
+  }, [mentorProfile]);
+
+  useEffect(() => {
+    if (profileState?.success || uploadState?.success) {
+      router.refresh();
+    }
+  }, [profileState?.success, uploadState?.success, router]);
+
+  const handleSaveProfile = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
-      alert('Profile saved.');
-    }, 800);
+    const formData = new FormData();
+    formData.set('rate', String(profile.rate));
+    formData.set('employer', profile.employer);
+    formData.set('expertise', profile.expertise);
+    formData.set('bio', profile.bio);
+    if (profile.isCivilServant) {
+      formData.set('isCivilServant', 'on');
+    }
+    profileAction(formData);
   };
 
   const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setUploading(true);
-      setTimeout(() => {
-        setUploading(false);
-        setPdfUploaded(true);
-        if (profile.stripeOnboardingCompleted) {
-          setProfile((prev) => ({ ...prev, complianceStatus: 'awaiting_human_approval' }));
-        }
-        alert('Document uploaded for compliance review.');
-      }, 1200);
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
     }
+    const formData = new FormData();
+    formData.set('file', file);
+    uploadAction(formData);
+    e.target.value = '';
   };
+
+  const pdfUploaded =
+    uploadState?.success ||
+    (profile.isCivilServant &&
+      profile.complianceStatus !== 'document_required' &&
+      profile.complianceStatus !== 'stripe_incomplete');
 
   return (
     <div className="min-h-screen bg-background p-6 text-on-surface md:p-10">
@@ -216,7 +249,20 @@ export default function MentorDashboardClient({
                 <form
                   onSubmit={handleSaveProfile}
                   className="space-y-5 rounded-lg border border-outline-variant bg-surface p-6"
+                  data-testid="mentor-profile-form"
                 >
+                  {profileState?.success ? (
+                    <p
+                      className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2"
+                      data-testid="mentor-profile-success"
+                    >
+                      {profileState.message ?? 'Profile saved.'}
+                    </p>
+                  ) : null}
+                  {profileState?.message && !profileState.success ? (
+                    <FormAlert message={profileState.message} />
+                  ) : null}
+
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                       <label className="mb-1.5 block text-xs font-medium text-on-surface-variant">
@@ -302,9 +348,16 @@ export default function MentorDashboardClient({
                         type="file"
                         accept=".pdf"
                         onChange={handlePdfUpload}
-                        className="w-full text-sm text-on-surface-variant file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-outline-variant file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:uppercase"
+                        disabled={uploadPending}
+                        className="w-full text-sm text-on-surface-variant file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-outline-variant file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:uppercase disabled:opacity-50"
                       />
-                      {uploading ? (
+                      {uploadState?.errors?.file?.[0] ? (
+                        <p className="text-xs text-on-error-container">{uploadState.errors.file[0]}</p>
+                      ) : null}
+                      {uploadState?.message && !uploadState.success ? (
+                        <FormAlert message={uploadState.message} />
+                      ) : null}
+                      {uploadPending ? (
                         <p className="text-xs text-on-surface-variant">Uploading…</p>
                       ) : null}
                       {pdfUploaded ? (
@@ -315,24 +368,15 @@ export default function MentorDashboardClient({
 
                   <button
                     type="submit"
-                    disabled={saving}
+                    disabled={profilePending}
                     className="w-full cursor-pointer rounded-md bg-primary py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-primary-container disabled:opacity-50"
                   >
-                    {saving ? 'Saving…' : 'Save profile'}
+                    {profilePending ? 'Saving…' : 'Save profile'}
                   </button>
                 </form>
               </div>
             )}
 
-            {activeTab === 'reports' && (
-              <div className="rounded-lg border border-outline-variant bg-surface p-6">
-                <h2 className="text-lg font-semibold text-on-surface">Session reports</h2>
-                <p className="mt-2 text-sm text-on-surface-variant">
-                  Briefing summaries and compliance notes will appear here after you complete live
-                  sessions.
-                </p>
-              </div>
-            )}
           </main>
         </div>
       </div>
