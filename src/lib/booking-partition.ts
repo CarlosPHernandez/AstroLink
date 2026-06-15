@@ -14,6 +14,7 @@ export interface MenteeBookingView {
   matchReason: string | null;
   dailyRoomUrl: string | null;
   briefing: MentorBriefingOutput | PreCallBriefOutput | null;
+  durationMinutes?: number; // from slider for 1:1; shown in cards + used for prorated price
 }
 
 export interface PartitionedMenteeBookings {
@@ -49,9 +50,12 @@ export function partitionMenteeBookings(
     }
   }
 
-  upcoming.sort(
-    (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
-  );
+  upcoming.sort((a, b) => {
+    const ta = new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime();
+    if (ta !== 0) return ta;
+    // Stable/deterministic for equal times (e.g. just-booked vs others); newer id tends to sort later but predictable.
+    return a.id.localeCompare(b.id);
+  });
 
   return {
     upcoming,

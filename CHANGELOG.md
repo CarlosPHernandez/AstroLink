@@ -2,6 +2,33 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.3.0.0] - 2026-06-13
+
+**Real Stripe Payments + Variable Duration Live Sessions**
+
+This is a significant release that brings production-ready payments and flexible session lengths to AstroLink.
+
+### Added
+- Real Stripe payments with immediate-capture PaymentIntents (platform-only collection at launch). We now use a dedicated AstroLink sandbox for testing/dev/preview and a scoped Restricted API Key (RAK) + live webhook for production on the shared Helios Nexus account.
+- Variable-duration live 1:1 sessions controlled by a slider in the booking summary card (15-minute minimum, up to 2 hours). Pricing is prorated in real time from the mentor's hourly rate (the `live_session_price_cents` value is treated as the hourly rate). The chosen duration is persisted on the booking record.
+- Full refund support via `POST /api/bookings/[id]/cancel` with a clear cancellation policy library (`src/lib/refunds.ts`).
+- Per-user rate limiting on booking creation and cancellation.
+- Additional Stripe webhook event handlers (`payment_intent.payment_failed`, `charge.refunded`, `charge.dispute.created`) plus defensive filtering using `metadata.app = 'astrolink'` for the shared account.
+
+### Changed
+- Removed `STRIPE_BOOKING_TEST_MODE` entirely and all manual-capture/escrow paths. `SKIP_STRIPE_PAYMENTS` is now strictly for local AI/E2E testing and is hard-disabled in production.
+- `pending_payment` bookings are included in the "upcoming" lists immediately (so users see their new booking right after paying). Added auto-refresh polling on the just-booked flow and friendly status labels ("Awaiting confirmation") so the transition to `confirmed` + room availability feels smooth.
+- The mentor pre-session briefing (APX-02) is now always included as part of every standard live session.
+
+### Fixed
+- The "Join room" button now appears reliably once the webhook confirms the payment and provisions the Daily room. Previously, users could succeed on the client side but remain stuck in `pending_payment` with no join affordance.
+- Production payments no longer require mentor Stripe Connect setup (deferred to a future phase). The platform collects 100% at launch while still recording the 80/20 split for future manual or automated payouts.
+- Various races and edge cases around very close-to-call bookings, manual test data cleanup, and webhook idempotency.
+
+### Documentation & Operations
+- New guide: `docs/how-to/stripe-production-cutover.md` — exact steps for moving from the AstroLink sandbox (test keys) to production (RAK + live webhook on the same account).
+- Updated `.env.example`, `AGENTS.md`, and references with clear sandbox-vs-production guidance and strong warnings against mixing live keys into preview or local environments.
+
 ## [0.2.0.1] - 2026-06-12
 
 ### Fixed

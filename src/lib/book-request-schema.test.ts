@@ -9,6 +9,7 @@ describe('BookBodySchema', () => {
     scheduledAt: '2026-06-15T18:00:00.000Z',
     goals: 'Understand commercial crew certification path for our vehicle.',
     background: 'Series A space startup building reusable orbital tug with 12 engineers.',
+    durationMinutes: 45, // from slider; prorated price used for the PI
   };
 
   it('accepts a valid D1 booking payload', () => {

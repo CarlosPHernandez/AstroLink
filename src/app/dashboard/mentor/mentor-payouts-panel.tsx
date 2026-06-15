@@ -221,7 +221,7 @@ export function MentorPayoutsPanel({
             <p className="mt-1 max-w-xl text-sm text-on-surface-variant">
               {skipStripePayments
                 ? 'Stripe is turned off in this environment. Earnings above reflect test bookings only.'
-                : 'Link your bank account to receive the 80% mentor share after each completed session. Payout timing follows your Stripe Express schedule.'}
+                : 'Payouts are processed manually at launch. Your 80% mentor share is recorded per session; bank transfers are handled outside Stripe Connect (deferred to fast-follow).'}
             </p>
             {stripeConnectAccountId ? (
               <p className="mt-2 font-mono text-xs text-on-surface-variant">

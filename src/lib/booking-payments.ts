@@ -8,14 +8,6 @@ export function isStripePaymentsSkipped(): boolean {
   return process.env.SKIP_STRIPE_PAYMENTS === 'true';
 }
 
-/** Local/dev only — checkout without Connect destination and relaxed fee validation. */
-export function isStripeBookingTestMode(): boolean {
-  if (process.env.NODE_ENV === 'production') {
-    return false;
-  }
-  return process.env.STRIPE_BOOKING_TEST_MODE === 'true';
-}
-
 export function isDevSkippedPaymentIntent(paymentIntentId: string): boolean {
   return paymentIntentId.startsWith('dev_skip_');
 }

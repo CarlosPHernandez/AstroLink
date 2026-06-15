@@ -1,0 +1,49 @@
+{
+  "date": "2026-06-10",
+  "window": "7d",
+  "metrics": {
+    "commits": 69,
+    "contributors": 2,
+    "prs_merged": 0,
+    "insertions": 4500,
+    "deletions": 1200,
+    "net_loc": 3300,
+    "test_loc": 800,
+    "test_ratio": 0.24,
+    "active_days": 7,
+    "sessions": 12,
+    "deep_sessions": 4,
+    "avg_session_minutes": 35,
+    "loc_per_session_hour": 280,
+    "feat_pct": 0.28,
+    "fix_pct": 0.32,
+    "peak_hour": 19,
+    "ai_assisted_commits": 9
+  },
+  "authors": {
+    "CarlosPHernandez": {
+      "commits": 60,
+      "insertions": 3800,
+      "deletions": 900,
+      "test_ratio": 0.26,
+      "top_area": "src/app/experts/ + lib/ (D3 post-session)"
+    },
+    "Cursor Agent": {
+      "commits": 9,
+      "insertions": 700,
+      "deletions": 300,
+      "test_ratio": 0.10,
+      "top_area": "docs/ + homepage perf"
+    }
+  },
+  "version_range": ["0.1.2.0", "0.1.6.0"],
+  "streak_days": 7,
+  "personal_streak_days": 7,
+  "tweetable": "Week of Jun 3: 69 commits (you + Cursor Agent), experts directory + full D3 transcript/translation/live-captions shipped, design polish, 7d streak | Streak: 7d",
+  "test_health": {
+    "total_test_files": 39,
+    "tests_added_this_period": 3,
+    "regression_test_commits": 0,
+    "test_files_changed": 3
+  }
+}

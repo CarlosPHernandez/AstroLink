@@ -13,7 +13,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
 1. Copy `.env.example` → `.env.local` and fill Supabase keys from the [project API settings](https://supabase.com/dashboard/project/vwoizjesyyygmokfqpyy/settings/api).
 2. Set **`ENCRYPTION_KEY`** (`openssl rand -hex 32`) for session cookies (required in production). The app reads `ENCRYPTION_KEY` in `src/lib/crypto.ts`.
 3. Local dev: `APP_MODE=full` and `ENABLE_DEMO_AUTH=true` (defaults in `.env.example`). Production waitlist: `APP_MODE=waitlist`; enable `ENABLE_DEMO_AUTH=true` only on preview/staging for ops admin access.
-4. For local booking without Stripe: keep `SKIP_STRIPE_PAYMENTS=true` (default in `.env.example`). `SKIP_STRIPE_PAYMENTS` and `STRIPE_BOOKING_TEST_MODE` are hard-disabled in production builds.
+4. For local booking without Stripe: keep `SKIP_STRIPE_PAYMENTS=true` (default in `.env.example`). `SKIP_STRIPE_PAYMENTS` is hard-disabled in production builds. Stripe Connect payouts are deferred (platform-only immediate-capture at launch; mentors paid manually).
+
+### Stripe environment split (critical)
+
+- **Sandbox (AstroLink sandbox)**: Use for local dev + Vercel Preview. Create an isolated "AstroLink" sandbox in the Stripe Dashboard on the Helios Nexus account. Use its test keys (`sk_test_...` / `pk_test_...`). Local webhooks via `stripe listen`. See `docs/how-to/stripe-production-cutover.md`.
+- **Production**: Stay on the same Helios Nexus account but switch to **Live** mode.
+  - Create a narrow **Restricted API Key (RAK)** (`rk_live_...`) — this is your production `STRIPE_SECRET_KEY`.
+  - Register the webhook endpoint in **Live** mode (exactly the four events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`, `charge.dispute.created`).
+  - Put the live `pk_live_...`, the RAK, and the live `whsec_...` **only** into Vercel **Production** environment variables.
+  - Never put live keys into Preview or `.env.local`.
+  - Full cutover checklist is in `docs/how-to/stripe-production-cutover.md`. Always do one small real transaction + refund before considering the cutover complete.
+
+The code sets `metadata.app = 'astrolink'` on every PaymentIntent and filters defensively in the webhook handler for the shared account.
 5. Optional: `E2E_STUB_LLM=true` for stubbed briefings; `OPENAI_API_KEY` / `GEMINI_API_KEY` for real APX-02.
 6. Waitlist production (`APP_MODE=waitlist`, demo auth off): proxy blocks protected pages; `getSession()` also returns null for API routes so stale cookies cannot reach booking or dashboards.
 

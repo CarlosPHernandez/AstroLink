@@ -49,6 +49,7 @@ export type Database = {
           daily_room_url: string | null
           id: string
           include_pre_call_brief: boolean
+          duration_minutes: number
           intake_background: string | null
           match_reason: string | null
           mentee_id: string
@@ -66,6 +67,7 @@ export type Database = {
           daily_room_url?: string | null
           id?: string
           include_pre_call_brief?: boolean
+          duration_minutes?: number
           intake_background?: string | null
           match_reason?: string | null
           mentee_id: string
@@ -83,6 +85,7 @@ export type Database = {
           daily_room_url?: string | null
           id?: string
           include_pre_call_brief?: boolean
+          duration_minutes?: number
           intake_background?: string | null
           match_reason?: string | null
           mentee_id?: string
@@ -385,6 +388,7 @@ export type Database = {
           status: Database["public"]["Enums"]["transaction_status"]
           stripe_event_id: string
           stripe_payment_intent_id: string
+          stripe_refund_id: string | null
         }
         Insert: {
           booking_id: string
@@ -397,6 +401,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["transaction_status"]
           stripe_event_id: string
           stripe_payment_intent_id: string
+          stripe_refund_id?: string | null
         }
         Update: {
           booking_id?: string
@@ -409,6 +414,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["transaction_status"]
           stripe_event_id?: string
           stripe_payment_intent_id?: string
+          stripe_refund_id?: string | null
         }
         Relationships: [
           {
@@ -472,6 +478,8 @@ export type Database = {
         | "completed"
         | "pending_review"
         | "payment_failed"
+        | "cancelled"
+        | "refunded"
       compliance_status:
         | "pending_review"
         | "document_required"

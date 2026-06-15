@@ -45,7 +45,7 @@ export async function confirmBookingWithoutPayment(bookingId: string) {
 }
 
 /**
- * Idempotent D1 fulfillment after Stripe authorizes payment (manual capture / escrow).
+ * Idempotent D1 fulfillment after Stripe immediate-capture PaymentIntent succeeds.
  */
 export async function fulfillBookingAfterPayment(params: {
   stripeEventId: string;

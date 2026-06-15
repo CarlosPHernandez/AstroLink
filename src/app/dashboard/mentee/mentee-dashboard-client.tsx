@@ -136,6 +136,23 @@ export default function MenteeDashboardClient({
     router.replace('/dashboard/mentee', { scroll: false });
   }, [bookedId, bookings, localBriefings, router]);
 
+  // Auto-refresh a few times if the just-booked item is still pending_payment.
+  // Lets the Stripe webhook (succeeded -> fulfill -> confirmed + room) catch up and
+  // show the join button + updated status without the user having to manually reload.
+  // (Critical for the "payments succeed (200) but pending in DB/list" + "no join at T-5min" flow.)
+  useEffect(() => {
+    if (!bookedId) return;
+    const b = bookings.find((bb) => bb.id === bookedId);
+    if (!b || b.status !== 'pending_payment') return;
+
+    const t1 = setTimeout(() => router.refresh(), 1200);
+    const t2 = setTimeout(() => router.refresh(), 3500);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [bookedId, bookings, router]);
+
   function renderUpcomingCard(booking: MenteeBookingView) {
     const briefing = resolveBriefing(booking);
     const isGenerating = generatingId === booking.id;
@@ -152,14 +169,15 @@ export default function MenteeDashboardClient({
         }`}
       >
         <span className="absolute top-0 right-0 px-3 py-1 bg-surface-container-low text-on-surface-variant text-[9px] font-mono font-bold rounded-bl-md border-l border-b border-outline-variant uppercase">
-          {booking.status}
+          {booking.status === 'pending_payment' ? 'Awaiting confirmation' : booking.status}
         </span>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pr-16">
           <div>
             <h3 className="text-base font-bold text-on-surface">{booking.mentorName}</h3>
             <p className="text-xs text-on-surface-variant mt-0.5">
-              {SERVICE_TYPE_LABELS[booking.serviceType]} ·{' '}
+              {SERVICE_TYPE_LABELS[booking.serviceType]}
+              {booking.durationMinutes ? ` · ${booking.durationMinutes} min` : ''} ·{' '}
               <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span>
             </p>
           </div>
@@ -179,7 +197,7 @@ export default function MenteeDashboardClient({
                 disabled={generatingId !== null}
                 className="px-3 py-2 rounded-md border border-outline-variant text-on-surface-variant hover:text-on-surface text-[10px] font-semibold uppercase tracking-wider cursor-pointer disabled:opacity-50"
               >
-                {skipPayments ? 'Generate brief' : 'Brief after pay'}
+                {skipPayments ? 'Generate brief' : (booking.status === 'pending_payment' ? 'Brief (confirming payment)' : 'Generate brief')}
               </button>
             ) : null}
             {canJoin ? (
@@ -209,7 +227,7 @@ export default function MenteeDashboardClient({
           <p className="text-sm font-semibold text-on-surface">{booking.mentorName}</p>
           <p className="text-[11px] text-on-surface-variant">
             <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span> ·{' '}
-            {booking.status}
+            {booking.status === 'pending_payment' ? 'Awaiting confirmation' : booking.status}
           </p>
         </div>
         <div className="flex gap-2">

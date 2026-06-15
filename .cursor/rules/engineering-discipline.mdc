@@ -1,0 +1,24 @@
+---
+description: Close reviews with decisions, expand tests, and pair features with simplification (YC growth areas)
+alwaysApply: true
+---
+
+# Engineering discipline
+
+Full workflow: `skills/engineering-discipline/SKILL.md`. Apply on plan reviews, critiques, and feature work.
+
+## 1. Review closeout
+
+Every critique item gets one disposition before the session ends: **Accepted**, **Rejected**, **Deferred**, or **Needs option**. End with a decision ledger table — not findings alone.
+
+## 2. Test depth
+
+Turn every planned check from reviews into a named test (`src/lib/*.test.ts` or E2E). Prefer unit tests for access, env/mode guards, and token/booking logic. Run `npm test` after adding tests.
+
+## 3. Simplification
+
+Every feature plan names what gets **removed**, **split**, or **merged** — not only risks. Flag files approaching 500 lines and legacy paths (mock data, `NODE_ENV` branches, dev-only routes) this work replaces.
+
+## Session end
+
+Close with: decision counts, test files touched, simplification actions (or justified none), and one next action.
