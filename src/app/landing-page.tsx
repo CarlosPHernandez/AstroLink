@@ -1,12 +1,27 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import LandingHero from '@/components/landing/landing-hero';
+import ExpertDirectory from '@/components/landing/expert-directory';
 import { LandingAuthNavClient } from '@/components/landing/landing-auth-nav-client';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
-const LandingHero = dynamic(() => import('@/components/landing/landing-hero'));
-const ExpertDirectory = dynamic(() => import('@/components/landing/expert-directory'));
-const LandingComparison = dynamic(() =>
-  import('@/components/landing/landing-comparison').then((mod) => mod.LandingComparison),
+const LandingComparison = dynamic(
+  () =>
+    import('@/components/landing/landing-comparison').then((mod) => mod.LandingComparison),
+  {
+    loading: () => (
+      <div
+        className="border-t border-outline-variant/30 bg-background py-24"
+        aria-busy="true"
+        aria-label="Loading comparison section"
+      >
+        <div className="mx-auto max-w-[1200px] px-lg">
+          <div className="mx-auto mb-16 h-8 max-w-xl animate-pulse rounded-md bg-surface-container-low" />
+          <div className="h-64 animate-pulse rounded-2xl bg-surface-container-low" />
+        </div>
+      </div>
+    ),
+  },
 );
 
 export default function LandingPage({ experts }: { experts: ListedExpert[] }) {
