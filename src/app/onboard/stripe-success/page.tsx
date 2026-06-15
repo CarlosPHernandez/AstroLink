@@ -15,7 +15,7 @@ export default async function StripeSuccessPage() {
         <div className="absolute -top-12 -left-12 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl -z-10 pointer-events-none" />
         
         {/* Success Icon Badge */}
-        <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-250 text-emerald-600 text-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+        <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 text-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
           ✓
         </div>
         

@@ -56,9 +56,11 @@ function AuthPageContent() {
         </div>
 
         <div className="bg-surface-container-lowest border border-outline-variant p-5 sm:p-8 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.015)] animate-reveal-up delay-300">
-          <div className="flex border-b border-outline-variant mb-6">
+          <div className="flex border-b border-outline-variant mb-6" role="tablist" aria-label="Authentication">
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'login'}
               onClick={() => setActiveTab('login')}
               className={`flex-1 pb-3 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all ${
                 activeTab === 'login'
@@ -70,6 +72,8 @@ function AuthPageContent() {
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'signup'}
               onClick={() => setActiveTab('signup')}
               className={`flex-1 pb-3 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all ${
                 activeTab === 'signup'
@@ -152,9 +156,8 @@ function AuthPageContent() {
                 <FieldError id="login-email-error" message={loginState?.errors?.email?.[0]} />
               </div>
               <div>
-                <div className="flex justify-between items-center mb-xs">
+                <div className="mb-xs">
                   <label className="block font-label-sm text-label-sm text-on-surface" htmlFor="password">Password</label>
-                  <a className="font-label-sm text-label-sm text-primary hover:text-on-primary-fixed-variant transition-colors" href="#">Forgot password?</a>
                 </div>
                 <input
                   className={fieldErrorInputClass(
