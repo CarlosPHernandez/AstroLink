@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { toAuthWithRedirect } from '@/lib/auth-redirect';
 import { getBookingForSession } from '@/lib/booking-access';
+import { getDashboardPathForRole } from '@/lib/dashboard-paths';
+import { getSession } from '@/lib/session';
 import SessionRoomClient from './session-room-client';
 
 export default async function SessionPage({
@@ -16,7 +18,8 @@ export default async function SessionPage({
   }
 
   if (!booking) {
-    redirect('/dashboard/mentee');
+    const session = await getSession();
+    redirect(getDashboardPathForRole(session?.role ?? 'mentee'));
   }
 
   return <SessionRoomClient booking={booking} />;

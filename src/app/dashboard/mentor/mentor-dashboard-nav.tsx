@@ -1,12 +1,11 @@
 'use client';
 
-export type MentorDashboardTab = 'sessions' | 'earnings' | 'profile' | 'reports';
+export type MentorDashboardTab = 'sessions' | 'earnings' | 'profile';
 
 const TABS: { id: MentorDashboardTab; label: string }[] = [
   { id: 'sessions', label: 'Sessions' },
   { id: 'earnings', label: 'Earnings & payouts' },
   { id: 'profile', label: 'Profile' },
-  { id: 'reports', label: 'Reports' },
 ];
 
 export function MentorDashboardNav({
@@ -23,11 +22,14 @@ export function MentorDashboardNav({
       <nav
         className="flex flex-row gap-1 overflow-x-auto border-b border-outline-variant pb-2 lg:flex-col lg:overflow-x-visible lg:border-b-0 lg:pb-0"
         aria-label="Mentor dashboard"
+        role="tablist"
       >
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
             onClick={() => onTabChange(tab.id)}
             data-testid={`mentor-tab-${tab.id}`}
             className={`rounded-md px-3 py-2 text-left text-sm font-medium transition-colors cursor-pointer whitespace-nowrap ${

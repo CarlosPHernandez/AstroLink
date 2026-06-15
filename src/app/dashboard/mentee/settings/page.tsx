@@ -1,3 +1,4 @@
+import { toAuthWithRedirect } from '@/lib/auth-redirect';
 import { isStripePaymentsSkipped } from '@/lib/booking-payments';
 import { getMenteeProfile } from '@/lib/user-profile';
 import { getSession } from '@/lib/session';
@@ -8,7 +9,7 @@ export default async function MenteeSettingsPage() {
   const session = await getSession();
 
   if (!session) {
-    redirect('/auth');
+    redirect(toAuthWithRedirect('/dashboard/mentee/settings'));
   }
 
   if (session.role !== 'mentee') {

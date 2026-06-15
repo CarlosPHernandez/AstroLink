@@ -1,12 +1,12 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 import type { ListedExpert } from '@/lib/mentor-directory';
+import { toOptimizedImageUrl } from '@/lib/public-images';
 import {
   PRE_CALL_BRIEF_ADDON_CENTS,
   computeBookingTotalCents,
@@ -14,6 +14,7 @@ import {
 import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
 import { BookBodySchema } from '@/lib/book-request-schema';
+import { getDashboardPathForRole, getPostBookingDashboardPath } from '@/lib/dashboard-paths';
 import type { SessionData } from '@/lib/session';
 import {
   type FieldErrors,
@@ -23,7 +24,16 @@ import {
   toFieldErrors,
 } from '@/lib/zod-field-errors';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
+const BookingPaymentStep = dynamic(
+  () =>
+    import('@/app/booking/booking-payment-step').then((mod) => mod.BookingPaymentStep),
+  {
+    ssr: false,
+    loading: () => (
+      <p className="text-sm text-on-surface-variant py-8 text-center">Loading secure checkout…</p>
+    ),
+  },
+);
 
 const fieldClass =
   'w-full py-3 px-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow';
@@ -124,13 +134,19 @@ function SessionFormatPicker({
   ];
 
   return (
-    <div className="grid sm:grid-cols-2 gap-3">
+    <div
+      className="grid sm:grid-cols-2 gap-3"
+      role="radiogroup"
+      aria-label="Session type"
+    >
       {options.map((opt) => {
         const selected = value === opt.id;
         return (
           <button
             key={opt.id}
             type="button"
+            role="radio"
+            aria-checked={selected}
             onClick={() => onChange(opt.id)}
             className={`text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${
               selected
@@ -200,7 +216,13 @@ function CheckoutSummary({
           {mentor && isLive ? (
             <div className="flex gap-3 pb-4 border-b border-outline-variant/60">
               <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-outline-variant">
-                <Image src={mentor.imageUrl} alt="" fill className="object-cover" sizes="40px" />
+                <Image
+                  src={toOptimizedImageUrl(mentor.imageUrl)}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                />
               </div>
               <div className="min-w-0">
                 <p className="text-label-md font-semibold text-on-surface truncate">{mentor.name}</p>
@@ -275,81 +297,6 @@ function CheckoutSummary({
           </li>
         ))}
       </ul>
-    </div>
-  );
-}
-
-function PaymentStep({
-  checkout,
-  onBack,
-}: {
-  checkout: CheckoutState;
-  onBack: () => void;
-}) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const router = useRouter();
-  const [paying, setPaying] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handlePay = async () => {
-    if (!stripe || !elements) return;
-    setPaying(true);
-    setError(null);
-
-    const { error: submitError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/dashboard/mentee?booked=${checkout.bookingId}`,
-      },
-      redirect: 'if_required',
-    });
-
-    setPaying(false);
-
-    if (submitError) {
-      setError(submitError.message ?? 'Payment failed');
-      return;
-    }
-
-    router.push(`/dashboard/mentee?booked=${checkout.bookingId}`);
-    router.refresh();
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="rounded-lg border border-outline-variant bg-surface-container-low p-4 flex gap-3">
-        <span className="material-symbols-outlined text-primary text-[22px]">account_balance</span>
-        <p className="text-label-md text-on-surface-variant leading-relaxed">
-          Authorize{' '}
-          <strong className="text-on-surface font-mono">{formatMoney(checkout.amountCents)}</strong>.
-          Funds are captured only after your session completes successfully.
-        </p>
-      </div>
-
-      <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
-        <PaymentElement options={{ layout: 'tabs' }} />
-      </div>
-
-      <FormAlert message={error} />
-
-      <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="sm:flex-1 py-3 rounded-lg border border-outline-variant text-label-md font-semibold text-on-surface-variant hover:bg-surface-container-low transition-colors"
-        >
-          Edit details
-        </button>
-        <button
-          type="button"
-          disabled={!stripe || paying}
-          onClick={handlePay}
-          className="sm:flex-[2] py-3.5 rounded-lg bg-primary text-on-primary text-label-md font-semibold hover:bg-primary-container disabled:opacity-50 transition-all"
-        >
-          {paying ? 'Authorizing…' : `Authorize ${formatMoney(checkout.amountCents)}`}
-        </button>
-      </div>
     </div>
   );
 }
@@ -444,7 +391,7 @@ export default function BookingClient({
       }
 
       if (json.data.skipPayment) {
-        router.push(`/dashboard/mentee?booked=${json.data.bookingId}`);
+        router.push(getPostBookingDashboardPath(session.role, json.data.bookingId));
         router.refresh();
         return;
       }
@@ -472,14 +419,17 @@ export default function BookingClient({
       <header className="border-b border-outline-variant/60 bg-surface-container-lowest/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link href="/" className="font-bold text-on-surface tracking-tight">
-            Astrolink
+            AstroLink
           </Link>
           <div className="flex items-center gap-3 text-label-md">
             <span className="text-on-surface-variant hidden sm:inline truncate max-w-[180px]">
               {session.fullName}
             </span>
             <span className="text-outline-variant hidden sm:inline">·</span>
-            <Link href="/dashboard/mentee" className="text-primary font-semibold hover:underline">
+            <Link
+              href={getDashboardPathForRole(session.role)}
+              className="text-primary font-semibold hover:underline"
+            >
               Dashboard
             </Link>
           </div>
@@ -502,7 +452,7 @@ export default function BookingClient({
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={expertAvatarClass}>
                     <Image
-                      src={mentor.imageUrl}
+                      src={toOptimizedImageUrl(mentor.imageUrl)}
                       alt=""
                       fill
                       className="object-cover"
@@ -555,9 +505,11 @@ export default function BookingClient({
           <div className="min-w-0">
             <div className="rounded-xl border border-outline-variant bg-surface-container-lowest shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-5 sm:p-8">
               {checkout?.clientSecret ? (
-                <Elements stripe={stripePromise} options={{ clientSecret: checkout.clientSecret }}>
-                  <PaymentStep checkout={checkout} onBack={() => setCheckout(null)} />
-                </Elements>
+                <BookingPaymentStep
+                  checkout={checkout}
+                  onBack={() => setCheckout(null)}
+                  sessionRole={session.role}
+                />
               ) : (
                 <form onSubmit={handleSubmit} method="post" className="space-y-10">
                   <section>
