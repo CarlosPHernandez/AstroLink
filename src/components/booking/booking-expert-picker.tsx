@@ -4,7 +4,10 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { BookingExpertPickerCard } from '@/components/booking/booking-expert-picker-card';
 import { ExpertCategoryFilter } from '@/components/booking/expert-category-filter';
-import { filterExpertsByCategory } from '@/lib/expert-categories';
+import {
+  filterExpertsByCategory,
+  shouldClearExpertOnCategoryChange,
+} from '@/lib/expert-categories';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 type BookingExpertPickerProps = {
@@ -12,6 +15,8 @@ type BookingExpertPickerProps = {
   selectedSlug: string | null;
   invalidMentorSlug?: string | null;
   onSelect: (slug: string) => void;
+  /** Clears parent selection when the active expert is filtered out of the category. */
+  onClearSelection?: () => void;
 };
 
 export function BookingExpertPicker({
@@ -19,6 +24,7 @@ export function BookingExpertPicker({
   selectedSlug,
   invalidMentorSlug,
   onSelect,
+  onClearSelection,
 }: BookingExpertPickerProps) {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
@@ -26,6 +32,13 @@ export function BookingExpertPicker({
     () => filterExpertsByCategory(experts, selectedCategory),
     [experts, selectedCategory],
   );
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    if (onClearSelection && shouldClearExpertOnCategoryChange(experts, selectedSlug, category)) {
+      onClearSelection();
+    }
+  };
 
   return (
     <section aria-labelledby="booking-expert-picker-heading" data-testid="booking-expert-picker">
@@ -45,7 +58,7 @@ export function BookingExpertPicker({
 
       <ExpertCategoryFilter
         selectedCategory={selectedCategory}
-        onCategoryChange={(cat) => setSelectedCategory(cat)}
+        onCategoryChange={handleCategoryChange}
       />
 
       {filteredExperts.length === 0 ? (
