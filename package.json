@@ -1,6 +1,6 @@
 {
   "name": "astrolink",
-  "version": "0.3.1.0",
+  "version": "0.4.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -19,6 +19,7 @@
     "@google/genai": "^2.6.0",
     "@stripe/react-stripe-js": "^6.6.0",
     "@stripe/stripe-js": "^9.8.0",
+    "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.106.1",
     "next": "16.2.6",
     "openai": "^6.39.1",
