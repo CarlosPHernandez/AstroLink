@@ -2,6 +2,11 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.0.1] - 2026-06-16
+
+### Fixed
+- X OAuth and other Supabase redirects no longer fall back to `http://127.0.0.1:3000` in production when `NEXT_PUBLIC_APP_URL` is unset — uses `https://astro-link.space` instead.
+
 ## [0.4.0.0] - 2026-06-16
 
 Real account creation with Supabase Auth.

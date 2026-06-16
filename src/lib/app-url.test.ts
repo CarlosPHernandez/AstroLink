@@ -17,4 +17,10 @@ describe('app-url', () => {
     const { getAppBaseUrl } = await import('@/lib/app-url');
     expect(getAppBaseUrl()).toBe('https://preview.vercel.app');
   });
+
+  it('uses production app URL when NODE_ENV is production and no env is set', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    const { getAppBaseUrl } = await import('@/lib/app-url');
+    expect(getAppBaseUrl()).toBe('https://astro-link.space');
+  });
 });
