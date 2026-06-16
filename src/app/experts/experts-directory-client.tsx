@@ -3,8 +3,10 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ExpertCategoryFilter } from '@/components/booking/expert-category-filter';
 import { ExpertCard } from '@/components/experts/expert-card';
 import { LandingAuthNavClient } from '@/components/landing/landing-auth-nav-client';
+import { filterExpertsByCategory } from '@/lib/expert-categories';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 const ExpertDetailPanel = dynamic(
@@ -18,8 +20,6 @@ const ExpertDetailSheet = dynamic(
     import('@/components/experts/expert-detail-sheet').then((mod) => mod.ExpertDetailSheet),
   { loading: () => null },
 );
-
-const CATEGORIES = ['all', 'systems', 'propulsion', 'spacecraft', 'policy'] as const;
 
 export default function ExpertsDirectoryClient({
   experts,
@@ -42,10 +42,7 @@ export default function ExpertsDirectoryClient({
   }, []);
 
   const filteredExperts = useMemo(
-    () =>
-      selectedCategory === 'all'
-        ? experts
-        : experts.filter((e) => e.category === selectedCategory),
+    () => filterExpertsByCategory(experts, selectedCategory),
     [experts, selectedCategory],
   );
 
@@ -92,26 +89,11 @@ export default function ExpertsDirectoryClient({
           </p>
         </div>
 
-        <div
-          className="flex flex-wrap gap-2 mb-8"
-          role="group"
-          aria-label="Filter experts by category"
-        >
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => handleCategoryChange(cat)}
-              aria-pressed={selectedCategory === cat}
-              className={`touch-manipulation px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border rounded-md transition-all cursor-pointer ${
-                selectedCategory === cat
-                  ? 'bg-primary text-white border-primary'
-                  : 'border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:border-outline'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="mb-8">
+          <ExpertCategoryFilter
+            selectedCategory={selectedCategory}
+            onCategoryChange={handleCategoryChange}
+          />
         </div>
 
         {filteredExperts.length === 0 ? (

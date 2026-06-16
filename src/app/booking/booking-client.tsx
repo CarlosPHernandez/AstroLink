@@ -1,10 +1,11 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { BookingExpertPicker } from '@/components/booking/booking-expert-picker';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 import {
@@ -205,7 +206,7 @@ function CheckoutSummary({
   const isLive = form.serviceType === 'session_1on1';
 
   return (
-    <div className="lg:sticky lg:top-24 space-y-4">
+    <div id="booking-checkout-summary" className="lg:sticky lg:top-24 space-y-4">
       <div className="rounded-xl border border-outline-variant bg-surface-container-lowest overflow-hidden">
         <div className="px-5 py-4 border-b border-outline-variant bg-surface-container-low">
           <h3 className="text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant">
@@ -239,7 +240,11 @@ function CheckoutSummary({
                 {isLive ? 'Session' : 'Pre-call brief'}
               </dt>
               <dd className="font-mono text-on-surface tabular-nums shrink-0">
-                {isLive && mentor ? formatMoney(mentor.liveSessionPriceCents) : formatMoney(PRE_CALL_BRIEF_ADDON_CENTS)}
+                {isLive
+                  ? mentor
+                    ? `${formatMoney(mentor.liveSessionPriceCents)}/hr`
+                    : '—'
+                  : formatMoney(PRE_CALL_BRIEF_ADDON_CENTS)}
               </dd>
             </div>
             {/* Brief is now included in the base mentor session price for live sessions (no separate add-on) */}
@@ -269,14 +274,20 @@ function CheckoutSummary({
             </div>
           )}
 
-          <div className="pt-4 border-t border-outline-variant flex justify-between items-baseline">
-            <span className="text-body-md font-semibold text-on-surface">
-              {step === 2 ? 'Due today' : 'Estimated'}
-            </span>
-            <span className="text-headline-md font-bold text-primary tabular-nums">
-              {formatMoney(displayTotal)}
-            </span>
-          </div>
+          {isLive && !mentor ? (
+            <p className="pt-4 border-t border-outline-variant text-label-sm text-on-surface-variant">
+              Select an expert to see your estimated total.
+            </p>
+          ) : (
+            <div className="pt-4 border-t border-outline-variant flex justify-between items-baseline">
+              <span className="text-body-md font-semibold text-on-surface">
+                {step === 2 ? 'Due today' : 'Estimated'}
+              </span>
+              <span className="text-headline-md font-bold text-primary tabular-nums">
+                {formatMoney(displayTotal)}
+              </span>
+            </div>
+          )}
           <p className="text-label-sm text-on-surface-variant leading-relaxed">
             {step === 2
               ? 'Authorization only — charged after your session ends.'
@@ -303,11 +314,15 @@ function CheckoutSummary({
 
 export default function BookingClient({
   session,
+  experts,
   mentor,
+  invalidMentorSlug = null,
   skipPayments = false,
 }: {
   session: SessionData;
+  experts: ListedExpert[];
   mentor: ListedExpert | null;
+  invalidMentorSlug?: string | null;
   skipPayments?: boolean;
 }) {
   const router = useRouter();
@@ -315,6 +330,8 @@ export default function BookingClient({
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [pendingSlug, setPendingSlug] = useState<string | null>(mentor?.slug ?? null);
+  const [showPicker, setShowPicker] = useState(!mentor);
   const [form, setForm] = useState<BookingFormState>({
     serviceType: 'session_1on1',
     goals: '',
@@ -323,7 +340,37 @@ export default function BookingClient({
     durationMinutes: 30, // default; slider will adjust (min 15 enforced in pricing)
   });
 
-  const baseCents = mentor?.liveSessionPriceCents ?? 0;
+  useEffect(() => {
+    setPendingSlug(mentor?.slug ?? null);
+    if (mentor) {
+      setShowPicker(false);
+    }
+  }, [mentor?.slug, mentor]);
+
+  const activeMentor = useMemo(() => {
+    if (pendingSlug) {
+      return experts.find((expert) => expert.slug === pendingSlug) ?? mentor ?? null;
+    }
+    return mentor;
+  }, [pendingSlug, experts, mentor]);
+
+  const needsExpert = form.serviceType === 'session_1on1';
+  const pickerVisible = needsExpert && (showPicker || !activeMentor);
+
+  const handleSelectExpert = (slug: string) => {
+    setPendingSlug(slug);
+    setShowPicker(false);
+    setError(null);
+    router.replace(`/booking?mentor=${encodeURIComponent(slug)}`, { scroll: false });
+  };
+
+  const handleChangeExpert = () => {
+    setPendingSlug(null);
+    setShowPicker(true);
+    router.replace('/booking', { scroll: false });
+  };
+
+  const baseCents = activeMentor?.liveSessionPriceCents ?? 0;
   // Duration slider (in summary card) makes live 1:1 price dynamic (prorated hourly rate).
   // Briefing always bundled. pre_call_brief remains fixed.
   const totalCents = computeBookingTotalCents({
@@ -336,14 +383,15 @@ export default function BookingClient({
   const step: 1 | 2 = checkout?.clientSecret ? 2 : 1;
 
   const submitBooking = async () => {
-    if (!mentor && form.serviceType === 'session_1on1') {
+    if (!activeMentor && form.serviceType === 'session_1on1') {
       setFieldErrors({});
-      setError('Choose an expert from the directory before booking a live session.');
+      setShowPicker(true);
+      setError('Choose an expert above before booking a live session.');
       return;
     }
 
     const payload = {
-      mentorId: mentor?.id,
+      mentorId: activeMentor?.id,
       serviceType: form.serviceType,
       includePreCallBrief: false,
       scheduledAt: new Date(form.scheduledAt).toISOString(),
@@ -436,7 +484,11 @@ export default function BookingClient({
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <main
+        className={`max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 ${
+          needsExpert && step === 1 ? 'pb-28 lg:pb-12' : ''
+        }`}
+      >
         <div className="mb-8">
           <Link
             href="/experts"
@@ -446,13 +498,13 @@ export default function BookingClient({
             Directory
           </Link>
 
-          {mentor ? (
+          {activeMentor && !showPicker ? (
             <>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={expertAvatarClass}>
                     <Image
-                      src={toOptimizedImageUrl(mentor.imageUrl)}
+                      src={toOptimizedImageUrl(activeMentor.imageUrl)}
                       alt=""
                       fill
                       className="object-cover"
@@ -464,36 +516,37 @@ export default function BookingClient({
                       {step === 1 ? 'Booking a session with' : 'Authorizing payment for'}
                     </p>
                     <h1 className="text-headline-lg-mobile sm:text-headline-lg font-bold tracking-tight text-on-surface truncate">
-                      {mentor.name}
+                      {activeMentor.name}
                     </h1>
                   </div>
                 </div>
-                <Link
-                  href="/experts"
-                  className="shrink-0 pt-5 text-label-sm text-on-surface-variant hover:text-primary transition-colors hidden sm:block"
-                >
-                  Change expert
-                </Link>
+                {step === 1 ? (
+                  <button
+                    type="button"
+                    onClick={handleChangeExpert}
+                    className="shrink-0 pt-5 text-label-sm text-on-surface-variant hover:text-primary transition-colors"
+                  >
+                    Change expert
+                  </button>
+                ) : null}
               </div>
-              <p className="mt-1.5 text-label-md text-on-surface-variant pl-12">
-                {mentor.role}
-                <span className="mx-1.5 text-outline-variant">·</span>
-                {mentor.employer}
-                <span className="mx-2 text-outline-variant">·</span>
-                <span className="font-mono text-on-surface">${mentor.rate}</span>
-                <span className="text-on-surface-variant"> / session</span>
+              <p className="mt-1.5 text-label-md text-on-surface-variant pl-0 sm:pl-12 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                <span className="truncate max-w-full">{activeMentor.role}</span>
+                <span className="text-outline-variant">·</span>
+                <span className="truncate max-w-full text-on-surface-variant/90">{activeMentor.employer}</span>
+                <span className="text-outline-variant">·</span>
+                <span className="font-mono text-on-surface whitespace-nowrap">${activeMentor.rate}/hr</span>
               </p>
             </>
           ) : (
             <>
               <h1 className="text-headline-lg-mobile sm:text-headline-lg font-bold tracking-tight text-on-surface">
-                Complete your booking
+                {needsExpert ? 'Book a live session' : 'Complete your booking'}
               </h1>
               <p className="mt-2 text-label-md text-on-surface-variant">
-                No expert selected.{' '}
-                <Link href="/experts" className="text-primary hover:underline">
-                  Browse the directory →
-                </Link>
+                {needsExpert
+                  ? 'Choose an expert below to see pricing and continue.'
+                  : 'Add your session details to continue.'}
               </p>
             </>
           )}
@@ -512,12 +565,26 @@ export default function BookingClient({
                 />
               ) : (
                 <form onSubmit={handleSubmit} method="post" className="space-y-10">
+                  {pickerVisible ? (
+                    <BookingExpertPicker
+                      experts={experts}
+                      selectedSlug={pendingSlug}
+                      invalidMentorSlug={invalidMentorSlug}
+                      onSelect={handleSelectExpert}
+                    />
+                  ) : null}
+
                   <section>
                     <h2 className={sectionTitleClass}>Session type</h2>
                     <p className={sectionHintClass}>Choose how you want to work with an expert.</p>
                     <SessionFormatPicker
                       value={form.serviceType}
-                      onChange={(serviceType) => setForm({ ...form, serviceType })}
+                      onChange={(serviceType) => {
+                        setForm({ ...form, serviceType });
+                        if (serviceType === 'session_1on1' && !activeMentor) {
+                          setShowPicker(true);
+                        }
+                      }}
                     />
                   </section>
 
@@ -634,7 +701,9 @@ export default function BookingClient({
                           : 'Creating booking…'
                         : skipPayments
                           ? 'Confirm booking'
-                          : `Continue — ${formatMoney(totalCents)}`}
+                          : needsExpert && !activeMentor
+                            ? 'Continue'
+                            : `Continue — ${formatMoney(totalCents)}`}
                     </button>
                     <p className="text-label-sm text-on-surface-variant">
                       {skipPayments
@@ -648,7 +717,7 @@ export default function BookingClient({
           </div>
 
           <CheckoutSummary
-            mentor={mentor}
+            mentor={activeMentor}
             form={form}
             totalCents={totalCents}
             step={step}
@@ -657,6 +726,33 @@ export default function BookingClient({
           />
         </div>
       </main>
+
+      {needsExpert && step === 1 ? (
+        <div
+          className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-outline-variant bg-surface-container-lowest/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+          data-testid="booking-mobile-price-bar"
+        >
+          {activeMentor ? (
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-label-sm font-semibold text-on-surface truncate">
+                  {activeMentor.name}
+                </p>
+                <p className="text-label-sm text-on-surface-variant">
+                  {form.durationMinutes} min · ${activeMentor.rate}/hr
+                </p>
+              </div>
+              <p className="text-headline-sm font-bold text-primary tabular-nums shrink-0">
+                {formatMoney(totalCents)}
+              </p>
+            </div>
+          ) : (
+            <p className="text-label-sm text-on-surface-variant text-center">
+              Select an expert above to see your estimated total
+            </p>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
