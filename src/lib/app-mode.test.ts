@@ -30,6 +30,19 @@ describe('app-mode', () => {
     expect(isProtectedAppSurfaceEnabled()).toBe(true);
   });
 
+  it('enables Supabase auth when demo auth is off in full mode', async () => {
+    vi.stubEnv('APP_MODE', 'full');
+    vi.stubEnv('ENABLE_DEMO_AUTH', 'false');
+    const { isSupabaseAuthEnabled } = await import('@/lib/app-mode');
+    expect(isSupabaseAuthEnabled()).toBe(true);
+  });
+
+  it('disables Supabase auth when demo auth is on', async () => {
+    vi.stubEnv('ENABLE_DEMO_AUTH', 'true');
+    const { isSupabaseAuthEnabled } = await import('@/lib/app-mode');
+    expect(isSupabaseAuthEnabled()).toBe(false);
+  });
+
   it('enforces ADMIN_EMAILS when set', async () => {
     vi.stubEnv('ADMIN_EMAILS', 'ops@astrolink.ai, admin@astrolink.ai');
     const { isAdminEmailAllowed } = await import('@/lib/app-mode');
