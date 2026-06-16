@@ -2,6 +2,25 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.0.0] - 2026-06-16
+
+Real account creation with Supabase Auth.
+
+### Added
+- Email/password sign-up and sign-in on `/auth`, with email confirmation and forgot/update password flows.
+- Phone OTP sign-in (international `+` format) alongside email — equal entry points on the auth page.
+- X (Twitter) OAuth sign-in; new OAuth users complete profile when email is missing.
+- Supabase SSR session cookies with proxy refresh; demo cookie auth preserved for local dev and E2E when `ENABLE_DEMO_AUTH=true`.
+- `user_app_state` table and `handle_new_auth_user` trigger linking `auth.users` to mentee profiles (`users.auth_id`, `mentors.user_id`).
+- `NEXT_PUBLIC_APP_URL` for PKCE redirect URLs (production default `https://astro-link.space`).
+
+### Changed
+- `getSession()` and proxy resolve roles from Supabase `auth.users` → mentee, mentor, or admin (`ADMIN_EMAILS`).
+- Expert category filtering aligned between the booking picker and `/experts` directory.
+
+### Operations
+- Production: set `ENABLE_DEMO_AUTH=false`, configure Supabase Site URL + redirect URLs, Twilio Verify for phone, and X OAuth credentials in the Supabase dashboard.
+
 ## [0.3.1.0] - 2026-06-16
 
 Booking expert selection and signed-in home experience.
