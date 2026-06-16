@@ -11,6 +11,11 @@ export function getAppBaseUrl(): string {
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
+  // Never fall back to localhost in a production build — Supabase OAuth uses this
+  // as redirectTo; a dev Site URL in the dashboard alone can still strand users.
+  if (process.env.NODE_ENV === 'production') {
+    return PRODUCTION_APP_URL;
+  }
   return 'http://127.0.0.1:3000';
 }
 
