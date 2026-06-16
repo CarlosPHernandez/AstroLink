@@ -68,10 +68,24 @@ test.describe('Auth and landing smoke', () => {
     });
   });
 
-  test('landing shows Chris Sembroski from Supabase roster', async ({ page }) => {
+  test('signed-in home shows shell with expert teaser, not marketing hero', async ({ page }) => {
     await page.goto('/');
+    await expect(page.getByTestId('signed-in-home')).toBeVisible();
+    await expect(page.getByTestId('signed-in-cta-book')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Book verified space experts/i })).toHaveCount(0);
     await expect(page.getByTestId('expert-card-chris-sembroski')).toBeVisible();
-    await expect(page.getByText('Chris Sembroski')).toBeVisible();
-    await expect(page.getByText('$250/hr')).toBeVisible();
+  });
+
+  test.describe('signed-out landing', () => {
+    test.use({ storageState: emptyStorage });
+
+    test('marketing landing shows hero and expert roster', async ({ page }) => {
+      await page.goto('/');
+      await expect(page.getByTestId('signed-in-home')).toHaveCount(0);
+      await expect(page.getByRole('heading', { name: /Book verified space experts/i })).toBeVisible();
+      await expect(page.getByTestId('expert-card-chris-sembroski')).toBeVisible();
+      await expect(page.getByText('Chris Sembroski')).toBeVisible();
+      await expect(page.getByTestId('expert-card-chris-sembroski')).toContainText('$250/hr');
+    });
   });
 });

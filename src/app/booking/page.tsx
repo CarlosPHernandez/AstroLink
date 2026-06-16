@@ -1,5 +1,5 @@
 import { isStripePaymentsSkipped } from '@/lib/booking-payments';
-import { getMentorBySlug } from '@/lib/mentor-directory';
+import { getMentorBySlug, listPublicMentors } from '@/lib/mentor-directory';
 import { requireSession } from '@/lib/require-session';
 import BookingClient from './booking-client';
 
@@ -11,7 +11,19 @@ export default async function BookingPage({
   const session = await requireSession();
 
   const { mentor: mentorSlug } = await searchParams;
-  const mentor = mentorSlug ? await getMentorBySlug(mentorSlug) : null;
+  const [experts, mentor] = await Promise.all([
+    listPublicMentors(),
+    mentorSlug ? getMentorBySlug(mentorSlug) : Promise.resolve(null),
+  ]);
+  const invalidMentorSlug = mentorSlug && !mentor ? mentorSlug : null;
 
-  return <BookingClient session={session} mentor={mentor} skipPayments={isStripePaymentsSkipped()} />;
+  return (
+    <BookingClient
+      session={session}
+      experts={experts}
+      mentor={mentor}
+      invalidMentorSlug={invalidMentorSlug}
+      skipPayments={isStripePaymentsSkipped()}
+    />
+  );
 }

@@ -2,6 +2,19 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.3.1.0] - 2026-06-16
+
+Booking expert selection and signed-in home experience.
+
+### Added
+- Inline expert picker on `/booking` — horizontal carousel with category filters so mentees can choose an expert and see rates without leaving checkout.
+- Mobile sticky price bar on booking showing estimated total after expert selection.
+- Signed-in landing shell on `/` — welcome message, role-aware quick actions, and expert teaser for mentees (marketing hero hidden when signed in).
+
+### Changed
+- Shared expert category filter between booking picker and `/experts` directory.
+- Booking header rate label uses `$X/hr` consistently; summary no longer shows pre-call brief price before an expert is picked.
+
 ## [0.3.0.2] - 2026-06-15
 
 Mobile load-time and first-paint polish on public routes.
