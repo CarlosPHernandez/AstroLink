@@ -46,3 +46,8 @@ export function isAdminEmailAllowed(email: string): boolean {
 export function isProtectedAppSurfaceEnabled(): boolean {
   return !isWaitlistMode() || isDemoAuthEnabled();
 }
+
+/** Real Supabase Auth (email, phone, OAuth). Off when demo cookie auth is on. */
+export function isSupabaseAuthEnabled(): boolean {
+  return isProtectedAppSurfaceEnabled() && !isDemoAuthEnabled();
+}

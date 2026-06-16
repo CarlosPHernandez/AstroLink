@@ -365,6 +365,11 @@ export default function BookingClient({
   };
 
   const handleChangeExpert = () => {
+    setShowPicker(true);
+    router.replace('/booking', { scroll: false });
+  };
+
+  const handleClearExpertSelection = () => {
     setPendingSlug(null);
     setShowPicker(true);
     router.replace('/booking', { scroll: false });
@@ -571,6 +576,7 @@ export default function BookingClient({
                       selectedSlug={pendingSlug}
                       invalidMentorSlug={invalidMentorSlug}
                       onSelect={handleSelectExpert}
+                      onClearSelection={handleClearExpertSelection}
                     />
                   ) : null}
 

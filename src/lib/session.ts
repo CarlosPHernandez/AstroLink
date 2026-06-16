@@ -1,6 +1,8 @@
 import 'server-only';
 import { cookies } from 'next/headers';
-import { isProtectedAppSurfaceEnabled } from '@/lib/app-mode';
+import { isDemoAuthEnabled, isProtectedAppSurfaceEnabled, isSupabaseAuthEnabled } from '@/lib/app-mode';
+import { resolveAppSessionFromAuthUser } from '@/lib/resolve-app-session';
+import { createClient } from '@/lib/supabase/server';
 import { encrypt, decrypt } from './crypto';
 
 export interface SessionData {
@@ -30,6 +32,18 @@ export async function getSession(): Promise<SessionData | null> {
   if (!isProtectedAppSurfaceEnabled()) {
     return null;
   }
+
+  if (isSupabaseAuthEnabled()) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return null;
+    }
+    return resolveAppSessionFromAuthUser(user);
+  }
+
   const cookieStore = await cookies();
   const encrypted = cookieStore.get('astrolink_session')?.value;
   if (!encrypted) return null;
@@ -50,6 +64,15 @@ export function decryptSessionString(encrypted: string): SessionData | null {
 }
 
 export async function deleteSession() {
+  if (isSupabaseAuthEnabled()) {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+    return;
+  }
   const cookieStore = await cookies();
   cookieStore.delete('astrolink_session');
+}
+
+export function isUsingDemoSessionCookie(): boolean {
+  return isProtectedAppSurfaceEnabled() && isDemoAuthEnabled();
 }

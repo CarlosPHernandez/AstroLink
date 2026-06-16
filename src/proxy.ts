@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { isProtectedAppSurfaceEnabled } from './lib/app-mode';
+import {
+  isDemoAuthEnabled,
+  isProtectedAppSurfaceEnabled,
+  isSupabaseAuthEnabled,
+} from './lib/app-mode';
 import { getDefaultPathAfterAuth } from './lib/auth-redirect';
-import { decryptSessionString } from './lib/session';
+import { resolveAppSessionFromAuthUser } from './lib/resolve-app-session';
+import { decryptSessionString, type SessionData } from './lib/session';
+import { createProxyClient, withSupabaseCookies } from './lib/supabase/proxy-client';
 
 function redirectToAuth(request: NextRequest, returnPath: string) {
   const authUrl = new URL('/auth', request.url);
@@ -14,19 +20,68 @@ function redirectToEarlyAccess(request: NextRequest) {
   return NextResponse.redirect(new URL('/early-access', request.url));
 }
 
-function redirectForRole(session: NonNullable<ReturnType<typeof decryptSessionString>>) {
+function redirectForRole(session: SessionData) {
   return getDefaultPathAfterAuth({
     role: session.role,
     onboarded: session.onboarded,
   });
 }
 
-export function proxy(request: NextRequest) {
+function applyRoleGuards(
+  request: NextRequest,
+  pathname: string,
+  session: SessionData,
+): NextResponse | null {
+  if (pathname.startsWith('/dashboard/mentor') && session.role !== 'mentor') {
+    const fallback = session.role === 'admin' ? '/dashboard/admin' : '/dashboard/mentee';
+    return NextResponse.redirect(new URL(fallback, request.url));
+  }
+
+  if (pathname.startsWith('/dashboard/mentee') && session.role !== 'mentee') {
+    const fallback = session.role === 'admin' ? '/dashboard/admin' : '/dashboard/mentor';
+    return NextResponse.redirect(new URL(fallback, request.url));
+  }
+
+  if (pathname.startsWith('/dashboard/admin') && session.role !== 'admin') {
+    const fallback = session.role === 'mentor' ? '/dashboard/mentor' : '/dashboard/mentee';
+    return NextResponse.redirect(new URL(fallback, request.url));
+  }
+
+  if (pathname.startsWith('/onboard') && session.role !== 'mentor') {
+    const fallback = session.role === 'admin' ? '/dashboard/admin' : '/dashboard/mentee';
+    return NextResponse.redirect(new URL(fallback, request.url));
+  }
+
+  return null;
+}
+
+async function resolveSessionForProxy(request: NextRequest): Promise<{
+  session: SessionData | null;
+  supabaseResponse: NextResponse | null;
+}> {
+  if (isSupabaseAuthEnabled()) {
+    const client = createProxyClient(request);
+    const {
+      data: { user },
+    } = await client.supabase.auth.getUser();
+    const session = user ? await resolveAppSessionFromAuthUser(user) : null;
+    return { session, supabaseResponse: client.getResponse() };
+  }
+
+  if (isDemoAuthEnabled()) {
+    const encrypted = request.cookies.get('astrolink_session')?.value;
+    const session = encrypted ? decryptSessionString(encrypted) : null;
+    return { session, supabaseResponse: null };
+  }
+
+  return { session: null, supabaseResponse: null };
+}
+
+export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const returnPath = `${pathname}${search}`;
 
-  const sessionCookie = request.cookies.get('astrolink_session')?.value;
-  const session = sessionCookie ? decryptSessionString(sessionCookie) : null;
+  const { session, supabaseResponse } = await resolveSessionForProxy(request);
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-pathname', returnPath);
@@ -35,54 +90,52 @@ export function proxy(request: NextRequest) {
   const isBooking = pathname.startsWith('/booking');
   const isSession = pathname.startsWith('/session');
   const isOnboard = pathname.startsWith('/onboard');
-  const isAuth = pathname === '/auth';
+  const isAuth = pathname === '/auth' || pathname.startsWith('/auth/');
+  const isProtectedRoute = isDashboard || isBooking || isSession || isOnboard;
+  const isAuthEntry = pathname === '/auth';
+
+  const finish = (response: NextResponse) => {
+    if (supabaseResponse) {
+      withSupabaseCookies(response, supabaseResponse);
+    }
+    return response;
+  };
 
   if (!isProtectedAppSurfaceEnabled()) {
-    if (isAuth || isDashboard || isBooking || isSession || isOnboard) {
-      return redirectToEarlyAccess(request);
+    if (isAuth || isProtectedRoute) {
+      return finish(redirectToEarlyAccess(request));
     }
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+    return finish(
+      NextResponse.next({
+        request: { headers: requestHeaders },
+      }),
+    );
   }
 
-  if (isAuth && session) {
-    return NextResponse.redirect(new URL(redirectForRole(session), request.url));
+  if (isAuthEntry && session) {
+    return finish(NextResponse.redirect(new URL(redirectForRole(session), request.url)));
   }
 
-  if (isDashboard || isBooking || isSession || isOnboard) {
+  if (pathname === '/auth/complete-profile' && !session) {
+    return finish(redirectToAuth(request, returnPath));
+  }
+
+  if (isProtectedRoute) {
     if (!session) {
-      return redirectToAuth(request, returnPath);
+      return finish(redirectToAuth(request, returnPath));
     }
 
-    if (pathname.startsWith('/dashboard/mentor') && session.role !== 'mentor') {
-      const fallback = session.role === 'admin' ? '/dashboard/admin' : '/dashboard/mentee';
-      return NextResponse.redirect(new URL(fallback, request.url));
-    }
-
-    if (pathname.startsWith('/dashboard/mentee') && session.role !== 'mentee') {
-      const fallback = session.role === 'admin' ? '/dashboard/admin' : '/dashboard/mentor';
-      return NextResponse.redirect(new URL(fallback, request.url));
-    }
-
-    if (pathname.startsWith('/dashboard/admin') && session.role !== 'admin') {
-      const fallback = session.role === 'mentor' ? '/dashboard/mentor' : '/dashboard/mentee';
-      return NextResponse.redirect(new URL(fallback, request.url));
-    }
-
-    if (isOnboard && session.role !== 'mentor') {
-      const fallback = session.role === 'admin' ? '/dashboard/admin' : '/dashboard/mentee';
-      return NextResponse.redirect(new URL(fallback, request.url));
+    const roleRedirect = applyRoleGuards(request, pathname, session);
+    if (roleRedirect) {
+      return finish(roleRedirect);
     }
   }
 
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
+  return finish(
+    NextResponse.next({
+      request: { headers: requestHeaders },
+    }),
+  );
 }
 
 export const config = {
@@ -92,5 +145,6 @@ export const config = {
     '/session/:path*',
     '/onboard/:path*',
     '/auth',
+    '/auth/complete-profile',
   ],
 };

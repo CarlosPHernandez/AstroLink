@@ -230,6 +230,7 @@ export type Database = {
           stripe_connect_account_id: string | null
           stripe_onboarding_completed: boolean
           title: string | null
+          user_id: string | null
         }
         Insert: {
           bio?: string
@@ -249,6 +250,7 @@ export type Database = {
           stripe_connect_account_id?: string | null
           stripe_onboarding_completed?: boolean
           title?: string | null
+          user_id?: string | null
         }
         Update: {
           bio?: string
@@ -268,6 +270,7 @@ export type Database = {
           stripe_connect_account_id?: string | null
           stripe_onboarding_completed?: boolean
           title?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -426,8 +429,38 @@ export type Database = {
           },
         ]
       }
+      user_app_state: {
+        Row: {
+          onboarded: boolean
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          onboarded?: boolean
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          onboarded?: boolean
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_app_state_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
+          auth_id: string | null
           bio: string
           created_at: string
           email: string
@@ -439,6 +472,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auth_id?: string | null
           bio?: string
           created_at?: string
           email: string
@@ -450,6 +484,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auth_id?: string | null
           bio?: string
           created_at?: string
           email?: string
