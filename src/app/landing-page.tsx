@@ -72,8 +72,11 @@ export default function LandingPage({ experts }: { experts: ListedExpert[] }) {
               Operational Downlink
             </span>
           </div>
-          <div className="text-on-surface-variant font-mono text-[10px]">
-            © 2026 AstroLink. All rights reserved.
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-on-surface-variant font-mono text-[10px]">
+            <a href="/privacy" className="hover:text-on-surface transition-colors">
+              Privacy
+            </a>
+            <span>© 2026 AstroLink. All rights reserved.</span>
           </div>
         </div>
       </footer>
