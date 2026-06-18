@@ -10,6 +10,7 @@ import { getDefaultPathAfterAuth } from './lib/auth-redirect';
 import { resolveAppSessionFromAuthUser } from './lib/resolve-app-session';
 import { decryptSessionString, type SessionData } from './lib/session';
 import { createProxyClient, withSupabaseCookies } from './lib/supabase/proxy-client';
+import { resolveWaitlistRoute } from './lib/waitlist-routes';
 
 function redirectToAuth(request: NextRequest, returnPath: string) {
   const authUrl = new URL('/auth', request.url);
@@ -99,7 +100,6 @@ export async function proxy(request: NextRequest) {
   const isBooking = pathname.startsWith('/booking');
   const isSession = pathname.startsWith('/session');
   const isOnboard = pathname.startsWith('/onboard');
-  const isAuth = pathname === '/auth' || pathname.startsWith('/auth/');
   const isProtectedRoute = isDashboard || isBooking || isSession || isOnboard;
   const isAuthEntry = pathname === '/auth';
 
@@ -111,23 +111,18 @@ export async function proxy(request: NextRequest) {
   };
 
   if (!isProtectedAppSurfaceEnabled()) {
-    const isAdminOpsRoute = pathname.startsWith('/dashboard/admin');
-    if (isAdminOpsRoute && session?.role === 'admin') {
+    const waitlistDecision = resolveWaitlistRoute(pathname, session);
+    if (waitlistDecision.action === 'allow') {
       return finish(
         NextResponse.next({
           request: { headers: requestHeaders },
         }),
       );
     }
-
-    if (isAuth || isProtectedRoute) {
-      return finish(redirectToEarlyAccess(request));
+    if (waitlistDecision.action === 'api_blocked') {
+      return finish(NextResponse.json({ error: 'Not found' }, { status: 404 }));
     }
-    return finish(
-      NextResponse.next({
-        request: { headers: requestHeaders },
-      }),
-    );
+    return finish(redirectToEarlyAccess(request));
   }
 
   if (isAuthEntry && session) {
@@ -158,11 +153,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
-    '/booking/:path*',
-    '/session/:path*',
-    '/onboard/:path*',
-    '/auth',
-    '/auth/complete-profile',
+    /*
+     * Run on all routes except static assets so waitlist mode can gate /, /experts,
+     * and other public marketing pages — not only auth/booking/dashboard paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };
