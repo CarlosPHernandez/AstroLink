@@ -75,7 +75,7 @@ export function ExpertCard({
           <p className="text-sm font-bold text-on-surface truncate group-hover:text-primary transition-colors">
             {expert.name}
           </p>
-          <p className="text-[10px] font-mono uppercase tracking-wider text-on-surface-variant truncate mt-0.5">
+          <p className="text-label-sm text-on-surface-variant truncate mt-0.5">
             {expert.role}
           </p>
         </div>

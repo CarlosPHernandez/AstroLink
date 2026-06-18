@@ -13,6 +13,8 @@ type ExpertIntroMediaProps = {
   priority?: boolean;
   /** Directory preview: muted autoplay on mount (browser policy requires muted). */
   autoPlayMuted?: boolean;
+  /** Waitlist/marketing: softer play affordance without mono badge. */
+  overlayVariant?: 'default' | 'minimal';
 };
 
 /**
@@ -27,6 +29,7 @@ export function ExpertIntroMedia({
   className = '',
   priority = false,
   autoPlayMuted = false,
+  overlayVariant = 'default',
 }: ExpertIntroMediaProps) {
   const [videoFailed, setVideoFailed] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -99,13 +102,26 @@ export function ExpertIntroMedia({
             >
               {!playing && (
                 <>
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 shadow-lg group-hover:scale-105 transition-transform">
-                    <MaterialIcon name="play_arrow" className="text-black/80 ml-1" size={34} fill />
+                  <div
+                    className={`flex items-center justify-center rounded-full bg-white/90 shadow-lg group-hover:scale-105 transition-transform ${
+                      overlayVariant === 'minimal' ? 'h-14 w-14' : 'h-16 w-16'
+                    }`}
+                  >
+                    <MaterialIcon
+                      name="play_arrow"
+                      className="text-black/80 ml-1"
+                      size={overlayVariant === 'minimal' ? 30 : 34}
+                      fill
+                    />
                   </div>
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-lg border border-white/20 bg-black/50 px-4 py-2 backdrop-blur-md">
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-white/90">Watch intro</span>
-                    <MaterialIcon name="videocam" className="text-white/70" size={16} />
-                  </div>
+                  {overlayVariant === 'default' ? (
+                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-lg border border-white/20 bg-black/50 px-4 py-2 backdrop-blur-md">
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-white/90">
+                        Watch intro
+                      </span>
+                      <MaterialIcon name="videocam" className="text-white/70" size={16} />
+                    </div>
+                  ) : null}
                 </>
               )}
             </button>

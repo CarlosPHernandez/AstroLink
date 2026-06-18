@@ -2,6 +2,24 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.1.0] - 2026-06-18
+
+Waitlist landing redesign, privacy policy, and ops signup dashboard.
+
+### Added
+- Redesigned `/early-access` waitlist — hero, single opt-in email signup with submit animation, Chris Sembroski featured intro video, and scrollable expert roster.
+- `/privacy` policy page with editable content in `src/content/privacy-policy.ts`.
+- Admin ops dashboard signup table (email, date, referrer) alongside waitlist metrics.
+- Early-access Playwright E2E coverage and waitlist roster ordering helpers.
+
+### Changed
+- Desktop layout: signup on the left, Chris video sticky on the right; mobile uses full-bleed video and improved form stacking.
+- Footer and signup trust line link to `/privacy` instead of mailto.
+- Waitlist production allows admin ops dashboard access when signed in as admin.
+
+### Fixed
+- Merge integration with Supabase auth session/proxy while preserving waitlist admin ops paths.
+
 ## [0.4.0.1] - 2026-06-16
 
 ### Fixed

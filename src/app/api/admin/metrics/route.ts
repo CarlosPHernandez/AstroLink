@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { requireApiRole } from '@/lib/api-auth';
-import { getAdminWaitlistMetrics } from '@/lib/admin-waitlist-metrics';
+import {
+  getAdminWaitlistMetrics,
+  getAdminWaitlistSignups,
+} from '@/lib/admin-waitlist-metrics';
 
 export async function GET() {
   const sessionOrResponse = await requireApiRole('admin');
@@ -9,10 +12,14 @@ export async function GET() {
   }
 
   try {
-    const waitlist = await getAdminWaitlistMetrics();
+    const [waitlist, signups] = await Promise.all([
+      getAdminWaitlistMetrics(),
+      getAdminWaitlistSignups(),
+    ]);
     return NextResponse.json({
       success: true,
       waitlist,
+      signups,
       generatedAt: new Date().toISOString(),
     });
   } catch (error: unknown) {

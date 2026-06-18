@@ -1,6 +1,11 @@
 import 'server-only';
 import { cookies } from 'next/headers';
-import { isDemoAuthEnabled, isProtectedAppSurfaceEnabled, isSupabaseAuthEnabled } from '@/lib/app-mode';
+import {
+  isDemoAuthEnabled,
+  isProtectedAppSurfaceEnabled,
+  isSupabaseAuthEnabled,
+  isWaitlistMode,
+} from '@/lib/app-mode';
 import { resolveAppSessionFromAuthUser } from '@/lib/resolve-app-session';
 import { createClient } from '@/lib/supabase/server';
 import { encrypt, decrypt } from './crypto';
@@ -29,10 +34,6 @@ export async function createSession(data: Omit<SessionData, 'expiresAt'>) {
 }
 
 export async function getSession(): Promise<SessionData | null> {
-  if (!isProtectedAppSurfaceEnabled()) {
-    return null;
-  }
-
   if (isSupabaseAuthEnabled()) {
     const supabase = await createClient();
     const {
@@ -47,7 +48,19 @@ export async function getSession(): Promise<SessionData | null> {
   const cookieStore = await cookies();
   const encrypted = cookieStore.get('astrolink_session')?.value;
   if (!encrypted) return null;
-  return decryptSessionString(encrypted);
+
+  const session = decryptSessionString(encrypted);
+  if (!session) return null;
+
+  if (!isProtectedAppSurfaceEnabled()) {
+    // Waitlist production: honor admin sessions for ops dashboard only.
+    if (isWaitlistMode() && session.role === 'admin') {
+      return session;
+    }
+    return null;
+  }
+
+  return session;
 }
 
 export function decryptSessionString(encrypted: string): SessionData | null {

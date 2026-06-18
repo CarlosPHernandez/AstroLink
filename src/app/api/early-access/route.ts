@@ -8,6 +8,7 @@ import {
 } from '@/lib/early-access-rate-limit';
 import { supabaseAdmin } from '@/lib/supabase';
 
+/** Single opt-in: valid email inserts immediately — no verification email or pending state. */
 export async function POST(request: Request) {
   try {
     assertEarlyAccessRateLimit(getEarlyAccessClientKey(request));

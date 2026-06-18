@@ -41,7 +41,7 @@ export function BookingExpertPickerCard({
       </div>
       <div className="p-3 border-t border-outline-variant/50 min-w-0">
         <p className="text-sm font-bold text-on-surface truncate">{expert.name}</p>
-        <p className="text-[10px] font-mono uppercase tracking-wider text-on-surface-variant truncate mt-0.5">
+        <p className="text-label-sm text-on-surface-variant truncate mt-0.5">
           {expert.role}
         </p>
         <p className="text-[11px] font-mono font-semibold text-primary mt-2">${expert.rate}/hr</p>

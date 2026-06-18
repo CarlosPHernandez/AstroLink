@@ -4,6 +4,7 @@ import {
   isDemoAuthEnabled,
   isProtectedAppSurfaceEnabled,
   isSupabaseAuthEnabled,
+  isWaitlistMode,
 } from './lib/app-mode';
 import { getDefaultPathAfterAuth } from './lib/auth-redirect';
 import { resolveAppSessionFromAuthUser } from './lib/resolve-app-session';
@@ -74,6 +75,14 @@ async function resolveSessionForProxy(request: NextRequest): Promise<{
     return { session, supabaseResponse: null };
   }
 
+  if (!isProtectedAppSurfaceEnabled() && isWaitlistMode()) {
+    const encrypted = request.cookies.get('astrolink_session')?.value;
+    const session = encrypted ? decryptSessionString(encrypted) : null;
+    if (session?.role === 'admin') {
+      return { session, supabaseResponse: null };
+    }
+  }
+
   return { session: null, supabaseResponse: null };
 }
 
@@ -102,6 +111,15 @@ export async function proxy(request: NextRequest) {
   };
 
   if (!isProtectedAppSurfaceEnabled()) {
+    const isAdminOpsRoute = pathname.startsWith('/dashboard/admin');
+    if (isAdminOpsRoute && session?.role === 'admin') {
+      return finish(
+        NextResponse.next({
+          request: { headers: requestHeaders },
+        }),
+      );
+    }
+
     if (isAuth || isProtectedRoute) {
       return finish(redirectToEarlyAccess(request));
     }

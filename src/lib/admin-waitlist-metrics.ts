@@ -13,6 +13,13 @@ export type WaitlistReferrerRow = {
   signups: number;
 };
 
+export type AdminWaitlistSignup = {
+  id: string;
+  email: string;
+  referrer: string | null;
+  createdAt: string;
+};
+
 export type AdminWaitlistMetrics = {
   total: number;
   last7d: number;
@@ -21,6 +28,8 @@ export type AdminWaitlistMetrics = {
   dailyTrend: WaitlistDailyPoint[];
   topReferrers: WaitlistReferrerRow[];
 };
+
+const SIGNUP_LIST_LIMIT = 250;
 
 function computeWowPercent(last7d: number, prev7d: number): number | null {
   if (prev7d === 0) {
@@ -83,9 +92,35 @@ async function fetchAdminWaitlistMetricsFromDb(): Promise<AdminWaitlistMetrics> 
   };
 }
 
+async function fetchAdminWaitlistSignupsFromDb(): Promise<AdminWaitlistSignup[]> {
+  const { data, error } = await supabaseAdmin
+    .from('early_access_signups')
+    .select('id, email, referrer, created_at')
+    .order('created_at', { ascending: false })
+    .limit(SIGNUP_LIST_LIMIT);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    email: row.email,
+    referrer: row.referrer,
+    createdAt: row.created_at,
+  }));
+}
+
 /** Cached 60s — admin metrics do not need real-time precision. */
 export async function getAdminWaitlistMetrics(): Promise<AdminWaitlistMetrics> {
   return unstable_cache(fetchAdminWaitlistMetricsFromDb, ['admin-waitlist-metrics'], {
     revalidate: 60,
+  })();
+}
+
+/** Cached 30s — recent signup rows for the ops dashboard. */
+export async function getAdminWaitlistSignups(): Promise<AdminWaitlistSignup[]> {
+  return unstable_cache(fetchAdminWaitlistSignupsFromDb, ['admin-waitlist-signups'], {
+    revalidate: 30,
   })();
 }

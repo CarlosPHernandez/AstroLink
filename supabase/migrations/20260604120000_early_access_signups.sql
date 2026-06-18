@@ -1,4 +1,5 @@
--- Early access waitlist for gauging interest before public launch
+-- Early access waitlist for gauging interest before public launch.
+-- Single opt-in: API inserts on submit; no verification or pending state.
 
 CREATE TABLE public.early_access_signups (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

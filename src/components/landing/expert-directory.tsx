@@ -86,7 +86,7 @@ export default function ExpertDirectory({ experts }: { experts: ListedExpert[] }
                   <p className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors truncate">
                     {expert.name}
                   </p>
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-on-surface-variant truncate mt-0.5">
+                  <p className="text-label-sm text-on-surface-variant truncate mt-0.5 tabular-nums">
                     ${expert.rate}/hr
                   </p>
                 </div>
