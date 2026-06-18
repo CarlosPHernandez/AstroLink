@@ -87,7 +87,7 @@ export function WaitlistRoster({ experts }: WaitlistRosterProps) {
     <section
       data-testid="early-access-roster"
       aria-labelledby="roster-heading"
-      className="flex flex-col gap-10 sm:gap-12 min-w-0 lg:contents"
+      className="mt-10 sm:mt-14 lg:mt-0 flex flex-col gap-10 sm:gap-12 min-w-0 lg:contents"
     >
       {chris ? (
         <aside className="w-full min-w-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-20 lg:self-start">
@@ -95,7 +95,7 @@ export function WaitlistRoster({ experts }: WaitlistRosterProps) {
         </aside>
       ) : null}
 
-      <div className="contents lg:flex lg:flex-col lg:gap-8 lg:col-start-1 lg:row-start-2">
+      <div className="contents lg:flex lg:flex-col lg:gap-8 lg:col-start-1 lg:row-start-2 lg:row-end-3 min-w-0">
         <div className="pt-2 lg:pt-0 border-t border-outline-variant/40 lg:border-0">
           <h2 id="roster-heading" className="text-sm text-on-surface-variant/70 pt-8 lg:pt-0">
             On the roster
