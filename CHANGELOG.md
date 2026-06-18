@@ -2,6 +2,19 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.1.1] - 2026-06-18
+
+Expert partner waitlist landings for roster distribution.
+
+### Added
+- `/join/[slug]` shareable partner pages (e.g. `/join/david-guajardo`) with personalized hero, featured intro media, and the same waitlist signup flow.
+- Auto-attributed signups via `ref=expert-<slug>` for admin referrer reporting.
+- Playwright E2E coverage for partner join landings.
+
+### Changed
+- Waitlist mode allows `/join/*` routes alongside `/early-access` and `/privacy`.
+- `WaitlistSignupForm` accepts a default referrer when the URL has no `?ref=` param.
+
 ## [0.4.1.0] - 2026-06-18
 
 Waitlist landing redesign, privacy policy, and ops signup dashboard.

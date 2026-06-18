@@ -2,9 +2,10 @@ import Link from 'next/link';
 
 type WaitlistHeaderProps = {
   showExpertsLink: boolean;
+  secondaryLink?: { href: string; label: string };
 };
 
-export function WaitlistHeader({ showExpertsLink }: WaitlistHeaderProps) {
+export function WaitlistHeader({ showExpertsLink, secondaryLink }: WaitlistHeaderProps) {
   return (
     <header>
       <div className="max-w-[var(--spacing-container-max)] mx-auto px-md sm:px-lg h-12 sm:h-14 flex justify-between items-center">
@@ -14,7 +15,14 @@ export function WaitlistHeader({ showExpertsLink }: WaitlistHeaderProps) {
         >
           AstroLink
         </Link>
-        {showExpertsLink ? (
+        {secondaryLink ? (
+          <Link
+            href={secondaryLink.href}
+            className="text-sm text-on-surface-variant hover:text-on-surface transition-colors"
+          >
+            {secondaryLink.label}
+          </Link>
+        ) : showExpertsLink ? (
           <Link
             href="/experts"
             className="text-sm text-on-surface-variant hover:text-on-surface transition-colors"

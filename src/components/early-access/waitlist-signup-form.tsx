@@ -21,7 +21,12 @@ async function waitForSubmitAnimation(startedAt: number): Promise<void> {
   }
 }
 
-export function WaitlistSignupForm() {
+type WaitlistSignupFormProps = {
+  /** Used when the URL has no ?ref= (e.g. /join/[slug] partner landings). */
+  defaultReferrer?: string;
+};
+
+export function WaitlistSignupForm({ defaultReferrer }: WaitlistSignupFormProps) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState<string | null>(null);
@@ -54,10 +59,11 @@ export function WaitlistSignupForm() {
     const startedAt = Date.now();
 
     try {
-      const referrer =
+      const referrerFromUrl =
         typeof window !== 'undefined'
           ? parseEarlyAccessReferrer(window.location.search)
           : undefined;
+      const referrer = referrerFromUrl ?? defaultReferrer;
 
       const response = await fetch('/api/early-access', {
         method: 'POST',
