@@ -6,6 +6,7 @@ import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
 import { getEarlyAccessSuccessDisplay } from '@/lib/early-access-success';
 import { parseEarlyAccessReferrer } from '@/lib/early-access-referrer';
+import { trackWaitlistBadEmail, trackWaitlistRateLimit } from '@/lib/waitlist-analytics';
 import { type FieldErrors, fieldErrorInputClass, firstFieldError } from '@/lib/zod-field-errors';
 
 const WAITLIST_SUBMIT_ANIMATION_MS = 1200;
@@ -44,6 +45,7 @@ export function WaitlistSignupForm() {
 
     const trimmed = email.trim();
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      trackWaitlistBadEmail('client');
       setFieldError('Enter a valid email address.');
       return;
     }
@@ -76,8 +78,12 @@ export function WaitlistSignupForm() {
 
       if (!response.ok || !data.success) {
         setStatus('error');
+        if (response.status === 429) {
+          trackWaitlistRateLimit();
+        }
         const emailError = firstFieldError(data.fieldErrors, 'email');
         if (emailError) {
+          trackWaitlistBadEmail('server');
           setFieldError(emailError);
           setMessage(data.error ?? null);
         } else {

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { WAITLIST_FEATURED_EXPERT_SLUG } from '@/lib/waitlist-roster-order';
+import { trackWaitlistIntroPlay } from '@/lib/waitlist-analytics';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 
 type WaitlistRosterProps = {
@@ -54,6 +55,7 @@ function ChrisFeaturedPanel({ expert }: { expert: ListedExpert }) {
           introVideoUrl={expert.introVideoUrl}
           priority
           overlayVariant="minimal"
+          onUserPlay={() => trackWaitlistIntroPlay(expert.slug)}
           className="aspect-[4/5] sm:aspect-[3/4] w-full max-w-none rounded-none sm:rounded-sm border-0 shadow-none lg:min-h-[min(82vh,760px)] lg:aspect-auto lg:h-full lg:rounded-sm"
         />
       </div>

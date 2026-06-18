@@ -15,6 +15,8 @@ type ExpertIntroMediaProps = {
   autoPlayMuted?: boolean;
   /** Waitlist/marketing: softer play affordance without mono badge. */
   overlayVariant?: 'default' | 'minimal';
+  /** Fired when the user explicitly starts playback (not muted directory autoplay). */
+  onUserPlay?: () => void;
 };
 
 /**
@@ -30,6 +32,7 @@ export function ExpertIntroMedia({
   priority = false,
   autoPlayMuted = false,
   overlayVariant = 'default',
+  onUserPlay,
 }: ExpertIntroMediaProps) {
   const [videoFailed, setVideoFailed] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -49,6 +52,7 @@ export function ExpertIntroMedia({
     if (playing) {
       videoRef.current.pause();
     } else {
+      onUserPlay?.();
       videoRef.current.play().catch(() => setVideoFailed(true));
     }
   };
