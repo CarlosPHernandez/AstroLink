@@ -27,6 +27,8 @@ Use **kebab-case**, stable for the life of a campaign (do not change mid-flight)
 | `conference-<event-slug>` | Oliver | Event booth, talk QR, partner table |
 | `partner-<org-slug>` | Oliver | Co-marketing with a named org |
 | `outbound-<prospect-slug>` | Oliver | One-off link in a sales email (optional) |
+| `expert-david-guajardo` | David / Carlos | David’s partner landing `/join/david-guajardo` (auto-set; do not hand-edit links) |
+| `expert-<mentor-slug>` | Expert roster | Other `/join/<slug>` partner pages (e.g. `expert-chris-sembroski`) |
 | `direct` | — | Reserved; omit `ref` for organic (stored as `(direct)` in reports) |
 
 Add new rows to this table before publishing links. Carlos refreshes canvases from the same strings.

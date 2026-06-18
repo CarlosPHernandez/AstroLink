@@ -7,8 +7,15 @@ export type WaitlistRouteDecision =
   | { action: 'redirect'; destination: '/early-access' }
   | { action: 'api_blocked' };
 
+export function isWaitlistJoinPage(pathname: string): boolean {
+  const prefix = '/join/';
+  return pathname.startsWith(prefix) && pathname.length > prefix.length;
+}
+
 export function isWaitlistPublicPage(pathname: string): boolean {
-  return (WAITLIST_PUBLIC_PAGES as readonly string[]).includes(pathname);
+  return (
+    (WAITLIST_PUBLIC_PAGES as readonly string[]).includes(pathname) || isWaitlistJoinPage(pathname)
+  );
 }
 
 export function isWaitlistAdminPage(pathname: string): boolean {
