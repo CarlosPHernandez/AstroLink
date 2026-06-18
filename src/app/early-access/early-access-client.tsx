@@ -29,11 +29,7 @@ export default function EarlyAccessClient({
             <WaitlistSignupForm />
           </div>
 
-          {experts.length > 0 ? (
-            <div className="mt-10 sm:mt-14 lg:mt-0 min-w-0">
-              <WaitlistRoster experts={experts} />
-            </div>
-          ) : null}
+          {experts.length > 0 ? <WaitlistRoster experts={experts} /> : null}
         </div>
       </main>
 
