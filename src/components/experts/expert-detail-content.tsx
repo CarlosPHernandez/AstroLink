@@ -56,11 +56,11 @@ function ExpertDetailMeta({
     <>
       <div className="flex shrink-0 items-start justify-between gap-4">
         <div>
-          <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-primary">
+          <p className="mb-1 text-eyebrow text-primary">
             Verified expert
           </p>
           <h2 className="text-xl font-bold tracking-tight text-on-surface">{expert.name}</h2>
-          <p className="mt-1 font-mono text-xs uppercase text-on-surface-variant">{expert.role}</p>
+          <p className="mt-1 text-sm text-on-surface-variant">{expert.role}</p>
           <p className="mt-0.5 text-xs text-on-surface-variant">{expert.employer}</p>
         </div>
         {onClose ? (
