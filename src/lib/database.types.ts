@@ -139,6 +139,7 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          est_time: string
           id: string
           referrer: string | null
           source: string
@@ -146,6 +147,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email: string
+          est_time: string
           id?: string
           referrer?: string | null
           source?: string
@@ -153,6 +155,7 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string
+          est_time?: string
           id?: string
           referrer?: string | null
           source?: string

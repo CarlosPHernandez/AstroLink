@@ -6,6 +6,7 @@ import {
   getEarlyAccessClientKey,
   isEarlyAccessRateLimitError,
 } from '@/lib/waitlist/early-access-rate-limit';
+import { formatEarlyAccessEstTime } from '@/lib/waitlist/early-access-est-time';
 import { supabaseAdmin } from '@/lib/supabase';
 
 const MAX_BODY_BYTES = 4096;
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
       email: body.email,
       source: 'early-access',
       referrer: body.referrer ?? null,
+      est_time: formatEarlyAccessEstTime(),
     });
 
     if (error) {
