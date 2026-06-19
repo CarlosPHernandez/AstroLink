@@ -2,6 +2,17 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.2.0] - 2026-06-19
+
+Waitlist funnel analytics for early-access and partner join pages.
+
+### Added
+- Vercel custom events for waitlist funnel: form view, form start, submit attempt/success/fail, form abandon, and page exit with dwell time and outcome.
+- `useWaitlistPageAnalytics` hook and unit tests for dwell-time bucketing and referrer sanitization.
+
+### Changed
+- Privacy policy notes anonymous waitlist interaction events via Vercel Web Analytics (no email in analytics).
+
 ## [0.4.1.1] - 2026-06-18
 
 Expert partner waitlist landings for roster distribution.
