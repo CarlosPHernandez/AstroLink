@@ -10,7 +10,7 @@ import { getDefaultPathAfterAuth } from './lib/auth-redirect';
 import { resolveAppSessionFromAuthUser } from './lib/resolve-app-session';
 import { decryptSessionString, type SessionData } from './lib/session';
 import { createProxyClient, withSupabaseCookies } from './lib/supabase/proxy-client';
-import { resolveWaitlistRoute } from './lib/waitlist-routes';
+import { resolveWaitlistRoute } from './lib/waitlist/waitlist-routes';
 
 function redirectToAuth(request: NextRequest, returnPath: string) {
   const authUrl = new URL('/auth', request.url);

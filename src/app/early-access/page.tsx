@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { isWaitlistMode } from '@/lib/app-mode';
 import { listPublicMentors } from '@/lib/mentor-directory';
-import { orderWaitlistRoster } from '@/lib/waitlist-roster-order';
+import { orderWaitlistRoster } from '@/lib/waitlist/waitlist-roster-order';
 import EarlyAccessClient from './early-access-client';
 
 export const revalidate = 300;

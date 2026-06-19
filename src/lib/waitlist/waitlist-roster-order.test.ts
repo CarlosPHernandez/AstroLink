@@ -3,7 +3,7 @@ import type { ListedExpert } from '@/lib/mentor-directory';
 import {
   WAITLIST_FEATURED_EXPERT_SLUG,
   orderWaitlistRoster,
-} from '@/lib/waitlist-roster-order';
+} from '@/lib/waitlist/waitlist-roster-order';
 
 function expert(slug: string, name: string): ListedExpert {
   return {

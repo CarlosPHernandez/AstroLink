@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveWaitlistRoute } from '@/lib/waitlist-routes';
+import { resolveWaitlistRoute } from '@/lib/waitlist/waitlist-routes';
 
 describe('resolveWaitlistRoute', () => {
   it('redirects home to early access', () => {

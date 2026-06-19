@@ -3,7 +3,7 @@ import { requireApiRole } from '@/lib/api-auth';
 import {
   getAdminWaitlistMetrics,
   getAdminWaitlistSignups,
-} from '@/lib/admin-waitlist-metrics';
+} from '@/lib/waitlist/admin-waitlist-metrics';
 
 export async function GET() {
   const sessionOrResponse = await requireApiRole('admin');

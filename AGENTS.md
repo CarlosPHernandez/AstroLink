@@ -56,6 +56,19 @@ After `npm ci`, install Playwright browsers once if running E2E: `npx playwright
 
 With `ENABLE_DEMO_AUTH=true`, sign in at `/auth` with seed emails (`carlos@astrolink.ai`, `chris@astrolink.ai`, `admin@astrolink.ai`) or call `POST /api/e2e/session` with `{ "role": "mentee" | "mentor" | "admin" }`. Seed UUIDs must exist in Supabase (`20260531140100_seed_d1_dev.sql`).
 
+### Repository layout
+
+| Path | Purpose |
+|------|---------|
+| `src/app/` | Next.js routes and API handlers (product surfaces) |
+| `src/components/` | UI by feature (`early-access`, `experts`, `booking`, `session`, `ui`) |
+| `src/lib/` | Domain logic; grouped subfolders where mature (`waitlist/`, `transcript-translation/`, `supabase/`) |
+| `src/services/agents/` | Booking, briefing, payment, and other agents |
+| `docs/` | Diataxis docs; `docs/plans/` = pre-ship specs only |
+| `design/` | Non-runtime design references (not imported by app code) |
+| `e2e/` | Playwright specs |
+| `supabase/migrations/` | Hosted DB migrations — do not rename |
+
 ### Engineering discipline (reviews & plans)
 
 After plan reviews, critiques, or feature planning, read `skills/engineering-discipline/SKILL.md` and close with a decision ledger, test ledger, and simplification section.

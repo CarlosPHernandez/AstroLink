@@ -46,4 +46,4 @@ Add new rows to this table before publishing links. Carlos refreshes canvases fr
 
 ## Technical note
 
-The client reads `ref` via [`parseEarlyAccessReferrer`](../../src/lib/early-access-referrer.ts) and POSTs it to [`/api/early-access`](../../src/app/api/early-access/route.ts).
+The client reads `ref` via [`parseEarlyAccessReferrer`](../../src/lib/waitlist/early-access-referrer.ts) and POSTs it to [`/api/early-access`](../../src/app/api/early-access/route.ts).

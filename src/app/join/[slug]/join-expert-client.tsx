@@ -6,7 +6,7 @@ import { JoinExpertHero } from '@/components/early-access/join-expert-hero';
 import { WaitlistHeader } from '@/components/early-access/waitlist-header';
 import { WaitlistSignupForm } from '@/components/early-access/waitlist-signup-form';
 import type { ListedExpert } from '@/lib/mentor-directory';
-import { trackWaitlistIntroPlay } from '@/lib/waitlist-analytics';
+import { trackWaitlistIntroPlay } from '@/lib/waitlist/waitlist-analytics';
 
 type JoinExpertClientProps = {
   expert: ListedExpert;

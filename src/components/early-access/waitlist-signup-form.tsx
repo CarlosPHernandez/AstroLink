@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
-import { getEarlyAccessSuccessDisplay } from '@/lib/early-access-success';
-import { parseEarlyAccessReferrer } from '@/lib/early-access-referrer';
-import { trackWaitlistBadEmail, trackWaitlistRateLimit } from '@/lib/waitlist-analytics';
+import { getEarlyAccessSuccessDisplay } from '@/lib/waitlist/early-access-success';
+import { parseEarlyAccessReferrer } from '@/lib/waitlist/early-access-referrer';
+import { trackWaitlistBadEmail, trackWaitlistRateLimit } from '@/lib/waitlist/waitlist-analytics';
 import { type FieldErrors, fieldErrorInputClass, firstFieldError } from '@/lib/zod-field-errors';
 
 const WAITLIST_SUBMIT_ANIMATION_MS = 1200;

@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { EarlyAccessBodySchema } from '@/lib/early-access-schema';
+import { EarlyAccessBodySchema } from '@/lib/waitlist/early-access-schema';
 import { formLevelSummary, toFieldErrors } from '@/lib/zod-field-errors';
 import {
   assertEarlyAccessRateLimit,
   getEarlyAccessClientKey,
   isEarlyAccessRateLimitError,
-} from '@/lib/early-access-rate-limit';
+} from '@/lib/waitlist/early-access-rate-limit';
 import { supabaseAdmin } from '@/lib/supabase';
 
 /** Single opt-in: valid email inserts immediately — no verification email or pending state. */

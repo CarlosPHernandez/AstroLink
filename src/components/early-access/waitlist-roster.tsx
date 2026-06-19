@@ -3,8 +3,8 @@
 import Image from 'next/image';
 import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
 import type { ListedExpert } from '@/lib/mentor-directory';
-import { WAITLIST_FEATURED_EXPERT_SLUG } from '@/lib/waitlist-roster-order';
-import { trackWaitlistIntroPlay } from '@/lib/waitlist-analytics';
+import { WAITLIST_FEATURED_EXPERT_SLUG } from '@/lib/waitlist/waitlist-roster-order';
+import { trackWaitlistIntroPlay } from '@/lib/waitlist/waitlist-analytics';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 
 type WaitlistRosterProps = {

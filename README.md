@@ -36,6 +36,16 @@ Paid aerospace expert network (live 1:1 sessions, Stripe, Daily, Gemini agents).
    - Dev fulfill: `POST /api/book/fulfill` with `{ "bookingId": "<uuid>" }` (development only).
 5. Mentee dashboard shows APX-02 briefing; **Join session** opens `/session/[bookingId]` with a server-minted Daily token (private room).
 
+## Repository layout
+
+| Path | Purpose |
+|------|---------|
+| `src/app/` | Routes and API (`/early-access`, `/join`, `/experts`, `/booking`, …) |
+| `src/components/` | Feature UI (`early-access`, `experts`, `booking`, `session`) |
+| `src/lib/waitlist/` | Waitlist signup, routing, metrics, analytics |
+| `src/lib/transcript-translation/` | Live captions and post-call translation |
+| `docs/` | Tutorials, how-tos, reference ([index](docs/README.md)) |
+
 ## Documentation
 
 Index: [docs/README.md](docs/README.md)

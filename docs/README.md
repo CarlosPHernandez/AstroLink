@@ -45,6 +45,15 @@ Agent skill: `skills/transcript-translation/SKILL.md` · Cursor rule: `.cursor/r
 
 Cursor canvases (Carlos refreshes): `weekly-team-brief`, `sales-pipeline`, `marketing-funnel` under the workspace `canvases/` directory.
 
+## Plans (pre-ship specs)
+
+| Doc | Notes |
+|-----|--------|
+| [plans/early-access-redesign.md](./plans/early-access-redesign.md) | Waitlist landing redesign spec |
+| [plans/david-guajardo-partner-landing.md](./plans/david-guajardo-partner-landing.md) | `/join/[slug]` partner pages |
+
+These are design/planning artifacts — not canonical runbooks. Prefer `how-to/` and `reference/` for ops.
+
 ## Other
 
 | Doc | Notes |
