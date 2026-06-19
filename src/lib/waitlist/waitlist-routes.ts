@@ -14,7 +14,9 @@ export function isWaitlistJoinPage(pathname: string): boolean {
 
 export function isWaitlistPublicPage(pathname: string): boolean {
   return (
-    (WAITLIST_PUBLIC_PAGES as readonly string[]).includes(pathname) || isWaitlistJoinPage(pathname)
+    (WAITLIST_PUBLIC_PAGES as readonly string[]).includes(pathname) ||
+    pathname === '/early-access/player' ||
+    isWaitlistJoinPage(pathname)
   );
 }
 

@@ -23,18 +23,31 @@ const nextConfig: NextConfig = {
     root: projectRoot,
   },
   async headers() {
+    const sharedHeaders = [
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      {
+        key: "Permissions-Policy",
+        value: "camera=(self), microphone=(self), geolocation=()",
+      },
+    ];
+
     return [
       {
-        source: "/:path*",
+        source: "/early-access/player",
         headers: [
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
-            key: "Permissions-Policy",
-            value: "camera=(self), microphone=(self), geolocation=()",
+            key: "Content-Security-Policy",
+            value:
+              "frame-ancestors 'self' https://twitter.com https://x.com https://platform.twitter.com",
           },
+          ...sharedHeaders,
         ],
+      },
+      {
+        // Exclude the Twitter embed player — X-Frame-Options DENY blocks Player Cards.
+        source: "/((?!early-access/player).*)",
+        headers: [{ key: "X-Frame-Options", value: "DENY" }, ...sharedHeaders],
       },
     ];
   },

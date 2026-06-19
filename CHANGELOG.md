@@ -2,6 +2,18 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.4.0] - 2026-06-19
+
+X (Twitter) Player Card for the early-access waitlist with Chris Sembroski's intro video.
+
+### Added
+- `/early-access/player` iframe embed for X Player Cards (Chris intro MP4 with controls).
+- Dynamic Open Graph and `twitter:card=player` metadata on `/early-access`, including stream URL and thumbnail.
+- Unit tests for Eastern Time formatting and player metadata fallbacks.
+
+### Changed
+- Security headers: allow X/Twitter to frame the player route via CSP `frame-ancestors` while keeping `X-Frame-Options: DENY` elsewhere.
+
 ## [0.4.3.0] - 2026-06-19
 
 Waitlist signup security hardening for production campaigns.
