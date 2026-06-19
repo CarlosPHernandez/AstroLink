@@ -264,7 +264,7 @@ export function WaitlistSignupForm({ defaultReferrer, analytics }: WaitlistSignu
             <button
               type="submit"
               disabled={status === 'loading'}
-              className="shrink-0 w-full sm:w-auto text-sm font-medium text-on-surface hover:opacity-60 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity focus-visible:outline-none focus-visible:underline underline-offset-4 text-left sm:text-center py-1 sm:py-0"
+              className="shrink-0 w-full sm:w-auto rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-sm font-medium text-on-surface transition-[border-color,background-color,opacity] hover:border-on-surface hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-surface/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background text-left sm:text-center"
             >
               {status === 'loading' ? 'Sending…' : 'Get early access'}
             </button>
