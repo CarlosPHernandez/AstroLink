@@ -126,12 +126,12 @@ export function WaitlistSignupForm({ defaultReferrer, analytics }: WaitlistSignu
         body: JSON.stringify({
           email: trimmed.toLowerCase(),
           referrer,
+          company: '',
         }),
       });
 
       const data = (await response.json()) as {
         success?: boolean;
-        alreadyRegistered?: boolean;
         message?: string;
         error?: string;
         fieldErrors?: FieldErrors;
@@ -157,10 +157,10 @@ export function WaitlistSignupForm({ defaultReferrer, analytics }: WaitlistSignu
       }
 
       await waitForSubmitAnimation(startedAt);
-      trackWaitlistSubmitSuccess(analytics.context, Boolean(data.alreadyRegistered));
+      trackWaitlistSubmitSuccess(analytics.context, false);
       analytics.reportSubmitSuccess();
       setStatus('success');
-      setSuccessDisplay(getEarlyAccessSuccessDisplay(Boolean(data.alreadyRegistered)));
+      setSuccessDisplay(getEarlyAccessSuccessDisplay());
       setMessage(null);
       setEmail('');
     } catch {
@@ -203,6 +203,22 @@ export function WaitlistSignupForm({ defaultReferrer, analytics }: WaitlistSignu
           <p className="text-sm text-on-surface-variant/80 mb-3">
             Enter your email—we&apos;ll notify you when early access opens.
           </p>
+          <div
+            aria-hidden="true"
+            className="absolute left-[-9999px] h-0 w-0 overflow-hidden"
+          >
+            <label htmlFor="early-access-company">Company</label>
+            <input
+              id="early-access-company"
+              name="company"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value=""
+              readOnly
+            />
+          </div>
+
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
             <div className="relative flex-1 min-w-0">
               <label htmlFor="early-access-email" className="sr-only">

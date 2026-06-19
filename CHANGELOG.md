@@ -2,6 +2,21 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.3.0] - 2026-06-19
+
+Waitlist signup security hardening for production campaigns.
+
+### Added
+- Supabase-backed cross-instance rate limits for `POST /api/early-access` (IP + per-email windows).
+- Honeypot bot trap, referrer kebab-case validation, production env build guard, and baseline security headers.
+- Waitlist production checklist (`docs/how-to/waitlist-production-checklist.md`).
+
+### Changed
+- Signup API returns uniform success copy (no email enumeration), generic 500 errors, and stricter request validation (JSON only, 4KB cap, POST-only).
+
+### Security
+- Migration `20260619120000_early_access_rate_limits.sql` with `early_access_consume_rate_limit` RPC.
+
 ## [0.4.2.0] - 2026-06-19
 
 Waitlist funnel analytics for early-access and partner join pages.

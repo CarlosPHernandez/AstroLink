@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { assertEarlyAccessDurableRateLimits } from '@/lib/waitlist/early-access-durable-rate-limit';
+
 export class EarlyAccessRateLimitError extends Error {
   readonly retryAfterMs: number;
 
@@ -32,6 +34,14 @@ function isRateLimitEnabled(): boolean {
   return true;
 }
 
+function isDurableRateLimitEnabled(): boolean {
+  const flag = process.env.EARLY_ACCESS_DURABLE_RATE_LIMIT?.trim().toLowerCase();
+  if (flag === 'false' || flag === '0') {
+    return false;
+  }
+  return Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim());
+}
+
 function getIpWindows(): RateLimitWindow[] {
   return [
     {
@@ -42,6 +52,16 @@ function getIpWindows(): RateLimitWindow[] {
     {
       label: 'hour',
       limit: parsePositiveInt(process.env.EARLY_ACCESS_MAX_REQUESTS_PER_HOUR, 30),
+      windowMs: 60 * 60_000,
+    },
+  ];
+}
+
+function getEmailWindows(): RateLimitWindow[] {
+  return [
+    {
+      label: 'hour',
+      limit: parsePositiveInt(process.env.EARLY_ACCESS_MAX_REQUESTS_PER_EMAIL_HOUR, 3),
       windowMs: 60 * 60_000,
     },
   ];
@@ -104,19 +124,70 @@ export function getEarlyAccessClientKey(request: Request): string {
   return 'unknown';
 }
 
-export function assertEarlyAccessRateLimit(clientKey: string): void {
+function assertInMemoryRateLimit(clientKey: string, email?: string): void {
+  const now = Date.now();
+  const ipResult = tryConsumeWindows(clientKey || 'unknown', getIpWindows(), now);
+  if (!ipResult.allowed) {
+    throw new EarlyAccessRateLimitError(
+      `Too many signup attempts. Try again in ${Math.ceil(ipResult.retryAfterMs / 1000)} seconds.`,
+      ipResult.retryAfterMs,
+    );
+  }
+
+  if (email) {
+    const emailResult = tryConsumeWindows(
+      `email:${email.toLowerCase()}`,
+      getEmailWindows(),
+      now,
+    );
+    if (!emailResult.allowed) {
+      throw new EarlyAccessRateLimitError(
+        `Too many signup attempts for this email. Try again in ${Math.ceil(emailResult.retryAfterMs / 1000)} seconds.`,
+        emailResult.retryAfterMs,
+      );
+    }
+  }
+}
+
+export async function assertEarlyAccessRateLimit(
+  request: Request,
+  email?: string,
+): Promise<void> {
   if (!isRateLimitEnabled()) {
     return;
   }
 
-  const now = Date.now();
-  const result = tryConsumeWindows(clientKey || 'unknown', getIpWindows(), now);
-  if (!result.allowed) {
-    throw new EarlyAccessRateLimitError(
-      `Too many signup attempts. Try again in ${Math.ceil(result.retryAfterMs / 1000)} seconds.`,
-      result.retryAfterMs,
-    );
+  const clientKey = getEarlyAccessClientKey(request);
+
+  if (isDurableRateLimitEnabled()) {
+    try {
+      await assertEarlyAccessDurableRateLimits({
+        clientKey,
+        email,
+        ipWindows: getIpWindows().map((window) => ({
+          label: window.label,
+          limit: window.limit,
+          windowSeconds: Math.ceil(window.windowMs / 1000),
+        })),
+        emailWindows: getEmailWindows().map((window) => ({
+          label: window.label,
+          limit: window.limit,
+          windowSeconds: Math.ceil(window.windowMs / 1000),
+        })),
+      });
+      return;
+    } catch (error) {
+      if (error instanceof EarlyAccessRateLimitError) {
+        throw error;
+      }
+      console.warn(
+        '[early-access] Durable rate limit unavailable; falling back to in-memory limit.',
+        error instanceof Error ? error.message : error,
+      );
+    }
   }
+
+  assertInMemoryRateLimit(clientKey, email);
 }
 
 export function isEarlyAccessRateLimitError(error: unknown): error is EarlyAccessRateLimitError {

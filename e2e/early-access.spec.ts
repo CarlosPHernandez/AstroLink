@@ -65,12 +65,15 @@ test.describe('Early access waitlist', () => {
     await expect(page.getByTestId('early-access-form')).toHaveCount(0);
   });
 
-  test('duplicate signup shows already-on-list copy', async ({ page }) => {
+  test('duplicate signup shows the same success copy as a new signup', async ({ page }) => {
     await page.route('**/api/early-access', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ success: true, alreadyRegistered: true }),
+        body: JSON.stringify({
+          success: true,
+          message: "You're on the list. We'll reach out when early access opens.",
+        }),
       });
     });
 
@@ -79,9 +82,9 @@ test.describe('Early access waitlist', () => {
     await page.getByRole('button', { name: 'Get early access' }).click();
 
     await expect(page.getByTestId('early-access-success')).toBeVisible();
-    await expect(page.getByText("You're already on the list")).toBeVisible();
+    await expect(page.getByText("You're on the list")).toBeVisible();
     await expect(
-      page.getByText('We have your email—no need to sign up again.'),
+      page.getByText("We'll reach out when early access opens."),
     ).toBeVisible();
   });
 

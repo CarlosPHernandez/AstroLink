@@ -18,4 +18,8 @@ describe('parseEarlyAccessReferrer', () => {
       'partner-nasa',
     );
   });
+
+  it('drops invalid ref values', () => {
+    expect(parseEarlyAccessReferrer('?ref=INVALID')).toBeUndefined();
+  });
 });
