@@ -1,8 +1,45 @@
 # AstroLink
 
-Paid aerospace expert network (live 1:1 sessions, Stripe, Daily, Gemini agents). Next.js App Router + Supabase.
+AstroLink is a paid expert network for aerospace and space — live 1:1 video sessions with verified operators, astronauts, and industry specialists (GLG/Minnect-style, vertical-specific).
 
-**D1 engineering status:** [docs/d1-implementation-plan.md](docs/d1-implementation-plan.md)
+Buyers book sessions, receive AI-generated pre-call briefs, join private Daily rooms, and get post-session recaps. Experts set rates; the platform handles payments, compliance hooks, and bilingual session access.
+
+**Stack:** Next.js 16 (App Router) · Supabase · Stripe · Daily · Gemini (`@google/genai`)
+
+**Engineering status:** [docs/d1-implementation-plan.md](docs/d1-implementation-plan.md)
+
+## Gemini XPRIZE
+
+AstroLink is an entrant in [Build with Gemini XPRIZE](https://xprize.devpost.com/) ($2M prize pool, deadline Aug 17, 2026).
+
+| | |
+|--|--|
+| **Category** | [**Professional Services Access**](https://xprize.devpost.com/) — connecting everyday people with the expert guidance they need |
+| **Problem** | High-stakes aerospace knowledge is locked behind personal networks, opaque consulting firms, and conferences most buyers cannot access |
+| **Product** | A marketplace where anyone can discover, book, and follow a live session with a verified expert — with AI running match, brief, synthesis, translation, and compliance triage |
+
+### Why this category
+
+AstroLink is not a generic video app or course platform. It sells **access to named experts** — flight controllers, program managers, astronauts — with escrow, audit trails, and session context built for regulated-adjacent domains.
+
+### AI-native operations (production agents)
+
+Gemini (and OpenAI fallback via `src/lib/llm.ts`) runs key decisions in the live product:
+
+| Agent | Role |
+|-------|------|
+| **APX-01** Booking | Expert matching from buyer goals + roster |
+| **APX-02** Briefing | Pre-session brief for the expert (`briefing_json`) |
+| **APX-03** Session | Post-call summary and action items from transcript |
+| **APX-06** Translation | Live captions and localized recap (aerospace glossary) |
+| **Compliance** | Intake and transcript flags for ops review (ITAR-adjacent keywords) |
+
+Structured decision logs for judges: [T8 in D1 plan](docs/d1-implementation-plan.md) (export from `audit_log`).
+
+### Competition links
+
+- [Devpost — rules, categories, submission checklist](https://xprize.devpost.com/)
+- [geminixprize.com](https://www.geminixprize.com/)
 
 ## Supabase setup
 
@@ -85,35 +122,12 @@ E2E bookings are tagged with spec-specific goals prefixes (`E2E:golden-path`, `E
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local   # fill Supabase, Stripe, Daily, GEMINI_API_KEY / OPENAI_API_KEY
+npm ci
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Waitlist production:** `APP_MODE=waitlist` — public surface is `/early-access` and `/join/[slug]` only. See [AGENTS.md](AGENTS.md).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Deploy:** Vercel (production URL: [astro-link.space](https://astro-link.space)). See [docs/how-to/stripe-production-cutover.md](docs/how-to/stripe-production-cutover.md) for payment cutover.
