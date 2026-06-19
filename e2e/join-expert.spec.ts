@@ -44,6 +44,7 @@ test.describe('Expert partner join landing', () => {
     expect(postedBody).toEqual({
       email: 'join-expert-e2e@example.com',
       referrer: JOIN_REFERRER,
+      company: '',
     });
   });
 

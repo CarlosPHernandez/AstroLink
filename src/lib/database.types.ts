@@ -114,6 +114,27 @@ export type Database = {
           },
         ]
       }
+      early_access_rate_limits: {
+        Row: {
+          bucket_key: string
+          hit_count: number
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          bucket_key: string
+          hit_count?: number
+          updated_at?: string
+          window_start: string
+        }
+        Update: {
+          bucket_key?: string
+          hit_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       early_access_signups: {
         Row: {
           created_at: string
@@ -502,7 +523,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      early_access_consume_rate_limit: {
+        Args: {
+          p_bucket_key: string
+          p_limit: number
+          p_window_seconds: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       agent_id: "APX-01" | "APX-02" | "APX-03" | "APX-04" | "APX-05" | "APX-06"
