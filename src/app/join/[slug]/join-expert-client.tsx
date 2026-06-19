@@ -7,6 +7,7 @@ import { WaitlistHeader } from '@/components/early-access/waitlist-header';
 import { WaitlistSignupForm } from '@/components/early-access/waitlist-signup-form';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { trackWaitlistIntroPlay } from '@/lib/waitlist/waitlist-analytics';
+import { useWaitlistPageAnalytics } from '@/lib/waitlist/use-waitlist-page-analytics';
 
 type JoinExpertClientProps = {
   expert: ListedExpert;
@@ -61,6 +62,12 @@ export default function JoinExpertClient({
   copyrightYear,
   defaultReferrer,
 }: JoinExpertClientProps) {
+  const analytics = useWaitlistPageAnalytics({
+    page: 'join',
+    expert: expert.slug,
+    defaultReferrer,
+  });
+
   return (
     <div
       data-testid="join-expert-page"
@@ -75,7 +82,7 @@ export default function JoinExpertClient({
         <div className="pt-8 sm:pt-16 lg:pt-20 pb-16 sm:pb-24 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,46%)] lg:gap-x-10 xl:gap-x-14 lg:items-start">
           <div className="min-w-0 space-y-5 sm:space-y-7 lg:col-start-1 lg:row-start-1">
             <JoinExpertHero expert={expert} />
-            <WaitlistSignupForm defaultReferrer={defaultReferrer} />
+            <WaitlistSignupForm defaultReferrer={defaultReferrer} analytics={analytics} />
           </div>
 
           <JoinExpertFeaturedPanel expert={expert} />

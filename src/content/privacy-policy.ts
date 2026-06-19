@@ -46,6 +46,7 @@ export const PRIVACY_POLICY = {
         'The /early-access waitlist is single opt-in: when you submit a valid email, you are added to our list immediately. We do not require a confirmation click to join.',
         'We send waitlist-related email only for product updates about early access and launch—not a recurring newsletter unless you opt into additional communications later.',
         'You may request removal at any time by emailing us at the address below.',
+        'We collect anonymous interaction events on the waitlist page (for example, whether the signup form was viewed or submitted) through Vercel Web Analytics. These events do not include your email address.',
       ],
     },
     {
