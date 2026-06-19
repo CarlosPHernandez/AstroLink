@@ -6,7 +6,18 @@ import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
 import { getEarlyAccessSuccessDisplay } from '@/lib/waitlist/early-access-success';
 import { parseEarlyAccessReferrer } from '@/lib/waitlist/early-access-referrer';
-import { trackWaitlistBadEmail, trackWaitlistRateLimit } from '@/lib/waitlist/waitlist-analytics';
+import {
+  trackWaitlistBadEmail,
+  trackWaitlistFormStart,
+  trackWaitlistFormView,
+  trackWaitlistRateLimit,
+  trackWaitlistSubmitAttempt,
+  trackWaitlistSubmitFail,
+  trackWaitlistSubmitSuccess,
+  type WaitlistFormStartVia,
+  type WaitlistSubmitFailReason,
+} from '@/lib/waitlist/waitlist-analytics';
+import type { WaitlistFormAnalytics } from '@/lib/waitlist/use-waitlist-page-analytics';
 import { type FieldErrors, fieldErrorInputClass, firstFieldError } from '@/lib/zod-field-errors';
 
 const WAITLIST_SUBMIT_ANIMATION_MS = 1200;
@@ -24,9 +35,10 @@ async function waitForSubmitAnimation(startedAt: number): Promise<void> {
 type WaitlistSignupFormProps = {
   /** Used when the URL has no ?ref= (e.g. /join/[slug] partner landings). */
   defaultReferrer?: string;
+  analytics: WaitlistFormAnalytics;
 };
 
-export function WaitlistSignupForm({ defaultReferrer }: WaitlistSignupFormProps) {
+export function WaitlistSignupForm({ defaultReferrer, analytics }: WaitlistSignupFormProps) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState<string | null>(null);
@@ -36,6 +48,9 @@ export function WaitlistSignupForm({ defaultReferrer }: WaitlistSignupFormProps)
   } | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const successRef = useRef<HTMLDivElement>(null);
+  const signupRef = useRef<HTMLDivElement>(null);
+  const sentFormViewRef = useRef(false);
+  const sentFormStartRef = useRef(false);
 
   useEffect(() => {
     if (status === 'success') {
@@ -43,14 +58,54 @@ export function WaitlistSignupForm({ defaultReferrer }: WaitlistSignupFormProps)
     }
   }, [status]);
 
+  useEffect(() => {
+    const element = signupRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting || sentFormViewRef.current) return;
+        sentFormViewRef.current = true;
+        trackWaitlistFormView(analytics.context);
+        analytics.reportFormView();
+      },
+      { threshold: 0.5 },
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [analytics.context, analytics.reportFormView]);
+
+  function markFormStart(via: WaitlistFormStartVia) {
+    if (sentFormStartRef.current) return;
+    sentFormStartRef.current = true;
+    trackWaitlistFormStart(analytics.context, via);
+    analytics.reportFormStart(via);
+  }
+
+  function markSubmitFail(reason: WaitlistSubmitFailReason) {
+    trackWaitlistSubmitFail(analytics.context, reason);
+    analytics.reportSubmitFail(reason);
+    if (reason === 'invalid_email_client' || reason === 'invalid_email_server') {
+      trackWaitlistBadEmail(reason === 'invalid_email_client' ? 'client' : 'server');
+    }
+    if (reason === 'rate_limit') {
+      trackWaitlistRateLimit();
+    }
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFieldError(null);
     setMessage(null);
 
+    trackWaitlistSubmitAttempt(analytics.context);
+    analytics.reportSubmitAttempt();
+
     const trimmed = email.trim();
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      trackWaitlistBadEmail('client');
+      markSubmitFail('invalid_email_client');
       setFieldError('Enter a valid email address.');
       return;
     }
@@ -84,12 +139,15 @@ export function WaitlistSignupForm({ defaultReferrer }: WaitlistSignupFormProps)
 
       if (!response.ok || !data.success) {
         setStatus('error');
-        if (response.status === 429) {
-          trackWaitlistRateLimit();
-        }
         const emailError = firstFieldError(data.fieldErrors, 'email');
+        if (response.status === 429) {
+          markSubmitFail('rate_limit');
+        } else if (emailError) {
+          markSubmitFail('invalid_email_server');
+        } else {
+          markSubmitFail('server_error');
+        }
         if (emailError) {
-          trackWaitlistBadEmail('server');
           setFieldError(emailError);
           setMessage(data.error ?? null);
         } else {
@@ -99,18 +157,25 @@ export function WaitlistSignupForm({ defaultReferrer }: WaitlistSignupFormProps)
       }
 
       await waitForSubmitAnimation(startedAt);
+      trackWaitlistSubmitSuccess(analytics.context, Boolean(data.alreadyRegistered));
+      analytics.reportSubmitSuccess();
       setStatus('success');
       setSuccessDisplay(getEarlyAccessSuccessDisplay(Boolean(data.alreadyRegistered)));
       setMessage(null);
       setEmail('');
     } catch {
+      markSubmitFail('network');
       setStatus('error');
       setMessage('Check your network and try again.');
     }
   }
 
   return (
-    <div id="signup" className="w-full min-w-0 scroll-mt-20 lg:max-w-[40rem]">
+    <div
+      ref={signupRef}
+      id="signup"
+      className="w-full min-w-0 scroll-mt-20 lg:max-w-[40rem]"
+    >
       {status === 'success' && successDisplay ? (
         <div
           ref={successRef}
@@ -151,7 +216,12 @@ export function WaitlistSignupForm({ defaultReferrer }: WaitlistSignupFormProps)
                 inputMode="email"
                 placeholder="Your email address"
                 value={email}
+                onFocus={() => markFormStart('focus')}
                 onChange={(e) => {
+                  if (e.target.value.length > 0) {
+                    markFormStart('input');
+                    analytics.reportHadTyped();
+                  }
                   setEmail(e.target.value);
                   setFieldError(null);
                 }}

@@ -6,6 +6,7 @@ import { WaitlistHeader } from '@/components/early-access/waitlist-header';
 import { WaitlistHero } from '@/components/early-access/waitlist-hero';
 import { WaitlistRoster } from '@/components/early-access/waitlist-roster';
 import { WaitlistSignupForm } from '@/components/early-access/waitlist-signup-form';
+import { useWaitlistPageAnalytics } from '@/lib/waitlist/use-waitlist-page-analytics';
 
 type EarlyAccessClientProps = {
   copyrightYear: number;
@@ -18,6 +19,8 @@ export default function EarlyAccessClient({
   showExpertsLink,
   experts,
 }: EarlyAccessClientProps) {
+  const analytics = useWaitlistPageAnalytics({ page: 'early-access' });
+
   return (
     <div className="min-h-screen bg-background text-on-surface font-sans selection:bg-zinc-900 selection:text-white">
       <WaitlistHeader showExpertsLink={showExpertsLink} />
@@ -26,7 +29,7 @@ export default function EarlyAccessClient({
         <div className="pt-8 sm:pt-16 lg:pt-20 pb-16 sm:pb-24 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,46%)] lg:gap-x-10 xl:gap-x-14 lg:items-start">
           <div className="min-w-0 space-y-5 sm:space-y-7 lg:col-start-1 lg:row-start-1">
             <WaitlistHero />
-            <WaitlistSignupForm />
+            <WaitlistSignupForm analytics={analytics} />
           </div>
 
           {experts.length > 0 ? <WaitlistRoster experts={experts} /> : null}
