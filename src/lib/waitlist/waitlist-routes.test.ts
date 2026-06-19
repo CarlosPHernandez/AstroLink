@@ -11,6 +11,7 @@ describe('resolveWaitlistRoute', () => {
 
   it('allows public waitlist pages', () => {
     expect(resolveWaitlistRoute('/early-access', null)).toEqual({ action: 'allow' });
+    expect(resolveWaitlistRoute('/early-access/player', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/privacy', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/join/david-guajardo', null)).toEqual({ action: 'allow' });
   });
