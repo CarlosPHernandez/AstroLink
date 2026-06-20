@@ -157,6 +157,6 @@ export const config = {
      * Run on all routes except static assets so waitlist mode can gate /, /experts,
      * and other public marketing pages — not only auth/booking/dashboard paths.
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };
