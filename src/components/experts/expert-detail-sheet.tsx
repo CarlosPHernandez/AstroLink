@@ -7,10 +7,16 @@ import { ExpertDetailContent } from './expert-detail-content';
 type ExpertDetailSheetProps = {
   expert: ListedExpert;
   isSignedIn: boolean;
+  waitlistMode: boolean;
   onClose: () => void;
 };
 
-export function ExpertDetailSheet({ expert, isSignedIn, onClose }: ExpertDetailSheetProps) {
+export function ExpertDetailSheet({
+  expert,
+  isSignedIn,
+  waitlistMode,
+  onClose,
+}: ExpertDetailSheetProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,6 +60,7 @@ export function ExpertDetailSheet({ expert, isSignedIn, onClose }: ExpertDetailS
         <ExpertDetailContent
           expert={expert}
           isSignedIn={isSignedIn}
+          waitlistMode={waitlistMode}
           layout="sheet"
           onClose={onClose}
         />

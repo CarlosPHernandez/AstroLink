@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
-import { getMentorBySlug } from '@/lib/mentor-directory';
+import { SeoJsonLd } from '@/components/seo/seo-json-ld';
 import { ExpertProfileSkeleton } from '@/components/loading/route-loading';
+import { getMentorBySlug } from '@/lib/mentor-directory';
+import { buildPageMetadata } from '@/lib/seo/build-page-metadata';
+import { buildPersonJsonLd } from '@/lib/seo/json-ld';
 import ExpertProfileShell from './expert-profile-shell';
 
 type PageProps = {
@@ -20,14 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description: 'This profile is not in the verified directory.',
     };
   }
-  return {
-    title: `${expert.name} · AstroLink`,
-    description: expert.bio.slice(0, 160),
-    openGraph: {
-      title: `${expert.name} — Verified Aerospace Expert | AstroLink`,
-      description: expert.bio.slice(0, 160),
-    },
-  };
+  return buildPageMetadata({ pageType: 'expert-profile', expert });
 }
 
 export default async function ExpertProfilePage({ params }: PageProps) {
@@ -39,8 +35,11 @@ export default async function ExpertProfilePage({ params }: PageProps) {
   }
 
   return (
-    <Suspense fallback={<ExpertProfileSkeleton />}>
-      <ExpertProfileShell expert={expert} />
-    </Suspense>
+    <>
+      <SeoJsonLd data={buildPersonJsonLd(expert)} />
+      <Suspense fallback={<ExpertProfileSkeleton />}>
+        <ExpertProfileShell expert={expert} />
+      </Suspense>
+    </>
   );
 }

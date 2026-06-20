@@ -8,10 +8,16 @@ import { ExpertDetailContent } from './expert-detail-content';
 type ExpertDetailPanelProps = {
   expert: ListedExpert;
   isSignedIn: boolean;
+  waitlistMode: boolean;
   onClose: () => void;
 };
 
-export function ExpertDetailPanel({ expert, isSignedIn, onClose }: ExpertDetailPanelProps) {
+export function ExpertDetailPanel({
+  expert,
+  isSignedIn,
+  waitlistMode,
+  onClose,
+}: ExpertDetailPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -64,6 +70,7 @@ export function ExpertDetailPanel({ expert, isSignedIn, onClose }: ExpertDetailP
           <ExpertDetailContent
             expert={expert}
             isSignedIn={isSignedIn}
+            waitlistMode={waitlistMode}
             layout="panel"
             onClose={onClose}
           />

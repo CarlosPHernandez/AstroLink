@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
 import { MaterialIcon } from '@/components/ui/material-icon';
-import { getExpertBookHref } from '@/lib/expert-book-href';
+import { expertCtaIcon, expertCtaShortLabel, type ExpertCta } from '@/lib/expert-cta';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 interface SessionData {
@@ -17,14 +17,27 @@ interface SessionData {
 export default function ExpertProfileClient({
   expert,
   session,
+  expertCta,
 }: {
   expert: ListedExpert;
   session: SessionData | null;
+  expertCta: ExpertCta;
 }) {
   const [bioExpanded, setBioExpanded] = useState(false);
-  const bookHref = getExpertBookHref(expert.slug, Boolean(session));
-
   const firstName = expert.name.split(' ')[0];
+  const ctaIcon = expertCtaIcon(expertCta.variant);
+  const headerCtaLabel = expertCtaShortLabel(
+    expertCta.variant,
+    firstName,
+    expert.availability,
+    expert.rate,
+  );
+  const primaryCtaLabel =
+    expertCta.variant === 'waitlist'
+      ? 'Get early access'
+      : `Book live 1:1 with ${firstName}`;
+  const compactCtaLabel =
+    expertCta.variant === 'waitlist' ? 'Get early access' : `Book 1:1 with ${firstName}`;
 
   return (
     <div className="min-h-screen bg-background text-on-surface font-sans">
@@ -45,11 +58,11 @@ export default function ExpertProfileClient({
             </Link>
 
             <Link
-              href={bookHref}
+              href={expertCta.href}
               data-testid="expert-profile-book"
               className="bg-primary text-on-primary px-3.5 py-2 sm:px-lg sm:py-sm rounded-md font-label-md text-xs sm:text-label-md hover:bg-primary-container active:scale-95 transition-all shadow-sm"
             >
-              {expert.availability === 'Available Now' ? 'Book session' : 'Schedule'} · ${expert.rate}/hr
+              {headerCtaLabel}
             </Link>
 
             {session ? (
@@ -140,11 +153,11 @@ export default function ExpertProfileClient({
             {/* Primary CTA */}
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <Link
-                href={bookHref}
+                href={expertCta.href}
                 className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-[11px] font-bold uppercase tracking-wider text-on-primary transition-colors hover:bg-primary-container active:scale-[0.985]"
               >
-                <MaterialIcon name="videocam" size={20} />
-                Book live 1:1 with {firstName}
+                <MaterialIcon name={ctaIcon} size={20} />
+                {primaryCtaLabel}
               </Link>
 
               <Link
@@ -234,11 +247,11 @@ export default function ExpertProfileClient({
               </div>
 
               <Link
-                href={bookHref}
+                href={expertCta.href}
                 className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-[11px] font-bold uppercase tracking-wider text-on-primary transition-colors hover:bg-primary-container active:scale-[0.985]"
               >
-                <MaterialIcon name="videocam" size={20} />
-                Book live 1:1 with {firstName}
+                <MaterialIcon name={ctaIcon} size={20} />
+                {primaryCtaLabel}
               </Link>
 
               <p className="mt-3 text-[10px] text-on-surface-variant font-light leading-relaxed">
@@ -309,11 +322,11 @@ export default function ExpertProfileClient({
                   <span className="font-mono text-xs text-on-surface-variant font-light ml-1">/hr</span>
                 </div>
                 <Link
-                  href={bookHref}
+                  href={expertCta.href}
                   className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider bg-primary text-on-primary px-5 py-3 rounded-lg hover:bg-primary-container transition-colors"
                 >
-                  <MaterialIcon name="videocam" size={18} />
-                  Book 1:1 with {firstName}
+                  <MaterialIcon name={ctaIcon} size={18} />
+                  {compactCtaLabel}
                 </Link>
               </div>
             </div>
@@ -382,11 +395,11 @@ export default function ExpertProfileClient({
             30 minutes with {firstName}. Real pedigree, clear pricing.
           </p>
           <Link
-            href={bookHref}
+            href={expertCta.href}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-on-primary hover:bg-primary-container transition-colors"
           >
-            <MaterialIcon name="videocam" size={18} />
-            Book 1:1 with {firstName}
+            <MaterialIcon name={ctaIcon} size={18} />
+            {compactCtaLabel}
           </Link>
         </div>
       </div>

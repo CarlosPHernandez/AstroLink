@@ -12,11 +12,20 @@ export function isWaitlistJoinPage(pathname: string): boolean {
   return pathname.startsWith(prefix) && pathname.length > prefix.length;
 }
 
+export function isWaitlistExpertsPage(pathname: string): boolean {
+  if (pathname === '/experts') {
+    return true;
+  }
+  const prefix = '/experts/';
+  return pathname.startsWith(prefix) && pathname.length > prefix.length;
+}
+
 export function isWaitlistPublicPage(pathname: string): boolean {
   return (
     (WAITLIST_PUBLIC_PAGES as readonly string[]).includes(pathname) ||
     pathname === '/early-access/player' ||
-    isWaitlistJoinPage(pathname)
+    isWaitlistJoinPage(pathname) ||
+    isWaitlistExpertsPage(pathname)
   );
 }
 

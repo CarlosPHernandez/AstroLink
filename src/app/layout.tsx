@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+import { getProductionAppUrl } from "@/lib/app-url";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,6 +24,7 @@ const MATERIAL_SYMBOLS_HREF =
   "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getProductionAppUrl()),
   title: {
     default: "AstroLink",
     template: "%s · AstroLink",

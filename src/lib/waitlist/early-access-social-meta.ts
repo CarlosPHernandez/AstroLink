@@ -1,14 +1,18 @@
 import 'server-only';
 
 import type { Metadata } from 'next';
-import { getAppBaseUrl } from '@/lib/app-url';
+import { getAppBaseUrl, getProductionAppUrl } from '@/lib/app-url';
 import { getMentorBySlug } from '@/lib/mentor-directory';
 import { DEFAULT_MENTOR_IMAGE, toOptimizedImageUrl } from '@/lib/public-images';
+import {
+  EARLY_ACCESS_DESCRIPTION,
+  EARLY_ACCESS_TITLE,
+  withXprizeMention,
+} from '@/lib/seo/copy';
 import { WAITLIST_FEATURED_EXPERT_SLUG } from '@/lib/waitlist/waitlist-roster-order';
 
-export const EARLY_ACCESS_PAGE_TITLE = 'Early Access | AstroLink';
-export const EARLY_ACCESS_PAGE_DESCRIPTION =
-  'Join the waitlist for AstroLink — live 1:1 video sessions with verified aerospace experts, including Inspiration4 astronaut Chris Sembroski.';
+export const EARLY_ACCESS_PAGE_TITLE = EARLY_ACCESS_TITLE;
+export const EARLY_ACCESS_PAGE_DESCRIPTION = EARLY_ACCESS_DESCRIPTION;
 
 /** Portrait player iframe — matches Chris intro hero (4:5). */
 export const EARLY_ACCESS_TWITTER_PLAYER_WIDTH = 720;
@@ -24,7 +28,8 @@ export function absolutePublicAssetUrl(path: string, baseUrl: string): string {
 
 export async function buildEarlyAccessMetadata(): Promise<Metadata> {
   const baseUrl = getAppBaseUrl();
-  const pageUrl = `${baseUrl}/early-access`;
+  const canonicalUrl = `${getProductionAppUrl()}/early-access`;
+  const pageDescription = withXprizeMention(EARLY_ACCESS_PAGE_DESCRIPTION);
   const chris = await getMentorBySlug(WAITLIST_FEATURED_EXPERT_SLUG);
   const thumbnailUrl = absolutePublicAssetUrl(chris?.imageUrl ?? DEFAULT_MENTOR_IMAGE, baseUrl);
   const streamUrl = chris?.introVideoUrl?.trim() ?? null;
@@ -32,8 +37,8 @@ export async function buildEarlyAccessMetadata(): Promise<Metadata> {
 
   const openGraph = {
     title: EARLY_ACCESS_PAGE_TITLE,
-    description: EARLY_ACCESS_PAGE_DESCRIPTION,
-    url: pageUrl,
+    description: pageDescription,
+    url: canonicalUrl,
     siteName: 'AstroLink',
     type: 'website' as const,
     images: [
@@ -48,30 +53,30 @@ export async function buildEarlyAccessMetadata(): Promise<Metadata> {
 
   if (!streamUrl) {
     return {
-      metadataBase: new URL(baseUrl),
+      metadataBase: new URL(getProductionAppUrl()),
       title: EARLY_ACCESS_PAGE_TITLE,
-      description: EARLY_ACCESS_PAGE_DESCRIPTION,
-      alternates: { canonical: pageUrl },
+      description: pageDescription,
+      alternates: { canonical: canonicalUrl },
       openGraph,
       twitter: {
         card: 'summary_large_image',
         title: EARLY_ACCESS_PAGE_TITLE,
-        description: EARLY_ACCESS_PAGE_DESCRIPTION,
+        description: pageDescription,
         images: [thumbnailUrl],
       },
     };
   }
 
   return {
-    metadataBase: new URL(baseUrl),
+    metadataBase: new URL(getProductionAppUrl()),
     title: EARLY_ACCESS_PAGE_TITLE,
-    description: EARLY_ACCESS_PAGE_DESCRIPTION,
-    alternates: { canonical: pageUrl },
+    description: pageDescription,
+    alternates: { canonical: canonicalUrl },
     openGraph,
     twitter: {
       card: 'player',
       title: EARLY_ACCESS_PAGE_TITLE,
-      description: EARLY_ACCESS_PAGE_DESCRIPTION,
+      description: pageDescription,
       images: [thumbnailUrl],
       players: {
         playerUrl,

@@ -1,19 +1,11 @@
 import type { Metadata } from 'next';
 import { listPublicMentors } from '@/lib/mentor-directory';
+import { buildPageMetadata } from '@/lib/seo/build-page-metadata';
 import ExpertsDirectoryShell from './experts-directory-shell';
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: 'Experts · AstroLink',
-  description:
-    'Browse verified aerospace experts — astronauts, flight controllers, and operators. Watch intro videos and book live 1:1 sessions.',
-  openGraph: {
-    title: 'Verified Experts | AstroLink',
-    description:
-      'Browse and book live sessions with verified aerospace experts.',
-  },
-};
+export const metadata: Metadata = buildPageMetadata({ pageType: 'experts-index' });
 
 export default async function ExpertsDirectoryPage() {
   const experts = await listPublicMentors();
