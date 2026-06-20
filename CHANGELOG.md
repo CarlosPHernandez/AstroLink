@@ -2,6 +2,14 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.5.1] - 2026-06-20
+
+Hotfix: serve `sitemap.xml` and `robots.txt` in waitlist mode so Google Search Console accepts the sitemap.
+
+### Fixed
+- Waitlist proxy no longer redirects `/sitemap.xml` and `/robots.txt` to early-access HTML.
+- Proxy matcher excludes SEO crawl routes so Next.js metadata handlers serve XML/text directly.
+
 ## [0.4.5.0] - 2026-06-20
 
 SEO foundation (PR1): crawlable public expert profiles in waitlist mode with canonical metadata on `astro-link.space`.

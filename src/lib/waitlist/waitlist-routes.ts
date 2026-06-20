@@ -20,12 +20,18 @@ export function isWaitlistExpertsPage(pathname: string): boolean {
   return pathname.startsWith(prefix) && pathname.length > prefix.length;
 }
 
+/** Next.js metadata routes — must not redirect to early-access (Google expects XML/text). */
+export function isWaitlistSeoCrawlPage(pathname: string): boolean {
+  return pathname === '/robots.txt' || pathname === '/sitemap.xml';
+}
+
 export function isWaitlistPublicPage(pathname: string): boolean {
   return (
     (WAITLIST_PUBLIC_PAGES as readonly string[]).includes(pathname) ||
     pathname === '/early-access/player' ||
     isWaitlistJoinPage(pathname) ||
-    isWaitlistExpertsPage(pathname)
+    isWaitlistExpertsPage(pathname) ||
+    isWaitlistSeoCrawlPage(pathname)
   );
 }
 

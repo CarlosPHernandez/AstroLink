@@ -5,6 +5,26 @@ const emptyStorage = { cookies: [] as [], origins: [] as [] };
 test.describe('Public expert SEO surfaces', () => {
   test.use({ storageState: emptyStorage });
 
+  test.describe('waitlist mode', () => {
+    test.use({
+      storageState: emptyStorage,
+    });
+
+    test('sitemap.xml returns XML, not early-access HTML', async ({ request }) => {
+      test.skip(
+        process.env.APP_MODE !== 'waitlist',
+        'Requires APP_MODE=waitlist in the Playwright webServer env',
+      );
+
+      const response = await request.get('/sitemap.xml');
+      expect(response.ok()).toBeTruthy();
+      const body = await response.text();
+      expect(body).toContain('<?xml');
+      expect(body).toContain('<urlset');
+      expect(body).not.toContain('Talk to astronauts');
+    });
+  });
+
   test('expert profile exposes astro-link.space canonical', async ({ page }) => {
     const response = await page.goto('/experts/chris-sembroski');
     expect(response?.status()).toBe(200);

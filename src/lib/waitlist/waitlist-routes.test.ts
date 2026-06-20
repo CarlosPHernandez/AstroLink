@@ -16,6 +16,8 @@ describe('resolveWaitlistRoute', () => {
     expect(resolveWaitlistRoute('/join/david-guajardo', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/experts', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/experts/chris-sembroski', null)).toEqual({ action: 'allow' });
+    expect(resolveWaitlistRoute('/sitemap.xml', null)).toEqual({ action: 'allow' });
+    expect(resolveWaitlistRoute('/robots.txt', null)).toEqual({ action: 'allow' });
   });
 
   it('redirects protected app surfaces', () => {
