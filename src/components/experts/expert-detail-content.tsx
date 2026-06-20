@@ -4,36 +4,49 @@ import Link from 'next/link';
 import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
 import { ExpertBioPreview } from '@/components/experts/expert-bio-preview';
 import { MaterialIcon } from '@/components/ui/material-icon';
-import { getExpertBookHref } from '@/lib/expert-book-href';
+import {
+  expertCtaIcon,
+  expertCtaPrimaryLabel,
+  resolveExpertCta,
+} from '@/lib/expert-cta';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 type ExpertDetailContentProps = {
   expert: ListedExpert;
   isSignedIn: boolean;
+  waitlistMode: boolean;
   layout: 'panel' | 'sheet';
   onClose?: () => void;
 };
 
 function ExpertDetailActions({
-  bookHref,
+  href,
+  variant,
   firstName,
   rate,
   slug,
 }: {
-  bookHref: string;
+  href: string;
+  variant: 'waitlist' | 'booking';
   firstName: string;
   rate: number;
   slug: string;
 }) {
+  const icon = expertCtaIcon(variant);
+  const label =
+    variant === 'waitlist'
+      ? 'Get early access'
+      : expertCtaPrimaryLabel(variant, firstName, rate);
+
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
       <Link
-        href={bookHref}
+        href={href}
         data-testid="expert-detail-book"
         className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-on-primary transition-colors hover:bg-primary-container active:scale-[0.985]"
       >
-        <MaterialIcon name="videocam" size={20} />
-        Book live 1:1 with {firstName} · ${rate}/hr
+        <MaterialIcon name={icon} size={20} />
+        {label}
       </Link>
       <Link
         href={`/experts/${slug}`}
@@ -92,10 +105,11 @@ function ExpertDetailMeta({
 export function ExpertDetailContent({
   expert,
   isSignedIn,
+  waitlistMode,
   layout,
   onClose,
 }: ExpertDetailContentProps) {
-  const bookHref = getExpertBookHref(expert.slug, isSignedIn);
+  const expertCta = resolveExpertCta(expert.slug, isSignedIn, waitlistMode);
   const firstName = expert.name.split(' ')[0];
   const isPanel = layout === 'panel';
 
@@ -118,7 +132,8 @@ export function ExpertDetailContent({
           <ExpertBioPreview bio={expert.bio} variant="panel" />
           <div className="mt-6 shrink-0 border-t border-outline-variant/60 pt-6">
             <ExpertDetailActions
-              bookHref={bookHref}
+              href={expertCta.href}
+              variant={expertCta.variant}
               firstName={firstName}
               rate={expert.rate}
               slug={expert.slug}
@@ -131,7 +146,6 @@ export function ExpertDetailContent({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* Media — always visible at top of sheet */}
       <div className="w-full shrink-0">
         <ExpertIntroMedia
           name={expert.name}
@@ -143,7 +157,6 @@ export function ExpertDetailContent({
         />
       </div>
 
-      {/* Scrollable content region (meta + bio). The outer scroller owns variable height. */}
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="flex flex-col gap-6 pb-8">
           <ExpertDetailMeta expert={expert} onClose={onClose} />
@@ -151,10 +164,10 @@ export function ExpertDetailContent({
         </div>
       </div>
 
-      {/* Docked actions footer — primary CTA is always reachable with safe-area padding */}
       <div className="shrink-0 border-t border-outline-variant/60 bg-background pt-6 pb-[max(2rem,env(safe-area-inset-bottom))]">
         <ExpertDetailActions
-          bookHref={bookHref}
+          href={expertCta.href}
+          variant={expertCta.variant}
           firstName={firstName}
           rate={expert.rate}
           slug={expert.slug}

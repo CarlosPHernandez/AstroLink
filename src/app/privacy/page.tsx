@@ -2,12 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PrivacyPolicyDocument } from '@/components/legal/privacy-policy-document';
 import { isWaitlistMode } from '@/lib/app-mode';
+import { buildPageMetadata } from '@/lib/seo/build-page-metadata';
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy | AstroLink',
-  description: 'How AstroLink collects, uses, and protects your personal information.',
-  robots: { index: true, follow: true },
-};
+export const metadata: Metadata = buildPageMetadata({ pageType: 'privacy' });
 
 export default function PrivacyPage() {
   const backHref = isWaitlistMode() ? '/early-access' : '/';

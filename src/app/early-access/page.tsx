@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { isWaitlistMode } from '@/lib/app-mode';
 import { listPublicMentors } from '@/lib/mentor-directory';
 import { buildEarlyAccessMetadata } from '@/lib/waitlist/early-access-social-meta';
 import { orderWaitlistRoster } from '@/lib/waitlist/waitlist-roster-order';
@@ -17,7 +16,7 @@ export default async function EarlyAccessPage() {
   return (
     <EarlyAccessClient
       copyrightYear={new Date().getFullYear()}
-      showExpertsLink={!isWaitlistMode()}
+      showExpertsLink
       experts={experts}
     />
   );

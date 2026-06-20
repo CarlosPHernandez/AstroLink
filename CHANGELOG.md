@@ -2,6 +2,24 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.5.0] - 2026-06-20
+
+SEO foundation (PR1): crawlable public expert profiles in waitlist mode with canonical metadata on `astro-link.space`.
+
+### Added
+- `src/lib/seo/` metadata builder, JSON-LD helpers, and dev README.
+- `robots.txt` and dynamic `sitemap.xml` for early-access, experts, join, and privacy routes.
+- `expert-cta` waitlist-safe CTAs (`/early-access?ref=expert-<slug>`).
+- Person + VideoObject JSON-LD on `/experts/[slug]`.
+- Build with Gemini XPRIZE mention on early-access metadata only.
+- Plan doc `docs/plans/seo-agent.md` and Playwright `e2e/seo-public-experts.spec.ts`.
+
+### Changed
+- Waitlist mode allows public `/experts` and `/experts/[slug]` (booking/auth still blocked).
+- All public pages use production canonicals on `https://astro-link.space`; `/join/[slug]` canonical points to expert profile.
+- Early-access shows Experts nav link in waitlist mode.
+- Root layout sets `metadataBase` to production app URL.
+
 ## [0.4.4.0] - 2026-06-19
 
 X (Twitter) Player Card for the early-access waitlist with Chris Sembroski's intro video.

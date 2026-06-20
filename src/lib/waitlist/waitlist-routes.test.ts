@@ -14,10 +14,12 @@ describe('resolveWaitlistRoute', () => {
     expect(resolveWaitlistRoute('/early-access/player', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/privacy', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/join/david-guajardo', null)).toEqual({ action: 'allow' });
+    expect(resolveWaitlistRoute('/experts', null)).toEqual({ action: 'allow' });
+    expect(resolveWaitlistRoute('/experts/chris-sembroski', null)).toEqual({ action: 'allow' });
   });
 
-  it('redirects marketing and app surfaces', () => {
-    for (const path of ['/experts', '/experts/chris-sembroski', '/booking', '/auth', '/dashboard/mentee']) {
+  it('redirects protected app surfaces', () => {
+    for (const path of ['/booking', '/auth', '/dashboard/mentee']) {
       expect(resolveWaitlistRoute(path, null)).toEqual({
         action: 'redirect',
         destination: '/early-access',

@@ -24,9 +24,11 @@ const ExpertDetailSheet = dynamic(
 export default function ExpertsDirectoryClient({
   experts,
   isSignedIn,
+  waitlistMode,
 }: {
   experts: ListedExpert[];
   isSignedIn: boolean;
+  waitlistMode: boolean;
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
@@ -120,6 +122,7 @@ export default function ExpertsDirectoryClient({
           <ExpertDetailPanel
             expert={selectedExpert}
             isSignedIn={isSignedIn}
+            waitlistMode={waitlistMode}
             onClose={handleClose}
           />
         ) : null}
@@ -128,6 +131,7 @@ export default function ExpertsDirectoryClient({
           <ExpertDetailSheet
             expert={selectedExpert}
             isSignedIn={isSignedIn}
+            waitlistMode={waitlistMode}
             onClose={handleClose}
           />
         ) : null}

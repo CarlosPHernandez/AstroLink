@@ -10,6 +10,7 @@ import {
 
 vi.mock('@/lib/app-url', () => ({
   getAppBaseUrl: () => 'https://astro-link.space',
+  getProductionAppUrl: () => 'https://astro-link.space',
 }));
 
 vi.mock('@/lib/mentor-directory', () => ({
@@ -64,7 +65,8 @@ describe('buildEarlyAccessMetadata', () => {
     const metadata = await buildEarlyAccessMetadata();
 
     expect(metadata.title).toBe(EARLY_ACCESS_PAGE_TITLE);
-    expect(metadata.description).toBe(EARLY_ACCESS_PAGE_DESCRIPTION);
+    expect(metadata.description).toContain('Build with Gemini XPRIZE');
+    expect(metadata.alternates?.canonical).toBe('https://astro-link.space/early-access');
     expect(metadata.openGraph?.url).toBe('https://astro-link.space/early-access');
     expect(metadata.twitter).toMatchObject({
       card: 'player',
