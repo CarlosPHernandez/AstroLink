@@ -2,6 +2,23 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.6.0] - 2026-06-21
+
+Mentor dashboard production hardening: deferred Connect UX, NF-1860 upload validation, E2E smoke.
+
+### Added
+- `src/lib/mentor-payouts-config.ts` — `ENABLE_STRIPE_CONNECT_PAYOUTS` gate for Connect CTAs.
+- `src/lib/nf1860-upload.ts` — PDF size (10 MB) and magic-byte validation for NF-1860 uploads.
+- Unit tests for mentor actions, payouts config, stripe-connect route, and NF-1860 validator.
+- Playwright `e2e/mentor-dashboard.spec.ts` (9 cases).
+
+### Changed
+- Mentor earnings tab shows manual payouts card in production (no broken Connect button).
+- Sidebar payout status: Dev mode / Manual payouts / Connected / Setup required.
+
+### Fixed
+- Mentor profile save when civil-servant checkbox is unchecked (`isCivilServant` null from FormData).
+
 ## [0.4.5.1] - 2026-06-20
 
 Hotfix: serve `sitemap.xml` and `robots.txt` in waitlist mode so Google Search Console accepts the sitemap.
