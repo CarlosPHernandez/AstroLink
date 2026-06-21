@@ -1,5 +1,10 @@
 'use client';
 
+import {
+  PAYOUT_NAV_LABELS,
+  type PayoutNavStatus,
+} from '@/lib/mentor-payouts-config';
+
 export type MentorDashboardTab = 'sessions' | 'earnings' | 'profile';
 
 const TABS: { id: MentorDashboardTab; label: string }[] = [
@@ -8,14 +13,21 @@ const TABS: { id: MentorDashboardTab; label: string }[] = [
   { id: 'profile', label: 'Profile' },
 ];
 
+const PAYOUT_NAV_STYLES: Record<PayoutNavStatus, string> = {
+  dev_skip: 'text-emerald-700',
+  manual: 'text-on-surface',
+  connected: 'text-emerald-700',
+  setup_required: 'text-amber-700',
+};
+
 export function MentorDashboardNav({
   activeTab,
   onTabChange,
-  stripeReady,
+  payoutNavStatus,
 }: {
   activeTab: MentorDashboardTab;
   onTabChange: (tab: MentorDashboardTab) => void;
-  stripeReady: boolean;
+  payoutNavStatus: PayoutNavStatus;
 }) {
   return (
     <aside className="lg:col-span-3 w-full">
@@ -46,11 +58,10 @@ export function MentorDashboardNav({
       <div className="mt-6 hidden border-t border-outline-variant/40 pt-4 lg:block">
         <p className="text-xs text-on-surface-variant">Payout account</p>
         <p
-          className={`mt-1 text-sm font-medium ${
-            stripeReady ? 'text-emerald-700' : 'text-amber-700'
-          }`}
+          className={`mt-1 text-sm font-medium ${PAYOUT_NAV_STYLES[payoutNavStatus]}`}
+          data-testid="mentor-payout-nav-status"
         >
-          {stripeReady ? 'Connected' : 'Setup required'}
+          {PAYOUT_NAV_LABELS[payoutNavStatus]}
         </p>
       </div>
     </aside>
