@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT=$(git rev-parse --show-toplevel)
 cd "$ROOT"
 
-ACTIVE_PR="${MENTOR_OPS_ACTIVE_PR:-PR4}"
+ACTIVE_PR="${MENTOR_OPS_ACTIVE_PR:-PR5}"
 
 case "$ACTIVE_PR" in
   PR1)
@@ -20,8 +20,11 @@ case "$ACTIVE_PR" in
   PR4)
     ALLOW_REGEX='^(docs/plans/mentor-dashboard-ops|docs/plans/mentor-dashboard-ops\.md|\.grok/skills/mentor-dashboard-ops|\.grok/skills/mentor-dashboard-ops-plan|\.cursor/rules/mentor-dashboard-ops\.mdc|src/app/dashboard/mentor/mentor-consultation-card\.tsx|src/app/dashboard/mentor/mentor-dashboard-client\.tsx)'
     ;;
+  PR5)
+    ALLOW_REGEX='^(docs/plans/mentor-dashboard-ops|docs/plans/mentor-dashboard-ops\.md|\.grok/skills/mentor-dashboard-ops|\.grok/skills/mentor-dashboard-ops-plan|\.cursor/rules/mentor-dashboard-ops\.mdc|\.env\.example|src/app/api/mentor/stripe-connect)'
+    ;;
   *)
-    echo "Unknown MENTOR_OPS_ACTIVE_PR=$ACTIVE_PR (use PR1–PR4)" >&2
+    echo "Unknown MENTOR_OPS_ACTIVE_PR=$ACTIVE_PR (use PR1–PR5)" >&2
     exit 2
     ;;
 esac

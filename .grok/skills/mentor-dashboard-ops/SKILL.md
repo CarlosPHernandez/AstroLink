@@ -36,8 +36,8 @@ description: >
 | PR1 | Earnings truthfulness | **Done** (#47) |
 | PR2 | Manual payouts + lines | **Done** (#48) |
 | PR3 | Listing/compliance card | **Done** (#49) |
-| PR4 | UI flex sweep | **ACTIVE** — `mentor-consultation-card`, civil servant row |
-| PR5 | Connect restore | `stripe-connect/route.ts` |
+| PR4 | UI flex sweep | **Done** (#50) |
+| PR5 | Connect restore | **ACTIVE** — `stripe-connect/route.ts` behind env flag |
 
 ## Forbidden (stop and ask user)
 
@@ -51,7 +51,7 @@ description: >
 ```bash
 docs/plans/mentor-dashboard-ops/scripts/check-scope.sh
 ```
-(default `MENTOR_OPS_ACTIVE_PR=PR4`)
+(default `MENTOR_OPS_ACTIVE_PR=PR5`)
 
 If scope fails, revert out-of-scope edits or ask user to expand GUARDRAILS.md.
 
