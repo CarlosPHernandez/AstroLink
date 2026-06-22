@@ -31,8 +31,6 @@ function bookingStatusLabel(status: BookingStatus): string {
       return 'Cancelled';
     case 'refunded':
       return 'Refunded';
-    default:
-      return status.replace(/_/g, ' ');
   }
 }
 
@@ -49,8 +47,6 @@ function bookingStatusStyles(status: BookingStatus): string {
     case 'cancelled':
     case 'refunded':
       return 'bg-red-50 text-red-800';
-    default:
-      return 'bg-surface-container text-on-surface-variant';
   }
 }
 
