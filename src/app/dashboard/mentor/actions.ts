@@ -5,6 +5,7 @@ import {
   recordMentorNf1860Upload,
   updateMentorProfile,
 } from '@/lib/mentor-profile';
+import { validateNf1860PdfBuffer, validateNf1860PdfFile } from '@/lib/nf1860-upload';
 import { getSession } from '@/lib/session';
 import { z } from 'zod';
 
@@ -18,9 +19,13 @@ const ProfileSchema = z.object({
   expertise: z.string().min(2, 'List at least one area of expertise.'),
   bio: z.string().min(10, 'Add at least 10 characters to your bio.'),
   isCivilServant: z
-    .string()
-    .optional()
-    .transform((v) => v === 'on' || v === 'true'),
+    .preprocess(
+      (value) => (value === null ? undefined : value),
+      z
+        .string()
+        .optional()
+        .transform((v) => v === 'on' || v === 'true'),
+    ),
 });
 
 export type MentorProfileActionState = {
@@ -100,21 +105,29 @@ export async function uploadMentorNf1860Action(
   }
 
   const file = formData.get('file');
-  if (!(file instanceof File) || file.size === 0) {
+  if (!(file instanceof File)) {
     return {
       errors: { file: ['Choose a PDF to upload.'] },
       success: false,
     };
   }
 
-  if (!file.name.toLowerCase().endsWith('.pdf')) {
+  const fileValidation = validateNf1860PdfFile(file);
+  if (!fileValidation.ok) {
     return {
-      errors: { file: ['Upload a PDF scan of your approved NF-1860 form.'] },
+      errors: { file: [fileValidation.message] },
       success: false,
     };
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
+  const bufferValidation = validateNf1860PdfBuffer(buffer);
+  if (!bufferValidation.ok) {
+    return {
+      errors: { file: [bufferValidation.message] },
+      success: false,
+    };
+  }
   const result = await recordMentorNf1860Upload(session.userId, buffer);
 
   if (!result) {

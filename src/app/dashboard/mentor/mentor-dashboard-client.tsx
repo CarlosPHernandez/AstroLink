@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useEffect, useMemo, useState } from 'react';
+import React, { startTransition, useActionState, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { logoutAction } from '@/app/auth/actions';
 import {
@@ -17,6 +17,7 @@ import {
 import { MentorPayoutsPanel } from '@/app/dashboard/mentor/mentor-payouts-panel';
 import { partitionMentorBookings, type MentorBookingView } from '@/lib/mentor-booking-partition';
 import type { MentorEarningRow, MentorEarningsSummary } from '@/lib/mentor-earnings-types';
+import { resolvePayoutNavStatus } from '@/lib/mentor-payouts-config';
 
 interface SessionData {
   userId: string;
@@ -64,6 +65,7 @@ export default function MentorDashboardClient({
   earningsSummary,
   earningsRows,
   skipStripePayments = false,
+  connectPayoutsEnabled = false,
 }: {
   session: SessionData;
   bookings: MentorBookingView[];
@@ -71,6 +73,7 @@ export default function MentorDashboardClient({
   earningsSummary: MentorEarningsSummary;
   earningsRows: MentorEarningRow[];
   skipStripePayments?: boolean;
+  connectPayoutsEnabled?: boolean;
 }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<MentorDashboardTab>('sessions');
@@ -112,7 +115,9 @@ export default function MentorDashboardClient({
     if (profile.isCivilServant) {
       formData.set('isCivilServant', 'on');
     }
-    profileAction(formData);
+    startTransition(() => {
+      profileAction(formData);
+    });
   };
 
   const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,7 +127,9 @@ export default function MentorDashboardClient({
     }
     const formData = new FormData();
     formData.set('file', file);
-    uploadAction(formData);
+    startTransition(() => {
+      uploadAction(formData);
+    });
     e.target.value = '';
   };
 
@@ -131,6 +138,12 @@ export default function MentorDashboardClient({
     (profile.isCivilServant &&
       profile.complianceStatus !== 'document_required' &&
       profile.complianceStatus !== 'stripe_incomplete');
+
+  const payoutNavStatus = resolvePayoutNavStatus({
+    skipStripePayments,
+    connectPayoutsEnabled,
+    stripeOnboardingCompleted: profile.stripeOnboardingCompleted,
+  });
 
   return (
     <div className="min-h-screen bg-background p-6 text-on-surface md:p-10">
@@ -176,7 +189,7 @@ export default function MentorDashboardClient({
           <MentorDashboardNav
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            stripeReady={profile.stripeOnboardingCompleted || skipStripePayments}
+            payoutNavStatus={payoutNavStatus}
           />
 
           <main className="lg:col-span-9">
@@ -234,6 +247,7 @@ export default function MentorDashboardClient({
                 stripeOnboardingCompleted={profile.stripeOnboardingCompleted}
                 stripeConnectAccountId={profile.stripeConnectAccountId}
                 skipStripePayments={skipStripePayments}
+                connectPayoutsEnabled={connectPayoutsEnabled}
               />
             )}
 
@@ -265,22 +279,31 @@ export default function MentorDashboardClient({
 
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-on-surface-variant">
+                      <label
+                        htmlFor="mentor-profile-rate"
+                        className="mb-1.5 block text-xs font-medium text-on-surface-variant"
+                      >
                         Hourly rate (USD)
                       </label>
                       <input
+                        id="mentor-profile-rate"
                         type="number"
                         required
+                        min={1}
                         value={profile.rate}
                         onChange={(e) => setProfile({ ...profile, rate: Number(e.target.value) })}
                         className="w-full rounded-md border border-outline-variant bg-surface-container-low px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-on-surface-variant">
+                      <label
+                        htmlFor="mentor-profile-employer"
+                        className="mb-1.5 block text-xs font-medium text-on-surface-variant"
+                      >
                         Employer
                       </label>
                       <input
+                        id="mentor-profile-employer"
                         type="text"
                         required
                         value={profile.employer}
@@ -291,10 +314,14 @@ export default function MentorDashboardClient({
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-on-surface-variant">
+                    <label
+                      htmlFor="mentor-profile-expertise"
+                      className="mb-1.5 block text-xs font-medium text-on-surface-variant"
+                    >
                       Expertise (comma-separated)
                     </label>
                     <input
+                      id="mentor-profile-expertise"
                       type="text"
                       required
                       value={profile.expertise}
@@ -304,10 +331,14 @@ export default function MentorDashboardClient({
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-on-surface-variant">
+                    <label
+                      htmlFor="mentor-profile-bio"
+                      className="mb-1.5 block text-xs font-medium text-on-surface-variant"
+                    >
                       Bio
                     </label>
                     <textarea
+                      id="mentor-profile-bio"
                       rows={5}
                       required
                       value={profile.bio}
@@ -325,6 +356,7 @@ export default function MentorDashboardClient({
                     </div>
                     <input
                       type="checkbox"
+                      aria-label="Federal civil servant"
                       checked={profile.isCivilServant}
                       onChange={(e) => {
                         const checked = e.target.checked;
@@ -349,10 +381,16 @@ export default function MentorDashboardClient({
                         accept=".pdf"
                         onChange={handlePdfUpload}
                         disabled={uploadPending}
+                        data-testid="mentor-nf1860-upload"
                         className="w-full text-sm text-on-surface-variant file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-outline-variant file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:uppercase disabled:opacity-50"
                       />
                       {uploadState?.errors?.file?.[0] ? (
-                        <p className="text-xs text-on-error-container">{uploadState.errors.file[0]}</p>
+                        <p
+                          className="text-xs text-on-error-container"
+                          data-testid="mentor-nf1860-upload-error"
+                        >
+                          {uploadState.errors.file[0]}
+                        </p>
                       ) : null}
                       {uploadState?.message && !uploadState.success ? (
                         <FormAlert message={uploadState.message} />

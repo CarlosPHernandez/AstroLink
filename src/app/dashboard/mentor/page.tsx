@@ -1,5 +1,6 @@
 import React from 'react';
 import { isStripePaymentsSkipped } from '@/lib/booking-payments';
+import { isStripeConnectPayoutsEnabled } from '@/lib/mentor-payouts-config';
 import { listMentorBookings } from '@/lib/mentor-bookings';
 import { listMentorEarnings } from '@/lib/mentor-earnings';
 import { requireRole } from '@/lib/require-session';
@@ -30,6 +31,7 @@ export default async function MentorDashboard() {
       earningsSummary={earnings.summary}
       earningsRows={earnings.rows}
       skipStripePayments={isStripePaymentsSkipped()}
+      connectPayoutsEnabled={isStripeConnectPayoutsEnabled()}
       mentorProfile={
         mentor
           ? {

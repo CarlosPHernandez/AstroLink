@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import { formatMoney, formatSessionWhen } from '@/lib/format';
 import type { MentorEarningRow, MentorEarningsSummary } from '@/lib/mentor-earnings-types';
+import {
+  resolvePayoutNavStatus,
+  type PayoutNavStatus,
+} from '@/lib/mentor-payouts-config';
 
 const PLATFORM_FEE_RATE = 0.2;
 const MENTOR_SHARE_RATE = 0.8;
@@ -146,6 +150,20 @@ function FeeEstimator({ hourlyRateDollars }: { hourlyRateDollars: number }) {
   );
 }
 
+const PAYOUT_BADGE_LABELS: Record<PayoutNavStatus, string> = {
+  dev_skip: 'Dev mode',
+  manual: 'Manual at launch',
+  connected: 'Connected',
+  setup_required: 'Not connected',
+};
+
+const PAYOUT_BADGE_STYLES: Record<PayoutNavStatus, string> = {
+  dev_skip: 'bg-emerald-50 text-emerald-800',
+  manual: 'bg-surface-container text-on-surface-variant',
+  connected: 'bg-emerald-50 text-emerald-800',
+  setup_required: 'bg-amber-50 text-amber-800',
+};
+
 export function MentorPayoutsPanel({
   summary,
   rows,
@@ -153,6 +171,7 @@ export function MentorPayoutsPanel({
   stripeOnboardingCompleted,
   stripeConnectAccountId,
   skipStripePayments,
+  connectPayoutsEnabled,
 }: {
   summary: MentorEarningsSummary;
   rows: MentorEarningRow[];
@@ -160,9 +179,18 @@ export function MentorPayoutsPanel({
   stripeOnboardingCompleted: boolean;
   stripeConnectAccountId: string | null;
   skipStripePayments: boolean;
+  connectPayoutsEnabled: boolean;
 }) {
   const [stripeLoading, setStripeLoading] = useState(false);
   const [stripeError, setStripeError] = useState<string | null>(null);
+
+  const payoutStatus = resolvePayoutNavStatus({
+    skipStripePayments,
+    connectPayoutsEnabled,
+    stripeOnboardingCompleted,
+  });
+
+  const showConnectActions = payoutStatus === 'setup_required' || payoutStatus === 'connected';
 
   async function openStripe(action: 'onboard' | 'dashboard') {
     setStripeLoading(true);
@@ -203,7 +231,8 @@ export function MentorPayoutsPanel({
       <header>
         <h2 className="text-lg font-semibold text-on-surface">Earnings & payouts</h2>
         <p className="mt-1 text-sm text-on-surface-variant">
-          Track session revenue from AstroLink bookings and manage your Stripe payout account.
+          Track session revenue from AstroLink bookings
+          {showConnectActions ? ' and manage your Stripe payout account' : ''}.
         </p>
       </header>
 
@@ -215,13 +244,20 @@ export function MentorPayoutsPanel({
 
       <section className="space-y-4">
         <h3 className="text-sm font-medium text-on-surface">Bank account</h3>
-        <div className="flex flex-col gap-4 rounded-lg border border-outline-variant bg-surface p-5 md:flex-row md:items-center md:justify-between">
+        <div
+          className="flex flex-col gap-4 rounded-lg border border-outline-variant bg-surface p-5 md:flex-row md:items-center md:justify-between"
+          data-testid={payoutStatus === 'manual' ? 'mentor-payouts-manual' : undefined}
+        >
           <div>
-            <p className="text-sm font-medium text-on-surface">Stripe Connect</p>
+            <p className="text-sm font-medium text-on-surface">
+              {payoutStatus === 'manual' ? 'Payouts at launch' : 'Stripe Connect'}
+            </p>
             <p className="mt-1 max-w-xl text-sm text-on-surface-variant">
-              {skipStripePayments
+              {payoutStatus === 'dev_skip'
                 ? 'Stripe is turned off in this environment. Earnings above reflect test bookings only.'
-                : 'Payouts are processed manually at launch. Your 80% mentor share is recorded per session; bank transfers are handled outside Stripe Connect (deferred to fast-follow).'}
+                : payoutStatus === 'manual'
+                  ? 'Payouts are processed manually at launch. Your 80% mentor share is recorded per session; bank transfers are handled by AstroLink ops until Stripe Connect goes live.'
+                  : 'Connect your bank account via Stripe to receive mentor payouts after sessions are captured.'}
             </p>
             {stripeConnectAccountId ? (
               <p className="mt-2 font-mono text-xs text-on-surface-variant">
@@ -236,7 +272,7 @@ export function MentorPayoutsPanel({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {!stripeOnboardingCompleted && !skipStripePayments ? (
+            {payoutStatus === 'setup_required' ? (
               <button
                 type="button"
                 onClick={() => openStripe('onboard')}
@@ -247,7 +283,7 @@ export function MentorPayoutsPanel({
                 {stripeLoading ? 'Opening…' : 'Connect bank account'}
               </button>
             ) : null}
-            {stripeOnboardingCompleted && !skipStripePayments ? (
+            {payoutStatus === 'connected' ? (
               <button
                 type="button"
                 onClick={() => openStripe('dashboard')}
@@ -259,17 +295,9 @@ export function MentorPayoutsPanel({
               </button>
             ) : null}
             <span
-              className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${
-                stripeOnboardingCompleted || skipStripePayments
-                  ? 'bg-emerald-50 text-emerald-800'
-                  : 'bg-amber-50 text-amber-800'
-              }`}
+              className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${PAYOUT_BADGE_STYLES[payoutStatus]}`}
             >
-              {stripeOnboardingCompleted
-                ? 'Connected'
-                : skipStripePayments
-                  ? 'Dev mode'
-                  : 'Not connected'}
+              {PAYOUT_BADGE_LABELS[payoutStatus]}
             </span>
           </div>
         </div>

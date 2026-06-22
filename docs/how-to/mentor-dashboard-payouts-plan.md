@@ -1,6 +1,6 @@
 # Mentor dashboard — earnings & payouts plan
 
-**Last updated:** 2026-06-06  
+**Last updated:** 2026-06-20
 **Scope:** Clean mentor dashboard navigation, real Stripe Connect wiring, earnings summary from `transactions`, webhook groundwork for payout lifecycle.
 
 ## Problem
@@ -47,7 +47,7 @@ Future: `mentor_payouts` table keyed on Stripe `payout.id` when we mirror Stripe
 | Task | Status | Files |
 |------|--------|-------|
 | **T1** — `mentor-earnings.ts` aggregation | Done | `src/lib/mentor-earnings.ts`, tests |
-| **T2** — Stripe Connect API route | Done | `src/app/api/mentor/stripe-connect/route.ts`, `src/lib/mentor-stripe-connect.ts` |
+| **T2** — Stripe Connect API route | **Deferred** | Route returns 503 at launch; UI gated by `ENABLE_STRIPE_CONNECT_PAYOUTS`. Lib: `src/lib/mentor-stripe-connect.ts` |
 | **T3** — Dashboard UI refactor | Done | `mentor-dashboard-client.tsx`, panel components |
 | **T4** — Webhook groundwork | Done | `src/app/api/webhooks/stripe/route.ts` |
 | **T5** — APX-04 prompt polish | Done | `compliance-agent.ts` |
@@ -72,6 +72,7 @@ Future: `mentor_payouts` table keyed on Stripe `payout.id` when we mirror Stripe
 | 2 | Keep v1 Express accounts | Avoid breaking `ComplianceAgent` in this pass |
 | 3 | Merge earnings + bank into one tab | Reduces nav noise after slop cleanup |
 | 4 | `account.updated` webhook updates `stripe_onboarding_completed` | Single source for Connect readiness |
+| 5 | Manual payouts at launch; Connect behind `ENABLE_STRIPE_CONNECT_PAYOUTS` | Avoids broken Connect CTA while route is stubbed |
 
 ## Test ledger
 
@@ -79,7 +80,8 @@ Future: `mentor_payouts` table keyed on Stripe `payout.id` when we mirror Stripe
 |------|---------|--------|
 | Earnings aggregation | `npm test mentor-earnings` | Summary buckets, row mapping |
 | Stripe webhook | `npm test stripe` (if exists) | Existing PI handlers unchanged |
-| Manual demo | `npm run dev` → `/dashboard/mentor` as Chris | Nav, earnings empty state, Connect CTA |
+| Manual demo | `npm run dev` → `/dashboard/mentor` as Chris | Nav, earnings empty state, manual payouts card |
+| Mentor dashboard E2E | `npm run test:e2e -- e2e/mentor-dashboard.spec.ts` | Tabs, manual payouts (no Connect CTA), profile + NF-1860 |
 
 ## Simplification
 
