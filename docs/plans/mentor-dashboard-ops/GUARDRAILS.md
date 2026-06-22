@@ -1,7 +1,7 @@
 # Mentor dashboard ops — guardrails
 
-**Active initiative:** mentor dashboard payouts + session transparency (v0.4.7.0)  
-**Branch:** `payouts-ui-dashboard`
+**Active initiative:** mentor dashboard ops (v0.4.9.0)  
+**Branch:** `mentor-dashboard-pr3`
 
 Agents **must** read this file and [README.md](./README.md) before editing. Run scope check after changes:
 
@@ -11,9 +11,9 @@ docs/plans/mentor-dashboard-ops/scripts/check-scope.sh
 
 ## Active PR gate
 
-**Active:** PR2 — manual payouts + transfer visibility.
+**Active:** PR3 — listing & compliance visibility.
 
-Only one PR slice is active at a time. Check [README.md](./README.md) for the current PR file list. Do not implement PR3+ while PR2 is in progress unless the README active PR section says otherwise.
+Only one PR slice is active at a time. Check [README.md](./README.md) for the current PR file list. Do not implement PR4+ while PR3 is in progress unless the README active PR section says otherwise.
 
 ## Allowed paths (by PR)
 
@@ -32,7 +32,7 @@ docs/plans/mentor-dashboard-ops/**
 CLAUDE.md
 ```
 
-### PR2 — manual payouts (active)
+### PR2 — manual payouts (done)
 
 ```
 supabase/migrations/*mentor_manual_payout*
@@ -58,12 +58,19 @@ docs/plans/mentor-dashboard-ops/**
 .cursor/rules/mentor-dashboard-ops.mdc
 ```
 
-### PR3 — listing visibility (when active)
+### PR3 — listing visibility (active)
 
 ```
 src/app/dashboard/mentor/page.tsx
 src/app/dashboard/mentor/mentor-dashboard-client.tsx
+src/app/dashboard/mentor/mentor-listing-card.tsx
+src/lib/mentor-listing-status.ts
+src/lib/mentor-listing-status.test.ts
 e2e/mentor-dashboard.spec.ts
+docs/plans/mentor-dashboard-ops/**
+.grok/skills/mentor-dashboard-ops/**
+.grok/skills/mentor-dashboard-ops-plan/**
+.cursor/rules/mentor-dashboard-ops.mdc
 ```
 
 ### PR4 — UI sweep (when active)

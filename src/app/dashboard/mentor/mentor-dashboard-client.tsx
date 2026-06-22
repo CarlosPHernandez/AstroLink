@@ -14,8 +14,10 @@ import {
   MentorDashboardNav,
   type MentorDashboardTab,
 } from '@/app/dashboard/mentor/mentor-dashboard-nav';
+import { MentorListingCard } from '@/app/dashboard/mentor/mentor-listing-card';
 import { MentorPayoutsPanel } from '@/app/dashboard/mentor/mentor-payouts-panel';
 import { partitionMentorBookings, type MentorBookingView } from '@/lib/mentor-booking-partition';
+import { complianceStatusLabel } from '@/lib/mentor-listing-status';
 import type { MentorEarningRow, MentorEarningsSummary } from '@/lib/mentor-earnings-types';
 import { resolvePayoutNavStatus } from '@/lib/mentor-payouts-config';
 
@@ -31,6 +33,8 @@ interface MentorProfileState {
   email: string;
   employer: string;
   complianceStatus: string;
+  slug: string | null;
+  isListed: boolean;
   stripeOnboardingCompleted: boolean;
   stripeConnectAccountId: string | null;
   isCivilServant: boolean;
@@ -45,6 +49,8 @@ function emptyProfileFromSession(session: SessionData): MentorProfileState {
     email: session.email,
     employer: '',
     complianceStatus: 'stripe_incomplete',
+    slug: null,
+    isListed: false,
     stripeOnboardingCompleted: false,
     stripeConnectAccountId: null,
     isCivilServant: false,
@@ -52,10 +58,6 @@ function emptyProfileFromSession(session: SessionData): MentorProfileState {
     expertise: '',
     rate: 0,
   };
-}
-
-function complianceLabel(status: string): string {
-  return status.replace(/_/g, ' ');
 }
 
 export default function MentorDashboardClient({
@@ -165,7 +167,7 @@ export default function MentorDashboardClient({
             <span className="rounded-md border border-outline-variant bg-surface px-3 py-1.5 text-xs text-on-surface-variant">
               Status:{' '}
               <span className="font-medium text-on-surface">
-                {complianceLabel(profile.complianceStatus)}
+                {complianceStatusLabel(profile.complianceStatus)}
               </span>
             </span>
             <button
@@ -259,6 +261,12 @@ export default function MentorDashboardClient({
                     Information shown to buyers on your expert listing.
                   </p>
                 </header>
+
+                <MentorListingCard
+                  complianceStatus={profile.complianceStatus}
+                  isListed={profile.isListed}
+                  slug={profile.slug}
+                />
 
                 <form
                   onSubmit={handleSaveProfile}

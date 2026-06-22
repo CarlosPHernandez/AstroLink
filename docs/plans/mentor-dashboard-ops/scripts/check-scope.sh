@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT=$(git rev-parse --show-toplevel)
 cd "$ROOT"
 
-ACTIVE_PR="${MENTOR_OPS_ACTIVE_PR:-PR2}"
+ACTIVE_PR="${MENTOR_OPS_ACTIVE_PR:-PR3}"
 
 case "$ACTIVE_PR" in
   PR1)
@@ -14,8 +14,11 @@ case "$ACTIVE_PR" in
   PR2)
     ALLOW_REGEX='^(docs/plans/mentor-dashboard-ops|docs/plans/mentor-dashboard-ops\.md|\.grok/skills/mentor-dashboard-ops|\.grok/skills/mentor-dashboard-ops-plan|\.cursor/rules/mentor-dashboard-ops\.mdc|supabase/migrations/.*mentor_manual_payout|src/lib/mentor-manual-payouts|src/lib/mentor-earnings|src/lib/database\.types\.ts|src/app/api/admin/mentor-payouts|src/app/dashboard/admin|src/app/dashboard/mentor|e2e/mentor-dashboard\.spec\.ts|e2e/admin-mentor-payouts\.spec\.ts|e2e/auth\.setup\.ts|e2e/fixtures/auth\.ts|e2e/helpers/session-bootstrap\.ts)'
     ;;
+  PR3)
+    ALLOW_REGEX='^(docs/plans/mentor-dashboard-ops|docs/plans/mentor-dashboard-ops\.md|\.grok/skills/mentor-dashboard-ops|\.grok/skills/mentor-dashboard-ops-plan|\.cursor/rules/mentor-dashboard-ops\.mdc|src/lib/mentor-listing-status|src/app/dashboard/mentor/page\.tsx|src/app/dashboard/mentor/mentor-dashboard-client\.tsx|src/app/dashboard/mentor/mentor-listing-card\.tsx|e2e/mentor-dashboard\.spec\.ts)'
+    ;;
   *)
-    echo "Unknown MENTOR_OPS_ACTIVE_PR=$ACTIVE_PR (use PR1 or PR2)" >&2
+    echo "Unknown MENTOR_OPS_ACTIVE_PR=$ACTIVE_PR (use PR1, PR2, or PR3)" >&2
     exit 2
     ;;
 esac
