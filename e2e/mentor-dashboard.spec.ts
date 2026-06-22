@@ -33,6 +33,26 @@ test.describe('Mentor dashboard', () => {
       await expect(page.getByText('Dev mode')).toBeVisible();
     });
 
+    test('profile tab shows public listing card for Chris', async ({ page }) => {
+      await page.goto('/dashboard/mentor');
+      await page.getByTestId('mentor-tab-profile').click();
+
+      const listingCard = page.getByTestId('mentor-listing-card');
+      if ((await listingCard.count()) === 0) {
+        test.skip(true, 'Chris mentor row missing in environment');
+      }
+
+      await expect(listingCard).toBeVisible();
+      await expect(page.getByTestId('mentor-listing-compliance')).toHaveText('Approved');
+      await expect(page.getByTestId('mentor-listing-listed')).toHaveText('Yes');
+      await expect(page.getByText('Live on the expert directory')).toBeVisible();
+      await expect(page.getByText('/experts/chris-sembroski')).toBeVisible();
+      await expect(page.getByTestId('mentor-listing-preview')).toHaveAttribute(
+        'href',
+        '/experts/chris-sembroski',
+      );
+    });
+
     test('profile tab renders form fields', async ({ page }) => {
       await page.goto('/dashboard/mentor');
       await page.getByTestId('mentor-tab-profile').click();
