@@ -298,6 +298,90 @@ export type Database = {
         }
         Relationships: []
       }
+      mentor_manual_payouts: {
+        Row: {
+          created_at: string
+          created_by_admin_id: string
+          id: string
+          mentor_id: string
+          paid_at: string
+          reference_note: string | null
+          total_cents: number
+        }
+        Insert: {
+          created_at?: string
+          created_by_admin_id: string
+          id?: string
+          mentor_id: string
+          paid_at?: string
+          reference_note?: string | null
+          total_cents: number
+        }
+        Update: {
+          created_at?: string
+          created_by_admin_id?: string
+          id?: string
+          mentor_id?: string
+          paid_at?: string
+          reference_note?: string | null
+          total_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_manual_payouts_created_by_admin_id_fkey"
+            columns: ["created_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentor_manual_payouts_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "mentors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentor_payout_lines: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          payout_id: string
+          transaction_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          payout_id: string
+          transaction_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          payout_id?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_payout_lines_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "mentor_manual_payouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentor_payout_lines_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: true
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessions: {
         Row: {
           booking_id: string
