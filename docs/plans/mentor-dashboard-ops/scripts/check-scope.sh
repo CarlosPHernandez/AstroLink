@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT=$(git rev-parse --show-toplevel)
 cd "$ROOT"
 
-ACTIVE_PR="${MENTOR_OPS_ACTIVE_PR:-PR3}"
+ACTIVE_PR="${MENTOR_OPS_ACTIVE_PR:-PR4}"
 
 case "$ACTIVE_PR" in
   PR1)
@@ -17,8 +17,11 @@ case "$ACTIVE_PR" in
   PR3)
     ALLOW_REGEX='^(docs/plans/mentor-dashboard-ops|docs/plans/mentor-dashboard-ops\.md|\.grok/skills/mentor-dashboard-ops|\.grok/skills/mentor-dashboard-ops-plan|\.cursor/rules/mentor-dashboard-ops\.mdc|src/lib/mentor-listing-status|src/app/dashboard/mentor/page\.tsx|src/app/dashboard/mentor/mentor-dashboard-client\.tsx|src/app/dashboard/mentor/mentor-listing-card\.tsx|e2e/mentor-dashboard\.spec\.ts)'
     ;;
+  PR4)
+    ALLOW_REGEX='^(docs/plans/mentor-dashboard-ops|docs/plans/mentor-dashboard-ops\.md|\.grok/skills/mentor-dashboard-ops|\.grok/skills/mentor-dashboard-ops-plan|\.cursor/rules/mentor-dashboard-ops\.mdc|src/app/dashboard/mentor/mentor-consultation-card\.tsx|src/app/dashboard/mentor/mentor-dashboard-client\.tsx)'
+    ;;
   *)
-    echo "Unknown MENTOR_OPS_ACTIVE_PR=$ACTIVE_PR (use PR1, PR2, or PR3)" >&2
+    echo "Unknown MENTOR_OPS_ACTIVE_PR=$ACTIVE_PR (use PR1–PR4)" >&2
     exit 2
     ;;
 esac

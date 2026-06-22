@@ -2,6 +2,15 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.10.0] - 2026-06-21
+
+Mentor dashboard UI flex sweep (PR4): session cards and the civil servant profile row use full-width stacked layout so goals, context, and compliance copy no longer squeeze into narrow columns.
+
+### Changed
+- **Consultation cards** — stacked title/status, full-width goals and context, join CTA in its own row; human-readable booking status badges.
+- **Civil servant row** — title and checkbox on one row, NF-1860 explanation full-width below (`mentor-civil-servant-row`).
+- PR4 activated in mentor-dashboard-ops plan docs and scope guardrails.
+
 ## [0.4.9.0] - 2026-06-21
 
 Mentor dashboard listing visibility (PR3): mentors see whether they are live on the expert directory, their public slug, and compliance blockers from the Profile tab.

@@ -355,32 +355,39 @@ export default function MentorDashboardClient({
                     />
                   </div>
 
-                  <div className="flex items-center justify-between rounded-md border border-outline-variant bg-surface-container-low/50 p-4">
-                    <div>
-                      <p className="text-sm font-medium text-on-surface">Federal civil servant</p>
-                      <p className="text-xs text-on-surface-variant">
-                        Requires NASA Form NF-1860 approval for outside consulting.
+                  <div
+                    className="space-y-3 rounded-lg border border-outline-variant bg-surface-container-low/50 p-4"
+                    data-testid="mentor-civil-servant-row"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <p className="min-w-0 text-sm font-medium text-on-surface">
+                        Federal civil servant
                       </p>
+                      <input
+                        type="checkbox"
+                        aria-label="Federal civil servant"
+                        checked={profile.isCivilServant}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setProfile((prev) => ({
+                            ...prev,
+                            isCivilServant: checked,
+                            complianceStatus:
+                              checked && !pdfUploaded
+                                ? 'document_required'
+                                : prev.complianceStatus,
+                          }));
+                        }}
+                        className="h-5 w-5 shrink-0 cursor-pointer rounded border-outline-variant text-primary focus:ring-primary"
+                      />
                     </div>
-                    <input
-                      type="checkbox"
-                      aria-label="Federal civil servant"
-                      checked={profile.isCivilServant}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setProfile((prev) => ({
-                          ...prev,
-                          isCivilServant: checked,
-                          complianceStatus:
-                            checked && !pdfUploaded ? 'document_required' : prev.complianceStatus,
-                        }));
-                      }}
-                      className="h-4 w-4 cursor-pointer rounded border-outline-variant text-primary focus:ring-primary"
-                    />
+                    <p className="text-sm leading-relaxed text-on-surface-variant">
+                      Requires NASA Form NF-1860 approval for outside consulting.
+                    </p>
                   </div>
 
                   {profile.isCivilServant ? (
-                    <div className="space-y-2 rounded-md border border-outline-variant bg-surface-container-low p-4">
+                    <div className="space-y-3 rounded-lg border border-outline-variant bg-surface-container-low p-4">
                       <p className="text-xs font-medium text-on-surface-variant">
                         NF-1860 upload
                       </p>
