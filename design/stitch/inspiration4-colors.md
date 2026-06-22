@@ -162,6 +162,7 @@ Consistent component styling is vital for the design system's integrity:
 *   **Buttons:** Primary buttons use a solid Primary Blue fill with white text. Secondary buttons are "ghost" style with a 1px Primary Blue border and blue text. No gradients.
 *   **Input Fields:** Use a 1px light gray border that transitions to a 2px Primary Blue border on focus. Labels should be small and positioned above the field.
 *   **Cards:** Pure white background, 12px radius, 1px light gray border. No shadows unless the card is interactive/hovered.
+*   **Status / info cards (dashboard):** Do **not** lay out multi-sentence body copy in a horizontal flex row beside a badge or button (`md:flex-row` + `justify-between`). Flexbox shrinks the text column and produces a narrow, vertically stretched paragraph. Pattern: **row 1** = title + status chip (`shrink-0` on chip); **row 2** = full-width description; **row 3** (optional) = actions separated by a top border. Reserve side-by-side rows for a short title/label and a single control only, with `min-w-0 flex-1` on the text side.
 *   **Chips/Tags:** Used for categorization; these should have a very light Primary Blue background (5% opacity) with Primary Blue text for a sophisticated monochromatic look.
 *   **Lists:** High-contrast text with thin horizontal dividers (#F2F2F7). Avoid icons in lists unless they serve a functional purpose.
 *   **Checkboxes/Radios:** When active, these should be solid Primary Blue to ensure high visibility against the white background.
