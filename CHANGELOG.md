@@ -2,6 +2,22 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.8.0] - 2026-06-21
+
+Mentor manual payouts (PR2): ops can mark per-session bank transfers; mentors see Transfer status per booking.
+
+### Added
+- `mentor_manual_payouts` and `mentor_payout_lines` tables (`transaction_id UNIQUE` for idempotent mark-paid).
+- `src/lib/mentor-manual-payouts.ts` — list unpaid sessions, mark paid, awaiting/transferred totals.
+- `GET/POST /api/admin/mentor-payouts` — admin-only payout batch API with audit log.
+- Admin **Mentor payouts** panel on `/dashboard/admin`.
+- E2E `admin-mentor-payouts.spec.ts` and admin auth bootstrap.
+
+### Changed
+- Mentor earnings ledger adds **Transfer** column (Awaiting / Transferred / —).
+- Summary cards reconcile `awaitingTransferCents` vs `transferredCents` from payout lines.
+- PR2 activated in mentor-dashboard-ops plan docs and scope guardrails.
+
 ## [0.4.7.0] - 2026-06-21
 
 Mentor dashboard earnings truthfulness (PR1): summary cards and ledger now match immediate-capture reality; ops guardrails keep agent work scoped.
