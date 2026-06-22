@@ -11,7 +11,9 @@ docs/plans/mentor-dashboard-ops/scripts/check-scope.sh
 
 ## Active PR gate
 
-Only one PR slice is active at a time. Check [README.md](./README.md) for the current PR file list. Do not implement PR2+ while PR1 is in progress unless the README active PR section says otherwise.
+**Active:** PR2 — manual payouts + transfer visibility.
+
+Only one PR slice is active at a time. Check [README.md](./README.md) for the current PR file list. Do not implement PR3+ while PR2 is in progress unless the README active PR section says otherwise.
 
 ## Allowed paths (by PR)
 
@@ -30,12 +32,15 @@ docs/plans/mentor-dashboard-ops/**
 CLAUDE.md
 ```
 
-### PR2 — manual payouts (when active)
+### PR2 — manual payouts (active)
 
 ```
 supabase/migrations/*mentor_manual_payout*
 src/lib/mentor-manual-payouts.ts
 src/lib/mentor-manual-payouts.test.ts
+src/lib/mentor-earnings-types.ts
+src/lib/mentor-earnings.ts
+src/lib/mentor-earnings.test.ts
 src/lib/database.types.ts
 src/app/api/admin/mentor-payouts/**
 src/app/dashboard/admin/**
@@ -44,6 +49,10 @@ src/app/dashboard/mentor/mentor-payouts-panel.tsx
 src/app/dashboard/mentor/mentor-dashboard-client.tsx
 e2e/mentor-dashboard.spec.ts
 e2e/admin-mentor-payouts.spec.ts
+docs/plans/mentor-dashboard-ops/**
+.grok/skills/mentor-dashboard-ops/**
+.grok/skills/mentor-dashboard-ops-plan/**
+.cursor/rules/mentor-dashboard-ops.mdc
 ```
 
 ### PR3 — listing visibility (when active)
