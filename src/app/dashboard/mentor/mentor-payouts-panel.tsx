@@ -96,14 +96,6 @@ function EarningsSummaryCards({ summary }: { summary: MentorEarningsSummary }) {
 }
 
 function EarningsLedger({ rows }: { rows: MentorEarningRow[] }) {
-  if (rows.length === 0) {
-    return (
-      <p className="text-sm text-on-surface-variant" data-testid="mentor-earnings-empty">
-        No earnings yet. When a buyer pays for a session, the split and status appear here.
-      </p>
-    );
-  }
-
   return (
     <div className="overflow-x-auto rounded-lg border border-outline-variant" data-testid="mentor-earnings-ledger">
       <table className="min-w-full text-left text-sm">
@@ -118,6 +110,17 @@ function EarningsLedger({ rows }: { rows: MentorEarningRow[] }) {
           </tr>
         </thead>
         <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td
+                colSpan={6}
+                className="px-4 py-6 text-sm text-on-surface-variant"
+                data-testid="mentor-earnings-empty"
+              >
+                No earnings yet. When a buyer pays for a session, the split and status appear here.
+              </td>
+            </tr>
+          ) : null}
           {rows.map((row) => (
             <tr key={row.id} className="border-b border-outline-variant/40 last:border-0">
               <td className="px-4 py-3 text-on-surface">
