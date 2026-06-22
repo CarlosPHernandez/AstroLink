@@ -2,6 +2,19 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.9.0] - 2026-06-21
+
+Mentor dashboard listing visibility (PR3): mentors see whether they are live on the expert directory, their public slug, and compliance blockers from the Profile tab.
+
+### Added
+- **Public listing** card on mentor Profile tab — compliance status, directory listing state, public URL, and preview link when live.
+- `src/lib/mentor-listing-status.ts` — status labels, visibility copy, and preview eligibility helpers.
+- E2E assertion for Chris seed (approved + listed on `/experts/chris-sembroski`).
+
+### Changed
+- Mentor dashboard loads `slug` and `is_listed` from `mentors` row; header compliance label uses shared helper.
+- PR3 activated in mentor-dashboard-ops plan docs and scope guardrails.
+
 ## [0.4.8.0] - 2026-06-21
 
 Mentor manual payouts (PR2): ops can mark per-session bank transfers; mentors see Transfer status per booking.
