@@ -2,6 +2,19 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.5.0.0] - 2026-06-21
+
+Mentor dashboard Stripe Connect restore (PR5): mentors can onboard to Stripe Express and open the payout dashboard when ops enables Connect — manual payouts remain the launch default.
+
+### Added
+- Restored `POST /api/mentor/stripe-connect` — `onboard` (account link) and `dashboard` (Express login) when `ENABLE_STRIPE_CONNECT_PAYOUTS=true`.
+- Route unit tests for deferred 503, dev_skip, onboard, dashboard, and error paths.
+
+### Changed
+- Launch default unchanged: flag off → 503 with manual-payouts message; `SKIP_STRIPE_PAYMENTS` still returns `dev_skip` when Connect is enabled.
+- `.env.example` documents `ENABLE_STRIPE_CONNECT_PAYOUTS` for Preview/staging Connect testing.
+- PR5 activated in mentor-dashboard-ops plan docs — completes the PR1–PR5 stack.
+
 ## [0.4.10.0] - 2026-06-21
 
 Mentor dashboard UI flex sweep (PR4): session cards and the civil servant profile row use full-width stacked layout so goals, context, and compliance copy no longer squeeze into narrow columns.
