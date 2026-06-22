@@ -1,9 +1,12 @@
 import { request as playwrightRequest } from '@playwright/test';
-import { menteeAuthFile, mentorAuthFile } from '../fixtures/auth';
+import { adminAuthFile, menteeAuthFile, mentorAuthFile } from '../fixtures/auth';
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000';
 
-export async function createStorageState(role: 'mentee' | 'mentor', path: string) {
+export async function createStorageState(
+  role: 'mentee' | 'mentor' | 'admin',
+  path: string,
+) {
   const context = await playwrightRequest.newContext({ baseURL });
   const response = await context.post('/api/e2e/session', { data: { role } });
   if (!response.ok()) {
@@ -20,4 +23,8 @@ export async function bootstrapMenteeAuth() {
 
 export async function bootstrapMentorAuth() {
   await createStorageState('mentor', mentorAuthFile);
+}
+
+export async function bootstrapAdminAuth() {
+  await createStorageState('admin', adminAuthFile);
 }

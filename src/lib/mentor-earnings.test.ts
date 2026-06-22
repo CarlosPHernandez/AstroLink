@@ -1,37 +1,52 @@
 import { describe, expect, it } from 'vitest';
 import {
   mapTransactionToEarningRow,
+  resolveTransferStatus,
   summarizeMentorEarnings,
 } from '@/lib/mentor-earnings';
 import type { MentorEarningRow } from '@/lib/mentor-earnings-types';
 
+function earningRow(
+  overrides: Partial<MentorEarningRow> & Pick<MentorEarningRow, 'id' | 'status' | 'mentorPayoutCents'>,
+): MentorEarningRow {
+  return {
+    bookingId: 'b1',
+    menteeName: 'Alex',
+    scheduledAt: '2026-06-01T12:00:00Z',
+    bookingStatus: 'completed',
+    grossCents: 10000,
+    platformFeeCents: 2000,
+    transferStatus: 'not_applicable',
+    createdAt: '2026-06-01T10:00:00Z',
+    ...overrides,
+  };
+}
+
+describe('resolveTransferStatus', () => {
+  it('marks completed rows as awaiting or transferred', () => {
+    expect(resolveTransferStatus('completed', false)).toBe('awaiting');
+    expect(resolveTransferStatus('completed', true)).toBe('transferred');
+    expect(resolveTransferStatus('refunded', true)).toBe('not_applicable');
+  });
+});
+
 describe('summarizeMentorEarnings', () => {
   it('aggregates recorded share and awaiting transfer from completed rows', () => {
     const rows: MentorEarningRow[] = [
-      {
+      earningRow({
         id: '1',
-        bookingId: 'b1',
-        menteeName: 'Alex',
-        scheduledAt: '2026-06-01T12:00:00Z',
-        bookingStatus: 'confirmed',
-        grossCents: 10000,
-        platformFeeCents: 2000,
-        mentorPayoutCents: 8000,
         status: 'pending',
-        createdAt: '2026-06-01T10:00:00Z',
-      },
-      {
+        mentorPayoutCents: 8000,
+        transferStatus: 'not_applicable',
+      }),
+      earningRow({
         id: '2',
-        bookingId: 'b2',
-        menteeName: 'Sam',
-        scheduledAt: '2026-06-02T12:00:00Z',
-        bookingStatus: 'completed',
+        status: 'completed',
+        mentorPayoutCents: 16000,
         grossCents: 20000,
         platformFeeCents: 4000,
-        mentorPayoutCents: 16000,
-        status: 'completed',
-        createdAt: '2026-06-02T10:00:00Z',
-      },
+        transferStatus: 'awaiting',
+      }),
     ];
 
     expect(summarizeMentorEarnings(rows)).toEqual({
@@ -45,44 +60,57 @@ describe('summarizeMentorEarnings', () => {
     });
   });
 
+  it('splits awaiting and transferred buckets for completed rows', () => {
+    const rows: MentorEarningRow[] = [
+      earningRow({
+        id: '1',
+        status: 'completed',
+        mentorPayoutCents: 8000,
+        transferStatus: 'transferred',
+      }),
+      earningRow({
+        id: '2',
+        status: 'completed',
+        mentorPayoutCents: 12000,
+        transferStatus: 'awaiting',
+      }),
+    ];
+
+    expect(summarizeMentorEarnings(rows)).toEqual({
+      totalGrossCents: 20000,
+      totalPlatformFeeCents: 4000,
+      recordedShareCents: 20000,
+      awaitingTransferCents: 12000,
+      transferredCents: 8000,
+      refundedPayoutCents: 0,
+      sessionCount: 2,
+    });
+  });
+
   it('excludes refunded and failed rows from recorded totals', () => {
     const rows: MentorEarningRow[] = [
-      {
+      earningRow({
         id: '1',
-        bookingId: 'b1',
-        menteeName: 'Alex',
-        scheduledAt: '2026-06-01T12:00:00Z',
-        bookingStatus: 'completed',
-        grossCents: 10000,
-        platformFeeCents: 2000,
-        mentorPayoutCents: 8000,
         status: 'completed',
-        createdAt: '2026-06-01T10:00:00Z',
-      },
-      {
+        mentorPayoutCents: 8000,
+        transferStatus: 'awaiting',
+      }),
+      earningRow({
         id: '2',
-        bookingId: 'b2',
-        menteeName: 'Sam',
-        scheduledAt: '2026-06-02T12:00:00Z',
-        bookingStatus: 'cancelled',
+        status: 'refunded',
+        mentorPayoutCents: 16000,
         grossCents: 20000,
         platformFeeCents: 4000,
-        mentorPayoutCents: 16000,
-        status: 'refunded',
-        createdAt: '2026-06-02T10:00:00Z',
-      },
-      {
+        transferStatus: 'not_applicable',
+      }),
+      earningRow({
         id: '3',
-        bookingId: 'b3',
-        menteeName: 'Jordan',
-        scheduledAt: '2026-06-03T12:00:00Z',
-        bookingStatus: 'cancelled',
+        status: 'failed',
+        mentorPayoutCents: 4000,
         grossCents: 5000,
         platformFeeCents: 1000,
-        mentorPayoutCents: 4000,
-        status: 'failed',
-        createdAt: '2026-06-03T10:00:00Z',
-      },
+        transferStatus: 'not_applicable',
+      }),
     ];
 
     expect(summarizeMentorEarnings(rows)).toEqual({
@@ -98,41 +126,48 @@ describe('summarizeMentorEarnings', () => {
 });
 
 describe('mapTransactionToEarningRow', () => {
-  it('maps joined booking and mentee name', () => {
-    const row = mapTransactionToEarningRow({
-      id: 'tx-1',
-      booking_id: 'bk-1',
-      gross_amount_cents: 32000,
-      platform_fee_cents: 6400,
-      mentor_payout_cents: 25600,
-      status: 'completed',
-      created_at: '2026-06-03T08:00:00Z',
-      bookings: {
-        scheduled_at: '2026-06-05T15:00:00Z',
+  it('maps joined booking and transfer status', () => {
+    const row = mapTransactionToEarningRow(
+      {
+        id: 'tx-1',
+        booking_id: 'bk-1',
+        gross_amount_cents: 32000,
+        platform_fee_cents: 6400,
+        mentor_payout_cents: 25600,
         status: 'completed',
-        users: { full_name: 'Carlos Hernandez' },
+        created_at: '2026-06-03T08:00:00Z',
+        bookings: {
+          scheduled_at: '2026-06-05T15:00:00Z',
+          status: 'completed',
+          users: { full_name: 'Carlos Hernandez' },
+        },
       },
-    });
+      new Set(['tx-1']),
+    );
 
     expect(row).toMatchObject({
       menteeName: 'Carlos Hernandez',
       mentorPayoutCents: 25600,
       status: 'completed',
+      transferStatus: 'transferred',
     });
   });
 
   it('returns null when booking join is missing', () => {
     expect(
-      mapTransactionToEarningRow({
-        id: 'tx-2',
-        booking_id: 'bk-2',
-        gross_amount_cents: 1000,
-        platform_fee_cents: 200,
-        mentor_payout_cents: 800,
-        status: 'pending',
-        created_at: '2026-06-03T08:00:00Z',
-        bookings: null,
-      }),
+      mapTransactionToEarningRow(
+        {
+          id: 'tx-2',
+          booking_id: 'bk-2',
+          gross_amount_cents: 1000,
+          platform_fee_cents: 200,
+          mentor_payout_cents: 800,
+          status: 'pending',
+          created_at: '2026-06-03T08:00:00Z',
+          bookings: null,
+        },
+        new Set(),
+      ),
     ).toBeNull();
   });
 });

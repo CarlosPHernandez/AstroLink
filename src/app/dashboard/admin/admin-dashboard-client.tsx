@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { logoutAction } from '@/app/auth/actions';
+import { MentorPayoutsPanel } from './mentor-payouts-panel';
 
 type WaitlistMetrics = {
   total: number;
@@ -225,6 +226,8 @@ export default function AdminDashboardClient({ session }: { session: SessionData
               </div>
             )}
           </div>
+
+          <MentorPayoutsPanel />
         </div>
       </div>
     </div>
