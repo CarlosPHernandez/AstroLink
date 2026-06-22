@@ -1,6 +1,6 @@
 # Mentor dashboard ops — implementation guide
 
-Agents and humans: read this before editing code on branch `mentor-dashboard-pr4`.
+Agents and humans: read this before editing code on branch `mentor-dashboard-pr5`.
 
 ## Quick links
 
@@ -17,60 +17,52 @@ Agents and humans: read this before editing code on branch `mentor-dashboard-pr4
 | `/mentor-dashboard-ops` | Implementing PR1–PR5 on this initiative |
 | `/mentor-dashboard-ops-plan` | Refining scope, eng review follow-ups, updating plan docs |
 
-## Current PR: PR4 — UI flex sweep
+## Current PR: PR5 — Stripe Connect restore
 
-**Goal:** Fix narrow-column text wrapping on session cards and the civil servant profile row using the stacked card pattern (`skills/mobile-first-design-practices` §2b).
+**Goal:** Restore `/api/mentor/stripe-connect` behind `ENABLE_STRIPE_CONNECT_PAYOUTS`. Manual payouts remain the default; Connect onboarding and Express dashboard links work when the flag is enabled.
 
-**Prerequisite:** PR3 merged to main via #49 (v0.4.9.0).
+**Prerequisite:** PR4 merged to main via #50 (v0.4.10.0).
 
-### Files (PR4 only)
+### Files (PR5 only)
 
 ```
-src/app/dashboard/mentor/mentor-consultation-card.tsx
-src/app/dashboard/mentor/mentor-dashboard-client.tsx
+src/app/api/mentor/stripe-connect/route.ts
+src/app/api/mentor/stripe-connect/route.test.ts
+.env.example
 docs/plans/mentor-dashboard-ops/**
 ```
 
-### UI changes
+### Behavior
 
-**Sessions tab — consultation card**
+| `ENABLE_STRIPE_CONNECT_PAYOUTS` | Route behavior |
+|---------------------------------|----------------|
+| unset / `false` | 503 — manual payouts message (launch default) |
+| `true` + `SKIP_STRIPE_PAYMENTS` | 200 `dev_skip` — no Stripe calls |
+| `true` + live Stripe | `onboard` → account link; `dashboard` → Express login link |
 
-- Stack title + status badge on row 1; session meta below.
-- Goals and context full-width (no `md:grid-cols-2` beside each other).
-- Join CTA in its own row below body copy (not `md:flex-row justify-between` with paragraph).
-- Human-readable booking status labels + badge styles.
-
-**Profile tab — civil servant row**
-
-- Stack title + checkbox on row 1; NF-1860 explanation full-width on row 2.
-- Remove `justify-between` layout that squeezes multi-sentence copy.
+UI (`mentor-payouts-panel`) already gates Connect CTAs via `isStripeConnectPayoutsEnabled()` — no dashboard changes in PR5.
 
 ### Acceptance criteria
 
-- [ ] Consultation card uses stacked layout (no side-by-side body + action squeezing copy)
-- [ ] Civil servant row uses stacked layout with `data-testid="mentor-civil-servant-row"`
-- [ ] Existing E2E selectors unchanged (`mentor-booking-*`, `mentor-join-*`, civil servant checkbox)
+- [ ] Route returns 503 when flag is off (unchanged launch default)
+- [ ] Route restores onboard + dashboard flows when flag is on
+- [ ] `dev_skip` path preserved when `SKIP_STRIPE_PAYMENTS=true`
+- [ ] Unit tests cover deferred, enabled onboard/dashboard, and error paths
+- [ ] `.env.example` documents the flag
 - [ ] Scope check passes
 
 ### Verify
 
 ```bash
 docs/plans/mentor-dashboard-ops/scripts/check-scope.sh
-npm run test:e2e -- e2e/mentor-dashboard.spec.ts
+npm test -- stripe-connect
 ```
 
-## PR1 — done (#47, v0.4.7.0)
+## PR1–PR4 — done
 
-Earnings truthfulness + ops guardrails.
-
-## PR2 — done (#48, v0.4.8.0)
-
-Manual payouts + Transfer column + admin mark-paid.
-
-## PR3 — done (#49, v0.4.9.0)
-
-Public listing card on Profile tab.
-
-## PR5 preview (do not start until PR4 merged)
-
-- Stripe Connect restore behind `ENABLE_STRIPE_CONNECT_PAYOUTS`
+| PR | Version | Summary |
+|----|---------|---------|
+| PR1 | v0.4.7.0 (#47) | Earnings truthfulness |
+| PR2 | v0.4.8.0 (#48) | Manual payouts + Transfer column |
+| PR3 | v0.4.9.0 (#49) | Public listing card |
+| PR4 | v0.4.10.0 (#50) | UI flex sweep |

@@ -1,7 +1,7 @@
 # Mentor dashboard ops — guardrails
 
-**Active initiative:** mentor dashboard ops (v0.4.10.0)  
-**Branch:** `mentor-dashboard-pr4`
+**Active initiative:** mentor dashboard ops (v0.5.0.0)  
+**Branch:** `mentor-dashboard-pr5`
 
 Agents **must** read this file and [README.md](./README.md) before editing. Run scope check after changes:
 
@@ -11,9 +11,9 @@ docs/plans/mentor-dashboard-ops/scripts/check-scope.sh
 
 ## Active PR gate
 
-**Active:** PR4 — UI flex sweep.
+**Active:** PR5 — Stripe Connect restore.
 
-Only one PR slice is active at a time. Check [README.md](./README.md) for the current PR file list. Do not implement PR5 while PR4 is in progress unless the README active PR section says otherwise.
+Only one PR slice is active at a time. Check [README.md](./README.md) for the current PR file list.
 
 ## Allowed paths (by PR)
 
@@ -73,7 +73,7 @@ docs/plans/mentor-dashboard-ops/**
 .cursor/rules/mentor-dashboard-ops.mdc
 ```
 
-### PR4 — UI sweep (active)
+### PR4 — UI sweep (done)
 
 ```
 src/app/dashboard/mentor/mentor-consultation-card.tsx
@@ -84,12 +84,16 @@ docs/plans/mentor-dashboard-ops/**
 .cursor/rules/mentor-dashboard-ops.mdc
 ```
 
-### PR5 — Connect restore (when active)
+### PR5 — Connect restore (active)
 
 ```
 src/app/api/mentor/stripe-connect/route.ts
 src/app/api/mentor/stripe-connect/route.test.ts
 .env.example
+docs/plans/mentor-dashboard-ops/**
+.grok/skills/mentor-dashboard-ops/**
+.grok/skills/mentor-dashboard-ops-plan/**
+.cursor/rules/mentor-dashboard-ops.mdc
 ```
 
 ### Always allowed (any PR)
@@ -117,7 +121,7 @@ docs/plans/mentor-dashboard-ops.md
 
 1. **Read** [mentor-dashboard-ops.md](../mentor-dashboard-ops.md) and current PR section in README.
 2. **Do not** refactor, rename, or "clean up" files outside allowed paths.
-3. **Do not** change Stripe Connect route behavior until PR5.
+3. **Do not** change Stripe Connect route outside PR5 allowlist.
 4. **Do not** add migrations until PR2 is the active PR.
 5. **Tests:** every behavior change needs a unit test; E2E updates only for visible copy/selectors.
 6. **Run** `npm test` before committing.

@@ -1,21 +1,20 @@
 # Mentor dashboard ops — eng-reviewed plan
 
-**Branch:** `mentor-dashboard-pr4`  
-**Status:** In progress (PR4 active)  
+**Branch:** `mentor-dashboard-pr5`  
+**Status:** In progress (PR5 active)  
 **Eng review:** CLEARED  
-**Version target:** v0.4.10.0 (PR4), v0.5.0.0 (PR5 Connect optional)
+**Version target:** v0.5.0.0 (PR5)
 
 Implementation README: [mentor-dashboard-ops/README.md](./mentor-dashboard-ops/README.md)  
 Guardrails: [mentor-dashboard-ops/GUARDRAILS.md](./mentor-dashboard-ops/GUARDRAILS.md)
 
-## Expert journey (north star)
-
-Mentors see per booking:
+## Expert journey (north star) — complete after PR5
 
 1. **Payment recorded** — PR1 ✓
 2. **Session complete** — booking status on ledger row
 3. **Transfer** — PR2 ✓ (`mentor_payout_lines`)
 4. **Public listing** — PR3 ✓
+5. **Connect restore** — PR5: optional Stripe Express onboarding
 
 ## PR stack
 
@@ -25,21 +24,22 @@ Mentors see per booking:
 | PR1 | Earnings truthfulness + card labels | Done (#47, v0.4.7.0) |
 | PR2 | Manual payouts + transfer UI | Done (#48, v0.4.8.0) |
 | PR3 | Listing/compliance visibility | Done (#49, v0.4.9.0) |
-| PR4 | UI flex sweep | **In progress** |
-| PR5 | Stripe Connect restore (deferred) | Pending |
+| PR4 | UI flex sweep | Done (#50, v0.4.10.0) |
+| PR5 | Stripe Connect restore | **In progress** |
 
-## Decision ledger (PR4)
+## Decision ledger (PR5)
 
 | # | Finding | Disposition |
 |---|---------|-------------|
-| 15 | Consultation card squeezes goals/context on md+ | Accepted → stacked card §2b |
-| 16 | Civil servant row squeezes NF-1860 copy | Accepted → stacked row |
+| 6 | Connect in same release as manual payouts | Deferred → PR5 behind flag |
+| 11 | No Stripe payout webhook mirror yet | Deferred — manual lines remain source of truth |
+| 17 | Route stubbed at launch (503) | Accepted → restore gated by env |
 
-**Session outcome:** invoke `/mentor-dashboard-ops` on `mentor-dashboard-pr4`
+**Session outcome:** invoke `/mentor-dashboard-ops` on `mentor-dashboard-pr5`
 
 ## Test ledger
 
 | Test | Command |
 |------|---------|
-| E2E | `npm run test:e2e -- e2e/mentor-dashboard.spec.ts` |
+| Unit | `npm test -- stripe-connect` |
 | Scope | `docs/plans/mentor-dashboard-ops/scripts/check-scope.sh` |
