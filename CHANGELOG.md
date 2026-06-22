@@ -2,6 +2,23 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.4.7.0] - 2026-06-21
+
+Mentor dashboard earnings truthfulness (PR1): summary cards and ledger now match immediate-capture reality; ops guardrails keep agent work scoped.
+
+### Added
+- `docs/plans/mentor-dashboard-ops/` — eng-reviewed plan, README, GUARDRAILS, and `check-scope.sh` for PR1–PR5.
+- `.grok/skills/mentor-dashboard-ops` and `mentor-dashboard-ops-plan` — implementation and planning skills.
+- `.cursor/rules/mentor-dashboard-ops.mdc` — cursor guardrails for the initiative.
+
+### Changed
+- Earnings summary cards: **Recorded share**, **Awaiting transfer**, **Transferred** (replaces misleading Pending capture / Paid out).
+- Ledger **Payment** column shows Recorded / Refunded / Pending / Failed per row.
+- `summarizeMentorEarnings` excludes refunded and failed rows from recorded totals; tracks `refundedPayoutCents` separately.
+
+### Fixed
+- Refunded transaction rows no longer inflate mentor earnings totals or session count.
+
 ## [0.4.6.0] - 2026-06-21
 
 Mentor dashboard production hardening: deferred Connect UX, NF-1860 upload validation, E2E smoke.
