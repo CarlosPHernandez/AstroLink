@@ -1,6 +1,6 @@
 # Mentor dashboard ops — implementation guide
 
-Agents and humans: read this before editing code on branch `mentor-dashboard-pr3`.
+Agents and humans: read this before editing code on branch `mentor-dashboard-pr4`.
 
 ## Quick links
 
@@ -17,57 +17,45 @@ Agents and humans: read this before editing code on branch `mentor-dashboard-pr3
 | `/mentor-dashboard-ops` | Implementing PR1–PR5 on this initiative |
 | `/mentor-dashboard-ops-plan` | Refining scope, eng review follow-ups, updating plan docs |
 
-## Current PR: PR3 — listing & compliance visibility
+## Current PR: PR4 — UI flex sweep
 
-**Goal:** Mentors see whether they are listed on `/experts`, their public slug, and compliance status with a clear path to fix blockers.
+**Goal:** Fix narrow-column text wrapping on session cards and the civil servant profile row using the stacked card pattern (`skills/mobile-first-design-practices` §2b).
 
-**Prerequisite:** PR2 merged to main via #48 (v0.4.8.0).
+**Prerequisite:** PR3 merged to main via #49 (v0.4.9.0).
 
-### Files (PR3 only)
+### Files (PR4 only)
 
 ```
-src/app/dashboard/mentor/page.tsx
+src/app/dashboard/mentor/mentor-consultation-card.tsx
 src/app/dashboard/mentor/mentor-dashboard-client.tsx
-src/app/dashboard/mentor/mentor-listing-card.tsx   # new
-src/lib/mentor-listing-status.ts                   # new (pure helpers + tests)
-src/lib/mentor-listing-status.test.ts
-e2e/mentor-dashboard.spec.ts
 docs/plans/mentor-dashboard-ops/**
 ```
 
-### UI (Profile tab)
+### UI changes
 
-New **Public listing** card showing:
+**Sessions tab — consultation card**
 
-| Field | Source |
-|-------|--------|
-| Compliance status | `mentors.compliance_status` (human label) |
-| Listed on directory | `mentors.is_listed` |
-| Public URL | `/experts/{slug}` when `slug` set |
-| Preview link | Opens expert profile in new tab when listed |
+- Stack title + status badge on row 1; session meta below.
+- Goals and context full-width (no `md:grid-cols-2` beside each other).
+- Join CTA in its own row below body copy (not `md:flex-row justify-between` with paragraph).
+- Human-readable booking status labels + badge styles.
 
-Copy guidance per status:
+**Profile tab — civil servant row**
 
-- `approved` + listed → “Live on the expert directory”
-- `approved` + not listed → “Approved but not listed — contact ops”
-- `pending_review` / `awaiting_human_approval` → “Under review”
-- `document_required` → “NF-1860 or compliance docs needed”
-- `rejected` → “Not approved for listing”
+- Stack title + checkbox on row 1; NF-1860 explanation full-width on row 2.
+- Remove `justify-between` layout that squeezes multi-sentence copy.
 
 ### Acceptance criteria
 
-- [ ] `page.tsx` loads `slug`, `is_listed`, `compliance_status` for mentor
-- [ ] Listing card visible on Profile tab with status + directory link when applicable
-- [ ] Preview link to `/experts/[slug]` only when `is_listed && slug`
-- [ ] Unit tests for status label / preview eligibility helpers
-- [ ] E2E asserts listing card visible for Chris (seed: approved + listed)
+- [ ] Consultation card uses stacked layout (no side-by-side body + action squeezing copy)
+- [ ] Civil servant row uses stacked layout with `data-testid="mentor-civil-servant-row"`
+- [ ] Existing E2E selectors unchanged (`mentor-booking-*`, `mentor-join-*`, civil servant checkbox)
 - [ ] Scope check passes
 
 ### Verify
 
 ```bash
 docs/plans/mentor-dashboard-ops/scripts/check-scope.sh
-npm test -- mentor-listing-status
 npm run test:e2e -- e2e/mentor-dashboard.spec.ts
 ```
 
@@ -79,6 +67,10 @@ Earnings truthfulness + ops guardrails.
 
 Manual payouts + Transfer column + admin mark-paid.
 
-## PR4 preview (do not start until PR3 merged)
+## PR3 — done (#49, v0.4.9.0)
 
-- UI flex sweep (`mentor-consultation-card`, civil servant row)
+Public listing card on Profile tab.
+
+## PR5 preview (do not start until PR4 merged)
+
+- Stripe Connect restore behind `ENABLE_STRIPE_CONNECT_PAYOUTS`

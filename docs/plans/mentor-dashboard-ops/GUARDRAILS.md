@@ -1,7 +1,7 @@
 # Mentor dashboard ops — guardrails
 
-**Active initiative:** mentor dashboard ops (v0.4.9.0)  
-**Branch:** `mentor-dashboard-pr3`
+**Active initiative:** mentor dashboard ops (v0.4.10.0)  
+**Branch:** `mentor-dashboard-pr4`
 
 Agents **must** read this file and [README.md](./README.md) before editing. Run scope check after changes:
 
@@ -11,9 +11,9 @@ docs/plans/mentor-dashboard-ops/scripts/check-scope.sh
 
 ## Active PR gate
 
-**Active:** PR3 — listing & compliance visibility.
+**Active:** PR4 — UI flex sweep.
 
-Only one PR slice is active at a time. Check [README.md](./README.md) for the current PR file list. Do not implement PR4+ while PR3 is in progress unless the README active PR section says otherwise.
+Only one PR slice is active at a time. Check [README.md](./README.md) for the current PR file list. Do not implement PR5 while PR4 is in progress unless the README active PR section says otherwise.
 
 ## Allowed paths (by PR)
 
@@ -58,7 +58,7 @@ docs/plans/mentor-dashboard-ops/**
 .cursor/rules/mentor-dashboard-ops.mdc
 ```
 
-### PR3 — listing visibility (active)
+### PR3 — listing visibility (done)
 
 ```
 src/app/dashboard/mentor/page.tsx
@@ -73,11 +73,15 @@ docs/plans/mentor-dashboard-ops/**
 .cursor/rules/mentor-dashboard-ops.mdc
 ```
 
-### PR4 — UI sweep (when active)
+### PR4 — UI sweep (active)
 
 ```
 src/app/dashboard/mentor/mentor-consultation-card.tsx
 src/app/dashboard/mentor/mentor-dashboard-client.tsx
+docs/plans/mentor-dashboard-ops/**
+.grok/skills/mentor-dashboard-ops/**
+.grok/skills/mentor-dashboard-ops-plan/**
+.cursor/rules/mentor-dashboard-ops.mdc
 ```
 
 ### PR5 — Connect restore (when active)
