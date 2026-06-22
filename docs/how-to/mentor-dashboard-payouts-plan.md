@@ -1,7 +1,7 @@
 # Mentor dashboard — earnings & payouts plan
 
-**Last updated:** 2026-06-20
-**Scope:** Clean mentor dashboard navigation, real Stripe Connect wiring, earnings summary from `transactions`, webhook groundwork for payout lifecycle.
+**Last updated:** 2026-06-22
+**Scope:** Mentor dashboard earnings, manual payouts at launch, optional Connect restore. **PR1–PR5 shipped** (v0.4.7.0 → v0.5.0.0). See [mentor-dashboard-ops plan](../plans/mentor-dashboard-ops.md) and Cursor canvas `mentor-dashboard-ops`.
 
 ## Problem
 
@@ -32,22 +32,27 @@ Per [Stripe Connect best practices](https://docs.stripe.com/connect/saas-platfor
 
 **Do not** add `payment_method_types` on new Checkout/PI calls (dynamic payment methods).
 
-## Data model (no migration this pass)
+## Data model
 
-Reuse `public.transactions`:
+**Transactions** (`public.transactions`) — earnings source of truth:
 
 - `pending` — payment authorized, escrow not captured
 - `completed` — capture succeeded after session
 - `failed` — payment or capture failed
 
-Future: `mentor_payouts` table keyed on Stripe `payout.id` when we mirror Stripe payout objects.
+**Manual payouts** (PR2, shipped):
+
+- `mentor_manual_payouts` — batch header when ops marks paid
+- `mentor_payout_lines` — one row per `transaction_id` (idempotent)
+
+Future: Stripe `payout.*` webhook mirror — manual lines remain source of truth until then.
 
 ## Implementation tasks
 
 | Task | Status | Files |
 |------|--------|-------|
 | **T1** — `mentor-earnings.ts` aggregation | Done | `src/lib/mentor-earnings.ts`, tests |
-| **T2** — Stripe Connect API route | **Deferred** | Route returns 503 at launch; UI gated by `ENABLE_STRIPE_CONNECT_PAYOUTS`. Lib: `src/lib/mentor-stripe-connect.ts` |
+| **T2** — Stripe Connect API route | **Done (PR5)** | Restored behind `ENABLE_STRIPE_CONNECT_PAYOUTS`; 503 when off. Lib: `src/lib/mentor-stripe-connect.ts` |
 | **T3** — Dashboard UI refactor | Done | `mentor-dashboard-client.tsx`, panel components |
 | **T4** — Webhook groundwork | Done | `src/app/api/webhooks/stripe/route.ts` |
 | **T5** — APX-04 prompt polish | Done | `compliance-agent.ts` |
@@ -62,7 +67,7 @@ Future: `mentor_payouts` table keyed on Stripe `payout.id` when we mirror Stripe
 | CEO Review | `/plan-ceo-review` | Scope | 0 | — | In scope for D2 mentor ops |
 | Codex Review | `/codex review` | 2nd opinion | 0 | — | Not run |
 
-**VERDICT:** Ready to ship — UI + read path + Connect API; full payout mirror deferred.
+**VERDICT:** Shipped — PR1–PR5 on main. Manual payouts at launch; Connect flag-gated; Stripe payout webhook mirror still deferred.
 
 ## Decision ledger
 

@@ -43,7 +43,16 @@ Agent skill: `skills/transcript-translation/SKILL.md` · Cursor rule: `.cursor/r
 | [how-to/weekly-ops-slack-template.md](./how-to/weekly-ops-slack-template.md) | How-to | Monday #astrolink-ops post after Canvas refresh |
 | [how-to/marketing-referrer-taxonomy.md](./how-to/marketing-referrer-taxonomy.md) | How-to | `ref` values for /early-access attribution |
 
-Cursor canvases (Carlos refreshes): `weekly-team-brief`, `sales-pipeline`, `marketing-funnel` under the workspace `canvases/` directory.
+Cursor canvases (Carlos refreshes): `weekly-team-brief`, `sales-pipeline`, `marketing-funnel`, `mentor-dashboard-ops` (PR1–PR5 before/after + CEO translations) under the workspace `canvases/` directory.
+
+## Mentor dashboard ops (shipped v0.5.0.0)
+
+| Doc | Quadrant | Description |
+|-----|----------|-------------|
+| [plans/mentor-dashboard-ops.md](./plans/mentor-dashboard-ops.md) | Explanation | PR1–PR5 stack, decision ledger, north-star journey |
+| [how-to/mentor-dashboard-payouts-plan.md](./how-to/mentor-dashboard-payouts-plan.md) | How-to | Earnings, manual payouts, Connect flag |
+
+Cursor canvas: `mentor-dashboard-ops` — CTO → CEO → mentor language for all five PRs.
 
 ## Plans (pre-ship specs)
 
@@ -51,6 +60,7 @@ Cursor canvases (Carlos refreshes): `weekly-team-brief`, `sales-pipeline`, `mark
 |-----|--------|
 | [plans/early-access-redesign.md](./plans/early-access-redesign.md) | Waitlist landing redesign spec |
 | [plans/david-guajardo-partner-landing.md](./plans/david-guajardo-partner-landing.md) | `/join/[slug]` partner pages |
+| [plans/mentor-dashboard-ops.md](./plans/mentor-dashboard-ops.md) | Shipped — retained as decision record |
 
 These are design/planning artifacts — not canonical runbooks. Prefer `how-to/` and `reference/` for ops.
 
