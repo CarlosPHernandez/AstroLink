@@ -11,34 +11,62 @@ import {
 const PLATFORM_FEE_RATE = 0.2;
 const MENTOR_SHARE_RATE = 0.8;
 
+function paymentStatusLabel(status: MentorEarningRow['status']): string {
+  switch (status) {
+    case 'completed':
+      return 'Recorded';
+    case 'refunded':
+      return 'Refunded';
+    case 'pending':
+      return 'Pending';
+    case 'failed':
+      return 'Failed';
+    default:
+      return status;
+  }
+}
+
+function paymentStatusStyles(status: MentorEarningRow['status']): string {
+  switch (status) {
+    case 'completed':
+      return 'bg-emerald-50 text-emerald-800';
+    case 'refunded':
+      return 'bg-red-50 text-red-800';
+    case 'pending':
+      return 'bg-amber-50 text-amber-800';
+    default:
+      return 'bg-surface-container text-on-surface-variant';
+  }
+}
+
 function EarningsSummaryCards({ summary }: { summary: MentorEarningsSummary }) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <div className="rounded-lg border border-outline-variant bg-surface p-4">
-        <p className="text-xs text-on-surface-variant">Total earned (your share)</p>
+        <p className="text-xs text-on-surface-variant">Recorded share</p>
         <p className="mt-1 text-xl font-semibold text-on-surface">
-          {formatMoney(summary.totalPayoutCents)}
+          {formatMoney(summary.recordedShareCents)}
         </p>
         <p className="mt-1 text-[11px] text-on-surface-variant">
-          {summary.sessionCount} paid session{summary.sessionCount === 1 ? '' : 's'}
+          {summary.sessionCount} recorded session{summary.sessionCount === 1 ? '' : 's'}
         </p>
       </div>
       <div className="rounded-lg border border-outline-variant bg-surface p-4">
-        <p className="text-xs text-on-surface-variant">Pending capture</p>
+        <p className="text-xs text-on-surface-variant">Awaiting transfer</p>
         <p className="mt-1 text-xl font-semibold text-amber-700">
-          {formatMoney(summary.pendingPayoutCents)}
+          {formatMoney(summary.awaitingTransferCents)}
         </p>
         <p className="mt-1 text-[11px] text-on-surface-variant">
-          Authorized before session completes
+          Your share not yet sent to your bank
         </p>
       </div>
       <div className="rounded-lg border border-outline-variant bg-surface p-4">
-        <p className="text-xs text-on-surface-variant">Paid out</p>
+        <p className="text-xs text-on-surface-variant">Transferred</p>
         <p className="mt-1 text-xl font-semibold text-emerald-700">
-          {formatMoney(summary.completedPayoutCents)}
+          {formatMoney(summary.transferredCents)}
         </p>
         <p className="mt-1 text-[11px] text-on-surface-variant">
-          After session capture (80% split)
+          Paid to your bank by AstroLink ops
         </p>
       </div>
     </div>
@@ -63,7 +91,7 @@ function EarningsLedger({ rows }: { rows: MentorEarningRow[] }) {
             <th className="px-4 py-3 font-medium">Buyer</th>
             <th className="px-4 py-3 font-medium">Gross</th>
             <th className="px-4 py-3 font-medium">Your payout</th>
-            <th className="px-4 py-3 font-medium">Status</th>
+            <th className="px-4 py-3 font-medium">Payment</th>
           </tr>
         </thead>
         <tbody>
@@ -79,15 +107,9 @@ function EarningsLedger({ rows }: { rows: MentorEarningRow[] }) {
               </td>
               <td className="px-4 py-3">
                 <span
-                  className={`inline-flex rounded px-2 py-0.5 text-xs font-medium capitalize ${
-                    row.status === 'completed'
-                      ? 'bg-emerald-50 text-emerald-800'
-                      : row.status === 'pending'
-                        ? 'bg-amber-50 text-amber-800'
-                        : 'bg-surface-container text-on-surface-variant'
-                  }`}
+                  className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${paymentStatusStyles(row.status)}`}
                 >
-                  {row.status.replace(/_/g, ' ')}
+                  {paymentStatusLabel(row.status)}
                 </span>
               </td>
             </tr>
