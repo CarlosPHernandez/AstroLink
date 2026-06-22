@@ -6,7 +6,7 @@ import {
 import type { MentorEarningRow } from '@/lib/mentor-earnings-types';
 
 describe('summarizeMentorEarnings', () => {
-  it('aggregates gross, fees, and payout buckets', () => {
+  it('aggregates recorded share and awaiting transfer from completed rows', () => {
     const rows: MentorEarningRow[] = [
       {
         id: '1',
@@ -35,12 +35,64 @@ describe('summarizeMentorEarnings', () => {
     ];
 
     expect(summarizeMentorEarnings(rows)).toEqual({
-      totalGrossCents: 30000,
-      totalPlatformFeeCents: 6000,
-      totalPayoutCents: 24000,
-      pendingPayoutCents: 8000,
-      completedPayoutCents: 16000,
-      sessionCount: 2,
+      totalGrossCents: 20000,
+      totalPlatformFeeCents: 4000,
+      recordedShareCents: 16000,
+      awaitingTransferCents: 16000,
+      transferredCents: 0,
+      refundedPayoutCents: 0,
+      sessionCount: 1,
+    });
+  });
+
+  it('excludes refunded and failed rows from recorded totals', () => {
+    const rows: MentorEarningRow[] = [
+      {
+        id: '1',
+        bookingId: 'b1',
+        menteeName: 'Alex',
+        scheduledAt: '2026-06-01T12:00:00Z',
+        bookingStatus: 'completed',
+        grossCents: 10000,
+        platformFeeCents: 2000,
+        mentorPayoutCents: 8000,
+        status: 'completed',
+        createdAt: '2026-06-01T10:00:00Z',
+      },
+      {
+        id: '2',
+        bookingId: 'b2',
+        menteeName: 'Sam',
+        scheduledAt: '2026-06-02T12:00:00Z',
+        bookingStatus: 'cancelled',
+        grossCents: 20000,
+        platformFeeCents: 4000,
+        mentorPayoutCents: 16000,
+        status: 'refunded',
+        createdAt: '2026-06-02T10:00:00Z',
+      },
+      {
+        id: '3',
+        bookingId: 'b3',
+        menteeName: 'Jordan',
+        scheduledAt: '2026-06-03T12:00:00Z',
+        bookingStatus: 'cancelled',
+        grossCents: 5000,
+        platformFeeCents: 1000,
+        mentorPayoutCents: 4000,
+        status: 'failed',
+        createdAt: '2026-06-03T10:00:00Z',
+      },
+    ];
+
+    expect(summarizeMentorEarnings(rows)).toEqual({
+      totalGrossCents: 10000,
+      totalPlatformFeeCents: 2000,
+      recordedShareCents: 8000,
+      awaitingTransferCents: 8000,
+      transferredCents: 0,
+      refundedPayoutCents: 16000,
+      sessionCount: 1,
     });
   });
 });

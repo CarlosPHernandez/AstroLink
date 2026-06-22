@@ -21,6 +21,9 @@ test.describe('Mentor dashboard', () => {
       await page.getByTestId('mentor-tab-earnings').click();
 
       await expect(page.getByTestId('mentor-earnings-tab')).toBeVisible();
+      await expect(page.getByText('Recorded share')).toBeVisible();
+      await expect(page.getByText('Awaiting transfer')).toBeVisible();
+      await expect(page.getByText('Transferred')).toBeVisible();
       await expect(page.getByTestId('mentor-stripe-onboard')).toHaveCount(0);
       // Playwright webServer sets SKIP_STRIPE_PAYMENTS=true → dev mode badge.
       await expect(page.getByText('Dev mode')).toBeVisible();

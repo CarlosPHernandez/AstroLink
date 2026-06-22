@@ -28,24 +28,25 @@ type TransactionRow = {
 export function summarizeMentorEarnings(rows: MentorEarningRow[]): MentorEarningsSummary {
   return rows.reduce<MentorEarningsSummary>(
     (acc, row) => {
-      acc.totalGrossCents += row.grossCents;
-      acc.totalPlatformFeeCents += row.platformFeeCents;
-      acc.totalPayoutCents += row.mentorPayoutCents;
-      if (row.status === 'pending') {
-        acc.pendingPayoutCents += row.mentorPayoutCents;
-      }
       if (row.status === 'completed') {
-        acc.completedPayoutCents += row.mentorPayoutCents;
+        acc.totalGrossCents += row.grossCents;
+        acc.totalPlatformFeeCents += row.platformFeeCents;
+        acc.recordedShareCents += row.mentorPayoutCents;
+        // PR2 will subtract lines already transferred; until then all recorded share awaits transfer.
+        acc.awaitingTransferCents += row.mentorPayoutCents;
+        acc.sessionCount += 1;
+      } else if (row.status === 'refunded') {
+        acc.refundedPayoutCents += row.mentorPayoutCents;
       }
-      acc.sessionCount += 1;
       return acc;
     },
     {
       totalGrossCents: 0,
       totalPlatformFeeCents: 0,
-      totalPayoutCents: 0,
-      pendingPayoutCents: 0,
-      completedPayoutCents: 0,
+      recordedShareCents: 0,
+      awaitingTransferCents: 0,
+      transferredCents: 0,
+      refundedPayoutCents: 0,
       sessionCount: 0,
     },
   );

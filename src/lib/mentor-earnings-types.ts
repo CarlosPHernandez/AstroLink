@@ -5,9 +5,10 @@ export type MentorEarningStatus = 'pending' | 'completed' | 'failed' | 'refunded
 export type MentorEarningsSummary = {
   totalGrossCents: number;
   totalPlatformFeeCents: number;
-  totalPayoutCents: number;
-  pendingPayoutCents: number;
-  completedPayoutCents: number;
+  recordedShareCents: number;
+  awaitingTransferCents: number;
+  transferredCents: number;
+  refundedPayoutCents: number;
   sessionCount: number;
 };
 

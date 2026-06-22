@@ -1,0 +1,42 @@
+---
+description: Mentor dashboard ops initiative — scope guard for payouts-ui-dashboard (PR1–PR5).
+globs:
+  - src/lib/mentor-earnings*
+  - src/lib/mentor-manual-payouts*
+  - src/app/dashboard/mentor/mentor-payouts-panel.tsx
+  - src/app/dashboard/mentor/mentor-dashboard-client.tsx
+  - src/app/dashboard/mentor/page.tsx
+  - src/app/dashboard/mentor/mentor-consultation-card.tsx
+  - src/app/api/admin/mentor-payouts/**
+  - src/app/api/mentor/stripe-connect/**
+  - e2e/mentor-dashboard.spec.ts
+  - e2e/admin-mentor-payouts.spec.ts
+  - docs/plans/mentor-dashboard-ops/**
+  - docs/plans/mentor-dashboard-ops.md
+---
+
+# Mentor dashboard ops — agent guardrails
+
+**Branch:** `payouts-ui-dashboard`  
+**Skills:** `/mentor-dashboard-ops` (implement), `/mentor-dashboard-ops-plan` (plan/refine)
+
+## Required before edits
+
+1. Read `docs/plans/mentor-dashboard-ops/README.md` for the **active PR** file list.
+2. Read `docs/plans/mentor-dashboard-ops/GUARDRAILS.md`.
+3. Invoke `/mentor-dashboard-ops` when implementing; `/mentor-dashboard-ops-plan` when changing scope only.
+
+## Hard stops
+
+- Do **not** edit `payment-agent.ts`, booking flow, webhooks, transcript-translation, or waitlist surfaces.
+- Do **not** add migrations until PR2 is the active PR in README.
+- Do **not** change Stripe Connect route until PR5.
+- Do **not** refactor files outside the active PR allowlist.
+
+## After changes
+
+```bash
+docs/plans/mentor-dashboard-ops/scripts/check-scope.sh
+```
+
+Escalate to the user if the task requires a forbidden path.

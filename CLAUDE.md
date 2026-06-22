@@ -17,3 +17,5 @@ Key routing rules:
 - Ship/deploy/PR → invoke /ship or /land-and-deploy
 - Save progress → invoke /context-save
 - Resume context → invoke /context-restore
+- Mentor dashboard ops (implement PR1–PR5) → invoke /mentor-dashboard-ops
+- Mentor dashboard ops (plan/refine scope) → invoke /mentor-dashboard-ops-plan
