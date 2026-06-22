@@ -49,6 +49,9 @@ src/app/dashboard/mentor/mentor-payouts-panel.tsx
 src/app/dashboard/mentor/mentor-dashboard-client.tsx
 e2e/mentor-dashboard.spec.ts
 e2e/admin-mentor-payouts.spec.ts
+e2e/auth.setup.ts
+e2e/fixtures/auth.ts
+e2e/helpers/session-bootstrap.ts
 docs/plans/mentor-dashboard-ops/**
 .grok/skills/mentor-dashboard-ops/**
 .grok/skills/mentor-dashboard-ops-plan/**

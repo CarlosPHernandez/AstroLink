@@ -1,14 +1,21 @@
 import 'server-only';
 
+import { listPaidTransactionIdsForMentor } from '@/lib/mentor-manual-payouts';
 import {
   type MentorEarningRow,
   type MentorEarningStatus,
   type MentorEarningsSummary,
+  type MentorTransferStatus,
 } from '@/lib/mentor-earnings-types';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { BookingStatus } from '@/lib/types';
 
-export type { MentorEarningRow, MentorEarningsSummary, MentorEarningStatus } from '@/lib/mentor-earnings-types';
+export type {
+  MentorEarningRow,
+  MentorEarningsSummary,
+  MentorEarningStatus,
+  MentorTransferStatus,
+} from '@/lib/mentor-earnings-types';
 
 type TransactionRow = {
   id: string;
@@ -25,6 +32,16 @@ type TransactionRow = {
   } | null;
 };
 
+export function resolveTransferStatus(
+  status: MentorEarningStatus,
+  isTransferred: boolean,
+): MentorTransferStatus {
+  if (status !== 'completed') {
+    return 'not_applicable';
+  }
+  return isTransferred ? 'transferred' : 'awaiting';
+}
+
 export function summarizeMentorEarnings(rows: MentorEarningRow[]): MentorEarningsSummary {
   return rows.reduce<MentorEarningsSummary>(
     (acc, row) => {
@@ -32,9 +49,12 @@ export function summarizeMentorEarnings(rows: MentorEarningRow[]): MentorEarning
         acc.totalGrossCents += row.grossCents;
         acc.totalPlatformFeeCents += row.platformFeeCents;
         acc.recordedShareCents += row.mentorPayoutCents;
-        // PR2 will subtract lines already transferred; until then all recorded share awaits transfer.
-        acc.awaitingTransferCents += row.mentorPayoutCents;
         acc.sessionCount += 1;
+        if (row.transferStatus === 'transferred') {
+          acc.transferredCents += row.mentorPayoutCents;
+        } else if (row.transferStatus === 'awaiting') {
+          acc.awaitingTransferCents += row.mentorPayoutCents;
+        }
       } else if (row.status === 'refunded') {
         acc.refundedPayoutCents += row.mentorPayoutCents;
       }
@@ -52,10 +72,15 @@ export function summarizeMentorEarnings(rows: MentorEarningRow[]): MentorEarning
   );
 }
 
-export function mapTransactionToEarningRow(row: TransactionRow): MentorEarningRow | null {
+export function mapTransactionToEarningRow(
+  row: TransactionRow,
+  paidTransactionIds: Set<string>,
+): MentorEarningRow | null {
   if (!row.bookings) {
     return null;
   }
+
+  const isTransferred = paidTransactionIds.has(row.id);
 
   return {
     id: row.id,
@@ -67,6 +92,7 @@ export function mapTransactionToEarningRow(row: TransactionRow): MentorEarningRo
     platformFeeCents: row.platform_fee_cents,
     mentorPayoutCents: row.mentor_payout_cents,
     status: row.status,
+    transferStatus: resolveTransferStatus(row.status, isTransferred),
     createdAt: row.created_at,
   };
 }
@@ -75,6 +101,8 @@ export async function listMentorEarnings(mentorId: string): Promise<{
   summary: MentorEarningsSummary;
   rows: MentorEarningRow[];
 }> {
+  const paidTransactionIds = await listPaidTransactionIdsForMentor(mentorId);
+
   const { data, error } = await supabaseAdmin
     .from('transactions')
     .select(
@@ -106,7 +134,7 @@ export async function listMentorEarnings(mentorId: string): Promise<{
   }
 
   const rows = (data as TransactionRow[])
-    .map(mapTransactionToEarningRow)
+    .map((row) => mapTransactionToEarningRow(row, paidTransactionIds))
     .filter((row): row is MentorEarningRow => row !== null);
 
   return {

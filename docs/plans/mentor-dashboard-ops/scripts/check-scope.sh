@@ -12,7 +12,7 @@ case "$ACTIVE_PR" in
     ALLOW_REGEX='^(docs/plans/mentor-dashboard-ops|docs/plans/mentor-dashboard-ops\.md|\.grok/skills/mentor-dashboard-ops|\.grok/skills/mentor-dashboard-ops-plan|\.cursor/rules/mentor-dashboard-ops\.mdc|CLAUDE\.md|src/lib/mentor-earnings|src/app/dashboard/mentor/mentor-payouts-panel\.tsx|e2e/mentor-dashboard\.spec\.ts)'
     ;;
   PR2)
-    ALLOW_REGEX='^(docs/plans/mentor-dashboard-ops|docs/plans/mentor-dashboard-ops\.md|\.grok/skills/mentor-dashboard-ops|\.grok/skills/mentor-dashboard-ops-plan|\.cursor/rules/mentor-dashboard-ops\.mdc|supabase/migrations/.*mentor_manual_payout|src/lib/mentor-manual-payouts|src/lib/mentor-earnings|src/lib/database\.types\.ts|src/app/api/admin/mentor-payouts|src/app/dashboard/admin|src/app/dashboard/mentor|e2e/mentor-dashboard\.spec\.ts|e2e/admin-mentor-payouts\.spec\.ts)'
+    ALLOW_REGEX='^(docs/plans/mentor-dashboard-ops|docs/plans/mentor-dashboard-ops\.md|\.grok/skills/mentor-dashboard-ops|\.grok/skills/mentor-dashboard-ops-plan|\.cursor/rules/mentor-dashboard-ops\.mdc|supabase/migrations/.*mentor_manual_payout|src/lib/mentor-manual-payouts|src/lib/mentor-earnings|src/lib/database\.types\.ts|src/app/api/admin/mentor-payouts|src/app/dashboard/admin|src/app/dashboard/mentor|e2e/mentor-dashboard\.spec\.ts|e2e/admin-mentor-payouts\.spec\.ts|e2e/auth\.setup\.ts|e2e/fixtures/auth\.ts|e2e/helpers/session-bootstrap\.ts)'
     ;;
   *)
     echo "Unknown MENTOR_OPS_ACTIVE_PR=$ACTIVE_PR (use PR1 or PR2)" >&2

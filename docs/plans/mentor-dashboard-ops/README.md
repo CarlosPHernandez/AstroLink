@@ -113,13 +113,13 @@ New **Mentor payouts** section on `/dashboard/admin` (D4 — separate API, not b
 
 ### Acceptance criteria
 
-- [ ] Migration creates tables + `transaction_id UNIQUE` on lines
-- [ ] `markMentorTransactionsPaid` is idempotent (second call for same tx → error, no duplicate line)
-- [ ] Refunded / pending / failed transactions cannot be marked paid
-- [ ] Mentor ledger shows Transfer column; summary buckets reconcile
-- [ ] Admin can mark one or more sessions paid; audit log written
-- [ ] Unit tests: `mentor-manual-payouts`, updated `mentor-earnings`
-- [ ] E2E: `admin-mentor-payouts.spec.ts` + mentor dashboard transfer assertion
+- [x] Migration creates tables + `transaction_id UNIQUE` on lines
+- [x] `markMentorTransactionsPaid` is idempotent (second call for same tx → error, no duplicate line)
+- [x] Refunded / pending / failed transactions cannot be marked paid
+- [x] Mentor ledger shows Transfer column; summary buckets reconcile
+- [x] Admin can mark one or more sessions paid; audit log written
+- [x] Unit tests: `mentor-manual-payouts`, updated `mentor-earnings`, admin API route
+- [x] E2E: `admin-mentor-payouts.spec.ts` + mentor dashboard transfer assertion
 
 ### Verify
 

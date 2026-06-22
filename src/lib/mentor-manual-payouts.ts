@@ -208,6 +208,81 @@ export async function getMentorAwaitingTransferCents(mentorId: string): Promise<
   return sumMentorPayoutCents(unpaid.map((row) => ({ mentor_payout_cents: row.mentorPayoutCents })));
 }
 
+export type MentorAwaitingPayoutSummary = {
+  mentorId: string;
+  fullName: string;
+  awaitingCents: number;
+};
+
+export async function listAllPaidTransactionIds(): Promise<Set<string>> {
+  const { data, error } = await supabaseAdmin
+    .from('mentor_payout_lines')
+    .select('transaction_id');
+
+  if (error || !data) {
+    console.error('listAllPaidTransactionIds:', error?.message);
+    return new Set();
+  }
+
+  return new Set(data.map((row) => row.transaction_id));
+}
+
+export async function listMentorsWithAwaitingPayouts(): Promise<MentorAwaitingPayoutSummary[]> {
+  const paidIds = await listAllPaidTransactionIds();
+
+  const { data, error } = await supabaseAdmin
+    .from('transactions')
+    .select(
+      `
+      id,
+      mentor_payout_cents,
+      status,
+      bookings!inner (
+        mentor_id,
+        mentors!inner ( id, full_name )
+      )
+    `,
+    )
+    .eq('status', 'completed');
+
+  if (error || !data) {
+    console.error('listMentorsWithAwaitingPayouts:', error?.message);
+    return [];
+  }
+
+  const byMentor = new Map<string, MentorAwaitingPayoutSummary>();
+
+  for (const row of data) {
+    if (paidIds.has(row.id)) {
+      continue;
+    }
+
+    const booking = row.bookings as {
+      mentor_id: string;
+      mentors: { id: string; full_name: string };
+    } | null;
+    if (!booking?.mentors) {
+      continue;
+    }
+
+    const mentorId = booking.mentors.id;
+    const existing = byMentor.get(mentorId);
+    if (existing) {
+      existing.awaitingCents += row.mentor_payout_cents;
+    } else {
+      byMentor.set(mentorId, {
+        mentorId,
+        fullName: booking.mentors.full_name,
+        awaitingCents: row.mentor_payout_cents,
+      });
+    }
+  }
+
+  return [...byMentor.values()]
+    .filter((mentor) => mentor.awaitingCents > 0)
+    .sort((a, b) => b.awaitingCents - a.awaitingCents);
+}
+
 export async function getMentorTransferredCents(mentorId: string): Promise<number> {
   const { data, error } = await supabaseAdmin
     .from('mentor_payout_lines')

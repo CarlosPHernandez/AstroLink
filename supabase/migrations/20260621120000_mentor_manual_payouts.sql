@@ -32,3 +32,12 @@ CREATE INDEX mentor_payout_lines_payout_id_idx
 
 ALTER TABLE public.mentor_manual_payouts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mentor_payout_lines ENABLE ROW LEVEL SECURITY;
+
+-- Admin preset for created_by_admin_id FK (matches auth-presets.ts)
+INSERT INTO public.users (id, email, full_name)
+VALUES (
+  'a0000003-0000-4000-8000-000000000003',
+  'admin@astrolink.ai',
+  'Flight Command'
+)
+ON CONFLICT (email) DO NOTHING;

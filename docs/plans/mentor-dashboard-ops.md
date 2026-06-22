@@ -35,7 +35,7 @@ Mentors see per booking:
 |----|-------|--------|
 | PR0 | Merge layout fix branch | Done (#45) |
 | PR1 | Earnings truthfulness + card labels | **Done** (#47, v0.4.7.0) |
-| PR2 | Manual payouts migration + admin + mentor transfer UI | **In progress** |
+| PR2 | Manual payouts migration + admin + mentor transfer UI | **Ready to ship** |
 | PR3 | Listing/compliance visibility | Pending |
 | PR4 | UI flex sweep (consultation card, civil servant row) | Pending |
 | PR5 | Stripe Connect restore (deferred) | Pending |

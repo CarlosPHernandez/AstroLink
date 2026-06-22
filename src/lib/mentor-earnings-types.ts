@@ -12,6 +12,8 @@ export type MentorEarningsSummary = {
   sessionCount: number;
 };
 
+export type MentorTransferStatus = 'awaiting' | 'transferred' | 'not_applicable';
+
 export type MentorEarningRow = {
   id: string;
   bookingId: string;
@@ -22,5 +24,6 @@ export type MentorEarningRow = {
   platformFeeCents: number;
   mentorPayoutCents: number;
   status: MentorEarningStatus;
+  transferStatus: MentorTransferStatus;
   createdAt: string;
 };

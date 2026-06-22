@@ -26,6 +26,28 @@ function paymentStatusLabel(status: MentorEarningRow['status']): string {
   }
 }
 
+function transferStatusLabel(status: MentorEarningRow['transferStatus']): string {
+  switch (status) {
+    case 'awaiting':
+      return 'Awaiting';
+    case 'transferred':
+      return 'Transferred';
+    default:
+      return '—';
+  }
+}
+
+function transferStatusStyles(status: MentorEarningRow['transferStatus']): string {
+  switch (status) {
+    case 'awaiting':
+      return 'bg-amber-50 text-amber-800';
+    case 'transferred':
+      return 'bg-emerald-50 text-emerald-800';
+    default:
+      return 'bg-surface-container text-on-surface-variant';
+  }
+}
+
 function paymentStatusStyles(status: MentorEarningRow['status']): string {
   switch (status) {
     case 'completed':
@@ -92,6 +114,7 @@ function EarningsLedger({ rows }: { rows: MentorEarningRow[] }) {
             <th className="px-4 py-3 font-medium">Gross</th>
             <th className="px-4 py-3 font-medium">Your payout</th>
             <th className="px-4 py-3 font-medium">Payment</th>
+            <th className="px-4 py-3 font-medium">Transfer</th>
           </tr>
         </thead>
         <tbody>
@@ -110,6 +133,13 @@ function EarningsLedger({ rows }: { rows: MentorEarningRow[] }) {
                   className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${paymentStatusStyles(row.status)}`}
                 >
                   {paymentStatusLabel(row.status)}
+                </span>
+              </td>
+              <td className="px-4 py-3">
+                <span
+                  className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${transferStatusStyles(row.transferStatus)}`}
+                >
+                  {transferStatusLabel(row.transferStatus)}
                 </span>
               </td>
             </tr>
