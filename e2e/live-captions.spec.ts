@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import {
+  CHRIS_MENTOR_ID,
   deleteE2eBookingsForMentee,
   E2E_GOALS_PREFIX,
   setE2eDailyRoomStub,
@@ -8,7 +9,6 @@ import { futureDatetimeLocal } from './helpers/datetime';
 
 const E2E_GOALS_TAG = `${E2E_GOALS_PREFIX}live-captions`;
 const E2E_GOALS = `${E2E_GOALS_TAG} live translated captions`;
-const CHRIS_MENTOR_ID = 'a0000002-0000-4000-8000-000000000002';
 const CAPTION_LINE = 'We should review the LEO relay architecture.';
 
 test.describe('D3 Phase 3 live captions', () => {

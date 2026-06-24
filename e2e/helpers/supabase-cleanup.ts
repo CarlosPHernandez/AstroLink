@@ -1,7 +1,29 @@
 import { createClient } from '@supabase/supabase-js';
 
 export const MENTEE_ID = 'a0000001-0000-4000-8000-000000000001';
+export const CHRIS_MENTOR_ID = 'a0000002-0000-4000-8000-000000000002';
+/** Canonical seed value from `20260531140100_seed_d1_dev.sql`. */
+export const CHRIS_SEED_EMPLOYER = 'Inspiration4 / Lockheed Martin / Starfish Space';
 export const E2E_GOALS_PREFIX = 'E2E:';
+
+const E2E_EMPLOYER_SUFFIX = /-e2e-\d+$/;
+
+export function stripE2eEmployerSuffix(employer: string): string {
+  return employer.replace(E2E_EMPLOYER_SUFFIX, '');
+}
+
+/** Restore Chris mentor employer after profile-save E2E (shared hosted Supabase). */
+export async function restoreChrisMentorEmployer(employer: string = CHRIS_SEED_EMPLOYER) {
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase
+    .from('mentors')
+    .update({ employer: stripE2eEmployerSuffix(employer) })
+    .eq('id', CHRIS_MENTOR_ID);
+
+  if (error) {
+    throw new Error(`E2E cleanup failed to restore Chris employer: ${error.message}`);
+  }
+}
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

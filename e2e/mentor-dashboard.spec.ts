@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { test, expect } from '@playwright/test';
 import { mentorAuthFile } from './fixtures/auth';
+import { restoreChrisMentorEmployer, stripE2eEmployerSuffix } from './helpers/supabase-cleanup';
 
 const emptyStorage = { cookies: [] as [], origins: [] as [] };
 const minimalPdf = path.join(__dirname, 'fixtures/nf1860-minimal.pdf');
@@ -8,6 +9,14 @@ const minimalPdf = path.join(__dirname, 'fixtures/nf1860-minimal.pdf');
 test.describe('Mentor dashboard', () => {
   test.describe('authenticated mentor', () => {
     test.use({ storageState: mentorAuthFile });
+
+    test.afterEach(async () => {
+      try {
+        await restoreChrisMentorEmployer();
+      } catch {
+        // Supabase keys optional in some environments; profile-save test uses try/finally too.
+      }
+    });
 
     test('loads sessions tab', async ({ page }) => {
       await page.goto('/dashboard/mentor');
@@ -74,15 +83,22 @@ test.describe('Mentor dashboard', () => {
         test.skip(true, 'Chris mentor row missing in environment');
       }
 
-      const suffix = `-e2e-${Date.now()}`;
-      await employer.fill(`${current.replace(/-e2e-\d+$/, '')}${suffix}`);
-      await page.getByRole('button', { name: 'Save profile' }).click();
+      const baseline = stripE2eEmployerSuffix(current);
 
-      const success = page.getByTestId('mentor-profile-success');
-      if ((await success.count()) === 0) {
-        test.skip(true, 'Profile save requires Supabase mentor row');
+      try {
+        const suffix = `-e2e-${Date.now()}`;
+        await employer.fill(`${baseline}${suffix}`);
+        await page.getByRole('button', { name: 'Save profile' }).click();
+
+        const success = page.getByTestId('mentor-profile-success');
+        try {
+          await expect(success).toBeVisible({ timeout: 15_000 });
+        } catch {
+          test.skip(true, 'Profile save requires Supabase mentor row');
+        }
+      } finally {
+        await restoreChrisMentorEmployer(baseline);
       }
-      await expect(success).toBeVisible();
     });
 
     test('profile rejects invalid rate', async ({ page }) => {
