@@ -34,6 +34,7 @@ export interface BookingSessionView {
   dailyRoomUrl: string | null;
   dailyJoinUrl: string | null;
   mentorName: string;
+  menteeName: string;
   mentorId: string;
   menteeId: string;
   menteePreferredLocale: SupportedTargetLocale;
@@ -109,7 +110,7 @@ export async function getBookingForSession(
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .select(
-      'id, status, daily_room_url, mentee_id, mentor_id, scheduled_at, briefing_json, mentors(full_name), users!bookings_mentee_id_fkey(preferred_locale)',
+      'id, status, daily_room_url, mentee_id, mentor_id, scheduled_at, briefing_json, mentors(full_name), users!bookings_mentee_id_fkey(full_name, preferred_locale)',
     )
     .eq('id', bookingId)
     .single();
@@ -155,7 +156,7 @@ export async function getBookingForSession(
     }
   }
 
-  const menteeUser = data.users as { preferred_locale: string | null } | null;
+  const menteeUser = data.users as { full_name: string; preferred_locale: string | null } | null;
   const menteePreferredLocale: SupportedTargetLocale =
     menteeUser?.preferred_locale && isSupportedTargetLocale(menteeUser.preferred_locale)
       ? menteeUser.preferred_locale
@@ -177,6 +178,7 @@ export async function getBookingForSession(
       dailyRoomUrl: data.daily_room_url,
       dailyJoinUrl,
       mentorName: mentor?.full_name ?? 'Expert',
+      menteeName: menteeUser?.full_name ?? 'Guest',
       mentorId: data.mentor_id,
       menteeId: data.mentee_id,
       menteePreferredLocale,
