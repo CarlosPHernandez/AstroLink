@@ -2,6 +2,19 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.5.1.0] - 2026-06-25
+
+Session transcripts and live captions now show real names instead of generic labels, and both dashboards let you expand a transcript on completed sessions without opening the full recap page.
+
+### Added
+- `resolveSessionSpeakerLabel` — first-name labels with "You" when the mentee views their own speech; unit tests included.
+- Expandable **View transcript** on mentee and mentor dashboards for completed bookings.
+
+### Changed
+- Live captions and post-call transcript panel use mentor/mentee first names (replacing Expert/Buyer).
+- Session recap link on mentee past sessions no longer requires a Daily room URL.
+- Completed mentor consultation cards show session recap and inline transcript.
+
 ## [0.5.0.0] - 2026-06-21
 
 Mentor dashboard Stripe Connect restore (PR5): mentors can onboard to Stripe Express and open the payout dashboard when ops enables Connect — manual payouts remain the launch default.
