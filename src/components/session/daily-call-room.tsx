@@ -89,6 +89,8 @@ export function DailyCallRoom({ booking, onEnded }: DailyCallRoomProps) {
     menteeId: booking.menteeId,
     sessionRole: booking.sessionRole,
     menteePreferredLocale: booking.menteePreferredLocale,
+    mentorName: booking.mentorName,
+    menteeName: booking.menteeName,
     captionsEnabled: booking.captionsAvailable,
     transcriptionUnavailable: daily.transcriptionUnavailable,
   });

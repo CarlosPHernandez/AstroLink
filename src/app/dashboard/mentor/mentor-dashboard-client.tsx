@@ -218,7 +218,11 @@ export default function MentorDashboardClient({
                       ) : (
                         <div className="space-y-4">
                           {upcoming.map((booking) => (
-                            <MentorConsultationCard key={booking.id} booking={booking} />
+                            <MentorConsultationCard
+                              key={booking.id}
+                              booking={booking}
+                              mentorName={profile.fullName}
+                            />
                           ))}
                         </div>
                       )}
@@ -231,7 +235,12 @@ export default function MentorDashboardClient({
                       ) : (
                         <div className="space-y-4">
                           {past.map((booking) => (
-                            <MentorConsultationCard key={booking.id} booking={booking} compact />
+                            <MentorConsultationCard
+                              key={booking.id}
+                              booking={booking}
+                              compact
+                              mentorName={profile.fullName}
+                            />
                           ))}
                         </div>
                       )}

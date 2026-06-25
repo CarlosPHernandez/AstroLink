@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { resolveCaptionDirection } from '@/lib/transcript-translation/caption-direction';
 import { mapSpeakersToRoles } from '@/lib/transcript-translation/map-speakers';
+import { resolveSessionSpeakerLabel } from '@/lib/transcript-translation/speaker-label';
 import {
   admitTranslationRequest,
   buildTranslationCacheKey,
@@ -31,21 +32,13 @@ type UseLiveCaptionsOptions = {
   menteeId: string;
   sessionRole: 'mentee' | 'mentor' | 'admin';
   menteePreferredLocale: SupportedTargetLocale;
+  mentorName: string;
+  menteeName: string;
   captionsEnabled: boolean;
   transcriptionUnavailable?: boolean;
 };
 
 const DEFAULT_TRANSLATION_PAUSE_MS = 60_000;
-
-function speakerLabel(role: TranscriptUtterance['speakerRole'], sessionRole: string): string {
-  if (role === 'mentor') {
-    return 'Expert';
-  }
-  if (role === 'mentee') {
-    return sessionRole === 'mentee' ? 'You' : 'Buyer';
-  }
-  return 'Speaker';
-}
 
 type PendingTranslation = {
   segmentId: string;
@@ -64,6 +57,8 @@ export function useLiveCaptions(options: UseLiveCaptionsOptions) {
     menteeId,
     sessionRole,
     menteePreferredLocale,
+    mentorName,
+    menteeName,
     captionsEnabled,
     transcriptionUnavailable = false,
   } = options;
@@ -255,7 +250,12 @@ export function useLiveCaptions(options: UseLiveCaptionsOptions) {
         mentorUserId: mentorId,
         menteeUserId: menteeId,
       });
-      const label = speakerLabel(mapped.speakerRole, sessionRole);
+      const label = resolveSessionSpeakerLabel({
+        speakerRole: mapped.speakerRole,
+        viewerRole: sessionRole,
+        mentorFullName: mentorName,
+        menteeFullName: menteeName,
+      });
       const direction = resolveCaptionDirection({
         viewerRole: sessionRole,
         menteePreferredLocale,
@@ -316,8 +316,10 @@ export function useLiveCaptions(options: UseLiveCaptionsOptions) {
       captionsEnabled,
       captionsOn,
       menteeId,
+      menteeName,
       menteePreferredLocale,
       mentorId,
+      mentorName,
       pushLine,
       scheduleTranslation,
       sessionRole,

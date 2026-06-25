@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { resolveSessionSpeakerLabel } from '@/lib/transcript-translation/speaker-label';
 import type { TranscriptUtterance } from '@/lib/transcript-translation/types';
 
 type TranscriptResponse = {
@@ -17,17 +18,17 @@ type TranslateTranscriptResponse = {
   error?: string;
 };
 
-function speakerDisplay(role: TranscriptUtterance['speakerRole']): string {
-  if (role === 'mentor') {
-    return 'Expert';
-  }
-  if (role === 'mentee') {
-    return 'Buyer';
-  }
-  return 'Speaker';
-}
-
-export function SessionTranscriptPanel({ bookingId }: { bookingId: string }) {
+export function SessionTranscriptPanel({
+  bookingId,
+  mentorName,
+  menteeName,
+  viewerRole,
+}: {
+  bookingId: string;
+  mentorName: string;
+  menteeName: string;
+  viewerRole: 'mentee' | 'mentor' | 'admin';
+}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [canonical, setCanonical] = useState<TranscriptUtterance[]>([]);
@@ -117,7 +118,14 @@ export function SessionTranscriptPanel({ bookingId }: { bookingId: string }) {
   }
 
   if (display.length === 0) {
-    return null;
+    return (
+      <p
+        className="text-body-md text-on-surface-variant mb-6"
+        data-testid="session-transcript-unavailable"
+      >
+        Transcript not available for this session yet.
+      </p>
+    );
   }
 
   const localeLabel = targetLocale === 'es' ? 'Español' : targetLocale;
@@ -145,7 +153,13 @@ export function SessionTranscriptPanel({ bookingId }: { bookingId: string }) {
         {display.map((utterance) => (
           <li key={utterance.id} className="text-body-md text-on-surface">
             <span className="text-label-sm font-semibold text-on-surface-variant">
-              {speakerDisplay(utterance.speakerRole)}:{' '}
+              {resolveSessionSpeakerLabel({
+                speakerRole: utterance.speakerRole,
+                viewerRole,
+                mentorFullName: mentorName,
+                menteeFullName: menteeName,
+              })}
+              :{' '}
             </span>
             {utterance.text}
           </li>

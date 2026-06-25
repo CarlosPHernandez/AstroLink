@@ -7,6 +7,7 @@ import { SessionTranscriptPanel } from '@/components/session/session-transcript-
 import type { BookingSessionView } from '@/lib/booking-access';
 import { getDashboardPathForRole } from '@/lib/dashboard-paths';
 import type { MentorBriefingOutput, PostSessionOutput } from '@/lib/types';
+import { firstDisplayName } from '@/lib/display-name';
 import { formatSessionWhen } from '@/lib/format';
 import {
   getMediaOriginSnapshot,
@@ -253,7 +254,7 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
               data-testid="session-captions-indicator"
               className="text-label-sm text-on-surface-variant"
             >
-              Captions on for buyer ({booking.menteePreferredLocale})
+              Captions on for {firstDisplayName(booking.menteeName)} ({booking.menteePreferredLocale})
             </span>
           ) : null}
           <span
@@ -411,7 +412,12 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             <SessionGatePanel testId="session-completed">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Session completed</h3>
               <SessionRecapPanel bookingId={booking.id} />
-              <SessionTranscriptPanel bookingId={booking.id} />
+              <SessionTranscriptPanel
+                bookingId={booking.id}
+                mentorName={booking.mentorName}
+                menteeName={booking.menteeName}
+                viewerRole={booking.sessionRole}
+              />
               <Link
                 href={exitHref}
                 className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
