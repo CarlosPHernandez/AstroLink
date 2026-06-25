@@ -14,6 +14,7 @@ import {
 } from '@/lib/booking-partition';
 import type { BriefingPayload } from '@/lib/briefing-display';
 import { SERVICE_TYPE_LABELS } from '@/lib/types';
+import { DashboardSessionTranscript } from '@/components/session/dashboard-session-transcript';
 import { formatSessionWhen } from '@/lib/format';
 
 interface SessionData {
@@ -221,34 +222,45 @@ export default function MenteeDashboardClient({
       <div
         key={booking.id}
         data-testid={`booking-past-${booking.id}`}
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4 border-b border-outline-variant/40 last:border-0"
+        className="py-4 border-b border-outline-variant/40 last:border-0"
       >
-        <div>
-          <p className="text-sm font-semibold text-on-surface">{booking.mentorName}</p>
-          <p className="text-[11px] text-on-surface-variant">
-            <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span> ·{' '}
-            {booking.status === 'pending_payment' ? 'Awaiting confirmation' : booking.status}
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-on-surface">{booking.mentorName}</p>
+            <p className="text-[11px] text-on-surface-variant">
+              <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span> ·{' '}
+              {booking.status === 'pending_payment' ? 'Awaiting confirmation' : booking.status}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {briefing ? (
+              <button
+                type="button"
+                onClick={() => openBriefingPanel(booking, briefing)}
+                className="text-[10px] font-semibold text-primary uppercase tracking-wider hover:underline cursor-pointer"
+              >
+                View brief
+              </button>
+            ) : null}
+            {booking.status === 'completed' ? (
+              <Link
+                href={`/session/${booking.id}`}
+                className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider hover:text-on-surface"
+              >
+                Session recap
+              </Link>
+            ) : null}
+          </div>
         </div>
-        <div className="flex gap-2">
-          {briefing ? (
-            <button
-              type="button"
-              onClick={() => openBriefingPanel(booking, briefing)}
-              className="text-[10px] font-semibold text-primary uppercase tracking-wider hover:underline cursor-pointer"
-            >
-              View brief
-            </button>
-          ) : null}
-          {booking.dailyRoomUrl && booking.status === 'completed' ? (
-            <Link
-              href={`/session/${booking.id}`}
-              className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider hover:text-on-surface"
-            >
-              Session recap
-            </Link>
-          ) : null}
-        </div>
+        {booking.status === 'completed' ? (
+          <DashboardSessionTranscript
+            bookingId={booking.id}
+            mentorName={booking.mentorName}
+            menteeName={session.fullName}
+            viewerRole="mentee"
+            testIdPrefix={`booking-past-${booking.id}`}
+          />
+        ) : null}
       </div>
     );
   }

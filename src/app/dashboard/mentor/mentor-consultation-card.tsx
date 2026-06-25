@@ -5,6 +5,7 @@ import {
   getMentorBookingContextSummary,
   type MentorBookingView,
 } from '@/lib/mentor-booking-partition';
+import { DashboardSessionTranscript } from '@/components/session/dashboard-session-transcript';
 import { formatSessionWhen } from '@/lib/format';
 import { SERVICE_TYPE_LABELS, type BookingStatus, type ServiceType } from '@/lib/types';
 
@@ -53,9 +54,11 @@ function bookingStatusStyles(status: BookingStatus): string {
 export function MentorConsultationCard({
   booking,
   compact = false,
+  mentorName,
 }: {
   booking: MentorBookingView;
   compact?: boolean;
+  mentorName: string;
 }) {
   const contextSummary = getMentorBookingContextSummary(booking);
   const goals = booking.matchReason ?? 'No goals recorded for this session.';
@@ -103,7 +106,24 @@ export function MentorConsultationCard({
         </p>
       )}
 
-      {canJoin ? (
+      {booking.status === 'completed' ? (
+        <div className="space-y-3 border-t border-outline-variant/40 pt-4">
+          <Link
+            href={`/session/${booking.id}`}
+            data-testid={`mentor-recap-${booking.id}`}
+            className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
+          >
+            Session recap
+          </Link>
+          <DashboardSessionTranscript
+            bookingId={booking.id}
+            mentorName={mentorName}
+            menteeName={booking.menteeName}
+            viewerRole="mentor"
+            testIdPrefix={`mentor-booking-${booking.id}`}
+          />
+        </div>
+      ) : canJoin ? (
         <div className="border-t border-outline-variant/40 pt-4">
           <Link
             href={`/session/${booking.id}`}
