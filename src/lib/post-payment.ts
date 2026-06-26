@@ -7,7 +7,33 @@ import {
 import { canProvisionDailyRoom, provisionDailyRoomForBooking } from '@/lib/daily';
 import { supabaseAdmin } from '@/lib/supabase';
 import { BriefingAgent } from '@/services/agents/briefing-agent';
+import { NotificationAgent } from '@/services/agents/notification-agent';
 import { PaymentAgent } from '@/services/agents/payment-agent';
+
+/**
+ * APX-02 briefing, Daily room, and APX-08 confirmation emails after a booking is confirmed.
+ */
+export async function runConfirmedBookingFulfillment(bookingId: string) {
+  const { data: booking, error } = await supabaseAdmin
+    .from('bookings')
+    .select('id, daily_room_url')
+    .eq('id', bookingId)
+    .single();
+
+  if (error || !booking) {
+    throw new Error(`Booking not found: ${bookingId}`);
+  }
+
+  const briefingAgent = new BriefingAgent();
+  await briefingAgent.prepareBriefing(bookingId);
+
+  if (!booking.daily_room_url && canProvisionDailyRoom()) {
+    await provisionDailyRoomForBooking(bookingId);
+  }
+
+  const notificationAgent = new NotificationAgent();
+  await notificationAgent.sendBookingConfirmations(bookingId);
+}
 
 /**
  * Confirms a booking and runs APX-02 briefing + Daily room setup without Stripe.
@@ -34,12 +60,7 @@ export async function confirmBookingWithoutPayment(bookingId: string) {
 
   await supabaseAdmin.from('bookings').update({ status: 'confirmed' }).eq('id', bookingId);
 
-  const briefingAgent = new BriefingAgent();
-  await briefingAgent.prepareBriefing(bookingId);
-
-  if (!booking.daily_room_url && canProvisionDailyRoom()) {
-    await provisionDailyRoomForBooking(bookingId);
-  }
+  await runConfirmedBookingFulfillment(bookingId);
 
   return { bookingId, alreadyProcessed: false };
 }
@@ -88,12 +109,7 @@ export async function fulfillBookingAfterPayment(params: {
     },
   });
 
-  const briefingAgent = new BriefingAgent();
-  await briefingAgent.prepareBriefing(booking.id);
-
-  if (!booking.daily_room_url && canProvisionDailyRoom()) {
-    await provisionDailyRoomForBooking(booking.id);
-  }
+  await runConfirmedBookingFulfillment(booking.id);
 
   return { bookingId: booking.id, alreadyProcessed: false };
 }

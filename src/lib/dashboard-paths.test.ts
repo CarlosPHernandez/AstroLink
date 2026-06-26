@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { getDashboardPathForRole, getPostBookingDashboardPath } from './dashboard-paths';
+import {
+  getDashboardPathForRole,
+  getMentorPrepDashboardPath,
+  getPostBookingDashboardPath,
+} from './dashboard-paths';
 
 describe('getDashboardPathForRole', () => {
   it('routes each role to its dashboard', () => {
@@ -16,5 +20,11 @@ describe('getPostBookingDashboardPath', () => {
     );
     expect(getPostBookingDashboardPath('mentor', 'bk-123')).toBe('/dashboard/mentor');
     expect(getPostBookingDashboardPath('admin', 'bk-123')).toBe('/dashboard/admin');
+  });
+});
+
+describe('getMentorPrepDashboardPath', () => {
+  it('appends prep query for mentor dashboard', () => {
+    expect(getMentorPrepDashboardPath('bk-123')).toBe('/dashboard/mentor?prep=bk-123');
   });
 });
