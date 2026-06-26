@@ -203,6 +203,47 @@ export type Database = {
           },
         ]
       }
+      notification_deliveries: {
+        Row: {
+          booking_id: string
+          channel: string
+          created_at: string
+          error_message: string | null
+          id: string
+          recipient_role: string
+          resend_message_id: string | null
+          status: string
+        }
+        Insert: {
+          booking_id: string
+          channel: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          recipient_role: string
+          resend_message_id?: string | null
+          status: string
+        }
+        Update: {
+          booking_id?: string
+          channel?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          recipient_role?: string
+          resend_message_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_deliveries_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mentor_integrations: {
         Row: {
           created_at: string
@@ -620,7 +661,14 @@ export type Database = {
       }
     }
     Enums: {
-      agent_id: "APX-01" | "APX-02" | "APX-03" | "APX-04" | "APX-05" | "APX-06"
+      agent_id:
+        | "APX-01"
+        | "APX-02"
+        | "APX-03"
+        | "APX-04"
+        | "APX-05"
+        | "APX-06"
+        | "APX-08"
       bio_risk_rating: "low" | "medium" | "high"
       booking_status:
         | "pending_payment"
@@ -750,7 +798,15 @@ export type Enums<
 export const Constants = {
   public: {
     Enums: {
-      agent_id: ["APX-01", "APX-02", "APX-03", "APX-04", "APX-05", "APX-06"],
+      agent_id: [
+        "APX-01",
+        "APX-02",
+        "APX-03",
+        "APX-04",
+        "APX-05",
+        "APX-06",
+        "APX-08",
+      ],
       bio_risk_rating: ["low", "medium", "high"],
       booking_status: [
         "pending_payment",
