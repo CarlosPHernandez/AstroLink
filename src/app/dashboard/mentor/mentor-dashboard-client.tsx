@@ -1,7 +1,20 @@
 'use client';
 
-import React, { startTransition, useActionState, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  startTransition,
+  useActionState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  BriefingSidebar,
+  type BriefingSidebarState,
+} from '@/components/briefing/briefing-sidebar';
+import type { BriefingPayload } from '@/lib/briefing-display';
 import { logoutAction } from '@/app/auth/actions';
 import {
   updateMentorProfileAction,
@@ -27,6 +40,12 @@ interface SessionData {
   role: 'mentor' | 'mentee' | 'admin';
   fullName: string;
 }
+
+type BriefingApiResponse = {
+  success?: boolean;
+  error?: string;
+  data?: { briefing: BriefingPayload };
+};
 
 interface MentorProfileState {
   fullName: string;
@@ -81,12 +100,86 @@ export default function MentorDashboardClient({
   const searchParams = useSearchParams();
   const prepId = searchParams.get('prep');
   const handledPrepRef = useRef<string | null>(null);
+  const [localBriefings, setLocalBriefings] = useState<Record<string, BriefingPayload>>({});
+  const [sidebar, setSidebar] = useState<BriefingSidebarState>({ mode: 'closed' });
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<MentorDashboardTab>('sessions');
   const [profile, setProfile] = useState<MentorProfileState>(
     mentorProfile ?? emptyProfileFromSession(session),
   );
   const profileNeedsOnboarding = mentorProfile === null;
   const { upcoming, past } = useMemo(() => partitionMentorBookings(bookings), [bookings]);
+
+  const resolveBriefing = useCallback(
+    (booking: MentorBookingView): BriefingPayload | null => {
+      return localBriefings[booking.id] ?? booking.briefing;
+    },
+    [localBriefings],
+  );
+
+  function openBriefingPanel(booking: MentorBookingView, briefing: BriefingPayload) {
+    setSidebar({
+      mode: 'ready',
+      bookingId: booking.id,
+      counterpartyName: booking.menteeName,
+      audience: 'mentor',
+      briefing,
+    });
+  }
+
+  async function generateBriefing(booking: MentorBookingView) {
+    setGeneratingId(booking.id);
+    setSidebar({
+      mode: 'thinking',
+      bookingId: booking.id,
+      counterpartyName: booking.menteeName,
+      audience: 'mentor',
+    });
+
+    try {
+      const res = await fetch('/api/book/briefing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: booking.id }),
+      });
+      const json = (await res.json()) as BriefingApiResponse;
+
+      if (!res.ok || !json.success || !json.data?.briefing) {
+        throw new Error(json.error ?? 'Could not generate briefing');
+      }
+
+      const briefing = json.data.briefing;
+      setLocalBriefings((prev) => ({ ...prev, [booking.id]: briefing }));
+      setSidebar({
+        mode: 'ready',
+        bookingId: booking.id,
+        counterpartyName: booking.menteeName,
+        audience: 'mentor',
+        briefing,
+      });
+      router.refresh();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not generate briefing';
+      setSidebar({
+        mode: 'error',
+        bookingId: booking.id,
+        counterpartyName: booking.menteeName,
+        audience: 'mentor',
+        error: message,
+      });
+    } finally {
+      setGeneratingId(null);
+    }
+  }
+
+  function handleViewPrepBrief(booking: MentorBookingView) {
+    const briefing = resolveBriefing(booking);
+    if (briefing) {
+      openBriefingPanel(booking, briefing);
+      return;
+    }
+    void generateBriefing(booking);
+  }
 
   const [profileState, profileAction, profilePending] = useActionState<
     MentorProfileActionState | undefined,
@@ -123,6 +216,13 @@ export default function MentorDashboardClient({
     handledPrepRef.current = prepId;
     setActiveTab('sessions');
 
+    const briefing = localBriefings[booking.id] ?? booking.briefing;
+    if (briefing) {
+      openBriefingPanel(booking, briefing);
+    } else {
+      void generateBriefing(booking);
+    }
+
     requestAnimationFrame(() => {
       document
         .querySelector(`[data-testid="mentor-booking-${prepId}"]`)
@@ -130,7 +230,7 @@ export default function MentorDashboardClient({
     });
 
     router.replace('/dashboard/mentor', { scroll: false });
-  }, [prepId, bookings, router]);
+  }, [prepId, bookings, localBriefings, router]);
 
   const handleSaveProfile = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -173,6 +273,7 @@ export default function MentorDashboardClient({
   });
 
   return (
+    <>
     <div className="min-h-screen bg-background p-6 text-on-surface md:p-10">
       <div className="mx-auto max-w-5xl">
         <header className="mb-10 flex flex-col justify-between gap-6 border-b border-outline-variant pb-6 md:flex-row md:items-center">
@@ -245,8 +346,13 @@ export default function MentorDashboardClient({
                           {upcoming.map((booking) => (
                             <MentorConsultationCard
                               key={booking.id}
-                              booking={booking}
+                              booking={{
+                                ...booking,
+                                briefing: resolveBriefing(booking),
+                              }}
                               mentorName={profile.fullName}
+                              onViewPrepBrief={handleViewPrepBrief}
+                              prepBriefGenerating={generatingId === booking.id}
                             />
                           ))}
                         </div>
@@ -468,5 +574,21 @@ export default function MentorDashboardClient({
         </div>
       </div>
     </div>
+
+    <BriefingSidebar
+      state={sidebar}
+      onClose={() => setSidebar({ mode: 'closed' })}
+      onRegenerate={
+        sidebar.mode !== 'closed'
+          ? () => {
+              const booking = bookings.find((b) => b.id === sidebar.bookingId);
+              if (booking) {
+                void generateBriefing(booking);
+              }
+            }
+          : undefined
+      }
+    />
+    </>
   );
 }

@@ -1,8 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { isPreCallBrief, isSessionBriefing } from '@/lib/briefing-display';
-import type { MentorBriefingOutput, PreCallBriefOutput } from '@/lib/types';
+import {
+  isLegacySessionBriefing,
+  isPreCallBrief,
+  isSessionBriefing,
+  isSessionBriefingBundle,
+  needsBriefingUpgrade,
+  resolveExpertBrief,
+  resolveMenteeBrief,
+  resolveSessionObjectives,
+} from '@/lib/briefing-display';
+import type {
+  MentorBriefingOutput,
+  PreCallBriefOutput,
+  SessionBriefingBundle,
+} from '@/lib/types';
 
-const sessionBriefing: MentorBriefingOutput = {
+const legacyBriefing: MentorBriefingOutput = {
   session_objectives: ['Review propulsion trade study'],
   recommended_agenda: {
     minutes_0_5: 'Intro',
@@ -12,6 +25,35 @@ const sessionBriefing: MentorBriefingOutput = {
   },
   mentee_context_summary: 'Buyer is evaluating electric propulsion.',
   suggested_resources: ['NASA SBIR archives'],
+};
+
+const sessionBundle: SessionBriefingBundle = {
+  version: 2,
+  mentee: {
+    personal_intro: 'Based on your goals, you are ready to explore propulsion trade studies.',
+    session_objectives: ['Review your propulsion trade study'],
+    recommended_agenda: {
+      minutes_0_5: 'You will frame constraints.',
+      minutes_5_20: 'You will compare options.',
+      minutes_20_28: 'You will review resources.',
+      minutes_28_30: 'You will capture next steps.',
+    },
+    your_context: 'You are evaluating electric propulsion for a smallsat program.',
+    questions_to_ask: ['What surprised you most in your last trade study?'],
+    suggested_resources: ['NASA SBIR archives'],
+  },
+  mentor: {
+    session_objectives: ['Review propulsion trade study'],
+    recommended_agenda: {
+      minutes_0_5: 'Frame constraints',
+      minutes_5_20: 'Compare options',
+      minutes_20_28: 'Review resources',
+      minutes_28_30: 'Capture next steps',
+    },
+    mentee_context_summary: 'The mentee is evaluating electric propulsion.',
+    facilitation_notes: ['Confirm their mass budget early.'],
+    suggested_resources: ['NASA SBIR archives'],
+  },
 };
 
 const preCallBrief: PreCallBriefOutput = {
@@ -43,15 +85,58 @@ const preCallBrief: PreCallBriefOutput = {
 };
 
 describe('briefing-display type guards', () => {
-  it('detects session briefings', () => {
-    expect(isSessionBriefing(sessionBriefing)).toBe(true);
+  it('detects v2 session bundles', () => {
+    expect(isSessionBriefingBundle(sessionBundle)).toBe(true);
+    expect(isSessionBriefingBundle(legacyBriefing)).toBe(false);
+    expect(isSessionBriefingBundle(null)).toBe(false);
+  });
+
+  it('detects legacy session briefings', () => {
+    expect(isLegacySessionBriefing(legacyBriefing)).toBe(true);
+    expect(isLegacySessionBriefing(sessionBundle)).toBe(false);
+    expect(isLegacySessionBriefing(preCallBrief)).toBe(false);
+  });
+
+  it('detects any live session briefing', () => {
+    expect(isSessionBriefing(sessionBundle)).toBe(true);
+    expect(isSessionBriefing(legacyBriefing)).toBe(true);
     expect(isSessionBriefing(preCallBrief)).toBe(false);
-    expect(isSessionBriefing(null)).toBe(false);
   });
 
   it('detects pre-call briefs', () => {
     expect(isPreCallBrief(preCallBrief)).toBe(true);
-    expect(isPreCallBrief(sessionBriefing)).toBe(false);
+    expect(isPreCallBrief(sessionBundle)).toBe(false);
     expect(isPreCallBrief(null)).toBe(false);
+  });
+});
+
+describe('briefing-display resolvers', () => {
+  it('resolves mentee and expert slices from v2', () => {
+    expect(resolveMenteeBrief(sessionBundle)?.personal_intro).toContain('Based on your');
+    expect(resolveExpertBrief(sessionBundle)?.mentee_context_summary).toContain('mentee');
+  });
+
+  it('resolves legacy expert brief only', () => {
+    expect(resolveMenteeBrief(legacyBriefing)).toBeNull();
+    expect(resolveExpertBrief(legacyBriefing)?.mentee_context_summary).toBe(
+      'Buyer is evaluating electric propulsion.',
+    );
+  });
+
+  it('flags legacy briefings for upgrade', () => {
+    expect(needsBriefingUpgrade(legacyBriefing)).toBe(true);
+    expect(needsBriefingUpgrade(sessionBundle)).toBe(false);
+  });
+
+  it('resolves role-specific objectives', () => {
+    expect(resolveSessionObjectives(sessionBundle, 'mentee')).toEqual([
+      'Review your propulsion trade study',
+    ]);
+    expect(resolveSessionObjectives(sessionBundle, 'mentor')).toEqual([
+      'Review propulsion trade study',
+    ]);
+    expect(resolveSessionObjectives(legacyBriefing, 'mentor')).toEqual([
+      'Review propulsion trade study',
+    ]);
   });
 });

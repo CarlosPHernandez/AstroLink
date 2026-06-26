@@ -1,10 +1,6 @@
 import { isBookingUpcoming } from '@/lib/booking-partition';
-import type {
-  BookingStatus,
-  MentorBriefingOutput,
-  PreCallBriefOutput,
-  ServiceType,
-} from '@/lib/types';
+import { resolveExpertBrief } from '@/lib/briefing-display';
+import type { BookingStatus, BriefingPayload, ServiceType } from '@/lib/types';
 
 export interface MentorBookingView {
   id: string;
@@ -15,7 +11,7 @@ export interface MentorBookingView {
   matchReason: string | null;
   dailyRoomUrl: string | null;
   intakeBackground: string | null;
-  briefing: MentorBriefingOutput | PreCallBriefOutput | null;
+  briefing: BriefingPayload | null;
 }
 
 export interface PartitionedMentorBookings {
@@ -25,11 +21,12 @@ export interface PartitionedMentorBookings {
 }
 
 function mentorBriefingContext(
-  briefing: MentorBriefingOutput | PreCallBriefOutput | null,
+  briefing: BriefingPayload | null,
   intakeBackground: string | null,
 ): string {
-  if (briefing && 'mentee_context_summary' in briefing && briefing.mentee_context_summary) {
-    return briefing.mentee_context_summary;
+  const expert = resolveExpertBrief(briefing);
+  if (expert?.mentee_context_summary) {
+    return expert.mentee_context_summary;
   }
   if (briefing && 'buyer_context_summary' in briefing && briefing.buyer_context_summary) {
     return briefing.buyer_context_summary;

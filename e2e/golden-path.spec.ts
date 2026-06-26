@@ -5,6 +5,7 @@ import { futureDatetimeLocal } from './helpers/datetime';
 const E2E_GOALS_TAG = `${E2E_GOALS_PREFIX}golden-path`;
 const E2E_GOALS = `${E2E_GOALS_TAG} lunar relay comms architecture review`;
 const STUB_OBJECTIVE = 'Validate lunar relay architecture options';
+const STUB_PERSONAL_INTRO = 'Based on your goal to validate lunar relay architecture options';
 
 test.describe('D1 golden path (skip Stripe)', () => {
   test.beforeEach(async () => {
@@ -57,6 +58,7 @@ test.describe('D1 golden path (skip Stripe)', () => {
     await expect(briefingSidebar.getByRole('heading', { name: 'Pre-session brief' })).toBeVisible();
     // exact: true — "Pre-session brief" contains substring "Session brief"
     await expect(briefingSidebar.getByText('Session brief', { exact: true })).toBeVisible();
+    await expect(page.getByText(STUB_PERSONAL_INTRO)).toBeVisible();
     await expect(page.getByText(STUB_OBJECTIVE)).toBeVisible();
 
     await page.getByRole('button', { name: 'Close briefing panel' }).click();

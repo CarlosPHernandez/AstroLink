@@ -12,7 +12,7 @@ import {
 } from '@/lib/transcript-translation/types';
 import { getSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
-import type { MentorBriefingOutput, PreCallBriefOutput } from '@/lib/types';
+import type { BriefingPayload } from '@/lib/types';
 
 export type SessionParticipantRole = 'mentee' | 'mentor' | 'admin';
 
@@ -43,7 +43,7 @@ export interface BookingSessionView {
   /** Dev/E2E: skip Daily WebRTC; inject transcription via window.__ASTROLINK_E2E_CAPTIONS__ */
   e2eCaptionsStub: boolean;
   scheduledAt: string;
-  briefing: MentorBriefingOutput | PreCallBriefOutput | null;
+  briefing: BriefingPayload | null;
   tokenError: string | null;
 }
 
@@ -186,7 +186,7 @@ export async function getBookingForSession(
       showCaptionsForBuyer,
       e2eCaptionsStub,
       scheduledAt: data.scheduled_at,
-      briefing: (data.briefing_json as MentorBriefingOutput | PreCallBriefOutput | null) ?? null,
+      briefing: (data.briefing_json as BriefingPayload | null) ?? null,
       tokenError,
     },
     forbidden: false,

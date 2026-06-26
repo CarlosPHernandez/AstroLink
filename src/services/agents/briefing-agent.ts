@@ -1,7 +1,11 @@
 import type { Json } from '@/lib/database.types';
+import {
+  DUAL_SESSION_BRIEFING_SCHEMA,
+  DUAL_SESSION_BRIEFING_SYSTEM_INSTRUCTION,
+} from '@/lib/briefing-prompts';
 import { callLlmWithBackoff, generateStructuredJson, llmProModel } from '@/lib/llm';
 import { supabaseAdmin } from '@/lib/supabase';
-import { MentorBriefingOutput, PreCallBriefOutput } from '@/lib/types';
+import { PreCallBriefOutput, SessionBriefingBundle } from '@/lib/types';
 
 export class BriefingAgent {
   private agentId = 'APX-02' as const;
@@ -25,10 +29,11 @@ export class BriefingAgent {
     const { service_type } = booking;
 
     if (service_type === 'session_1on1' || service_type === 'extended_session') {
-      const briefing = await this.generateSessionBriefing({
+      const briefing = await this.generateDualSessionBriefing({
         rateLimitKey: booking.mentee_id,
         buyerName: booking.users.full_name,
         buyerGoals: booking.match_reason || '',
+        buyerBackground: booking.intake_background || '',
         expertName: booking.mentors.full_name,
         expertExpertise: booking.mentors.expertise.join(', '),
       });
@@ -46,7 +51,7 @@ export class BriefingAgent {
       const preCallBrief = await this.generatePreCallBrief({
         rateLimitKey: booking.mentee_id,
         buyerGoals: booking.match_reason || '',
-        buyerBackground: '', // TODO: load from booking intake fields when persisted
+        buyerBackground: booking.intake_background || '',
         expertExpertise: booking.mentors.expertise.join(', '),
         expertName: booking.mentors.full_name,
       });
@@ -64,67 +69,35 @@ export class BriefingAgent {
   }
 
   /**
-   * Pre-session briefing for the expert before a live call.
+   * Dual-audience pre-session briefing: mentee (second person) + expert (third person).
    */
-  private async generateSessionBriefing(input: {
+  private async generateDualSessionBriefing(input: {
     rateLimitKey: string;
     buyerName: string;
     buyerGoals: string;
+    buyerBackground: string;
     expertName: string;
     expertExpertise: string;
-  }): Promise<MentorBriefingOutput> {
-    const systemInstruction = `
-      You are AstroLink's expert-session preparation engine (comparable to GLG/Minnect-style paid expert calls).
-      Prepare a structured pre-session briefing so the aerospace expert can deliver a high-value live session.
-      Focus on the buyer's questions, context, and agenda — not job applications, resume scoring, or employer shortlists.
-      Return valid JSON only.
-    `;
-
+  }): Promise<SessionBriefingBundle> {
     const prompt = `
-      Buyer: ${input.buyerName}
+      Buyer name: ${input.buyerName}
       Buyer goals & questions: ${input.buyerGoals}
+      Buyer background: ${input.buyerBackground || '(not provided)'}
       Expert: ${input.expertName}
       Expert expertise: ${input.expertExpertise}
     `;
 
-    return callLlmWithBackoff(() =>
-      generateStructuredJson<MentorBriefingOutput>({
+    const raw = await callLlmWithBackoff(() =>
+      generateStructuredJson<SessionBriefingBundle>({
         model: llmProModel,
         rateLimitKey: input.rateLimitKey,
-        systemInstruction,
+        systemInstruction: DUAL_SESSION_BRIEFING_SYSTEM_INSTRUCTION,
         prompt,
-        schema: {
-          type: 'OBJECT',
-          properties: {
-            session_objectives: {
-              type: 'ARRAY',
-              items: { type: 'STRING' },
-            },
-            recommended_agenda: {
-              type: 'OBJECT',
-              properties: {
-                minutes_0_5: { type: 'STRING' },
-                minutes_5_20: { type: 'STRING' },
-                minutes_20_28: { type: 'STRING' },
-                minutes_28_30: { type: 'STRING' },
-              },
-              required: ['minutes_0_5', 'minutes_5_20', 'minutes_20_28', 'minutes_28_30'],
-            },
-            mentee_context_summary: { type: 'STRING' },
-            suggested_resources: {
-              type: 'ARRAY',
-              items: { type: 'STRING' },
-            },
-          },
-          required: [
-            'session_objectives',
-            'recommended_agenda',
-            'mentee_context_summary',
-            'suggested_resources',
-          ],
-        },
+        schema: DUAL_SESSION_BRIEFING_SCHEMA,
       }),
     );
+
+    return { ...raw, version: 2 };
   }
 
   /**
