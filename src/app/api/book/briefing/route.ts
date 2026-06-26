@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { isLlmRateLimitError } from '@/lib/llm';
 import { getSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
+import { canRefreshBriefing } from '@/lib/briefing-auth';
 import { BriefingAgent } from '@/services/agents/briefing-agent';
 
 const BodySchema = z.object({
@@ -32,7 +33,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Booking not found' }, { status: 404 });
     }
 
-    if (booking.mentee_id !== session.userId && session.role !== 'admin') {
+    if (
+      !canRefreshBriefing({
+        sessionUserId: session.userId,
+        sessionRole: session.role,
+        bookingMenteeId: booking.mentee_id,
+        bookingMentorId: booking.mentor_id,
+      })
+    ) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 

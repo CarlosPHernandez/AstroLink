@@ -1,7 +1,6 @@
 import type {
   BookingStatus,
-  MentorBriefingOutput,
-  PreCallBriefOutput,
+  BriefingPayload,
   ServiceType,
 } from '@/lib/types';
 
@@ -13,7 +12,7 @@ export interface MenteeBookingView {
   status: BookingStatus;
   matchReason: string | null;
   dailyRoomUrl: string | null;
-  briefing: MentorBriefingOutput | PreCallBriefOutput | null;
+  briefing: BriefingPayload | null;
   durationMinutes?: number; // from slider for 1:1; shown in cards + used for prorated price
 }
 

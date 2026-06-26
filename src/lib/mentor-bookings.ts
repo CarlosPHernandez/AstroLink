@@ -4,8 +4,7 @@ import type { MentorBookingView } from '@/lib/mentor-booking-partition';
 import { supabaseAdmin } from '@/lib/supabase';
 import type {
   BookingStatus,
-  MentorBriefingOutput,
-  PreCallBriefOutput,
+  BriefingPayload,
   ServiceType,
 } from '@/lib/types';
 
@@ -41,7 +40,7 @@ export async function listMentorBookings(mentorId: string): Promise<MentorBookin
       matchReason: row.match_reason,
       dailyRoomUrl: row.daily_room_url,
       intakeBackground: row.intake_background,
-      briefing: (row.briefing_json as MentorBriefingOutput | PreCallBriefOutput | null) ?? null,
+      briefing: (row.briefing_json as BriefingPayload | null) ?? null,
     };
   });
 }

@@ -2,7 +2,7 @@ import 'server-only';
 
 import type { MenteeBookingView, PartitionedMenteeBookings } from '@/lib/booking-partition';
 import { supabaseAdmin } from '@/lib/supabase';
-import type { MentorBriefingOutput, PreCallBriefOutput } from '@/lib/types';
+import type { BriefingPayload } from '@/lib/types';
 
 export type { MenteeBookingView, PartitionedMenteeBookings };
 export { isBookingUpcoming, partitionMenteeBookings } from '@/lib/booking-partition';
@@ -29,7 +29,7 @@ export async function listMenteeBookings(menteeId: string): Promise<MenteeBookin
       status: row.status,
       matchReason: row.match_reason,
       dailyRoomUrl: row.daily_room_url,
-      briefing: (row.briefing_json as MentorBriefingOutput | PreCallBriefOutput | null) ?? null,
+      briefing: (row.briefing_json as BriefingPayload | null) ?? null,
       durationMinutes: row.duration_minutes ?? undefined,
     };
   });

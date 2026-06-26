@@ -89,7 +89,7 @@ export interface Booking {
   mentor_token: string | null;
   mentee_token: string | null;
   match_reason: string | null;
-  briefing_json: MentorBriefingOutput | PreCallBriefOutput | null;
+  briefing_json: BriefingPayload | null;
   intake_background: string | null;
   created_at: string;
 }
@@ -149,14 +149,43 @@ export interface MatchingOutput {
   match_reason: string; // Actionable 1-sentence explanation
 }
 
+export interface BriefingAgenda {
+  minutes_0_5: string;
+  minutes_5_20: string;
+  minutes_20_28: string;
+  minutes_28_30: string;
+}
+
+/** APX-02 v2 mentee slice — second-person prep for the booking user. */
+export interface MenteeBriefingOutput {
+  personal_intro: string;
+  session_objectives: string[];
+  recommended_agenda: BriefingAgenda;
+  your_context: string;
+  questions_to_ask: string[];
+  suggested_resources: string[];
+}
+
+/** APX-02 v2 expert slice — third-person prep for the mentor. */
+export interface ExpertBriefingOutput {
+  session_objectives: string[];
+  recommended_agenda: BriefingAgenda;
+  mentee_context_summary: string;
+  facilitation_notes: string[];
+  suggested_resources: string[];
+}
+
+/** APX-02 v2 dual-audience bundle for live sessions. */
+export interface SessionBriefingBundle {
+  version: 2;
+  mentee: MenteeBriefingOutput;
+  mentor: ExpertBriefingOutput;
+}
+
+/** APX-02 v1 legacy — expert-oriented single brief (pre-v2 bookings). */
 export interface MentorBriefingOutput {
-  session_objectives: string[]; // Max 3 items
-  recommended_agenda: {
-    minutes_0_5: string;   // Framing
-    minutes_5_20: string;  // Core deep-dive
-    minutes_20_28: string; // Resources & development paths
-    minutes_28_30: string; // Wrap up
-  };
+  session_objectives: string[];
+  recommended_agenda: BriefingAgenda;
   mentee_context_summary: string;
   suggested_resources: string[];
 }
@@ -175,6 +204,11 @@ export interface PreCallBriefOutput {
   session_readiness_score: number; // Float 0.0 - 1.0 — readiness to use expert time well
   one_line_summary: string;
 }
+
+export type BriefingPayload =
+  | SessionBriefingBundle
+  | MentorBriefingOutput
+  | PreCallBriefOutput;
 
 export interface PostSessionOutput {
   session_summary: string; // 3-4 sentence narrative
