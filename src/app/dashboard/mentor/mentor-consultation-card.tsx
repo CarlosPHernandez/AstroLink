@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { isSessionBriefing } from '@/lib/briefing-display';
 import {
   getMentorBookingContextSummary,
   type MentorBookingView,
@@ -55,16 +56,21 @@ export function MentorConsultationCard({
   booking,
   compact = false,
   mentorName,
+  onViewPrepBrief,
+  prepBriefGenerating = false,
 }: {
   booking: MentorBookingView;
   compact?: boolean;
   mentorName: string;
+  onViewPrepBrief?: (booking: MentorBookingView) => void;
+  prepBriefGenerating?: boolean;
 }) {
   const contextSummary = getMentorBookingContextSummary(booking);
   const goals = booking.matchReason ?? 'No goals recorded for this session.';
   const canJoin = canMentorJoin(booking);
   const serviceLabel =
     SERVICE_TYPE_LABELS[booking.serviceType as ServiceType] ?? booking.serviceType;
+  const hasPrepBrief = isSessionBriefing(booking.briefing);
 
   return (
     <article
@@ -123,17 +129,30 @@ export function MentorConsultationCard({
             testIdPrefix={`mentor-booking-${booking.id}`}
           />
         </div>
-      ) : canJoin ? (
-        <div className="border-t border-outline-variant/40 pt-4">
-          <Link
-            href={`/session/${booking.id}`}
-            data-testid={`mentor-join-${booking.id}`}
-            className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-primary-container"
-          >
-            Join video room
-          </Link>
+      ) : (
+        <div className="flex flex-wrap gap-2 border-t border-outline-variant/40 pt-4">
+          {hasPrepBrief && onViewPrepBrief ? (
+            <button
+              type="button"
+              data-testid={`mentor-prep-brief-${booking.id}`}
+              onClick={() => onViewPrepBrief(booking)}
+              disabled={prepBriefGenerating}
+              className="inline-flex min-h-12 items-center justify-center rounded-md border border-primary/30 bg-primary/5 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-primary hover:bg-primary/10 disabled:opacity-50 cursor-pointer"
+            >
+              View prep brief
+            </button>
+          ) : null}
+          {canJoin ? (
+            <Link
+              href={`/session/${booking.id}`}
+              data-testid={`mentor-join-${booking.id}`}
+              className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-primary-container"
+            >
+              Join video room
+            </Link>
+          ) : null}
         </div>
-      ) : null}
+      )}
     </article>
   );
 }

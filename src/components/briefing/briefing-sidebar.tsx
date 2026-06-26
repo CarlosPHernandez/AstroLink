@@ -4,14 +4,15 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { BriefingPayload } from '@/lib/briefing-display';
 import { BRIEFING_THINKING_STEPS } from '@/lib/briefing-display';
-import { BriefingContent } from './briefing-content';
+import { BriefingContent } from '@/components/briefing/briefing-content';
 
 export type BriefingSidebarState =
   | { mode: 'closed' }
   | {
       mode: 'thinking' | 'ready' | 'error';
       bookingId: string;
-      mentorName: string;
+      counterpartyName: string;
+      audience: 'mentee' | 'mentor';
       briefing?: BriefingPayload;
       error?: string;
     };
@@ -19,6 +20,7 @@ export type BriefingSidebarState =
 type BriefingSidebarProps = {
   state: BriefingSidebarState;
   onClose: () => void;
+  onRegenerate?: () => void;
 };
 
 function AiThinkingOrb() {
@@ -31,7 +33,23 @@ function AiThinkingOrb() {
   );
 }
 
-export function BriefingSidebar({ state, onClose }: BriefingSidebarProps) {
+function sidebarCopy(audience: 'mentee' | 'mentor') {
+  if (audience === 'mentor') {
+    return {
+      badge: 'Prep brief',
+      title: 'Session prep brief',
+      thinking: 'AstroLink is preparing your session prep brief. This usually takes 10–30 seconds.',
+    };
+  }
+
+  return {
+    badge: 'Session brief',
+    title: 'Pre-session brief',
+    thinking: 'AstroLink is preparing your expert session brief. This usually takes 10–30 seconds.',
+  };
+}
+
+export function BriefingSidebar({ state, onClose, onRegenerate }: BriefingSidebarProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [entered, setEntered] = useState(false);
@@ -90,7 +108,8 @@ export function BriefingSidebar({ state, onClose }: BriefingSidebarProps) {
     return null;
   }
 
-  const { mentorName, mode } = state;
+  const { counterpartyName, mode, audience } = state;
+  const copy = sidebarCopy(audience);
 
   return createPortal(
     <>
@@ -119,7 +138,7 @@ export function BriefingSidebar({ state, onClose }: BriefingSidebarProps) {
             <div className="min-w-0">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <span className="rounded bg-primary px-2 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-widest text-on-primary animate-ai-shimmer-badge">
-                  Session brief
+                  {copy.badge}
                 </span>
                 {mode === 'thinking' ? (
                   <span className="text-[9px] font-mono uppercase tracking-widest text-primary animate-pulse">
@@ -132,9 +151,11 @@ export function BriefingSidebar({ state, onClose }: BriefingSidebarProps) {
                 ) : null}
               </div>
               <h2 id="briefing-panel-title" className="text-lg font-bold text-on-surface">
-                Pre-session brief
+                {copy.title}
               </h2>
-              <p className="mt-0.5 truncate text-xs text-on-surface-variant">with {mentorName}</p>
+              <p className="mt-0.5 truncate text-xs text-on-surface-variant">
+                with {counterpartyName}
+              </p>
             </div>
             <button
               type="button"
@@ -155,9 +176,7 @@ export function BriefingSidebar({ state, onClose }: BriefingSidebarProps) {
                 <p className="text-sm font-medium text-on-surface animate-ai-text-pulse">
                   {BRIEFING_THINKING_STEPS[stepIndex]}
                 </p>
-                <p className="text-xs leading-relaxed text-on-surface-variant">
-                  AstroLink is preparing your expert session brief. This usually takes 10–30 seconds.
-                </p>
+                <p className="text-xs leading-relaxed text-on-surface-variant">{copy.thinking}</p>
               </div>
               <div className="mt-2 flex gap-1.5">
                 {BRIEFING_THINKING_STEPS.map((_, i) => (
@@ -179,7 +198,11 @@ export function BriefingSidebar({ state, onClose }: BriefingSidebarProps) {
           ) : null}
 
           {mode === 'ready' && state.briefing ? (
-            <BriefingContent briefing={state.briefing} />
+            <BriefingContent
+              briefing={state.briefing}
+              audience={audience}
+              onRegenerate={onRegenerate}
+            />
           ) : null}
         </div>
       </aside>

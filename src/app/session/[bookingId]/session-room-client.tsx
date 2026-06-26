@@ -6,7 +6,8 @@ import { DailyCallRoom } from '@/components/session/daily-call-room';
 import { SessionTranscriptPanel } from '@/components/session/session-transcript-panel';
 import type { BookingSessionView } from '@/lib/booking-access';
 import { getDashboardPathForRole } from '@/lib/dashboard-paths';
-import type { MentorBriefingOutput, PostSessionOutput } from '@/lib/types';
+import { isSessionBriefing, resolveSessionObjectives } from '@/lib/briefing-display';
+import type { PostSessionOutput } from '@/lib/types';
 import { firstDisplayName } from '@/lib/display-name';
 import { formatSessionWhen } from '@/lib/format';
 import {
@@ -17,12 +18,6 @@ import {
 
 const PROVISION_POLL_MS = 5000;
 const PROVISION_TIMEOUT_MS = 120_000;
-
-function isSessionBriefing(
-  briefing: BookingSessionView['briefing'],
-): briefing is MentorBriefingOutput {
-  return briefing !== null && 'session_objectives' in briefing;
-}
 
 type SessionRecapResponse = {
   ready: boolean;
@@ -462,14 +457,19 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
 
         <aside className="w-full shrink-0 p-6 space-y-6 border-outline-variant bg-surface-container-lowest lg:w-96">
           <div>
-            <h3 className="text-headline-md font-bold text-on-surface">Session briefing</h3>
+            <h3 className="text-headline-md font-bold text-on-surface">
+              {booking.sessionRole === 'mentor' ? 'Session prep' : 'Your session plan'}
+            </h3>
             <p className="text-label-sm text-on-surface-variant mt-1">
               <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span>
             </p>
           </div>
           {isSessionBriefing(booking.briefing) ? (
             <ul className="space-y-2 text-body-md text-on-surface-variant">
-              {booking.briefing.session_objectives.map((obj) => (
+              {resolveSessionObjectives(
+                booking.briefing,
+                booking.sessionRole === 'mentor' ? 'mentor' : 'mentee',
+              ).map((obj) => (
                 <li key={obj}>• {obj}</li>
               ))}
             </ul>

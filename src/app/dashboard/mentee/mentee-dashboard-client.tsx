@@ -7,7 +7,7 @@ import { logoutAction } from '@/app/auth/actions';
 import {
   BriefingSidebar,
   type BriefingSidebarState,
-} from '@/app/dashboard/mentee/briefing-sidebar';
+} from '@/components/briefing/briefing-sidebar';
 import {
   partitionMenteeBookings,
   type MenteeBookingView,
@@ -63,7 +63,8 @@ export default function MenteeDashboardClient({
     setSidebar({
       mode: 'ready',
       bookingId: booking.id,
-      mentorName: booking.mentorName,
+      counterpartyName: booking.mentorName,
+      audience: 'mentee',
       briefing,
     });
   }
@@ -73,7 +74,8 @@ export default function MenteeDashboardClient({
     setSidebar({
       mode: 'thinking',
       bookingId: booking.id,
-      mentorName: booking.mentorName,
+      counterpartyName: booking.mentorName,
+      audience: 'mentee',
     });
 
     try {
@@ -93,7 +95,8 @@ export default function MenteeDashboardClient({
       setSidebar({
         mode: 'ready',
         bookingId: booking.id,
-        mentorName: booking.mentorName,
+        counterpartyName: booking.mentorName,
+        audience: 'mentee',
         briefing,
       });
       router.refresh();
@@ -102,7 +105,8 @@ export default function MenteeDashboardClient({
       setSidebar({
         mode: 'error',
         bookingId: booking.id,
-        mentorName: booking.mentorName,
+        counterpartyName: booking.mentorName,
+        audience: 'mentee',
         error: message,
       });
     } finally {
@@ -127,7 +131,8 @@ export default function MenteeDashboardClient({
       setSidebar({
         mode: 'ready',
         bookingId: booking.id,
-        mentorName: booking.mentorName,
+        counterpartyName: booking.mentorName,
+        audience: 'mentee',
         briefing,
       });
     } else {
@@ -387,7 +392,20 @@ export default function MenteeDashboardClient({
         </div>
       </div>
 
-      <BriefingSidebar state={sidebar} onClose={() => setSidebar({ mode: 'closed' })} />
+      <BriefingSidebar
+        state={sidebar}
+        onClose={() => setSidebar({ mode: 'closed' })}
+        onRegenerate={
+          sidebar.mode !== 'closed'
+            ? () => {
+                const booking = bookings.find((b) => b.id === sidebar.bookingId);
+                if (booking) {
+                  void generateBriefing(booking);
+                }
+              }
+            : undefined
+        }
+      />
     </>
   );
 }
