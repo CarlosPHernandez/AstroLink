@@ -47,6 +47,7 @@ export default defineConfig({
       DAILY_API_KEY: '',
       DAILY_PROVISION_ENABLED: 'false',
       DAILY_TRANSCRIPTION_ENABLED: 'false',
+      NOTIFICATIONS_DISABLED: 'true',
     },
   },
 });

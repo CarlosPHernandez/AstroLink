@@ -32,6 +32,7 @@ Gemini (and OpenAI fallback via `src/lib/llm.ts`) runs key decisions in the live
 | **APX-02** Briefing | Pre-session brief for the expert (`briefing_json`) |
 | **APX-03** Session | Post-call summary and action items from transcript |
 | **APX-06** Translation | Live captions and localized recap (aerospace glossary) |
+| **APX-08** Notifications | Booking confirmation email + calendar invite (Resend) |
 | **APX-04** Compliance | Intake and transcript flags for ops review (ITAR-adjacent keywords) |
 
 Structured decision logs for judges: [T8 in D1 plan](docs/d1-implementation-plan.md) (export from `audit_log`).

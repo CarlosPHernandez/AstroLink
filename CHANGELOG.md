@@ -2,6 +2,20 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.5.3.0] - 2026-06-26
+
+When a booking confirms, mentees and mentors now get a confirmation email with a calendar invite — so sessions show up outside the app and mentors learn about new bookings without polling the dashboard.
+
+### Added
+- **APX-08 Notifications** — Resend confirmation emails to mentee and mentor with `.ics` calendar attachments on booking fulfillment.
+- `notification_deliveries` table for idempotent send tracking (Stripe webhook retries won't double-email).
+- `runConfirmedBookingFulfillment` orchestrator — briefing, Daily room, then notifications in one path.
+- Mentor dashboard `?prep={bookingId}` deep link from confirmation email (scrolls to session card).
+- `NOTIFICATIONS_DISABLED` env guard for local dev and E2E (Playwright pins it on).
+
+### Changed
+- `confirmBookingWithoutPayment` and `fulfillBookingAfterPayment` share the same post-confirm fulfillment tail.
+
 ## [0.5.1.0] - 2026-06-25
 
 Session transcripts and live captions now show real names instead of generic labels, and both dashboards let you expand a transcript on completed sessions without opening the full recap page.

@@ -122,7 +122,7 @@ export interface Transaction {
 // 7. Global Audit Log
 export interface AuditLog {
   id: string; // UUID
-  agent_id: 'APX-01' | 'APX-02' | 'APX-03' | 'APX-04' | 'APX-05';
+  agent_id: 'APX-01' | 'APX-02' | 'APX-03' | 'APX-04' | 'APX-05' | 'APX-06' | 'APX-08';
   event: string;
   ref_id: string | null;
   payload: object | null;

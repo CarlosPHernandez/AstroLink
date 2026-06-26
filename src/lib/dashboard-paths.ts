@@ -25,3 +25,8 @@ export function getPostBookingDashboardPath(
   }
   return base;
 }
+
+/** Mentor dashboard prep deep-link from confirmation email. */
+export function getMentorPrepDashboardPath(bookingId: string): string {
+  return `/dashboard/mentor?prep=${encodeURIComponent(bookingId)}`;
+}

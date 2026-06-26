@@ -1,7 +1,7 @@
 'use client';
 
-import React, { startTransition, useActionState, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { startTransition, useActionState, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { logoutAction } from '@/app/auth/actions';
 import {
   updateMentorProfileAction,
@@ -78,6 +78,9 @@ export default function MentorDashboardClient({
   connectPayoutsEnabled?: boolean;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const prepId = searchParams.get('prep');
+  const handledPrepRef = useRef<string | null>(null);
   const [activeTab, setActiveTab] = useState<MentorDashboardTab>('sessions');
   const [profile, setProfile] = useState<MentorProfileState>(
     mentorProfile ?? emptyProfileFromSession(session),
@@ -106,6 +109,28 @@ export default function MentorDashboardClient({
       router.refresh();
     }
   }, [profileState?.success, uploadState?.success, router]);
+
+  useEffect(() => {
+    if (!prepId || handledPrepRef.current === prepId) {
+      return;
+    }
+
+    const booking = bookings.find((b) => b.id === prepId);
+    if (!booking) {
+      return;
+    }
+
+    handledPrepRef.current = prepId;
+    setActiveTab('sessions');
+
+    requestAnimationFrame(() => {
+      document
+        .querySelector(`[data-testid="mentor-booking-${prepId}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    router.replace('/dashboard/mentor', { scroll: false });
+  }, [prepId, bookings, router]);
 
   const handleSaveProfile = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

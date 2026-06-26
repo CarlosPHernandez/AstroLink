@@ -112,8 +112,6 @@ export class PaymentAgent {
       .eq('booking_id', bookingId);
 
     await this.logAudit('PAYMENT_FAILED_RECONCILED', bookingId, {});
-    
-    // In a production flow, we would trigger an email resend to the mentee with links here
   }
 
   private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {
