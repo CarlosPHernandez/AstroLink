@@ -1,15 +1,42 @@
 {
-  "session_objectives": [
-    "Validate lunar relay architecture options",
-    "Identify integration risks for payload comms",
-    "Draft next-step questions for the expert"
-  ],
-  "recommended_agenda": {
-    "minutes_0_5": "Frame mission constraints and success criteria.",
-    "minutes_5_20": "Deep dive on relay architecture tradeoffs.",
-    "minutes_20_28": "Resources and development paths.",
-    "minutes_28_30": "Wrap up and action items."
+  "version": 2,
+  "mentee": {
+    "personal_intro": "Based on your goal to validate lunar relay architecture options, this session is structured to help you pressure-test integration risks and leave with concrete next steps.",
+    "session_objectives": [
+      "Validate lunar relay architecture options",
+      "Identify integration risks for payload comms",
+      "Draft next-step questions for the expert"
+    ],
+    "recommended_agenda": {
+      "minutes_0_5": "You'll frame your mission constraints and success criteria.",
+      "minutes_5_20": "You'll deep dive on relay architecture tradeoffs.",
+      "minutes_20_28": "You'll review resources and development paths.",
+      "minutes_28_30": "You'll wrap up and capture action items."
+    },
+    "your_context": "You are preparing for a commercial space comms session and exploring relay options for an upcoming milestone.",
+    "questions_to_ask": [
+      "What integration risks have you seen with lunar relay payloads?",
+      "How do you compare relay latency against direct-to-Earth links?"
+    ],
+    "suggested_resources": ["NASA SCaN overview", "Commercial relay market brief"]
   },
-  "mentee_context_summary": "E2E test buyer preparing for a commercial space comms session.",
-  "suggested_resources": ["NASA SCaN overview", "Commercial relay market brief"]
+  "mentor": {
+    "session_objectives": [
+      "Validate lunar relay architecture options",
+      "Identify integration risks for payload comms",
+      "Draft next-step questions for the expert"
+    ],
+    "recommended_agenda": {
+      "minutes_0_5": "Frame mission constraints and success criteria.",
+      "minutes_5_20": "Deep dive on relay architecture tradeoffs.",
+      "minutes_20_28": "Resources and development paths.",
+      "minutes_28_30": "Wrap up and action items."
+    },
+    "mentee_context_summary": "The mentee is preparing for a commercial space comms session and wants to compare lunar relay options.",
+    "facilitation_notes": [
+      "Start by confirming their Q3 milestone constraints.",
+      "Use a concrete trade study example to anchor the architecture discussion."
+    ],
+    "suggested_resources": ["NASA SCaN overview", "Commercial relay market brief"]
+  }
 }
