@@ -29,7 +29,7 @@ Gemini (and OpenAI fallback via `src/lib/llm.ts`) runs key decisions in the live
 | Agent | Role |
 |-------|------|
 | **APX-01** Booking | Expert matching from buyer goals + roster |
-| **APX-02** Briefing | Pre-session brief for the expert (`briefing_json`) |
+| **APX-02** Briefing | Dual pre-session briefs for mentee + expert (`briefing_json` v2 bundle) |
 | **APX-03** Session | Post-call summary and action items from transcript |
 | **APX-06** Translation | Live captions and localized recap (aerospace glossary) |
 | **APX-08** Notifications | Booking confirmation email + calendar invite (Resend) |

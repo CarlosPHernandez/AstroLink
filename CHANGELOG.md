@@ -2,6 +2,22 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.5.4.0] - 2026-06-26
+
+Pre-session briefs are now written for you, not about you. Live sessions generate a dual-audience APX-02 bundle: a second-person mentee brief ("Based on your…") and a third-person expert prep brief, each shown in the right dashboard and session room.
+
+### Added
+- APX-02 v2 `briefing_json` bundle — `mentee` slice (personal intro, your objectives, session plan, questions to ask) and `mentor` slice (facilitation notes, mentee context).
+- Shared briefing components under `src/components/briefing/` with audience-specific rendering for mentee and mentor panels.
+- Mentor dashboard **View prep brief** slide-over; mentors can refresh briefs via `/api/book/briefing`.
+- `briefing-auth` and expanded `briefing-display` resolvers with v1 legacy upgrade banner.
+
+### Changed
+- Booking intake `background` is now passed into briefing generation alongside goals.
+- Session room sidebar is role-aware: mentees see "Your session plan", mentors see "Session prep".
+- Mentor `?prep={bookingId}` deep link (from confirmation email) opens the prep brief slide-over.
+- E2E briefing stub and golden-path assert the personal intro line.
+
 ## [0.5.3.0] - 2026-06-26
 
 When a booking confirms, mentees and mentors now get a confirmation email with a calendar invite — so sessions show up outside the app and mentors learn about new bookings without polling the dashboard.
@@ -10,7 +26,7 @@ When a booking confirms, mentees and mentors now get a confirmation email with a
 - **APX-08 Notifications** — Resend confirmation emails to mentee and mentor with `.ics` calendar attachments on booking fulfillment.
 - `notification_deliveries` table for idempotent send tracking (Stripe webhook retries won't double-email).
 - `runConfirmedBookingFulfillment` orchestrator — briefing, Daily room, then notifications in one path.
-- Mentor dashboard `?prep={bookingId}` deep link from confirmation email (scrolls to session card).
+- Mentor dashboard `?prep={bookingId}` deep link from confirmation email.
 - `NOTIFICATIONS_DISABLED` env guard for local dev and E2E (Playwright pins it on).
 
 ### Changed
