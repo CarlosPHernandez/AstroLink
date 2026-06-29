@@ -8,6 +8,8 @@ import {
 } from '@/lib/booking-rate-limit';
 import { screenBookingIntake } from '@/lib/intake-moderation';
 import { isLlmRateLimitError } from '@/lib/llm';
+import { ChrisCampaignSoldOutError } from '@/lib/chris-campaign/chris-campaign-slots';
+import { resolveChrisCampaignForBooking } from '@/lib/chris-campaign/validate-chris-booking';
 import { getSession } from '@/lib/session';
 import { BookingAgent } from '@/services/agents/booking-agent';
 
@@ -59,16 +61,29 @@ export async function POST(request: Request) {
       ? new Date(body.scheduledAt).toISOString()
       : new Date(body.scheduledAt).toISOString();
 
+    let chrisCampaign: Awaited<ReturnType<typeof resolveChrisCampaignForBooking>>;
+    try {
+      chrisCampaign = await resolveChrisCampaignForBooking({
+        campaign: body.campaign,
+        mentorId: body.mentorId,
+      });
+    } catch (campaignError: unknown) {
+      const message =
+        campaignError instanceof Error ? campaignError.message : 'Invalid booking campaign.';
+      return NextResponse.json({ success: false, error: message }, { status: 400 });
+    }
+
     const agent = new BookingAgent();
     const result = await agent.bookSession({
       menteeId: session.userId,
-      mentorId: body.mentorId,
+      mentorId: chrisCampaign?.mentorId ?? body.mentorId,
       serviceType: body.serviceType,
       includePreCallBrief: body.includePreCallBrief ?? false,
       scheduledAt,
       menteeGoals: body.goals,
       menteeBackground: body.background,
       durationMinutes: body.durationMinutes,
+      campaignId: chrisCampaign?.campaignId,
     });
 
     return NextResponse.json({
@@ -82,6 +97,9 @@ export async function POST(request: Request) {
       },
     });
   } catch (error: unknown) {
+    if (error instanceof ChrisCampaignSoldOutError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 409 });
+    }
     if (isLlmRateLimitError(error)) {
       return NextResponse.json(
         { success: false, error: error.message },

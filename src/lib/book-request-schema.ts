@@ -21,6 +21,7 @@ export const BookBodySchema = z.object({
     .min(15, { message: 'Session length must be between 15 and 120 minutes.' })
     .max(120, { message: 'Session length must be between 15 and 120 minutes.' })
     .optional(),
+  campaign: z.literal('chris').optional(),
 });
 
 export type BookBody = z.infer<typeof BookBodySchema>;

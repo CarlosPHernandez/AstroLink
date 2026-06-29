@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { isChrisBookingEnabled } from '@/lib/chris-campaign/chris-campaign-config';
+
 export type AppMode = 'full' | 'waitlist';
 
 /** Product surface: full app vs public waitlist-only landing. */
@@ -47,7 +49,12 @@ export function isProtectedAppSurfaceEnabled(): boolean {
   return !isWaitlistMode() || isDemoAuthEnabled();
 }
 
+/** Booking funnel open under waitlist when Chris campaign is live. */
+export function isChrisBookingSurfaceEnabled(): boolean {
+  return isChrisBookingEnabled();
+}
+
 /** Real Supabase Auth (email, phone, OAuth). Off when demo cookie auth is on. */
 export function isSupabaseAuthEnabled(): boolean {
-  return isProtectedAppSurfaceEnabled() && !isDemoAuthEnabled();
+  return (isProtectedAppSurfaceEnabled() || isChrisBookingSurfaceEnabled()) && !isDemoAuthEnabled();
 }

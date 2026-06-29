@@ -1,6 +1,7 @@
 import 'server-only';
 import { cookies } from 'next/headers';
 import {
+  isChrisBookingSurfaceEnabled,
   isDemoAuthEnabled,
   isProtectedAppSurfaceEnabled,
   isSupabaseAuthEnabled,
@@ -52,7 +53,7 @@ export async function getSession(): Promise<SessionData | null> {
   const session = decryptSessionString(encrypted);
   if (!session) return null;
 
-  if (!isProtectedAppSurfaceEnabled()) {
+  if (!isProtectedAppSurfaceEnabled() && !isChrisBookingSurfaceEnabled()) {
     // Waitlist production: honor admin sessions for ops dashboard only.
     if (isWaitlistMode() && session.role === 'admin') {
       return session;

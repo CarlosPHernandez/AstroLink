@@ -55,4 +55,8 @@ describe('BookBodySchema', () => {
     const { mentorId: _mentorId, ...withoutMentor } = validBody;
     expect(BookBodySchema.parse(withoutMentor).mentorId).toBeUndefined();
   });
+
+  it('accepts optional campaign=chris', () => {
+    expect(BookBodySchema.parse({ ...validBody, campaign: 'chris' }).campaign).toBe('chris');
+  });
 });

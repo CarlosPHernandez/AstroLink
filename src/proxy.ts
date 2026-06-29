@@ -22,6 +22,13 @@ function redirectToEarlyAccess(request: NextRequest) {
   return NextResponse.redirect(new URL('/early-access', request.url));
 }
 
+function redirectToWaitlistDestination(
+  request: NextRequest,
+  destination: '/early-access' | '/talk-with-chris',
+) {
+  return NextResponse.redirect(new URL(destination, request.url));
+}
+
 function redirectForRole(session: SessionData) {
   return getDefaultPathAfterAuth({
     role: session.role,
@@ -121,6 +128,9 @@ export async function proxy(request: NextRequest) {
     }
     if (waitlistDecision.action === 'api_blocked') {
       return finish(NextResponse.json({ error: 'Not found' }, { status: 404 }));
+    }
+    if (waitlistDecision.action === 'redirect') {
+      return finish(redirectToWaitlistDestination(request, waitlistDecision.destination));
     }
     return finish(redirectToEarlyAccess(request));
   }

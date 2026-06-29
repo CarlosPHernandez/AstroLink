@@ -1,5 +1,5 @@
 import 'server-only';
-import { isProtectedAppSurfaceEnabled } from '@/lib/app-mode';
+import { isChrisBookingSurfaceEnabled, isProtectedAppSurfaceEnabled } from '@/lib/app-mode';
 import type { SessionData } from '@/lib/session';
 
 /** Same-origin relative path only; blocks open redirects. */
@@ -45,7 +45,7 @@ export function getDefaultPathAfterAuth(params: {
 }
 
 export function getSignInPath(): string {
-  return isProtectedAppSurfaceEnabled() ? '/auth' : '/early-access';
+  return isProtectedAppSurfaceEnabled() || isChrisBookingSurfaceEnabled() ? '/auth' : '/early-access';
 }
 
 export function toAuthWithRedirect(returnPath: string): string {

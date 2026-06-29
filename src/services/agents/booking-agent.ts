@@ -1,4 +1,9 @@
 import type { Json } from '@/lib/database.types';
+import {
+  ChrisCampaignSoldOutError,
+  releaseChrisCampaignSlot,
+  reserveChrisCampaignSlot,
+} from '@/lib/chris-campaign/chris-campaign-slots';
 import { computeBookingTotalCents } from '@/lib/booking-pricing';
 import {
   createDevSkippedPaymentIntentId,
@@ -26,10 +31,55 @@ export class BookingAgent {
     menteeBackground: string;
     includePreCallBrief?: boolean;
     durationMinutes?: number; // from slider for variable 1:1; used for prorated price + persisted
+    campaignId?: string;
   }) {
     // 1. Audit Log: BOOKING_INITIATED
     await this.logAudit('BOOKING_INITIATED', null, { params });
 
+    let campaignSlotReserved = false;
+    if (params.campaignId) {
+      const reserved = await reserveChrisCampaignSlot(params.campaignId);
+      if (!reserved) {
+        throw new ChrisCampaignSoldOutError();
+      }
+      campaignSlotReserved = true;
+      await this.logAudit('CHRIS_CAMPAIGN_SLOT_RESERVED', null, {
+        campaign_id: params.campaignId,
+      });
+    }
+
+    try {
+      return await this.createBookingAfterSlotReserve(params, campaignSlotReserved);
+    } catch (error) {
+      if (campaignSlotReserved && params.campaignId) {
+        try {
+          await releaseChrisCampaignSlot(params.campaignId);
+          await this.logAudit('CHRIS_CAMPAIGN_SLOT_RELEASED', null, {
+            campaign_id: params.campaignId,
+            reason: 'booking_failed',
+          });
+        } catch {
+          // Best-effort release; original error is more important to surface.
+        }
+      }
+      throw error;
+    }
+  }
+
+  private async createBookingAfterSlotReserve(
+    params: {
+      menteeId: string;
+      mentorId?: string;
+      serviceType: ServiceType;
+      scheduledAt: string;
+      menteeGoals: string;
+      menteeBackground: string;
+      includePreCallBrief?: boolean;
+      durationMinutes?: number;
+      campaignId?: string;
+    },
+    _campaignSlotReserved: boolean,
+  ) {
     let finalMentorId = params.mentorId;
     let matchReason = 'User selected mentor directly.';
 
@@ -104,27 +154,37 @@ export class BookingAgent {
       stripeClientSecret = paymentIntent.client_secret;
     }
 
-    const { data: booking, error: bookingErr } = await supabaseAdmin
-      .from('bookings')
-      .insert({
-        mentee_id: params.menteeId,
-        mentor_id: finalMentorId,
-        service_type: params.serviceType,
-        include_pre_call_brief: includePreCallBrief,
-        status: 'pending_payment',
-        scheduled_at: params.scheduledAt,
-        stripe_payment_intent_id: paymentIntentId,
-        match_reason: params.menteeGoals || matchReason,
-        intake_background: params.menteeBackground || null,
-        // Persist chosen duration for variable sessions (prorated price already used for PI).
-        // Defaults via migration for legacy rows; new bookings always provide from slider.
-        duration_minutes: params.durationMinutes ?? (params.serviceType === 'session_1on1' ? 30 : 15),
-      })
+    const bookingInsert = {
+      mentee_id: params.menteeId,
+      mentor_id: finalMentorId,
+      service_type: params.serviceType,
+      include_pre_call_brief: includePreCallBrief,
+      status: 'pending_payment' as const,
+      scheduled_at: params.scheduledAt,
+      stripe_payment_intent_id: paymentIntentId,
+      match_reason: params.menteeGoals || matchReason,
+      intake_background: params.menteeBackground || null,
+      // Persist chosen duration for variable sessions (prorated price already used for PI).
+      // Defaults via migration for legacy rows; new bookings always provide from slider.
+      duration_minutes: params.durationMinutes ?? (params.serviceType === 'session_1on1' ? 30 : 15),
+      ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
+    };
+
+    const { data: booking, error: bookingErr } = await (
+      supabaseAdmin.from('bookings') as unknown as {
+        insert: (values: Record<string, unknown>) => {
+          select: () => { single: () => Promise<{ data: { id: string } | null; error: { message: string } | null }> };
+        };
+      }
+    )
+      .insert(bookingInsert)
       .select()
       .single();
 
-    if (bookingErr) {
-      throw new Error(`Failed to create database booking: ${bookingErr.message}`);
+    if (bookingErr || !booking) {
+      throw new Error(
+        `Failed to create database booking: ${bookingErr?.message ?? 'no row returned'}`,
+      );
     }
 
     if (skipPayments) {
