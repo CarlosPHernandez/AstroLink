@@ -5,6 +5,8 @@ const mockMentorSingle = vi.hoisted(() => vi.fn());
 const mockBookingInsert = vi.hoisted(() => vi.fn());
 const mockAuditInsert = vi.hoisted(() => vi.fn());
 const mockGenerateStructuredJson = vi.hoisted(() => vi.fn());
+const mockReserveSlot = vi.hoisted(() => vi.fn());
+const mockReleaseSlot = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/supabase', () => ({
   supabaseAdmin: {
@@ -50,6 +52,14 @@ vi.mock('@/lib/post-payment', () => ({
   confirmBookingWithoutPayment: vi.fn().mockResolvedValue({ bookingId: 'booking-1' }),
 }));
 
+vi.mock('@/lib/chris-campaign/chris-campaign-slots', () => ({
+  ChrisCampaignSoldOutError: class ChrisCampaignSoldOutError extends Error {
+    name = 'ChrisCampaignSoldOutError';
+  },
+  reserveChrisCampaignSlot: (...args: unknown[]) => mockReserveSlot(...args),
+  releaseChrisCampaignSlot: (...args: unknown[]) => mockReleaseSlot(...args),
+}));
+
 vi.mock('@/lib/booking-payments', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/booking-payments')>();
   return {
@@ -87,6 +97,8 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
       data: { id: 'booking-1' },
       error: null,
     });
+    mockReserveSlot.mockResolvedValue(true);
+    mockReleaseSlot.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -146,5 +158,61 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
       }),
     ).rejects.toThrow('No approved mentors available in the pool.');
     expect(mockGenerateStructuredJson).not.toHaveBeenCalled();
+  });
+
+  it('reserves a campaign slot before creating the booking', async () => {
+    const agent = new BookingAgent();
+    await agent.bookSession({
+      menteeId: 'mentee-1',
+      mentorId: 'mentor-1',
+      serviceType: 'session_1on1',
+      scheduledAt: new Date().toISOString(),
+      menteeGoals: 'Learn about propulsion',
+      menteeBackground: 'Early-career engineer',
+      campaignId: 'chris-sembroski',
+    });
+
+    expect(mockReserveSlot).toHaveBeenCalledWith('chris-sembroski');
+    expect(mockReleaseSlot).not.toHaveBeenCalled();
+  });
+
+  it('releases campaign slot when booking insert fails', async () => {
+    mockBookingInsert.mockResolvedValue({
+      data: null,
+      error: { message: 'insert failed' },
+    });
+
+    const agent = new BookingAgent();
+    await expect(
+      agent.bookSession({
+        menteeId: 'mentee-1',
+        mentorId: 'mentor-1',
+        serviceType: 'session_1on1',
+        scheduledAt: new Date().toISOString(),
+        menteeGoals: 'Learn about propulsion',
+        menteeBackground: 'Early-career engineer',
+        campaignId: 'chris-sembroski',
+      }),
+    ).rejects.toThrow('Failed to create database booking');
+
+    expect(mockReleaseSlot).toHaveBeenCalledWith('chris-sembroski');
+  });
+
+  it('throws sold out when campaign reserve returns false', async () => {
+    mockReserveSlot.mockResolvedValue(false);
+    const { ChrisCampaignSoldOutError } = await import('@/lib/chris-campaign/chris-campaign-slots');
+
+    const agent = new BookingAgent();
+    await expect(
+      agent.bookSession({
+        menteeId: 'mentee-1',
+        mentorId: 'mentor-1',
+        serviceType: 'session_1on1',
+        scheduledAt: new Date().toISOString(),
+        menteeGoals: 'Learn about propulsion',
+        menteeBackground: 'Early-career engineer',
+        campaignId: 'chris-sembroski',
+      }),
+    ).rejects.toBeInstanceOf(ChrisCampaignSoldOutError);
   });
 });

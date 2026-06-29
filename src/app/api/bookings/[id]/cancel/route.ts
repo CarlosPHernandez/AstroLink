@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { Json } from '@/lib/database.types';
+import { releaseChrisCampaignSlot } from '@/lib/chris-campaign/chris-campaign-slots';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getSession } from '@/lib/session';
@@ -9,6 +10,17 @@ import {
   isBookingRateLimitError,
 } from '@/lib/booking-rate-limit';
 import { computeCancellationRefund } from '@/lib/refunds';
+
+/** Includes campaign_id once 20260627120000_booking_campaigns.sql is applied (types lag migration). */
+type BookingCancelRow = {
+  id: string;
+  mentee_id: string;
+  mentor_id: string;
+  status: string;
+  scheduled_at: string;
+  stripe_payment_intent_id: string;
+  campaign_id?: string | null;
+};
 
 export async function POST(
   request: Request,
@@ -40,11 +52,13 @@ export async function POST(
     }
 
     // Load booking and verify ownership
-    const { data: booking, error: bookingErr } = await supabaseAdmin
+    const { data: bookingData, error: bookingErr } = await supabaseAdmin
       .from('bookings')
-      .select('id, mentee_id, mentor_id, status, scheduled_at, stripe_payment_intent_id')
+      .select('*')
       .eq('id', bookingId)
       .single();
+
+    const booking = bookingData as BookingCancelRow | null;
 
     if (bookingErr || !booking) {
       return NextResponse.json({ success: false, error: 'Booking not found.' }, { status: 404 });
@@ -61,6 +75,12 @@ export async function POST(
         data: { bookingId, alreadyProcessed: true, status: booking.status },
       });
     }
+
+    const campaignId = booking.campaign_id;
+    const releaseCampaignSlot =
+      booking.status === 'pending_payment' &&
+      typeof campaignId === 'string' &&
+      campaignId.length > 0;
 
     const policy = computeCancellationRefund(booking.scheduled_at);
 
@@ -100,6 +120,19 @@ export async function POST(
         refund_percent: policy.refundPercent,
       } as Json,
     });
+
+    if (releaseCampaignSlot && campaignId) {
+      await releaseChrisCampaignSlot(campaignId);
+      await supabaseAdmin.from('audit_log').insert({
+        agent_id: 'APX-01',
+        event: 'CHRIS_CAMPAIGN_SLOT_RELEASED',
+        ref_id: booking.id,
+        payload: {
+          campaign_id: campaignId,
+          reason: 'pending_payment_cancelled',
+        } as Json,
+      });
+    }
 
     return NextResponse.json({
       success: true,
