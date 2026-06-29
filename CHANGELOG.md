@@ -2,6 +2,21 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.5.5.0] - 2026-06-28
+
+You can now run a limited Chris Sembroski booking campaign while the rest of the site stays on the waitlist. Ten slots are reserved atomically; unpaid bookings release a slot when cancelled.
+
+### Added
+- `booking_campaigns` table and atomic slot reserve/release RPCs; `bookings.campaign_id` for campaign attribution.
+- `src/lib/chris-campaign/` — env config, waitlist route allowlists, slot helpers, and `campaign=chris` booking validation.
+- `/talk-with-chris` placeholder landing (full Stitch UI in PR2).
+- Chris campaign plan docs under `docs/plans/`.
+
+### Changed
+- `APP_MODE=waitlist` + `CHRIS_BOOKING_ENABLED=true` opens `/auth`, `/booking`, and booking APIs with Supabase auth.
+- `/experts` and `/join/chris-sembroski` redirect to `/talk-with-chris` when Chris booking is enabled.
+- Booking agent reserves a campaign slot before insert and releases on failure; cancel releases slots for `pending_payment` rows.
+
 ## [0.5.4.0] - 2026-06-26
 
 Pre-session briefs are now written for you, not about you. Live sessions generate a dual-audience APX-02 bundle: a second-person mentee brief ("Based on your…") and a third-person expert prep brief, each shown in the right dashboard and session room.
