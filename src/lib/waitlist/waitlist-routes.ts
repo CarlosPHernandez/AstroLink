@@ -1,10 +1,20 @@
 import 'server-only';
 
+import { isChrisBookingEnabled } from '@/lib/chris-campaign/chris-campaign-config';
+import {
+  CHRIS_CAMPAIGN_LANDING_PATH,
+  isChrisBookingApiRoute,
+  isChrisBookingPageRoute,
+  isChrisJoinRedirectPath,
+} from '@/lib/chris-campaign/chris-campaign-routes';
+
 export const WAITLIST_PUBLIC_PAGES = ['/early-access', '/privacy'] as const;
+
+export type WaitlistRedirectDestination = '/early-access' | typeof CHRIS_CAMPAIGN_LANDING_PATH;
 
 export type WaitlistRouteDecision =
   | { action: 'allow' }
-  | { action: 'redirect'; destination: '/early-access' }
+  | { action: 'redirect'; destination: WaitlistRedirectDestination }
   | { action: 'api_blocked' };
 
 export function isWaitlistJoinPage(pathname: string): boolean {
@@ -25,7 +35,11 @@ export function isWaitlistSeoCrawlPage(pathname: string): boolean {
   return pathname === '/robots.txt' || pathname === '/sitemap.xml';
 }
 
-export function isWaitlistPublicPage(pathname: string): boolean {
+export function isWaitlistPublicPage(pathname: string, chrisBookingEnabled = isChrisBookingEnabled()): boolean {
+  if (chrisBookingEnabled && isWaitlistExpertsPage(pathname)) {
+    return false;
+  }
+
   return (
     (WAITLIST_PUBLIC_PAGES as readonly string[]).includes(pathname) ||
     pathname === '/early-access/player' ||
@@ -50,8 +64,14 @@ export function isWaitlistAllowedApi(pathname: string): boolean {
 export function resolveWaitlistRoute(
   pathname: string,
   session: { role: string } | null,
+  options?: { chrisBookingEnabled?: boolean },
 ): WaitlistRouteDecision {
+  const chrisBookingEnabled = options?.chrisBookingEnabled ?? isChrisBookingEnabled();
+
   if (pathname.startsWith('/api/')) {
+    if (chrisBookingEnabled && isChrisBookingApiRoute(pathname)) {
+      return { action: 'allow' };
+    }
     return isWaitlistAllowedApi(pathname) ? { action: 'allow' } : { action: 'api_blocked' };
   }
 
@@ -59,7 +79,19 @@ export function resolveWaitlistRoute(
     return { action: 'redirect', destination: '/early-access' };
   }
 
-  if (isWaitlistPublicPage(pathname)) {
+  if (chrisBookingEnabled && isChrisJoinRedirectPath(pathname)) {
+    return { action: 'redirect', destination: CHRIS_CAMPAIGN_LANDING_PATH };
+  }
+
+  if (chrisBookingEnabled && isWaitlistExpertsPage(pathname)) {
+    return { action: 'redirect', destination: CHRIS_CAMPAIGN_LANDING_PATH };
+  }
+
+  if (chrisBookingEnabled && isChrisBookingPageRoute(pathname)) {
+    return { action: 'allow' };
+  }
+
+  if (isWaitlistPublicPage(pathname, chrisBookingEnabled)) {
     return { action: 'allow' };
   }
 
