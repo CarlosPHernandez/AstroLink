@@ -4,7 +4,7 @@ All notable changes to AstroLink are documented in this file.
 
 ## [0.5.7.0] - 2026-06-30
 
-The Chris Sembroski campaign landing now matches the Stitch mobile design on phones and keeps the desktop HUD on tablets and larger screens — with a July 2026 booking date strip.
+Chris Sembroski campaign visitors on phones now get the full Stitch mobile booking screen at `/talk-with-chris`; iPad and desktop keep the HUD. Pick a July 2026 session date from the new scrollable date strip.
 
 ### Added
 - Stitch mobile landing at `/talk-with-chris` for viewports under 768px: hero portrait, slot bars, scrollable question queue, glass date picker, and Book Private Session CTA.

@@ -78,8 +78,9 @@ Structured decision logs for judges: [T8 in D1 plan](docs/d1-implementation-plan
 
 | Path | Purpose |
 |------|---------|
-| `src/app/` | Routes and API (`/early-access`, `/join`, `/experts`, `/booking`, …) |
-| `src/components/` | Feature UI (`early-access`, `experts`, `booking`, `session`) |
+| `src/app/` | Routes and API (`/early-access`, `/join`, `/experts`, `/booking`, `/talk-with-chris`, …) |
+| `src/components/` | Feature UI (`early-access`, `experts`, `booking`, `session`, `chris-campaign`) |
+| `src/lib/chris-campaign/` | Chris booking campaign config, slots, dates, route allowlists |
 | `src/lib/waitlist/` | Waitlist signup, routing, metrics, analytics |
 | `src/lib/transcript-translation/` | Live captions and post-call translation |
 | `docs/` | Tutorials, how-tos, reference ([index](docs/README.md)) |
@@ -104,7 +105,7 @@ npm test          # Vitest unit/contract tests
 npm run test:e2e  # Playwright D1 golden path (requires .env.local + Supabase seed)
 ```
 
-Vitest covers D1 contract logic: booking pricing, `/api/book` request schema, Daily webhook parsing, LLM rate limits (including caption scope), dev payment skip helpers, session waitlist guard (`getSession`), Stripe booking test-mode production guard, booking-agent mentor pool validation, D3 translate-segment / segment-cache / translation-queue / caption-direction paths, transcript APIs, and public expert helpers (`expert-book-href`, `expert-bio`).
+Vitest covers D1 contract logic: booking pricing, `/api/book` request schema, Daily webhook parsing, LLM rate limits (including caption scope), dev payment skip helpers, session waitlist guard (`getSession`), Stripe booking test-mode production guard, booking-agent mentor pool validation, D3 translate-segment / segment-cache / translation-queue / caption-direction paths, transcript APIs, public expert helpers (`expert-book-href`, `expert-bio`), and Chris campaign helpers (`chris-campaign-dates`, slots, booking validation).
 
 ### E2E (Playwright)
 

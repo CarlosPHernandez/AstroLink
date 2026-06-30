@@ -1,6 +1,6 @@
 # Chris Sembroski Launch
 
-**Branch:** `feat/chris-booking`  
+**Branch:** `feat/chris-mobile-landing` (PR2.5)
 **Public URL:** `https://<prod>/talk-with-chris?ref=chris-sembroski`  
 **Design assets:** Google Stitch web + mobile → `design/stitch/talk-with-chris/`
 
