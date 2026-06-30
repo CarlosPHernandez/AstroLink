@@ -9,17 +9,23 @@
   --color-error: #ba1a1a;
   --chris-copy-max: 36rem;
   --chris-form-max: 28rem;
+  --chris-mobile-max: 32rem;
+  /* Layout split: phone <768px (mobile hero), tablet/desktop >=768px (HUD). */
   background-color: #1c1c1c;
   color: #ffffff;
 }
 
-/* Avoid max-w-md / max-w-xl — they collide with --spacing-md (16px) and --spacing-xl (32px). */
+/* Avoid max-w-sm/md/lg/xl — they collide with --spacing-* (sm 12px, md 16px, lg 24px, xl 32px). */
 .chris-landing .chris-copy-max {
   max-width: var(--chris-copy-max);
 }
 
 .chris-landing .chris-form-max {
   max-width: var(--chris-form-max);
+}
+
+.chris-landing .chris-mobile-max {
+  max-width: var(--chris-mobile-max);
 }
 
 @keyframes chrisFadeInUp {
@@ -142,4 +148,51 @@
 .chris-landing .chris-footer-link:hover::after {
   transform: scaleX(1);
   transform-origin: bottom left;
+}
+
+.chris-landing .chris-text-gradient {
+  background: linear-gradient(to right, #ffffff, #c9c6c5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.chris-landing .chris-glass-card {
+  background: rgba(28, 28, 28, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chris-landing .chris-fade-mask-y {
+  mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+}
+
+.chris-landing .chris-fade-mask-x {
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+@keyframes chrisQueueScroll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+.chris-landing .chris-queue-scroll {
+  animation: chrisQueueScroll 15s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chris-landing .chris-queue-scroll {
+    animation: none;
+  }
+}
+
+.chris-landing .chris-mobile-hero-media .absolute.bottom-4 {
+  display: none;
 }
