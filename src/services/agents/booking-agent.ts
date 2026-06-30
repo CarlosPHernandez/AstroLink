@@ -1,9 +1,11 @@
 import type { Json } from '@/lib/database.types';
+import { CHRIS_SESSION_DURATION_MINUTES } from '@/lib/chris-campaign/chris-campaign-constants';
 import {
   ChrisCampaignSoldOutError,
   releaseChrisCampaignSlot,
   reserveChrisCampaignSlot,
 } from '@/lib/chris-campaign/chris-campaign-slots';
+import { getChrisCampaignStripeDiscounts } from '@/lib/chris-campaign/chris-stripe-promo';
 import { computeBookingTotalCents } from '@/lib/booking-pricing';
 import {
   createDevSkippedPaymentIntentId,
@@ -113,6 +115,11 @@ export class BookingAgent {
       throw new Error('This expert is not available for booking.');
     }
 
+    const isChrisCampaign = Boolean(params.campaignId);
+    const durationMinutes = isChrisCampaign
+      ? CHRIS_SESSION_DURATION_MINUTES
+      : params.durationMinutes;
+
     // Briefing (APX-02) is always included for live sessions as part of the standard offering.
     // Duration (slider) makes 1:1 price variable (prorated hourly rate from live_session_price_cents).
     const includePreCallBrief = params.serviceType === 'session_1on1';
@@ -120,7 +127,7 @@ export class BookingAgent {
       serviceType: params.serviceType,
       liveSessionPriceCents: mentor.live_session_price_cents,
       includePreCallBrief,
-      durationMinutes: params.durationMinutes,
+      durationMinutes,
     });
 
     const skipPayments = isStripePaymentsSkipped();
@@ -134,17 +141,20 @@ export class BookingAgent {
       const stripeCustomerId = await getOrCreateStripeCustomerForMentee(params.menteeId);
 
       const idempotencyKey = `astrolink_book_${params.menteeId}_${finalMentorId}_${params.scheduledAt}`;
+      const discounts = isChrisCampaign ? await getChrisCampaignStripeDiscounts() : [];
 
       const paymentIntent = await stripe.paymentIntents.create(
         {
           amount: servicePriceCents,
           currency: 'usd',
           ...(stripeCustomerId ? { customer: stripeCustomerId } : {}),
+          ...(discounts.length > 0 ? { discounts } : {}),
           metadata: {
             app: 'astrolink',
             mentor_id: finalMentorId,
             mentee_id: params.menteeId,
             service_type: params.serviceType,
+            ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
           },
         },
         { idempotencyKey },
@@ -166,7 +176,8 @@ export class BookingAgent {
       intake_background: params.menteeBackground || null,
       // Persist chosen duration for variable sessions (prorated price already used for PI).
       // Defaults via migration for legacy rows; new bookings always provide from slider.
-      duration_minutes: params.durationMinutes ?? (params.serviceType === 'session_1on1' ? 30 : 15),
+      duration_minutes:
+        durationMinutes ?? (params.serviceType === 'session_1on1' ? 30 : 15),
       ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
     };
 
