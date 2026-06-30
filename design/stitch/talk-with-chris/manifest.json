@@ -1,0 +1,69 @@
+{
+  "projectId": "15210333602755341136",
+  "projectTitle": "Minimal Astronaut Launch",
+  "screens": [
+    {
+      "screenId": "c34090408bd44fe59f2694a3f255ce09",
+      "slug": "desktop-hud-session-indicator",
+      "title": "AstroLink - HUD Session Indicator",
+      "deviceType": "DESKTOP",
+      "width": "2560",
+      "height": "2048",
+      "htmlFile": "desktop-hud-session-indicator.html",
+      "screenshotFile": "desktop-hud-session-indicator.png",
+      "primary": true
+    },
+    {
+      "screenId": "a4976e7ddacb4c21ad462d4ee8f5daa9",
+      "slug": "desktop-private-session-access",
+      "title": "AstroLink - Private Session Access",
+      "deviceType": "DESKTOP",
+      "width": "2560",
+      "height": "2192",
+      "htmlFile": "desktop-private-session-access.html",
+      "screenshotFile": "desktop-private-session-access.png"
+    },
+    {
+      "screenId": "c680422b991e4874ba01debf39bc33f7",
+      "slug": "mobile-refined-experience",
+      "title": "AstroLink - Refined Mobile Experience",
+      "deviceType": "MOBILE",
+      "width": "780",
+      "height": "2564",
+      "htmlFile": "mobile-refined-experience.html",
+      "screenshotFile": "mobile-refined-experience.png"
+    },
+    {
+      "screenId": "97e793ca4c704151867b08adddaaba15",
+      "slug": "mobileview-chris-booking-screen",
+      "title": "AstroLink - Mobile Multi-Week Booking Selection",
+      "deviceType": "MOBILE",
+      "width": "780",
+      "height": "2392",
+      "htmlFile": "mobileview-chris-booking-screen.html",
+      "screenshotFile": "mobileview-chris-booking-screen.png",
+      "primaryMobile": true,
+      "stitchUrl": "https://stitch.withgoogle.com/projects/15210333602755341136?node-id=97e793ca4c704151867b08adddaaba15"
+    },
+    {
+      "screenId": "9ca0a9dad59441fa8be3a2169fb30bab",
+      "slug": "desktop-centered-luxury-gallery",
+      "title": "AstroLink - Centered Luxury Gallery",
+      "deviceType": "DESKTOP",
+      "width": "2560",
+      "height": "3028",
+      "htmlFile": "desktop-centered-luxury-gallery.html",
+      "screenshotFile": "desktop-centered-luxury-gallery.png"
+    },
+    {
+      "screenId": "73048c3db3df4ba38bbdcd633b53978c",
+      "slug": "desktop-editorial-style",
+      "title": "AstroLink - Editorial Style",
+      "deviceType": "DESKTOP",
+      "width": "2560",
+      "height": "2840",
+      "htmlFile": "desktop-editorial-style.html",
+      "screenshotFile": "desktop-editorial-style.png"
+    }
+  ]
+}

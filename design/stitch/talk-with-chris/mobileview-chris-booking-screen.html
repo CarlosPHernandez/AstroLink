@@ -1,0 +1,252 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>AstroLink - Office Hours</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed-dim": "#c9c6c5",
+                    "surface-bright": "#fdf8f8",
+                    "on-surface-variant": "#444748",
+                    "background": "#fdf8f8",
+                    "outline-variant": "#c4c7c7",
+                    "on-primary-fixed-variant": "#474746",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "surface-variant": "#e5e2e1",
+                    "primary-container": "#1c1c1c",
+                    "secondary-container": "#e5e2e1",
+                    "on-primary-fixed": "#1b1b1b",
+                    "on-tertiary-fixed-variant": "#0b3ea4",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "on-secondary-container": "#656464",
+                    "tertiary": "#000002",
+                    "on-tertiary-container": "#5b7fe6",
+                    "inverse-surface": "#313030",
+                    "secondary-fixed": "#e5e2e1",
+                    "surface-container": "#f1edec",
+                    "on-secondary-fixed-variant": "#474646",
+                    "on-primary": "#ffffff",
+                    "outline": "#747878",
+                    "tertiary-fixed": "#dbe1ff",
+                    "surface-dim": "#ddd9d8",
+                    "error": "#ba1a1a",
+                    "primary-fixed-dim": "#c8c6c5",
+                    "on-error-container": "#93000a",
+                    "inverse-primary": "#c8c6c5",
+                    "surface-container-high": "#ebe7e6",
+                    "primary-fixed": "#e5e2e1",
+                    "surface-container-highest": "#e5e2e1",
+                    "on-surface": "#1c1b1b",
+                    "error-container": "#ffdad6",
+                    "on-primary-container": "#858484",
+                    "on-background": "#1c1b1b",
+                    "primary": "#010101",
+                    "on-tertiary-fixed": "#00174b",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#b4c5ff",
+                    "surface-tint": "#5f5e5e",
+                    "tertiary-container": "#00174c",
+                    "surface-container-low": "#f7f3f2",
+                    "inverse-on-surface": "#f4f0ef",
+                    "surface": "#fdf8f8",
+                    "secondary": "#5f5e5e"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "lg": "48px",
+                    "sm": "12px",
+                    "md": "24px",
+                    "xl": "80px",
+                    "xs": "4px",
+                    "base": "8px",
+                    "safe": "env(safe-area-inset-bottom)"
+            },
+            "fontFamily": {
+                    "label-md": [
+                            "Inter"
+                    ],
+                    "headline-lg": [
+                            "Inter"
+                    ],
+                    "headline-md": [
+                            "Inter"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "label-md": [
+                            "12px",
+                            {
+                                    "lineHeight": "1",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "1.5",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            },
+            animation: {
+                'breathe': 'breathe 8s ease-in-out infinite',
+                'fade-up': 'fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                'queue-scroll': 'queueScroll 15s linear infinite',
+            },
+            keyframes: {
+                breathe: {
+                    '0%, 100%': { transform: 'scale(1)' },
+                    '50%': { transform: 'scale(1.02)' },
+                },
+                fadeUp: {
+                    '0%': { opacity: '0', transform: 'translateY(20px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+                queueScroll: {
+                    '0%': { transform: 'translateY(0)' },
+                    '100%': { transform: 'translateY(-50%)' },
+                }
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(28, 28, 28, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .text-gradient {
+            background: linear-gradient(to right, #ffffff, #c9c6c5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .fade-mask-y {
+            mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+        }
+    </style>
+</head>
+<body class="bg-primary-container text-on-primary min-h-screen flex flex-col font-body-md overflow-x-hidden selection:bg-surface-variant selection:text-primary">
+<!-- TopAppBar -->
+<!-- Main Content Canvas -->
+<main class="flex-grow relative pb-xl md:pb-lg flex flex-col w-full max-w-lg mx-auto">
+<!-- Hero Section with Image -->
+<div class="relative w-full md:h-[60vh] overflow-hidden shrink-0 h-[50vh]">
+<div class="absolute inset-0 bg-gradient-to-t from-primary-container via-primary-container/20 to-transparent z-10 pointer-events-none"></div>
+<img alt="Portrait of astronaut Chris Sembroski in a SpaceX suit" class="w-full h-full object-cover object-top animate-breathe" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCUUDkBM49PYxNekaZEhaYoqdySmTHqQApXvReJumgbqUM4q1bU8Ru4mp40kfvvEQNU_DxUXzPmTI8Qr7jojdyJBOqlzm0FK28SPVGdw2srJ8Ag5p_Ea59XI32vW7-OGk2hIuSWHN2UgOGl9Q7YAPMZpvjF6pQ64IWN0cHClgAzogb-gjm5wZ0Cp-exKTpfla0i79NAFK8eRSYm8TOKnXNzCA-wpZaOh5tHP6dwUMVa9H5AIjY_XPLrmJA_A1yD5hY3pf7X6LLfSUZ">
+<div class="absolute bottom-0 left-0 w-full p-md z-20 flex flex-col gap-sm opacity-0 animate-[fadeUp_0.8s_cubic-bezier(0.16,1,0.3,1)_0.2s_forwards]">
+<div class="flex items-center gap-2">
+<div aria-label="7 out of 10 spots remaining" class="flex gap-1 shadow-lg">
+<div class="w-2 h-4 bg-on-tertiary rounded-sm -skew-x-[20deg]"></div>
+<div class="w-2 h-4 bg-on-tertiary rounded-sm -skew-x-[20deg]"></div>
+<div class="w-2 h-4 bg-on-tertiary rounded-sm -skew-x-[20deg]"></div>
+<div class="w-2 h-4 border border-on-tertiary/30 rounded-sm -skew-x-[20deg]"></div>
+<div class="w-2 h-4 border border-on-tertiary/30 rounded-sm -skew-x-[20deg]"></div>
+<div class="w-2 h-4 border border-on-tertiary/30 rounded-sm -skew-x-[20deg]"></div>
+<div class="w-2 h-4 border border-on-tertiary/30 rounded-sm -skew-x-[20deg]"></div>
+<div class="w-2 h-4 border border-on-tertiary/30 rounded-sm -skew-x-[20deg]"></div>
+<div class="w-2 h-4 border border-on-tertiary/30 rounded-sm -skew-x-[20deg]"></div>
+<div class="w-2 h-4 border border-on-tertiary/30 rounded-sm -skew-x-[20deg]"></div>
+</div>
+<span class="font-label-md text-label-md text-on-tertiary tracking-widest uppercase ml-2">7 Spots Remaining</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-gradient tracking-tight tracking-tighter">Office hours with verified space operators — not A.I.</h1>
+</div>
+</div>
+<!-- Content Area -->
+<div class="flex flex-col z-20 relative -mt-4 opacity-0 animate-[fadeUp_0.8s_cubic-bezier(0.16,1,0.3,1)_0.4s_forwards] gap-4">
+<!-- Description -->
+<p class="font-body-lg text-body-lg text-secondary-fixed-dim leading-relaxed px-md">
+                Connect directly with the architects of modern space exploration. Gain unfiltered insights from those who have crossed the Kármán line.
+            </p>
+<!-- Dynamic Question Queue -->
+<div class="glass-card flex flex-col gap-4 mb-md border-white/10 shadow-2xl py-4">
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-outline-variant tracking-widest uppercase opacity-70 px-md px-4">CHOOSE YOUR 1:1 CALL</label><div class="flex items-center justify-between px-md mt-2 mb-1 px-4"><button class="text-outline-variant hover:text-on-primary transition-colors"><span class="material-symbols-outlined text-[18px]">chevron_left</span></button><span class="font-label-md text-label-md text-on-primary tracking-widest uppercase">October 2024</span><button class="text-outline-variant hover:text-on-primary transition-colors"><span class="material-symbols-outlined text-[18px]">chevron_right</span></button></div>
+<div class="flex gap-2 overflow-x-auto pb-2 fade-mask-x no-scrollbar px-4"><button class="flex flex-col items-center justify-center min-w-[64px] h-20 rounded-sm border border-on-tertiary/30 bg-white/5 backdrop-blur-sm transition-all hover:border-on-tertiary/60 -skew-x-[20deg]"><div class="skew-x-[20deg] flex flex-col items-center"><span class="text-[10px] text-outline-variant uppercase tracking-widest">Oct</span><span class="text-lg font-bold text-on-primary">24</span><span class="text-[10px] text-on-tertiary/60">THU</span></div></button><button class="flex flex-col items-center justify-center min-w-[64px] h-20 rounded-sm bg-white transition-all -skew-x-[20deg]"><div class="skew-x-[20deg] flex flex-col items-center"><span class="text-[10px] text-primary-container uppercase tracking-widest font-bold">Oct</span><span class="text-lg font-bold text-primary-container">25</span><span class="text-[10px] text-primary-container/80 font-bold">FRI</span></div></button><button class="flex flex-col items-center justify-center min-w-[64px] h-20 rounded-sm border border-on-tertiary/30 bg-white/5 backdrop-blur-sm transition-all hover:border-on-tertiary/60 -skew-x-[20deg]"><div class="skew-x-[20deg] flex flex-col items-center"><span class="text-[10px] text-outline-variant uppercase tracking-widest">Oct</span><span class="text-lg font-bold text-on-primary">26</span><span class="text-[10px] text-on-tertiary/60">SAT</span></div></button><button class="flex flex-col items-center justify-center min-w-[64px] h-20 rounded-sm border border-on-tertiary/30 bg-white/5 backdrop-blur-sm transition-all hover:border-on-tertiary/60 -skew-x-[20deg]"><div class="skew-x-[20deg] flex flex-col items-center"><span class="text-[10px] text-outline-variant uppercase tracking-widest">Oct</span><span class="text-lg font-bold text-on-primary">27</span><span class="text-[10px] text-on-tertiary/60">SUN</span></div></button><button class="flex flex-col items-center justify-center min-w-[64px] h-20 rounded-sm border border-on-tertiary/30 bg-white/5 backdrop-blur-sm transition-all hover:border-on-tertiary/60 -skew-x-[20deg]"><div class="skew-x-[20deg] flex flex-col items-center"><span class="text-[10px] text-outline-variant uppercase tracking-widest">Oct</span><span class="text-lg font-bold text-on-primary">28</span><span class="text-[10px] text-on-tertiary/60">MON</span></div></button><button class="flex flex-col items-center justify-center min-w-[64px] h-20 rounded-sm border border-on-tertiary/30 bg-white/5 backdrop-blur-sm transition-all hover:border-on-tertiary/60 -skew-x-[20deg] shrink-0"><div class="skew-x-[20deg] flex flex-col items-center"><span class="material-symbols-outlined text-on-primary mb-1">calendar_month</span><span class="text-[8px] text-outline-variant uppercase tracking-widest text-center">View All</span></div></button></div>
+</div>
+<button aria-label="Submit booking request for a private session" class="bg-white text-primary-container rounded-lg py-4 px-4 font-label-md text-label-md flex items-center justify-center gap-3 hover:bg-white/90 transition-all active:scale-[0.98] duration-150 shadow-lg shadow-white/10 shadow-2xl mx-md mx-4">
+<span class="tracking-widest uppercase">Book Private Session</span>
+<span class="material-symbols-outlined text-[18px] text-primary-container">arrow_forward</span>
+</button>
+<p class="font-body-md text-[10px] text-center text-outline/60 tracking-wide px-md px-4">Sessions are scheduled based on availability. Approval required.</p>
+</div><div class="flex flex-col gap-sm px-md">
+<h3 class="font-label-md text-label-md text-outline tracking-wider uppercase">Live Queue Highlights</h3>
+<div class="overflow-hidden fade-mask-y relative h-48"><div class="h-48 overflow-hidden fade-mask-y relative">
+<div class="flex flex-col gap-sm animate-queue-scroll">
+<div class="p-sm glass-card rounded-lg flex items-start gap-3 py-4">
+<span class="material-symbols-outlined text-outline-variant text-[20px]">forum</span>
+<p class="font-body-md text-body-md text-surface-bright/90 line-clamp-2 px-md">"What was the most unexpected challenge during the Inspiration4 mission timeline?"</p>
+</div>
+<div class="p-sm glass-card rounded-lg flex items-start gap-3 py-4">
+<span class="material-symbols-outlined text-outline-variant text-[20px]">forum</span>
+<p class="font-body-md text-body-md text-surface-bright/90 line-clamp-2 px-md">"How do you prepare mentally for the initial launch sequence when sitting in the Dragon capsule?"</p>
+</div>
+<div class="p-sm glass-card rounded-lg flex items-start gap-3 py-4">
+<span class="material-symbols-outlined text-outline-variant text-[20px]">forum</span>
+<p class="font-body-md text-body-md text-surface-bright/90 line-clamp-2 px-md">"Can you describe the visual transition from atmosphere to the vacuum of space?"</p>
+</div>
+<div class="p-sm glass-card rounded-lg flex items-start gap-3 py-4">
+<span class="material-symbols-outlined text-outline-variant text-[20px]">forum</span>
+<p class="font-body-md text-body-md text-surface-bright/90 line-clamp-2 px-md">"What was the most unexpected challenge during the Inspiration4 mission timeline?"</p>
+</div>
+<div class="p-sm glass-card rounded-lg flex items-start gap-3 py-4">
+<span class="material-symbols-outlined text-outline-variant text-[20px]">forum</span>
+<p class="font-body-md text-body-md text-surface-bright/90 line-clamp-2 px-md">"How do you prepare mentally for the initial launch sequence when sitting in the Dragon capsule?"</p>
+</div>
+</div>
+</div></div>
+</div>
+<!-- Booking Card -->
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+
+
+</body></html>

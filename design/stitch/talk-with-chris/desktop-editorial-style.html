@@ -1,0 +1,282 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>AstroLink | Elite Aerospace Access</title>
+<!-- Tailwind CSS with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#001e30",
+                    "on-error-container": "#93000a",
+                    "surface-container-low": "#f2f4f6",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed": "#271901",
+                    "secondary-fixed": "#cae6ff",
+                    "secondary": "#006493",
+                    "secondary-container": "#36b5fd",
+                    "tertiary-container": "#271901",
+                    "inverse-primary": "#bec6e0",
+                    "on-secondary-fixed-variant": "#004b70",
+                    "tertiary-fixed-dim": "#dec29a",
+                    "error": "#ba1a1a",
+                    "tertiary": "#000000",
+                    "outline-variant": "#c6c6cd",
+                    "surface-container-lowest": "#ffffff",
+                    "background": "#f7f9fb",
+                    "primary-container": "#131b2e",
+                    "surface-dim": "#d8dadc",
+                    "surface-container": "#eceef0",
+                    "primary-fixed": "#dae2fd",
+                    "error-container": "#ffdad6",
+                    "on-primary-container": "#7c839b",
+                    "on-primary": "#ffffff",
+                    "on-surface-variant": "#45464d",
+                    "on-error": "#ffffff",
+                    "on-secondary-container": "#004465",
+                    "surface-tint": "#565e74",
+                    "on-tertiary-fixed-variant": "#574425",
+                    "inverse-surface": "#2d3133",
+                    "surface-variant": "#e0e3e5",
+                    "on-background": "#191c1e",
+                    "primary": "#000000",
+                    "surface-bright": "#f7f9fb",
+                    "secondary-fixed-dim": "#8ccdff",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e6e8ea",
+                    "inverse-on-surface": "#eff1f3",
+                    "surface": "#f7f9fb",
+                    "on-tertiary-container": "#98805d",
+                    "on-primary-fixed-variant": "#3f465c",
+                    "primary-fixed-dim": "#bec6e0",
+                    "outline": "#76777d",
+                    "on-surface": "#191c1e",
+                    "surface-container-highest": "#e0e3e5",
+                    "tertiary-fixed": "#fcdeb5",
+                    "on-primary-fixed": "#131b2e"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max": "1280px",
+                    "section-gap": "120px",
+                    "margin-mobile": "24px",
+                    "margin-desktop": "64px",
+                    "gutter": "32px"
+            },
+            "fontFamily": {
+                    "display-xl": ["Hanken Grotesk"],
+                    "body-lg": ["Inter"],
+                    "display-xl-mobile": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "label-mono": ["JetBrains Mono"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                    "body-lg": ["18px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                    "display-xl-mobile": ["42px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                    "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "label-mono": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f7f9fb;
+            color: #191c1e;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .technical-border {
+            border: 1px solid #E2E8F0;
+        }
+        .editorial-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+        }
+        .waitlist-group:focus-within {
+            border-bottom-color: #000;
+        }
+        .btn-hover-scale {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .btn-hover-scale:hover {
+            transform: scale(1.02);
+        }
+        .roster-mask {
+            mask-image: linear-gradient(to right, black 85%, transparent 100%);
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<!-- Navigation -->
+<nav class="bg-surface sticky top-0 flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-6 max-w-container-max mx-auto z-50 border-b border-outline-variant/30">
+<div class="font-headline-md text-headline-md font-extrabold tracking-tighter text-primary">ASTROLINK</div>
+<div class="flex items-center gap-8">
+<a class="hidden md:block font-label-mono text-label-mono uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors" href="#">The Roster</a>
+<button class="bg-primary text-on-primary px-8 py-3 rounded-full font-label-mono text-label-mono uppercase tracking-widest btn-hover-scale">Elite Access</button>
+</div>
+</nav>
+<main class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<!-- Magazine Layout Section -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-x-gutter py-12 md:py-16 border-b border-outline-variant/30">
+<!-- Left: Headline & CTA (Cols 1-7) -->
+<div class="md:col-span-7 flex flex-col justify-between fade-in">
+<div>
+<div class="inline-block px-3 py-1 bg-primary text-on-primary font-label-mono text-[10px] uppercase tracking-[0.2em] mb-6">Exclusive Industry Access</div>
+<h1 class="font-display-xl-mobile md:font-display-xl text-display-xl-mobile md:text-display-xl text-primary mb-10 max-w-2xl">
+                    Connect with the Elite Minds Shaping the Cosmos.
+                </h1>
+<div class="max-w-lg">
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-8 leading-tight">
+                        Secure your position for private, 1:1 video sessions with verified industry leaders—starting with Inspiration4 mission specialist <span class="font-bold text-on-surface">Chris Sembroski</span>.
+                    </p>
+<!-- Integrated Waitlist -->
+<div class="relative max-w-md">
+<div class="flex items-center border-b-2 border-primary/20 waitlist-group transition-all duration-300">
+<input class="w-full bg-transparent border-none focus:ring-0 py-4 px-0 text-body-lg font-body-lg placeholder:text-outline/50" placeholder="Enter your corporate email" type="email">
+<button class="whitespace-nowrap py-4 pl-4 text-primary font-bold uppercase text-sm tracking-widest hover:text-secondary transition-colors">
+                                Apply for Access
+                            </button>
+</div>
+<p class="mt-4 font-label-mono text-[10px] text-on-surface-variant opacity-60 uppercase tracking-widest">
+                            Limited beta invites sent weekly.
+                        </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Video Card (Cols 8-12) -->
+<div class="md:col-span-5 mt-12 md:mt-0 fade-in" style="animation-delay: 0.1s;">
+<div class="relative group aspect-[4/5] rounded-xl overflow-hidden bg-surface-container-high shadow-xl technical-border">
+<img alt="Chris Sembroski" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8XNf8tLSD3FvRA7_C2rOLstCev8ANZhROzna4NlVMcO5r44tIh1UPh430QPMG89nHeEET84YFY069i_g8PWp_Lo-4Z9xWO1jObXGuXxrbOSx5RrAlWhG6r0sT04X3N7iMWe4hsCa8iGiOavVCislXeZyrw532lt0tdMczFdZ7kQTekDK1DUtYzyNOmKALLFFfrhebddWD_X52FivbT3_iMR6hJtx1LTmScEsMFSFP99Xue7fNqdIefrgMF134HfBCN5RYbCJndLbp">
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent"></div>
+<!-- Play Overlay -->
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-16 h-16 bg-white/20 backdrop-blur-xl rounded-full border border-white/30 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-white/40 cursor-pointer">
+<span class="material-symbols-outlined text-3xl text-white" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<!-- Info Overlay -->
+<div class="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+<div class="text-white">
+<p class="font-headline-md text-white font-bold text-xl leading-none">Chris Sembroski</p>
+<p class="font-label-mono text-[10px] uppercase tracking-widest text-white/70 mt-1">Inspiration4 Specialist</p>
+</div>
+<div class="flex items-center gap-2 bg-secondary-container px-3 py-1 rounded-full border border-white/20">
+<span class="w-1.5 h-1.5 bg-on-secondary-container rounded-full animate-pulse"></span>
+<span class="font-label-mono text-[10px] text-on-secondary-container font-bold uppercase tracking-tight">Verified</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Horizontal Roster: Pulls content up -->
+<section class="py-12 fade-in" style="animation-delay: 0.2s;">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+<div class="max-w-xl">
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase tracking-[0.3em]">The Registry</span>
+<h2 class="mt-2 font-headline-lg text-headline-lg text-primary">Unrivaled Expertise from Industry Leaders</h2>
+</div>
+<button class="flex items-center gap-2 font-label-mono text-label-mono uppercase tracking-widest text-primary border-b border-primary pb-1 group">
+                View Full Roster <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Expert Card 1 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-video rounded-lg overflow-hidden mb-3 technical-border">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkhhrJnInna7LFRZckWdnj3ON4LdvYzQdhNF0MSC3pbolxBpZPTTPiMy0dV7zheCtdq-QK9KFsfKkjLLlY76ZFuqFnGBrKrtVd35EjoZAuSELPrPNtkdST4F3SFTY_82fjwDnYobwnJp3D-pFOf2v1h4Y-n8Kc_-b3_JIA1FqoQ_3qLxK6x3M4-AH3NQBORkOf_xwwz00g4UKL90pufH_NDzxXB4QGNgaOOr_oC8jAjU2OoXiooG6c70kB3i9o8L-daHGIWpborUGX">
+</div>
+<h3 class="font-body-md font-bold text-on-surface leading-tight">Andrew "Titan" Parris</h3>
+<p class="font-label-mono text-[10px] text-on-surface-variant uppercase tracking-wider mt-1">Co-founder, Inspired24</p>
+</div>
+<!-- Expert Card 2 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-video rounded-lg overflow-hidden mb-3 technical-border">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDN9__0ysnK0KUQ2w4nWUE91DQpHm666Clz6G41Cc6E9lBq1t9NVrC-foSW0zogWrq9EWp-f12HCcPEfZ43rEd8Wp_kbV862sqTNPWzTc33QYua9P4RW8lcamLCqQ4uw3sPsNO_1N3LyRbtV3BndYI5zayxOENj1FxWyh_cC5sF5NyLwc8aziqFz1s87NYG2vUxRK_ujwiKU-Gs2hOThv_sBHP-uPT1gThSu01PAZtDQPimUzr2BsWLi27KyNJyYBMNE48Jywcvzaqi">
+</div>
+<h3 class="font-body-md font-bold text-on-surface leading-tight">Carlos Hernandez</h3>
+<p class="font-label-mono text-[10px] text-on-surface-variant uppercase tracking-wider mt-1">Systems Expert, AstroLink</p>
+</div>
+<!-- Expert Card 3 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-video rounded-lg overflow-hidden mb-3 technical-border">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsLSlWk51P67VuFC_J6476rTpJxKfmZEhxUdzaSfOysNClEmyw019CtI8IcSGbP2Wyduez9nqkZil0Cag2O2J_VkkHA8MbPGRt5PGO_Z5_MOF01QNRLZ0qCeG9xlcQGpIc7ORAnfu9IeczU17BBQZDpCO58jmm60jgiy72eHuTg6BMcO_qRpVKn__7vOVM_ktB-lwkRdJYf7MCxvmgvw2IhMtnu45JY8SSkPG0-aojVIH-4eMBuYLtIWXm_dpqVwFVMmS0sPLUNbeI">
+</div>
+<h3 class="font-body-md font-bold text-on-surface leading-tight">David F. Guajardo</h3>
+<p class="font-label-mono text-[10px] text-on-surface-variant uppercase tracking-wider mt-1">Expert, Mexanauta</p>
+</div>
+<!-- Expert Card 4 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-video rounded-lg overflow-hidden mb-3 technical-border">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMnDBPduWV_qBFcnC9uN_qt8eQLpTfUQYv2pOo_28aycG-zjc8z4aTnyWmjzrD-hkbAlmWNa2fezMM3B93jaXubSVuPKkCyx_1ZLJI5EvzPnAKhx0bupRh10InLw2M9doGhZttRlCJ6X7AHYU-XJ_pY5QistXcg2lIcIzaKTt4DjX-nc91l0YFWPfbIiQDxZL9qsQ-U8prqFc8fIADxL0CScAYw9PM_-x2zx6TvDISBOso2VlYVUJTzRt2XzzHtLJlPk3MwqdfOvpH">
+</div>
+<h3 class="font-body-md font-bold text-on-surface leading-tight">Dr. Jenni H</h3>
+<p class="font-label-mono text-[10px] text-on-surface-variant uppercase tracking-wider mt-1">Counter Intelligence Specialist</p>
+</div>
+</div>
+</section>
+</main>
+<footer class="mt-12 border-t border-outline-variant/30 bg-surface">
+<div class="w-full px-margin-mobile md:px-margin-desktop py-12 max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="font-headline-md text-headline-md text-primary font-extrabold tracking-tighter">ASTROLINK</div>
+<div class="flex gap-8">
+<a class="text-[10px] font-label-mono uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy</a>
+<a class="text-[10px] font-label-mono uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors" href="#">Terms</a>
+<a class="text-[10px] font-label-mono uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors" href="#">Contact</a>
+</div>
+<p class="text-on-surface-variant/60 font-label-mono text-[10px] uppercase tracking-widest">
+            © 2024 AstroLink. Orbital access secured.
+        </p>
+</div>
+</footer>
+<script>
+    const observerOptions = { threshold: 0.1 };
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('section, footer').forEach(el => {
+        el.style.opacity = '0';
+        observer.observe(el);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            document.querySelectorAll('.fade-in').forEach(el => el.style.opacity = '1');
+        }, 50);
+    });
+</script>
+</body></html>

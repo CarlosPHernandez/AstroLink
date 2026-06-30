@@ -1,0 +1,268 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>AstroLink | Premium 1:1 Aerospace Sessions</title>
+<!-- Tailwind CSS with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#001e30",
+                    "on-error-container": "#93000a",
+                    "surface-container-low": "#f2f4f6",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed": "#271901",
+                    "secondary-fixed": "#cae6ff",
+                    "secondary": "#006493",
+                    "secondary-container": "#36b5fd",
+                    "tertiary-container": "#271901",
+                    "inverse-primary": "#bec6e0",
+                    "on-secondary-fixed-variant": "#004b70",
+                    "tertiary-fixed-dim": "#dec29a",
+                    "error": "#ba1a1a",
+                    "tertiary": "#000000",
+                    "outline-variant": "#c6c6cd",
+                    "surface-container-lowest": "#ffffff",
+                    "background": "#f7f9fb",
+                    "primary-container": "#131b2e",
+                    "surface-dim": "#d8dadc",
+                    "surface-container": "#eceef0",
+                    "primary-fixed": "#dae2fd",
+                    "error-container": "#ffdad6",
+                    "on-primary-container": "#7c839b",
+                    "on-primary": "#ffffff",
+                    "on-surface-variant": "#45464d",
+                    "on-error": "#ffffff",
+                    "on-secondary-container": "#004465",
+                    "surface-tint": "#565e74",
+                    "on-tertiary-fixed-variant": "#574425",
+                    "inverse-surface": "#2d3133",
+                    "surface-variant": "#e0e3e5",
+                    "on-background": "#191c1e",
+                    "primary": "#000000",
+                    "surface-bright": "#f7f9fb",
+                    "secondary-fixed-dim": "#8ccdff",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e6e8ea",
+                    "inverse-on-surface": "#eff1f3",
+                    "surface": "#f7f9fb",
+                    "on-tertiary-container": "#98805d",
+                    "on-primary-fixed-variant": "#3f465c",
+                    "primary-fixed-dim": "#bec6e0",
+                    "outline": "#76777d",
+                    "on-surface": "#191c1e",
+                    "surface-container-highest": "#e0e3e5",
+                    "tertiary-fixed": "#fcdeb5",
+                    "on-primary-fixed": "#131b2e"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max": "1280px",
+                    "section-gap": "80px",
+                    "margin-mobile": "24px",
+                    "margin-desktop": "64px",
+                    "gutter": "32px"
+            },
+            "fontFamily": {
+                    "display-xl": ["Hanken Grotesk"],
+                    "body-lg": ["Inter"],
+                    "display-xl-mobile": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "label-mono": ["JetBrains Mono"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "display-xl": ["56px", {"lineHeight": "64px", "letterSpacing": "0.02em", "fontWeight": "300"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-xl-mobile": ["36px", {"lineHeight": "44px", "letterSpacing": "0.02em", "fontWeight": "300"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "500"}],
+                    "label-mono": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f7f9fb;
+            color: #191c1e;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fade-in {
+            animation: fadeIn 1s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .technical-border {
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .hero-image-mask {
+            border-radius: 1.5rem;
+            overflow: hidden;
+        }
+        .btn-hover-scale {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .btn-hover-scale:hover {
+            transform: translateY(-2px);
+        }
+        .overlap-portrait {
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.1);
+            transition: all 0.4s ease;
+        }
+        .overlap-portrait:hover {
+            transform: scale(1.05) translateY(-5px);
+            z-index: 40;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<!-- TopNavBar -->
+<nav class="bg-transparent full-width flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-8 max-w-container-max mx-auto z-50">
+<div class="font-headline-md text-headline-md font-bold text-primary">AstroLink</div>
+<div class="flex items-center gap-8">
+<a class="hidden md:block font-label-mono text-label-mono uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">The Roster</a>
+<button class="bg-primary text-on-primary px-8 py-3 rounded-full font-label-mono text-label-mono uppercase tracking-widest btn-hover-scale">Reserve Access</button>
+</div>
+</nav>
+<main class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center">
+<!-- Centered Hero Messaging -->
+<section class="max-w-4xl mx-auto pt-12 md:pt-16 fade-in">
+<span class="font-label-mono text-label-mono text-secondary tracking-[0.3em] uppercase mb-6 block">Exclusive Experience</span>
+<h1 class="font-display-xl-mobile md:font-display-xl text-display-xl-mobile md:text-display-xl text-primary mb-8 px-4">
+            Private 1:1 Video Sessions with the World's Leading Aerospace Pioneers.
+        </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mb-12">
+            Go beyond the horizon. Book direct video consultations with verified astronauts and mission operators, starting with Inspiration4’s Chris Sembroski.
+        </p>
+<!-- Centered Waitlist -->
+<div class="max-w-md mx-auto mb-20">
+<div class="flex flex-col sm:flex-row items-center border-b border-outline-variant transition-all duration-300 focus-within:border-primary">
+<input class="w-full bg-transparent border-none focus:ring-0 py-4 px-0 text-body-md font-body-md placeholder:text-outline/60 text-center sm:text-left" placeholder="Enter your email address" type="email">
+<button class="w-full sm:w-auto whitespace-nowrap py-4 sm:pl-8 text-primary font-bold hover:text-secondary transition-colors duration-200 uppercase text-label-mono tracking-widest">
+                    Apply Now
+                </button>
+</div>
+<p class="mt-4 font-label-mono text-label-mono text-on-surface-variant opacity-50">
+                Join a curated list. No spam, only access.
+            </p>
+</div>
+</section>
+<!-- Centered Visual Gallery Section -->
+<section class="relative max-w-5xl mx-auto pb-20 fade-in" style="animation-delay: 0.3s;">
+<!-- Overlapping Portrait Left 1 -->
+<div class="hidden lg:block absolute left-[-40px] top-1/2 -translate-y-1/2 w-40 z-20 overlap-portrait">
+<div class="aspect-[3/4] rounded-xl overflow-hidden technical-border bg-surface shadow-lg">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkhhrJnInna7LFRZckWdnj3ON4LdvYzQdhNF0MSC3pbolxBpZPTTPiMy0dV7zheCtdq-QK9KFsfKkjLLlY76ZFuqFnGBrKrtVd35EjoZAuSELPrPNtkdST4F3SFTY_82fjwDnYobwnJp3D-pFOf2v1h4Y-n8Kc_-b3_JIA1FqoQ_3qLxK6x3M4-AH3NQBORkOf_xwwz00g4UKL90pufH_NDzxXB4QGNgaOOr_oC8jAjU2OoXiooG6c70kB3i9o8L-daHGIWpborUGX">
+</div>
+<p class="mt-2 font-label-mono text-[10px] text-on-surface-variant uppercase tracking-tighter">A. Parris</p>
+</div>
+<!-- Overlapping Portrait Left 2 -->
+<div class="hidden lg:block absolute left-[80px] top-1/3 -translate-y-1/2 w-32 z-10 overlap-portrait opacity-60">
+<div class="aspect-[3/4] rounded-xl overflow-hidden technical-border bg-surface grayscale">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDN9__0ysnK0KUQ2w4nWUE91DQpHm666Clz6G41Cc6E9lBq1t9NVrC-foSW0zogWrq9EWp-f12HCcPEfZ43rEd8Wp_kbV862sqTNPWzTc33QYua9P4RW8lcamLCqQ4uw3sPsNO_1N3LyRbtV3BndYI5zayxOENj1FxWyh_cC5sF5NyLwc8aziqFz1s87NYG2vUxRK_ujwiKU-Gs2hOThv_sBHP-uPT1gThSu01PAZtDQPimUzr2BsWLi27KyNJyYBMNE48Jywcvzaqi">
+</div>
+</div>
+<!-- Central Video Card -->
+<div class="relative z-30 max-w-2xl mx-auto hero-image-mask technical-border bg-surface-container shadow-2xl overflow-hidden">
+<div class="relative aspect-video">
+<img alt="Chris Sembroski Astronaut" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8XNf8tLSD3FvRA7_C2rOLstCev8ANZhROzna4NlVMcO5r44tIh1UPh430QPMG89nHeEET84YFY069i_g8PWp_Lo-4Z9xWO1jObXGuXxrbOSx5RrAlWhG6r0sT04X3N7iMWe4hsCa8iGiOavVCislXeZyrw532lt0tdMczFdZ7kQTekDK1DUtYzyNOmKALLFFfrhebddWD_X52FivbT3_iMR6hJtx1LTmScEsMFSFP99Xue7fNqdIefrgMF134HfBCN5RYbCJndLbp">
+<!-- Play Overlay -->
+<div class="absolute inset-0 flex items-center justify-center group cursor-pointer bg-black/5 hover:bg-black/20 transition-all duration-300">
+<div class="w-16 h-16 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110">
+<span class="material-symbols-outlined text-3xl text-primary" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<!-- Mini Live Badge -->
+<div class="absolute top-6 right-6 flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">
+<span class="w-1.5 h-1.5 bg-secondary-container rounded-full animate-pulse"></span>
+<span class="font-label-mono text-[10px] text-white tracking-widest uppercase">Sample Call</span>
+</div>
+</div>
+<!-- Video Caption Bottom -->
+<div class="bg-white p-4 flex justify-between items-center border-t border-outline-variant">
+<div class="text-left">
+<p class="font-body-md font-bold text-primary">Chris Sembroski</p>
+<p class="font-label-mono text-[10px] text-on-surface-variant uppercase tracking-wider">Inspiration4 Specialist</p>
+</div>
+<span class="font-label-mono text-[10px] text-secondary border border-secondary/20 px-2 py-0.5 rounded">Verified</span>
+</div>
+</div>
+<!-- Overlapping Portrait Right 1 -->
+<div class="hidden lg:block absolute right-[-40px] top-1/2 -translate-y-1/2 w-40 z-20 overlap-portrait">
+<div class="aspect-[3/4] rounded-xl overflow-hidden technical-border bg-surface shadow-lg">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMnDBPduWV_qBFcnC9uN_qt8eQLpTfUQYv2pOo_28aycG-zjc8z4aTnyWmjzrD-hkbAlmWNa2fezMM3B93jaXubSVuPKkCyx_1ZLJI5EvzPnAKhx0bupRh10InLw2M9doGhZttRlCJ6X7AHYU-XJ_pY5QistXcg2lIcIzaKTt4DjX-nc91l0YFWPfbIiQDxZL9qsQ-U8prqFc8fIADxL0CScAYw9PM_-x2zx6TvDISBOso2VlYVUJTzRt2XzzHtLJlPk3MwqdfOvpH">
+</div>
+<p class="mt-2 font-label-mono text-[10px] text-on-surface-variant uppercase tracking-tighter">Dr. Jenni H</p>
+</div>
+<!-- Overlapping Portrait Right 2 -->
+<div class="hidden lg:block absolute right-[80px] top-1/3 -translate-y-1/2 w-32 z-10 overlap-portrait opacity-60">
+<div class="aspect-[3/4] rounded-xl overflow-hidden technical-border bg-surface grayscale">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsLSlWk51P67VuFC_J6476rTpJxKfmZEhxUdzaSfOysNClEmyw019CtI8IcSGbP2Wyduez9nqkZil0Cag2O2J_VkkHA8MbPGRt5PGO_Z5_MOF01QNRLZ0qCeG9xlcQGpIc7ORAnfu9IeczU17BBQZDpCO58jmm60jgiy72eHuTg6BMcO_qRpVKn__7vOVM_ktB-lwkRdJYf7MCxvmgvw2IhMtnu45JY8SSkPG0-aojVIH-4eMBuYLtIWXm_dpqVwFVMmS0sPLUNbeI">
+</div>
+</div>
+<!-- Mobile Portraits Grid (Visible only on mobile/tablet) -->
+<div class="lg:hidden grid grid-cols-4 gap-2 mt-8 px-4">
+<div class="aspect-square rounded-lg overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkhhrJnInna7LFRZckWdnj3ON4LdvYzQdhNF0MSC3pbolxBpZPTTPiMy0dV7zheCtdq-QK9KFsfKkjLLlY76ZFuqFnGBrKrtVd35EjoZAuSELPrPNtkdST4F3SFTY_82fjwDnYobwnJp3D-pFOf2v1h4Y-n8Kc_-b3_JIA1FqoQ_3qLxK6x3M4-AH3NQBORkOf_xwwz00g4UKL90pufH_NDzxXB4QGNgaOOr_oC8jAjU2OoXiooG6c70kB3i9o8L-daHGIWpborUGX">
+</div>
+<div class="aspect-square rounded-lg overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMnDBPduWV_qBFcnC9uN_qt8eQLpTfUQYv2pOo_28aycG-zjc8z4aTnyWmjzrD-hkbAlmWNa2fezMM3B93jaXubSVuPKkCyx_1ZLJI5EvzPnAKhx0bupRh10InLw2M9doGhZttRlCJ6X7AHYU-XJ_pY5QistXcg2lIcIzaKTt4DjX-nc91l0YFWPfbIiQDxZL9qsQ-U8prqFc8fIADxL0CScAYw9PM_-x2zx6TvDISBOso2VlYVUJTzRt2XzzHtLJlPk3MwqdfOvpH">
+</div>
+<div class="aspect-square rounded-lg overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsLSlWk51P67VuFC_J6476rTpJxKfmZEhxUdzaSfOysNClEmyw019CtI8IcSGbP2Wyduez9nqkZil0Cag2O2J_VkkHA8MbPGRt5PGO_Z5_MOF01QNRLZ0qCeG9xlcQGpIc7ORAnfu9IeczU17BBQZDpCO58jmm60jgiy72eHuTg6BMcO_qRpVKn__7vOVM_ktB-lwkRdJYf7MCxvmgvw2IhMtnu45JY8SSkPG0-aojVIH-4eMBuYLtIWXm_dpqVwFVMmS0sPLUNbeI">
+</div>
+<div class="aspect-square rounded-lg overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDN9__0ysnK0KUQ2w4nWUE91DQpHm666Clz6G41Cc6E9lBq1t9NVrC-foSW0zogWrq9EWp-f12HCcPEfZ43rEd8Wp_kbV862sqTNPWzTc33QYua9P4RW8lcamLCqQ4uw3sPsNO_1N3LyRbtV3BndYI5zayxOENj1FxWyh_cC5sF5NyLwc8aziqFz1s87NYG2vUxRK_ujwiKU-Gs2hOThv_sBHP-uPT1gThSu01PAZtDQPimUzr2BsWLi27KyNJyYBMNE48Jywcvzaqi">
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="mt-20 border-t border-outline-variant/30 bg-surface">
+<div class="w-full px-margin-mobile md:px-margin-desktop py-16 max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="font-headline-md text-headline-md text-primary font-bold">AstroLink</div>
+<div class="flex gap-10">
+<a class="text-label-mono text-on-surface-variant hover:text-primary uppercase tracking-widest transition-colors duration-200" href="#">Privacy</a>
+<a class="text-label-mono text-on-surface-variant hover:text-primary uppercase tracking-widest transition-colors duration-200" href="#">Terms</a>
+<a class="text-label-mono text-on-surface-variant hover:text-primary uppercase tracking-widest transition-colors duration-200" href="#">Contact</a>
+</div>
+<p class="text-on-surface-variant opacity-60 font-label-mono text-[11px] uppercase tracking-widest">
+            © 2024 AstroLink · All Systems Operational
+        </p>
+</div>
+</footer>
+<script>
+    // Reveal animation logic
+    document.addEventListener('DOMContentLoaded', () => {
+        const elements = document.querySelectorAll('.fade-in');
+        elements.forEach((el, index) => {
+            el.style.opacity = '0';
+            setTimeout(() => {
+                el.style.opacity = '1';
+            }, index * 100);
+        });
+    });
+</script>
+</body></html>
