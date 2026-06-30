@@ -1,0 +1,145 @@
+/* Stitch HUD dark tokens — scoped to Chris landing only */
+.chris-landing {
+  --color-primary-container: #1c1c1c;
+  --color-secondary-fixed-dim: #c9c6c5;
+  --color-tertiary-fixed-dim: #b4c5ff;
+  --color-tertiary-container: #00174c;
+  --color-secondary-fixed: #e5e2e1;
+  --color-outline-variant: #c4c7c7;
+  --color-error: #ba1a1a;
+  --chris-copy-max: 36rem;
+  --chris-form-max: 28rem;
+  background-color: #1c1c1c;
+  color: #ffffff;
+}
+
+/* Avoid max-w-md / max-w-xl — they collide with --spacing-md (16px) and --spacing-xl (32px). */
+.chris-landing .chris-copy-max {
+  max-width: var(--chris-copy-max);
+}
+
+.chris-landing .chris-form-max {
+  max-width: var(--chris-form-max);
+}
+
+@keyframes chrisFadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chrisBreathe {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes chrisShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.chris-landing .chris-fade-in-up {
+  opacity: 0;
+  animation: chrisFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.chris-landing .chris-delay-100 {
+  animation-delay: 100ms;
+}
+.chris-landing .chris-delay-200 {
+  animation-delay: 200ms;
+}
+.chris-landing .chris-delay-300 {
+  animation-delay: 300ms;
+}
+.chris-landing .chris-delay-400 {
+  animation-delay: 400ms;
+}
+.chris-landing .chris-delay-500 {
+  animation-delay: 500ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chris-landing .chris-fade-in-up {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .chris-landing .chris-portrait-breathe {
+    animation: none;
+  }
+  .chris-landing .chris-hover-glow:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .chris-landing .chris-hover-glow:hover .chris-shimmer {
+    animation: none;
+  }
+}
+
+.chris-landing .chris-portrait-frame {
+  overflow: hidden;
+  border-radius: 1.5rem;
+}
+
+.chris-landing .chris-portrait-breathe {
+  animation: chrisBreathe 6s ease-in-out infinite alternate;
+  transform-origin: center center;
+}
+
+.chris-landing .chris-hover-glow {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.chris-landing .chris-hover-glow:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(180, 197, 255, 0.4);
+}
+
+.chris-landing .chris-hover-glow:hover .chris-shimmer {
+  animation: chrisShimmer 2s linear infinite;
+}
+
+.chris-landing .chris-input-glow:focus {
+  box-shadow:
+    0 1px 0 0 rgba(180, 197, 255, 0.8),
+    0 -1px 10px rgba(180, 197, 255, 0.2);
+}
+
+.chris-landing .chris-footer-link {
+  position: relative;
+}
+
+.chris-landing .chris-footer-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  background-color: #b4c5ff;
+  transition: transform 0.3s ease;
+}
+
+.chris-landing .chris-footer-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
