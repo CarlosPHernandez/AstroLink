@@ -1,8 +1,16 @@
 import 'server-only';
 
-export const CHRIS_CAMPAIGN_ID = 'chris-sembroski';
-export const CHRIS_MENTOR_SLUG_DEFAULT = 'chris-sembroski';
-export const CHRIS_BOOKING_CAMPAIGN_QUERY = 'chris';
+import {
+  CHRIS_BOOKING_CAMPAIGN_QUERY,
+  CHRIS_CAMPAIGN_ID,
+  CHRIS_MENTOR_SLUG_DEFAULT,
+} from '@/lib/chris-campaign/chris-campaign-constants';
+
+export {
+  CHRIS_BOOKING_CAMPAIGN_QUERY,
+  CHRIS_CAMPAIGN_ID,
+  CHRIS_MENTOR_SLUG_DEFAULT,
+} from '@/lib/chris-campaign/chris-campaign-constants';
 
 /** Opens booking funnel under waitlist APP_MODE (Vercel Production only). */
 export function isChrisBookingEnabled(): boolean {
