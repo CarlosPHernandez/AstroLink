@@ -2,6 +2,22 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.5.6.0] - 2026-06-29
+
+The Chris Sembroski campaign landing is now a full Stitch HUD desktop experience — live slot count, click-to-play intro video, and a Request Session path into booking.
+
+### Added
+- Stitch HUD landing at `/talk-with-chris`: slot indicator, rotating question queue, email + Request Session CTA, dark footer.
+- `ExpertIntroMedia` on the Chris portrait — click to watch his intro video (same pattern as `/experts`).
+- `src/components/chris-campaign/` — landing client, scoped dark theme CSS, slot indicator, form, portrait, footer.
+- `chris-booking-href` helper and client-safe `chris-campaign-constants` for `campaign=chris` booking URLs.
+- Route-specific dark loading skeleton and viewport theme for `/talk-with-chris`.
+- PR2 scope allowlist: `docs/plans/chris-sembroski-launch-PR2-scope.md`.
+
+### Changed
+- `/talk-with-chris` replaces the PR1 placeholder with the desktop HUD layout; slots load from `getChrisCampaignSlotSnapshot()`.
+- `chris-campaign-config` re-exports constants from a client-safe module.
+
 ## [0.5.5.0] - 2026-06-28
 
 You can now run a limited Chris Sembroski booking campaign while the rest of the site stays on the waitlist. Ten slots are reserved atomically; unpaid bookings release a slot when cancelled.
@@ -32,10 +48,6 @@ Pre-session briefs are now written for you, not about you. Live sessions generat
 - Session room sidebar is role-aware: mentees see "Your session plan", mentors see "Session prep".
 - Mentor `?prep={bookingId}` deep link (from confirmation email) opens the prep brief slide-over.
 - E2E briefing stub and golden-path assert the personal intro line.
-
-## [0.5.3.0] - 2026-06-26
-
-When a booking confirms, mentees and mentors now get a confirmation email with a calendar invite — so sessions show up outside the app and mentors learn about new bookings without polling the dashboard.
 
 ### Added
 - **APX-08 Notifications** — Resend confirmation emails to mentee and mentor with `.ics` calendar attachments on booking fulfillment.
