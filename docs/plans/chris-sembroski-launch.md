@@ -57,11 +57,13 @@ Apply migration `20260627120000_booking_campaigns.sql` to hosted Supabase before
 | PR | Scope |
 |----|-------|
 | **PR1** | Campaign infra: routing, slots, auth, booking API, placeholder landing |
-| **PR2** | Full Stitch `/talk-with-chris` landing |
+| **PR2** | Full Stitch `/talk-with-chris` landing (desktop HUD) |
 | **PR3** | Booking UI, 45 min fixed, Stripe promo code |
 | **PR4** | Launch ops, referrer split, prod checklist |
 
 **PR1 scope allowlist:** [`chris-sembroski-launch-PR1-scope.md`](./chris-sembroski-launch-PR1-scope.md) — do not edit files outside this list in PR1.
+
+**PR2 scope allowlist:** [`chris-sembroski-launch-PR2-scope.md`](./chris-sembroski-launch-PR2-scope.md) — do not edit files outside this list in PR2.
 
 ## PR1 test checklist
 
