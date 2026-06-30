@@ -72,7 +72,9 @@ export function ChrisMobileBookingCard({
   }
 
   function handleBook() {
-    router.push(getChrisBookingEntryHref(mentorSlug, isSignedIn));
+    router.push(
+      getChrisBookingEntryHref(mentorSlug, isSignedIn, { date: activeDate ?? undefined }),
+    );
   }
 
   function goToEarlierMonth() {
