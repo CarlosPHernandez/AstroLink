@@ -48,6 +48,7 @@ export default defineConfig({
       DAILY_PROVISION_ENABLED: 'false',
       DAILY_TRANSCRIPTION_ENABLED: 'false',
       NOTIFICATIONS_DISABLED: 'true',
+      CHRIS_BOOKING_ENABLED: 'true',
     },
   },
 });

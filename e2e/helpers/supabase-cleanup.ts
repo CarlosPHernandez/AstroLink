@@ -46,7 +46,7 @@ export async function deleteE2eBookingsForMentee(
 
   const { data: bookings, error } = await supabase
     .from('bookings')
-    .select('id')
+    .select('id, campaign_id')
     .eq('mentee_id', MENTEE_ID)
     .like('match_reason', `${matchReasonPrefix}%`);
 
@@ -54,7 +54,21 @@ export async function deleteE2eBookingsForMentee(
     throw new Error(`E2E cleanup failed to list bookings: ${error.message}`);
   }
 
-  await deleteBookingsByIds(supabase, bookings?.map((row) => row.id) ?? []);
+  const rows = bookings ?? [];
+  const campaignIds = [
+    ...new Set(rows.map((row) => row.campaign_id).filter((id): id is string => Boolean(id))),
+  ];
+
+  await deleteBookingsByIds(supabase, rows.map((row) => row.id));
+
+  for (const campaignId of campaignIds) {
+    const { error: releaseError } = await supabase.rpc('booking_campaign_release', {
+      p_campaign_id: campaignId,
+    });
+    if (releaseError) {
+      throw new Error(`E2E cleanup failed to release campaign slot: ${releaseError.message}`);
+    }
+  }
 }
 
 async function deleteBookingsByIds(
