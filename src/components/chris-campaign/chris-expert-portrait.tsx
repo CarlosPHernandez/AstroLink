@@ -17,7 +17,7 @@ export function ChrisExpertPortrait({
 }: ChrisExpertPortraitProps) {
   return (
     <div
-      className="chris-fade-in-up chris-delay-300 relative z-10 hidden w-full shrink-0 md:block md:max-w-[28rem] lg:w-[41.666667%] lg:max-w-[28rem]"
+      className="chris-fade-in-up chris-delay-300 relative z-10 w-full shrink-0 md:max-w-[22rem] md:mx-auto lg:mx-0 lg:w-[41.666667%] lg:max-w-[28rem]"
       data-testid="chris-portrait"
     >
       <div className="chris-portrait-frame relative shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
@@ -46,7 +46,7 @@ export function ChrisExpertPortrait({
         </div>
       </div>
       {introVideoUrl ? (
-        <p className="mt-3 text-center text-xs font-light text-secondary-fixed-dim/60 lg:text-left">
+        <p className="mt-3 text-center text-xs font-light text-secondary-fixed-dim/60 md:text-left">
           Click to watch his intro
         </p>
       ) : null}

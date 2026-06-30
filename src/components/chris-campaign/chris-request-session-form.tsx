@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { MaterialIcon } from '@/components/ui/material-icon';
 import { getChrisBookingEntryHref } from '@/lib/chris-campaign/chris-booking-href';
 
 type ChrisRequestSessionFormProps = {
@@ -10,6 +11,7 @@ type ChrisRequestSessionFormProps = {
   isSignedIn: boolean;
   mentorSlug: string;
   soldOut: boolean;
+  variant?: 'desktop' | 'mobile';
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -19,6 +21,7 @@ export function ChrisRequestSessionForm({
   isSignedIn,
   mentorSlug,
   soldOut,
+  variant = 'desktop',
 }: ChrisRequestSessionFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -60,6 +63,57 @@ export function ChrisRequestSessionForm({
     }
     setError(null);
     router.push(getChrisBookingEntryHref(mentorSlug, isSignedIn));
+  }
+
+  if (variant === 'mobile') {
+    return (
+      <div className="chris-fade-in-up chris-delay-400 w-full border-t border-white/10 pt-6">
+        <form className="flex w-full flex-col gap-4" onSubmit={handleSubmit}>
+          <div className="flex flex-col gap-2">
+            <label
+              className="text-xs font-medium uppercase tracking-widest text-on-tertiary-container/80"
+              htmlFor="chris-session-email-mobile"
+            >
+              Reserve Your Session
+            </label>
+            <div className="group relative">
+              <input
+                id="chris-session-email-mobile"
+                type="email"
+                autoComplete="email"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  if (error) setError(null);
+                }}
+                className="w-full border-b border-white/20 bg-transparent px-0 py-4 text-base font-light text-white placeholder:text-outline/30 transition-all focus:border-on-tertiary-container focus:outline-none"
+              />
+              <div
+                className="absolute bottom-0 left-0 h-px w-0 bg-on-tertiary-container shadow-[0_0_8px_rgba(91,127,230,0.8)] transition-all duration-500 group-focus-within:w-full"
+                aria-hidden="true"
+              />
+            </div>
+            {error ? (
+              <p className="text-xs text-error" role="alert">
+                {error}
+              </p>
+            ) : null}
+          </div>
+          <button
+            type="submit"
+            className="flex w-full items-center justify-center gap-3 rounded-lg border border-white/10 bg-on-tertiary-fixed-variant px-4 py-4 text-xs font-semibold uppercase tracking-widest text-on-tertiary shadow-[0_0_20px_rgba(11,62,164,0.4)] backdrop-blur-sm transition-all duration-150 hover:bg-on-tertiary-fixed-variant/90 active:scale-[0.98]"
+            data-testid="chris-request-session"
+          >
+            <span>Book Private Session</span>
+            <MaterialIcon name="arrow_forward" className="text-[18px]" />
+          </button>
+          <p className="text-center text-[10px] font-medium uppercase tracking-widest text-outline/40">
+            Sessions are scheduled based on availability. Approval required.
+          </p>
+        </form>
+      </div>
+    );
   }
 
   return (

@@ -6,7 +6,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Cursor Cloud specific instructions
 
-**Product:** AstroLink — single Next.js 16 app (`npm`, Node ≥ 20). Hosted Supabase project `vwoizjesyyygmokfqpyy` (no local Supabase stack in-repo). Public surfaces include a landing expert teaser, the full directory at `/experts` (approved+listed mentors from DB, category filters, inline preview), and profile pages at `/experts/[slug]` (bio, intro video via `ExpertIntroMedia`, modalities teaser, booking CTAs).
+**Product:** AstroLink — single Next.js 16 app (`npm`, Node ≥ 20). Hosted Supabase project `vwoizjesyyygmokfqpyy` (no local Supabase stack in-repo). Public surfaces include a landing expert teaser, the full directory at `/experts` (approved+listed mentors from DB, category filters, inline preview), profile pages at `/experts/[slug]` (bio, intro video via `ExpertIntroMedia`, modalities teaser, booking CTAs), and the Chris Sembroski campaign landing at `/talk-with-chris` (Stitch mobile layout on phones, HUD on tablet/desktop when `CHRIS_BOOKING_ENABLED=true`).
 
 ### Environment
 
@@ -61,8 +61,8 @@ With `ENABLE_DEMO_AUTH=true`, sign in at `/auth` with seed emails (`carlos@astro
 | Path | Purpose |
 |------|---------|
 | `src/app/` | Next.js routes and API handlers (product surfaces) |
-| `src/components/` | UI by feature (`early-access`, `experts`, `booking`, `session`, `ui`) |
-| `src/lib/` | Domain logic; grouped subfolders where mature (`waitlist/`, `transcript-translation/`, `supabase/`) |
+| `src/components/` | UI by feature (`early-access`, `experts`, `booking`, `session`, `chris-campaign`, `ui`) |
+| `src/lib/` | Domain logic; grouped subfolders where mature (`waitlist/`, `transcript-translation/`, `chris-campaign/`, `supabase/`) |
 | `src/services/agents/` | Booking, briefing, payment, and other agents |
 | `docs/` | Diataxis docs; `docs/plans/` = pre-ship specs only |
 | `design/` | Non-runtime design references (not imported by app code) |

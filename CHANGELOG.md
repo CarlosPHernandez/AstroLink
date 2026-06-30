@@ -2,6 +2,23 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.5.7.0] - 2026-06-30
+
+Chris Sembroski campaign visitors on phones now get the full Stitch mobile booking screen at `/talk-with-chris`; iPad and desktop keep the HUD. Pick a July 2026 session date from the new scrollable date strip.
+
+### Added
+- Stitch mobile landing at `/talk-with-chris` for viewports under 768px: hero portrait, slot bars, scrollable question queue, glass date picker, and Book Private Session CTA.
+- `chris-mobile-landing.tsx` and `chris-mobile-booking-card.tsx` — phone layout shell and month-navigable date strip.
+- `chris-campaign-dates.ts` — July 2026+ booking window helpers with 12-month horizon and unit tests.
+- Component variants: slot indicator (`hero`, `pill`), question queue (`scroll`), request form (`mobile`), portrait (`hero`).
+- Stitch mobile reference assets (`mobileview-chris-booking-screen`) and updated manifest.
+- PR2.5 scope allowlist: `docs/plans/chris-sembroski-launch-PR2.5-scope.md`.
+
+### Changed
+- `/talk-with-chris` splits at the `md` breakpoint: phone gets mobile Stitch layout; tablet and desktop keep the HUD (iPad no longer falls back to phone).
+- Loading skeleton uses separate phone vs tablet/desktop layouts with explicit rem widths.
+- `chris-landing.css` adds mobile tokens (`chris-mobile-max`), glass card, and queue scroll masks; avoids Tailwind spacing-token collisions that collapsed copy to one word per line.
+
 ## [0.5.6.0] - 2026-06-29
 
 The Chris Sembroski campaign landing is now a full Stitch HUD desktop experience — live slot count, click-to-play intro video, and a Request Session path into booking.

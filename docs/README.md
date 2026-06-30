@@ -60,6 +60,7 @@ Cursor canvas: `mentor-dashboard-ops` — CTO → CEO → mentor language for al
 |-----|--------|
 | [plans/early-access-redesign.md](./plans/early-access-redesign.md) | Waitlist landing redesign spec |
 | [plans/david-guajardo-partner-landing.md](./plans/david-guajardo-partner-landing.md) | `/join/[slug]` partner pages |
+| [plans/chris-sembroski-launch.md](./plans/chris-sembroski-launch.md) | Chris campaign launch stack (PR1–PR4); PR2.5 mobile landing shipped v0.5.7.0 |
 | [plans/mentor-dashboard-ops.md](./plans/mentor-dashboard-ops.md) | Shipped — retained as decision record |
 
 These are design/planning artifacts — not canonical runbooks. Prefer `how-to/` and `reference/` for ops.
