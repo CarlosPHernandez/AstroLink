@@ -16,8 +16,8 @@ test.describe('Chris campaign landing → booking', () => {
   test('landing CTA opens Chris booking with 45-minute session', async ({ page }) => {
     await page.goto('/talk-with-chris', { waitUntil: 'networkidle' });
 
-    await expect(page.getByRole('heading', { name: /Chris Sembroski/i })).toBeVisible();
-    await page.getByTestId('chris-request-session').first().click();
+    await expect(page.getByTestId('chris-landing-row')).toBeVisible();
+    await page.getByTestId('chris-landing-row').getByTestId('chris-request-session').click();
 
     await expect(page).toHaveURL(/\/booking\?.*campaign=chris/);
     await expect(page.getByTestId('booking-chris-campaign')).toBeVisible();
