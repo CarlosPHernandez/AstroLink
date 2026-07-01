@@ -34,6 +34,7 @@ export class BookingAgent {
     includePreCallBrief?: boolean;
     durationMinutes?: number; // from slider for variable 1:1; used for prorated price + persisted
     campaignId?: string;
+    marketingReferrer?: string;
   }) {
     // 1. Audit Log: BOOKING_INITIATED
     await this.logAudit('BOOKING_INITIATED', null, { params });
@@ -79,6 +80,7 @@ export class BookingAgent {
       includePreCallBrief?: boolean;
       durationMinutes?: number;
       campaignId?: string;
+      marketingReferrer?: string;
     },
     _campaignSlotReserved: boolean,
   ) {
@@ -155,6 +157,9 @@ export class BookingAgent {
             mentee_id: params.menteeId,
             service_type: params.serviceType,
             ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
+            ...(params.marketingReferrer
+              ? { marketing_referrer: params.marketingReferrer }
+              : {}),
           },
         },
         { idempotencyKey },
@@ -179,6 +184,7 @@ export class BookingAgent {
       duration_minutes:
         durationMinutes ?? (params.serviceType === 'session_1on1' ? 30 : 15),
       ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
+      ...(params.marketingReferrer ? { marketing_referrer: params.marketingReferrer } : {}),
     };
 
     const { data: booking, error: bookingErr } = await (

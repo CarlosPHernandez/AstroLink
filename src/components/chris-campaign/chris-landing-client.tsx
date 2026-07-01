@@ -17,6 +17,7 @@ type ChrisLandingClientProps = {
   copyrightYear: number;
   expertPortrait: ChrisExpertPortraitProps;
   isSignedIn: boolean;
+  marketingReferrer: string | null;
   mentorSlug: string;
   slotCap: number;
   slotsRemaining: number;
@@ -27,6 +28,7 @@ export function ChrisLandingClient({
   copyrightYear,
   expertPortrait,
   isSignedIn,
+  marketingReferrer,
   mentorSlug,
   slotCap,
   slotsRemaining,
@@ -41,6 +43,7 @@ export function ChrisLandingClient({
           bookingEnabled={bookingEnabled}
           expertPortrait={expertPortrait}
           isSignedIn={isSignedIn}
+          marketingReferrer={marketingReferrer}
           mentorSlug={mentorSlug}
           slotCap={slotCap}
           slotsRemaining={slotsRemaining}
@@ -73,6 +76,7 @@ export function ChrisLandingClient({
               <ChrisRequestSessionForm
                 bookingEnabled={bookingEnabled}
                 isSignedIn={isSignedIn}
+                marketingReferrer={marketingReferrer}
                 mentorSlug={mentorSlug}
                 soldOut={soldOut}
               />

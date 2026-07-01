@@ -1,7 +1,7 @@
 # Chris Sembroski Launch
 
-**Branch:** `feat/chris-mobile-landing` (PR2.5)
-**Public URL:** `https://<prod>/talk-with-chris?ref=chris-sembroski`  
+**Branch:** `main` (PR1–PR3.5 shipped through v0.5.8.0)
+**Public URL:** `https://<prod>/talk-with-chris?ref=chris-sembroski`
 **Design assets:** Google Stitch web + mobile → `design/stitch/talk-with-chris/`
 
 ## Goal
@@ -60,6 +60,7 @@ Apply migration `20260627120000_booking_campaigns.sql` to hosted Supabase before
 | **PR2** | Full Stitch `/talk-with-chris` landing (desktop HUD) |
 | **PR2.5** | Mobile Stitch landing + tablet/desktop HUD split (`md` breakpoint) |
 | **PR3** | Booking UI, 45 min fixed, Stripe promo code |
+| **PR3.5** | Inline booking wizard (Account → Session → Pay), desktop date picker |
 | **PR4** | Launch ops, referrer split, prod checklist |
 
 **PR1 scope allowlist:** [`chris-sembroski-launch-PR1-scope.md`](./chris-sembroski-launch-PR1-scope.md) — do not edit files outside this list in PR1.
@@ -70,6 +71,8 @@ Apply migration `20260627120000_booking_campaigns.sql` to hosted Supabase before
 
 **PR3 scope allowlist:** [`chris-sembroski-launch-PR3-scope.md`](./chris-sembroski-launch-PR3-scope.md) — do not edit files outside this list in PR3.
 
+**PR4 scope allowlist:** [`chris-sembroski-launch-PR4-scope.md`](./chris-sembroski-launch-PR4-scope.md) — do not edit files outside this list in PR4.
+
 ## PR1 test checklist
 
 - [ ] `npm test` — waitlist routes, app-mode, auth-redirect, chris-campaign-*, booking-agent, book-request-schema
@@ -79,7 +82,6 @@ Apply migration `20260627120000_booking_campaigns.sql` to hosted Supabase before
 
 ## Deferred (later PRs)
 
-- Stripe promo / checklist (PR3–4)
-- E2E `e2e/talk-with-chris.spec.ts` (PR3)
+- Promo code UI on Pay step (env-only for now)
 - `database.types.ts` regeneration after migration apply
 - Public experts directory while Chris campaign is live

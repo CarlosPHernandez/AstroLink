@@ -13,6 +13,13 @@ test.describe('Chris campaign landing → booking', () => {
     await deleteE2eBookingsForMentee(E2E_GOALS_TAG);
   });
 
+  test('landing CTA preserves ref through to booking URL', async ({ page }) => {
+    await page.goto('/talk-with-chris?ref=chris-sembroski', { waitUntil: 'networkidle' });
+
+    await page.getByTestId('chris-landing-row').getByTestId('chris-request-session').click();
+    await expect(page).toHaveURL(/\/booking\?.*campaign=chris.*ref=chris-sembroski/);
+  });
+
   test('landing CTA opens Chris booking with 45-minute session', async ({ page }) => {
     await page.goto('/talk-with-chris', { waitUntil: 'networkidle' });
 

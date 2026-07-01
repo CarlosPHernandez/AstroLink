@@ -55,6 +55,7 @@ type CheckoutState = {
 type ChrisBookingWizardProps = {
   session: SessionData | null;
   mentor: ListedExpert;
+  marketingReferrer: string | null;
   prefillScheduledAt: string | null;
   prefillDate: string | null;
 };
@@ -268,6 +269,7 @@ function ChrisWizardAccountStep({
 export function ChrisBookingWizard({
   session,
   mentor,
+  marketingReferrer,
   prefillScheduledAt,
   prefillDate,
 }: ChrisBookingWizardProps) {
@@ -321,6 +323,7 @@ export function ChrisBookingWizard({
       background,
       durationMinutes: chrisDurationMinutes,
       campaign: CHRIS_BOOKING_CAMPAIGN_QUERY,
+      ...(marketingReferrer ? { marketingReferrer } : {}),
     };
 
     const parsed = BookBodySchema.safeParse(payload);

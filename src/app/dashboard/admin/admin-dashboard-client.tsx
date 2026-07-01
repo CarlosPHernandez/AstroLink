@@ -20,6 +20,15 @@ type WaitlistSignup = {
   createdAt: string;
 };
 
+type ChrisCampaignMetrics = {
+  campaignId: string;
+  slotCap: number;
+  slotsReserved: number;
+  slotsRemaining: number;
+  bookingsByStatus: Record<string, number>;
+  bookingsByReferrer: Array<{ referrer: string; count: number }>;
+};
+
 function formatWowLabel(wowPercent: number | null): string {
   if (wowPercent === null) return 'New baseline';
   if (wowPercent > 0) return `+${wowPercent}%`;
@@ -46,6 +55,7 @@ interface SessionData {
 
 export default function AdminDashboardClient({ session }: { session: SessionData }) {
   const [waitlist, setWaitlist] = useState<WaitlistMetrics | null>(null);
+  const [chrisCampaign, setChrisCampaign] = useState<ChrisCampaignMetrics | null>(null);
   const [signups, setSignups] = useState<WaitlistSignup[]>([]);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [waitlistError, setWaitlistError] = useState<string | null>(null);
@@ -59,6 +69,7 @@ export default function AdminDashboardClient({ session }: { session: SessionData
       const data = (await response.json()) as {
         success?: boolean;
         waitlist?: WaitlistMetrics;
+        chrisCampaign?: ChrisCampaignMetrics | null;
         signups?: WaitlistSignup[];
         generatedAt?: string;
         error?: string;
@@ -67,6 +78,7 @@ export default function AdminDashboardClient({ session }: { session: SessionData
         throw new Error(data.error ?? 'Failed to load waitlist data');
       }
       setWaitlist(data.waitlist);
+      setChrisCampaign(data.chrisCampaign ?? null);
       setSignups(data.signups);
       setGeneratedAt(data.generatedAt ?? null);
     } catch (error: unknown) {
@@ -178,6 +190,80 @@ export default function AdminDashboardClient({ session }: { session: SessionData
               </div>
             ) : null}
           </div>
+
+          {chrisCampaign ? (
+            <div className="p-6 rounded-md border border-outline-variant bg-surface-container-lowest shadow-sm">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-on-surface flex items-center gap-2 mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                Chris campaign ({chrisCampaign.campaignId})
+              </h2>
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-surface-container-low border border-outline-variant p-3 rounded-md">
+                    <span className="text-[9px] text-on-surface-variant uppercase block tracking-widest font-mono mb-1">
+                      Slots left
+                    </span>
+                    <span className="text-base font-bold text-on-surface">
+                      {chrisCampaign.slotsRemaining}
+                    </span>
+                  </div>
+                  <div className="bg-surface-container-low border border-outline-variant p-3 rounded-md">
+                    <span className="text-[9px] text-on-surface-variant uppercase block tracking-widest font-mono mb-1">
+                      Reserved
+                    </span>
+                    <span className="text-base font-bold text-on-surface">
+                      {chrisCampaign.slotsReserved}/{chrisCampaign.slotCap}
+                    </span>
+                  </div>
+                  <div className="bg-surface-container-low border border-outline-variant p-3 rounded-md">
+                    <span className="text-[9px] text-on-surface-variant uppercase block tracking-widest font-mono mb-1">
+                      Bookings
+                    </span>
+                    <span className="text-base font-bold text-on-surface">
+                      {Object.values(chrisCampaign.bookingsByStatus).reduce(
+                        (sum, count) => sum + count,
+                        0,
+                      )}
+                    </span>
+                  </div>
+                </div>
+                {Object.keys(chrisCampaign.bookingsByStatus).length > 0 ? (
+                  <div>
+                    <p className="text-[9px] text-on-surface-variant uppercase tracking-widest font-mono mb-2">
+                      By status
+                    </p>
+                    <ul className="space-y-1 text-xs font-mono text-on-surface">
+                      {Object.entries(chrisCampaign.bookingsByStatus).map(([status, count]) => (
+                        <li key={status} className="flex justify-between gap-2">
+                          <span className="truncate">{status}</span>
+                          <span className="text-on-surface-variant shrink-0">{count}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {chrisCampaign.bookingsByReferrer.length > 0 ? (
+                  <div>
+                    <p className="text-[9px] text-on-surface-variant uppercase tracking-widest font-mono mb-2">
+                      Bookings by ref
+                    </p>
+                    <ul className="space-y-1 text-xs font-mono text-on-surface">
+                      {chrisCampaign.bookingsByReferrer.map((row) => (
+                        <li key={row.referrer} className="flex justify-between gap-2">
+                          <span className="truncate">{row.referrer}</span>
+                          <span className="text-on-surface-variant shrink-0">{row.count}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-on-surface-variant text-xs italic">
+                    No Chris bookings yet — use ?ref= on /talk-with-chris links.
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : null}
 
           <div className="p-6 rounded-md border border-outline-variant bg-surface-container-lowest shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">

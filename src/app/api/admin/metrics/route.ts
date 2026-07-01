@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireApiRole } from '@/lib/api-auth';
+import { getAdminChrisCampaignMetrics } from '@/lib/chris-campaign/admin-chris-campaign-metrics';
 import {
   getAdminWaitlistMetrics,
   getAdminWaitlistSignups,
@@ -12,14 +13,16 @@ export async function GET() {
   }
 
   try {
-    const [waitlist, signups] = await Promise.all([
+    const [waitlist, signups, chrisCampaign] = await Promise.all([
       getAdminWaitlistMetrics(),
       getAdminWaitlistSignups(),
+      getAdminChrisCampaignMetrics(),
     ]);
     return NextResponse.json({
       success: true,
       waitlist,
       signups,
+      chrisCampaign,
       generatedAt: new Date().toISOString(),
     });
   } catch (error: unknown) {
