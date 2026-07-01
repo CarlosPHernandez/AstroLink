@@ -21,8 +21,8 @@ test.describe('Chris campaign landing → booking', () => {
 
     await expect(page).toHaveURL(/\/booking\?.*campaign=chris/);
     await expect(page.getByTestId('booking-chris-campaign')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Chris Sembroski' })).toBeVisible();
-    await expect(page.getByText('45-minute live 1:1')).toBeVisible();
+    await expect(page.getByText('Book your call with Chris Sembroski')).toBeVisible();
+    await expect(page.getByText(/45-minute live 1:1/i)).toBeVisible();
     await expect(page.locator('input[type="range"]')).toHaveCount(0);
 
     const scheduledAt = page.getByTestId('booking-scheduled-at');
@@ -31,6 +31,9 @@ test.describe('Chris campaign landing → booking', () => {
     await page.getByTestId('booking-background').fill(
       'Nonprofit director planning Inspiration4-style outreach for youth STEM programs.',
     );
+    await page.getByTestId('booking-wizard-continue-session').click();
+
+    await expect(page.getByTestId('booking-submit')).toBeVisible();
 
     const [response] = await Promise.all([
       page.waitForResponse(

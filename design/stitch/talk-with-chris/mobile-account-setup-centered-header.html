@@ -1,0 +1,200 @@
+<!DOCTYPE html><html class="scroll-smooth" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>AstroLink | Booking Session</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#1c1c1c",
+                        "on-primary-fixed": "#1b1b1b",
+                        "on-background": "#1c1b1b",
+                        "surface-variant": "#e5e2e1",
+                        "surface-container": "#f1edec",
+                        "on-surface": "#1c1b1b",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#5b7fe6",
+                        "on-tertiary-fixed": "#00174b",
+                        "on-tertiary-fixed-variant": "#0b3ea4",
+                        "tertiary": "#000002",
+                        "secondary-fixed-dim": "#c9c6c5",
+                        "outline-variant": "#c4c7c7",
+                        "on-secondary-fixed-variant": "#474646",
+                        "inverse-primary": "#c8c6c5",
+                        "surface-container-low": "#f7f3f2",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#f4f0ef",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "surface-tint": "#5f5e5e",
+                        "on-secondary-container": "#656464",
+                        "secondary": "#5f5e5e",
+                        "primary-fixed": "#e5e2e1",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "inverse-surface": "#313030",
+                        "surface-dim": "#ddd9d8",
+                        "on-primary-container": "#858484",
+                        "background": "#fdf8f8",
+                        "outline": "#747878",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#00174c",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#dbe1ff",
+                        "secondary-fixed": "#e5e2e1",
+                        "on-primary-fixed-variant": "#474746",
+                        "surface-container-highest": "#e5e2e1",
+                        "on-surface-variant": "#444748",
+                        "tertiary-fixed-dim": "#b4c5ff",
+                        "surface": "#fdf8f8",
+                        "surface-bright": "#fdf8f8",
+                        "secondary-container": "#e5e2e1",
+                        "primary": "#010101",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#ebe7e6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "12px",
+                        "base": "8px",
+                        "lg": "48px",
+                        "xl": "80px",
+                        "xs": "4px",
+                        "md": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #1c1c1c;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .hud-border {
+            position: relative;
+            border-left: 2px solid #5b7fe6;
+            padding-left: 16px;
+        }
+        .hud-border::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -2px;
+            width: 8px;
+            height: 2px;
+            background: #5b7fe6;
+        }
+        .hud-border::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -2px;
+            width: 8px;
+            height: 2px;
+            background: #5b7fe6;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center bg-primary-container">
+<header class="fixed top-0 w-full z-50 bg-primary-container/95 backdrop-blur-md flex justify-center items-center px-md py-md max-w-full">
+<div class="flex flex-col items-center gap-xs text-center">
+<div class="w-12 h-12 rounded-full overflow-hidden border border-on-tertiary-container aspect-square mb-xs">
+<img alt="Chris Sembroski" class="w-full h-full object-cover rounded-full aspect-square" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEVxsjmiBEzHNfcGbCmyjiBhTaofsIiaiNMPRkp9dzWVe0FHjuuuYd7oPsXjd16rgy6c27fmYqVCVO9Ik4uhESslwzVYSnVToDZ0syKNVMkoO5x8r95hm1LitW4h4KQnL6QvNqu53QP5HjS48ULlzbXtDnt9M7vvLG1TygkIbH5cd6PS5VOnQghbGyD3RtVmW6ZpRJYXu1DF1x9Snx2XrCKcWhDEalQdd28W9Apg-9-2pnJ-kbZrWkwYTuUemxM4i6HmsHc989Xmfo">
+</div>
+<span class="font-headline-md text-[20px] text-on-primary tracking-tight">Book your call with Chris Sembroski</span>
+</div>
+</header>
+<main class="mt-[140px] w-full max-w-xl px-md py-lg flex flex-col gap-lg">
+<!-- Progress HUD Area -->
+<div class="flex flex-col items-center gap-md">
+<div class="flex justify-center mb-xs">
+<span class="text-[10px] font-label-md text-on-primary opacity-40 uppercase tracking-widest">Progress</span>
+</div>
+<div class="flex justify-center items-center gap-xs mb-md"><div class="w-8 h-1 bg-on-primary -skew-x-12 rounded-full"></div><div class="w-8 h-1 border border-on-primary/20 -skew-x-12 rounded-full"></div><div class="w-8 h-1 border border-on-primary/20 -skew-x-12 rounded-full"></div></div>
+</div>
+<!-- Main Content Section -->
+<section class="border-top border-white/5 pt-lg">
+<div class="w-full">
+<div class="space-y-xs mb-lg">
+<h1 class="font-headline-lg text-headline-lg text-on-primary">Create your account</h1>
+<p class="text-body-lg text-on-primary-container opacity-70">Introduce yourself to Chris!</p>
+</div>
+<form class="flex flex-col gap-md">
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-primary uppercase tracking-widest opacity-70" for="fullname">Full Name</label>
+<input class="bg-[#111111] border-outline-variant/30 text-on-primary rounded-lg px-md py-sm focus:ring-on-tertiary-container focus:border-on-tertiary-container transition-all" id="fullname" placeholder="John Doe" type="text" value="John Doe">
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-primary uppercase tracking-widest opacity-70" for="email">Email Address</label>
+<input class="bg-[#111111] border-outline-variant/30 text-on-primary rounded-lg px-md py-sm focus:ring-on-tertiary-container focus:border-on-tertiary-container transition-all" id="email" placeholder="commander@astrolink.com" type="email" value="commander@astrolink.com">
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-primary uppercase tracking-widest opacity-70" for="password">Password</label>
+<input class="bg-[#111111] border-outline-variant/30 text-on-primary rounded-lg px-md py-sm focus:ring-on-tertiary-container focus:border-on-tertiary-container transition-all" id="password" placeholder="••••••••" type="password" value="••••••••">
+<span class="text-[12px] text-on-primary-container opacity-50 italic mt-xs">Password must be at least 8 characters</span>
+</div>
+<div class="pt-lg flex flex-col gap-md">
+<button class="w-full bg-on-primary text-primary font-bold py-sm rounded-lg transition-transform active:scale-[0.98] shadow-sm hover:opacity-90 text-body-lg tracking-tight" type="button">
+                        Continue to Goals
+                    </button>
+<div class="text-center">
+<a class="text-body-md hover:underline decoration-on-tertiary-container/30 underline-offset-4 transition-all text-on-primary opacity-80" href="#">
+                            Already have an account? Sign in
+                        </a>
+</div>
+</div>
+</form>
+</div>
+</section>
+</main>
+<script>
+    // Simple micro-interaction for input focus
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            const label = input.parentElement.querySelector('label');
+            label.classList.add('text-on-tertiary-container', 'opacity-100');
+            label.classList.remove('opacity-70');
+        });
+        input.addEventListener('blur', () => {
+            if (!input.value) {
+                const label = input.parentElement.querySelector('label');
+                label.classList.remove('text-on-tertiary-container', 'opacity-100');
+                label.classList.add('opacity-70');
+            }
+        });
+    });
+</script>
+
+
+</body></html>

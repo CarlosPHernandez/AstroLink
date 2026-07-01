@@ -21,15 +21,11 @@ export function getChrisBookingPath(
   return `/booking?${params.toString()}`;
 }
 
-/** Auth-aware entry URL for the Chris booking funnel. */
+/** Direct booking path for Chris campaign — wizard handles inline auth. */
 export function getChrisBookingEntryHref(
   mentorSlug: string,
-  isSignedIn: boolean,
+  _isSignedIn: boolean,
   options?: ChrisBookingHrefOptions,
 ): string {
-  const bookingPath = getChrisBookingPath(mentorSlug, options);
-  if (isSignedIn) {
-    return bookingPath;
-  }
-  return `/auth?redirect=${encodeURIComponent(bookingPath)}`;
+  return getChrisBookingPath(mentorSlug, options);
 }

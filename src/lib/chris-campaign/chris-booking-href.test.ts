@@ -17,9 +17,9 @@ describe('chris-booking-href', () => {
     );
   });
 
-  it('wraps booking path in auth redirect when signed out', () => {
+  it('returns booking path for signed-out users (inline wizard auth)', () => {
     expect(getChrisBookingEntryHref('chris-sembroski', false)).toBe(
-      '/auth?redirect=%2Fbooking%3Fmentor%3Dchris-sembroski%26campaign%3Dchris',
+      '/booking?mentor=chris-sembroski&campaign=chris',
     );
   });
 
