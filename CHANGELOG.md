@@ -2,6 +2,20 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.5.9.1] - 2026-07-01
+
+Production Chris signup and `/auth` registration now show specific errors instead of a generic "use a different email" when Supabase rejects sign-up (duplicate account, email rate limit, blocked test domains).
+
+### Added
+- Supabase auth error mapper with unit tests (`src/lib/supabase/auth-error-message.ts`).
+
+### Changed
+- Chris booking wizard and `/auth` actions log Supabase errors server-side and surface mapped messages for sign-up and sign-in.
+- Chris launch checklist documents Supabase Auth settings (confirm email off, rate limits, preview demo auth).
+
+### Fixed
+- Unconfirmed-email sign-in on Chris wizard shows a confirm-inbox message instead of generic invalid credentials.
+
 ## [0.5.9.0] - 2026-06-30
 
 Chris campaign launch ops: marketing referrer attribution from landing through booking, admin ops metrics panel, and sold-out waitlist routing.
