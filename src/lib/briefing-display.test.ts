@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatMenteeBriefAsPlainText,
   isLegacySessionBriefing,
   isPreCallBrief,
   isSessionBriefing,
@@ -138,5 +139,12 @@ describe('briefing-display resolvers', () => {
     expect(resolveSessionObjectives(legacyBriefing, 'mentor')).toEqual([
       'Review propulsion trade study',
     ]);
+  });
+
+  it('formats mentee brief as plain text', () => {
+    const text = formatMenteeBriefAsPlainText(sessionBundle);
+    expect(text).toContain(sessionBundle.mentee.personal_intro);
+    expect(text).toContain('Review your propulsion trade study');
+    expect(text).toContain('What surprised you most in your last trade study?');
   });
 });
