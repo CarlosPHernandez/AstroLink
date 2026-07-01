@@ -2,6 +2,24 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.5.8.0] - 2026-06-30
+
+Chris Sembroski campaign visitors can now book a 45-minute session end-to-end: pick a date on the landing page, sign in or create an account inline, set session goals, and pay without leaving the campaign flow.
+
+### Added
+- Chris booking mode (`campaign=chris`): fixed 45-minute sessions, locked mentor, date param in booking URLs.
+- Three-step Chris booking wizard at `/booking?campaign=chris`: Account → Session goals → Pay, with inline register/login (no redirect to `/auth`).
+- Optional Stripe promo support via `CHRIS_STRIPE_COUPON_ID` / `CHRIS_STRIPE_PROMOTION_CODE` env vars.
+- Shared `chris-campaign-date-strip` for scrollable July 2026+ date selection on mobile and desktop HUD.
+- Stitch wizard reference assets (account, session goals, payment screens) and updated manifest.
+- E2E golden path for `/talk-with-chris` landing → booking wizard.
+
+### Changed
+- `/booking` accepts signed-out Chris visitors and renders the wizard instead of requiring auth upfront.
+- Desktop HUD Request Session form: email field replaced with date picker; CTA passes selected date into booking URL.
+- Chris checkout uses solid dark backgrounds and Stripe night theme (`variant="chris"`).
+- Landing CTAs link directly to `/booking?campaign=chris&date=…` instead of routing through `/auth`.
+
 ## [0.5.7.0] - 2026-06-30
 
 Chris Sembroski campaign visitors on phones now get the full Stitch mobile booking screen at `/talk-with-chris`; iPad and desktop keep the HUD. Pick a July 2026 session date from the new scrollable date strip.

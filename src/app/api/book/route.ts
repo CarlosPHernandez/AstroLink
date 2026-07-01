@@ -8,6 +8,7 @@ import {
 } from '@/lib/booking-rate-limit';
 import { screenBookingIntake } from '@/lib/intake-moderation';
 import { isLlmRateLimitError } from '@/lib/llm';
+import { CHRIS_SESSION_DURATION_MINUTES } from '@/lib/chris-campaign/chris-campaign-constants';
 import { ChrisCampaignSoldOutError } from '@/lib/chris-campaign/chris-campaign-slots';
 import { resolveChrisCampaignForBooking } from '@/lib/chris-campaign/validate-chris-booking';
 import { getSession } from '@/lib/session';
@@ -73,6 +74,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: message }, { status: 400 });
     }
 
+    const durationMinutes = chrisCampaign
+      ? CHRIS_SESSION_DURATION_MINUTES
+      : body.durationMinutes;
+
     const agent = new BookingAgent();
     const result = await agent.bookSession({
       menteeId: session.userId,
@@ -82,7 +87,7 @@ export async function POST(request: Request) {
       scheduledAt,
       menteeGoals: body.goals,
       menteeBackground: body.background,
-      durationMinutes: body.durationMinutes,
+      durationMinutes,
       campaignId: chrisCampaign?.campaignId,
     });
 

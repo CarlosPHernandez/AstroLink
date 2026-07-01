@@ -64,6 +64,42 @@
       "height": "2840",
       "htmlFile": "desktop-editorial-style.html",
       "screenshotFile": "desktop-editorial-style.png"
+    },
+    {
+      "screenId": "fb1d4f07a896407481819e4201344c5e",
+      "slug": "mobile-account-setup-centered-header",
+      "title": "AstroLink - Account Setup (Centered Header Focus)",
+      "deviceType": "MOBILE",
+      "width": "780",
+      "height": "1922",
+      "htmlFile": "mobile-account-setup-centered-header.html",
+      "screenshotFile": "mobile-account-setup-centered-header.png",
+      "stitchUrl": "https://stitch.withgoogle.com/projects/15210333602755341136?node-id=fb1d4f07a896407481819e4201344c5e",
+      "wizardStep": "account"
+    },
+    {
+      "screenId": "bbe912e1cd16400a9f39d7b9ed70f7ec",
+      "slug": "mobile-session-goals-centered-header",
+      "title": "AstroLink - Session Goals (Centered Header Focus)",
+      "deviceType": "MOBILE",
+      "width": "780",
+      "height": "1870",
+      "htmlFile": "mobile-session-goals-centered-header.html",
+      "screenshotFile": "mobile-session-goals-centered-header.png",
+      "stitchUrl": "https://stitch.withgoogle.com/projects/15210333602755341136?node-id=bbe912e1cd16400a9f39d7b9ed70f7ec",
+      "wizardStep": "session"
+    },
+    {
+      "screenId": "f78bc9e9ecc446058f35ebbb881463c5",
+      "slug": "mobile-payment-review-centered-header",
+      "title": "AstroLink - Payment Review (Centered Header Focus)",
+      "deviceType": "MOBILE",
+      "width": "780",
+      "height": "1768",
+      "htmlFile": "mobile-payment-review-centered-header.html",
+      "screenshotFile": "mobile-payment-review-centered-header.png",
+      "stitchUrl": "https://stitch.withgoogle.com/projects/15210333602755341136?node-id=f78bc9e9ecc446058f35ebbb881463c5",
+      "wizardStep": "payment"
     }
   ]
 }

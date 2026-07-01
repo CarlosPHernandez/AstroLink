@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AstroLink - Session Goals</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#ddd9d8",
+                        "tertiary-container": "#00174c",
+                        "secondary-fixed-dim": "#c9c6c5",
+                        "on-primary-fixed-variant": "#474746",
+                        "surface-container-high": "#ebe7e6",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#000002",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e5e2e1",
+                        "inverse-on-surface": "#f4f0ef",
+                        "background": "#1c1c1c", /* Adjusted to match dark theme constraint */
+                        "secondary-fixed": "#e5e2e1",
+                        "surface-tint": "#5f5e5e",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#1c1c1c",
+                        "primary": "#010101",
+                        "on-tertiary-fixed": "#00174b",
+                        "on-background": "#ffffff", /* Adjusted */
+                        "on-secondary-container": "#656464",
+                        "tertiary-fixed": "#dbe1ff",
+                        "surface-container": "#f1edec",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-primary-container": "#ffffff", /* Adjusted */
+                        "secondary-container": "#e5e2e1",
+                        "on-primary-fixed": "#1b1b1b",
+                        "surface-bright": "#fdf8f8",
+                        "on-secondary-fixed-variant": "#474646",
+                        "on-surface": "#ffffff", /* Adjusted */
+                        "surface-container-low": "#f7f3f2",
+                        "outline": "#747878",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "inverse-surface": "#313030",
+                        "surface-container-highest": "#e5e2e1",
+                        "outline-variant": "#c4c7c7",
+                        "secondary": "#5f5e5e",
+                        "primary-fixed": "#e5e2e1",
+                        "on-surface-variant": "#a3a3a3", /* Adjusted for dark theme */
+                        "on-tertiary-fixed-variant": "#0b3ea4",
+                        "inverse-primary": "#c8c6c5",
+                        "surface": "#1c1c1c", /* Adjusted */
+                        "on-tertiary-container": "#5b7fe6",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#b4c5ff",
+                        "error": "#ba1a1a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "lg": "48px",
+                        "sm": "12px",
+                        "md": "24px",
+                        "base": "8px",
+                        "xl": "80px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter", "sans-serif"],
+                        "headline-lg": ["Inter", "sans-serif"],
+                        "label-md": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "headline-md": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #1c1c1c;
+            color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .progress-dash {
+            width: 32px;
+            height: 4px;
+            transform: skewX(-30deg);
+            background-color: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .progress-dash.filled {
+            background-color: #ffffff;
+            border-color: #ffffff;
+        }
+
+        .custom-input {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .custom-input:focus {
+            border-color: #ffffff;
+            outline: none;
+            box-shadow: 0 0 0 1px #ffffff;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .custom-input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-md antialiased w-full max-w-[780px] mx-auto overflow-x-hidden relative">
+<!-- Top Navigation / Header -->
+<header class="w-full flex flex-col items-center pt-xl pb-md px-md relative z-10">
+<div class="absolute top-md left-md">
+<button class="text-on-background opacity-80 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+</div>
+<div class="flex flex-col items-center gap-sm">
+<div class="w-20 h-20 rounded-full overflow-hidden border-2 border-white/20 mb-2">
+<img alt="Chris Sembroski" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIMkBq8QoBHnvZLvckuMU3JstfFh6Wg3sh23UeK4GyW3hVAqTj7x8Mi1ZxKRMI4sy4yO1vJtmPzQQWh-YFrNCSqFIsyuF6_R3zLfyqBgSGOFZyNSpX0HJIb331CeuEOlgo_Jky9wKZptcfDMEBvcGAmyvvOozxFSl1QgCv5K97DPRvm3GIYUJKWQwbIguSsUXRQNvNyoEah3QIyo096O2OSNXVnWzFHXw5M1SBBkDGuA1js-UtyYfJgmG8bj_FEaozqIpR5zrnNsLT"/>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-center">
+                Book your call with Chris Sembroski
+            </p>
+</div>
+</header>
+<!-- Progress Indicator -->
+<div class="w-full flex flex-col items-center justify-center py-md px-md">
+<div class="flex items-center gap-sm">
+<span class="font-label-md text-[10px] uppercase tracking-widest text-on-surface-variant mr-2">PROGRESS</span>
+<div class="progress-dash filled"></div>
+<div class="progress-dash filled"></div>
+<div class="progress-dash"></div>
+</div>
+</div>
+<!-- Main Content -->
+<main class="flex-1 w-full px-md md:px-lg flex flex-col gap-lg pb-32">
+<div class="flex flex-col gap-xs text-center">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-background">What do you want to cover?</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Chris uses this to prepare for your 45-minute session.</p>
+</div>
+<form class="flex flex-col gap-md mt-md w-full max-w-2xl mx-auto">
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest" for="goals">GOALS &amp; QUESTIONS</label>
+<textarea class="custom-input rounded-lg p-sm font-body-md text-body-md resize-none w-full" id="goals" placeholder="e.g. Review our comms architecture for a lunar relay mission…" rows="4"></textarea>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest" for="background">YOUR BACKGROUND</label>
+<textarea class="custom-input rounded-lg p-sm font-body-md text-body-md resize-none w-full" id="background" placeholder="Role, organization, and what you have already tried…" rows="4"></textarea>
+</div>
+<div class="flex items-start gap-xs text-on-surface-variant mt-xs">
+<span class="material-symbols-outlined text-[16px]">info</span>
+<p class="font-body-md text-[13px]">At least 10 characters each — feeds your pre-call briefing.</p>
+</div>
+</form>
+</main>
+<!-- Footer Actions -->
+<div class="fixed bottom-0 w-full max-w-[780px] bg-gradient-to-t from-[#1c1c1c] via-[#1c1c1c] to-transparent pt-xl pb-lg px-md md:px-lg z-20 flex flex-col items-center gap-sm">
+<button class="w-full max-w-md bg-white text-[#1c1c1c] font-label-md text-[14px] uppercase tracking-widest py-4 rounded-full hover:bg-gray-200 transition-colors active:scale-95">
+            Continue to Payment
+        </button>
+<button class="font-label-md text-[12px] uppercase tracking-widest text-on-surface-variant hover:text-white transition-colors">
+            Back
+        </button>
+</div>
+</body></html>

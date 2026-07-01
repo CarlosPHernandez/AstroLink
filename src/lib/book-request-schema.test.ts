@@ -56,7 +56,38 @@ describe('BookBodySchema', () => {
     expect(BookBodySchema.parse(withoutMentor).mentorId).toBeUndefined();
   });
 
-  it('accepts optional campaign=chris', () => {
-    expect(BookBodySchema.parse({ ...validBody, campaign: 'chris' }).campaign).toBe('chris');
+  it('accepts optional campaign=chris with 45-minute live session', () => {
+    expect(
+      BookBodySchema.parse({
+        ...validBody,
+        campaign: 'chris',
+        durationMinutes: 45,
+      }).campaign,
+    ).toBe('chris');
+  });
+
+  it('rejects campaign=chris with non-45-minute duration', () => {
+    const result = BookBodySchema.safeParse({
+      ...validBody,
+      campaign: 'chris',
+      durationMinutes: 30,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.durationMinutes?.[0]).toContain('45');
+    }
+  });
+
+  it('rejects campaign=chris with pre-call brief only', () => {
+    const result = BookBodySchema.safeParse({
+      ...validBody,
+      campaign: 'chris',
+      serviceType: 'pre_call_brief',
+      durationMinutes: 45,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.serviceType?.[0]).toContain('live 1:1');
+    }
   });
 });

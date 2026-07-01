@@ -68,6 +68,8 @@ Apply migration `20260627120000_booking_campaigns.sql` to hosted Supabase before
 
 **PR2.5 scope allowlist:** [`chris-sembroski-launch-PR2.5-scope.md`](./chris-sembroski-launch-PR2.5-scope.md) — do not edit files outside this list in PR2.5.
 
+**PR3 scope allowlist:** [`chris-sembroski-launch-PR3-scope.md`](./chris-sembroski-launch-PR3-scope.md) — do not edit files outside this list in PR3.
+
 ## PR1 test checklist
 
 - [ ] `npm test` — waitlist routes, app-mode, auth-redirect, chris-campaign-*, booking-agent, book-request-schema

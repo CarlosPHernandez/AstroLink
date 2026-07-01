@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import {
+  CHRIS_BOOKING_CAMPAIGN_QUERY,
+  CHRIS_SESSION_DURATION_MINUTES,
+} from '@/lib/chris-campaign/chris-campaign-constants';
 
 export const BookBodySchema = z.object({
   mentorId: z.string().uuid({ message: 'Select a valid expert.' }).optional(),
@@ -21,7 +25,30 @@ export const BookBodySchema = z.object({
     .min(15, { message: 'Session length must be between 15 and 120 minutes.' })
     .max(120, { message: 'Session length must be between 15 and 120 minutes.' })
     .optional(),
-  campaign: z.literal('chris').optional(),
+  campaign: z.literal(CHRIS_BOOKING_CAMPAIGN_QUERY).optional(),
+}).superRefine((data, ctx) => {
+  if (data.campaign !== CHRIS_BOOKING_CAMPAIGN_QUERY) {
+    return;
+  }
+
+  if (data.serviceType !== 'session_1on1') {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Chris sessions are live 1:1 only.',
+      path: ['serviceType'],
+    });
+  }
+
+  if (
+    data.durationMinutes !== undefined &&
+    data.durationMinutes !== CHRIS_SESSION_DURATION_MINUTES
+  ) {
+    ctx.addIssue({
+      code: 'custom',
+      message: `Chris sessions are ${CHRIS_SESSION_DURATION_MINUTES} minutes.`,
+      path: ['durationMinutes'],
+    });
+  }
 });
 
 export type BookBody = z.infer<typeof BookBodySchema>;

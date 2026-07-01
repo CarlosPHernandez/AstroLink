@@ -14,6 +14,8 @@ import {
 } from '@/lib/booking-pricing';
 import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
+import { CHRIS_BOOKING_CAMPAIGN_QUERY } from '@/lib/chris-campaign/chris-campaign-constants';
+import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-booking-mode';
 import { BookBodySchema } from '@/lib/book-request-schema';
 import { getDashboardPathForRole, getPostBookingDashboardPath } from '@/lib/dashboard-paths';
 import type { SessionData } from '@/lib/session';
@@ -194,6 +196,7 @@ function CheckoutSummary({
   step,
   checkoutAmount,
   onDurationChange,
+  showDurationSlider = true,
 }: {
   mentor: ListedExpert | null;
   form: BookingFormState;
@@ -201,6 +204,7 @@ function CheckoutSummary({
   step: 1 | 2;
   checkoutAmount?: number;
   onDurationChange?: (minutes: number) => void;
+  showDurationSlider?: boolean;
 }) {
   const displayTotal = checkoutAmount ?? totalCents;
   const isLive = form.serviceType === 'session_1on1';
@@ -252,7 +256,7 @@ function CheckoutSummary({
 
           {/* Variable duration slider (real-time price in summary card, per new direction).
               Prorates the mentor hourly rate (liveSessionPriceCents). 15min min enforced in compute. */}
-          {isLive && onDurationChange && (
+          {isLive && showDurationSlider !== false && onDurationChange && (
             <div className="pt-3 border-t border-outline-variant/60">
               <div className="flex items-center justify-between text-label-sm mb-1">
                 <span className="text-on-surface-variant">Call length</span>
@@ -318,12 +322,16 @@ export default function BookingClient({
   mentor,
   invalidMentorSlug = null,
   skipPayments = false,
+  chrisCampaign = false,
+  prefillScheduledAt = null,
 }: {
   session: SessionData;
   experts: ListedExpert[];
   mentor: ListedExpert | null;
   invalidMentorSlug?: string | null;
   skipPayments?: boolean;
+  chrisCampaign?: boolean;
+  prefillScheduledAt?: string | null;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -332,12 +340,13 @@ export default function BookingClient({
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [pendingSlug, setPendingSlug] = useState<string | null>(mentor?.slug ?? null);
   const [showPicker, setShowPicker] = useState(!mentor);
+  const chrisDurationMinutes = getChrisCampaignDurationMinutes();
   const [form, setForm] = useState<BookingFormState>({
     serviceType: 'session_1on1',
     goals: '',
     background: '',
-    scheduledAt: '',
-    durationMinutes: 30, // default; slider will adjust (min 15 enforced in pricing)
+    scheduledAt: prefillScheduledAt ?? '',
+    durationMinutes: chrisCampaign ? chrisDurationMinutes : 30,
   });
 
   useEffect(() => {
@@ -355,7 +364,7 @@ export default function BookingClient({
   }, [pendingSlug, experts, mentor]);
 
   const needsExpert = form.serviceType === 'session_1on1';
-  const pickerVisible = needsExpert && (showPicker || !activeMentor);
+  const pickerVisible = !chrisCampaign && needsExpert && (showPicker || !activeMentor);
 
   const handleSelectExpert = (slug: string) => {
     setPendingSlug(slug);
@@ -402,7 +411,8 @@ export default function BookingClient({
       scheduledAt: new Date(form.scheduledAt).toISOString(),
       goals: form.goals,
       background: form.background,
-      durationMinutes: form.durationMinutes,
+      durationMinutes: chrisCampaign ? chrisDurationMinutes : form.durationMinutes,
+      ...(chrisCampaign ? { campaign: CHRIS_BOOKING_CAMPAIGN_QUERY } : {}),
     };
 
     const parsed = BookBodySchema.safeParse(payload);
@@ -468,7 +478,10 @@ export default function BookingClient({
   };
 
   return (
-    <div className="min-h-screen bg-background text-on-surface font-sans">
+    <div
+      className="min-h-screen bg-background text-on-surface font-sans"
+      data-testid={chrisCampaign ? 'booking-chris-campaign' : undefined}
+    >
       <header className="border-b border-outline-variant/60 bg-surface-container-lowest/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link href="/" className="font-bold text-on-surface tracking-tight">
@@ -496,11 +509,11 @@ export default function BookingClient({
       >
         <div className="mb-8">
           <Link
-            href="/experts"
+            href={chrisCampaign ? '/talk-with-chris' : '/experts'}
             className="inline-flex items-center gap-0.5 text-label-md text-on-surface-variant hover:text-primary mb-5 transition-colors"
           >
             <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-            Directory
+            {chrisCampaign ? 'Talk with Chris' : 'Directory'}
           </Link>
 
           {activeMentor && !showPicker ? (
@@ -525,7 +538,7 @@ export default function BookingClient({
                     </h1>
                   </div>
                 </div>
-                {step === 1 ? (
+                {step === 1 && !chrisCampaign ? (
                   <button
                     type="button"
                     onClick={handleChangeExpert}
@@ -580,19 +593,28 @@ export default function BookingClient({
                     />
                   ) : null}
 
-                  <section>
-                    <h2 className={sectionTitleClass}>Session type</h2>
-                    <p className={sectionHintClass}>Choose how you want to work with an expert.</p>
-                    <SessionFormatPicker
-                      value={form.serviceType}
-                      onChange={(serviceType) => {
-                        setForm({ ...form, serviceType });
-                        if (serviceType === 'session_1on1' && !activeMentor) {
-                          setShowPicker(true);
-                        }
-                      }}
-                    />
-                  </section>
+                  {chrisCampaign ? (
+                    <section>
+                      <h2 className={sectionTitleClass}>Session</h2>
+                      <p className={sectionHintClass}>
+                        Confidential {chrisDurationMinutes}-minute live 1:1 with Chris Sembroski.
+                      </p>
+                    </section>
+                  ) : (
+                    <section>
+                      <h2 className={sectionTitleClass}>Session type</h2>
+                      <p className={sectionHintClass}>Choose how you want to work with an expert.</p>
+                      <SessionFormatPicker
+                        value={form.serviceType}
+                        onChange={(serviceType) => {
+                          setForm({ ...form, serviceType });
+                          if (serviceType === 'session_1on1' && !activeMentor) {
+                            setShowPicker(true);
+                          }
+                        }}
+                      />
+                    </section>
+                  )}
 
                   {/* Pre-call briefing for the expert is now included by default with every live session (no extra charge or toggle). The intake below feeds the briefing generation. */}
 
@@ -728,7 +750,10 @@ export default function BookingClient({
             totalCents={totalCents}
             step={step}
             checkoutAmount={checkout?.amountCents}
-            onDurationChange={(m) => setForm({ ...form, durationMinutes: m })}
+            onDurationChange={
+              chrisCampaign ? undefined : (m) => setForm({ ...form, durationMinutes: m })
+            }
+            showDurationSlider={!chrisCampaign}
           />
         </div>
       </main>

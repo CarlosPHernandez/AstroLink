@@ -24,10 +24,12 @@ function PaymentStepInner({
   checkout,
   onBack,
   sessionRole,
+  variant = 'default',
 }: {
   checkout: BookingCheckoutState;
   onBack: () => void;
   sessionRole: SessionData['role'];
+  variant?: 'default' | 'chris';
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -60,28 +62,62 @@ function PaymentStepInner({
     router.refresh();
   };
 
+  const isChris = variant === 'chris';
+
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border border-outline-variant bg-surface-container-low p-4 flex gap-3">
-        <span className="material-symbols-outlined text-primary text-[22px]">account_balance</span>
-        <p className="text-label-md text-on-surface-variant leading-relaxed">
+      <div
+        className={
+          isChris
+            ? 'flex gap-3 rounded-lg border border-[#333333] bg-[#111111] p-4'
+            : 'rounded-lg border border-outline-variant bg-surface-container-low p-4 flex gap-3'
+        }
+      >
+        <span
+          className={
+            isChris
+              ? 'material-symbols-outlined text-[22px] text-[#5b7fe6]'
+              : 'material-symbols-outlined text-primary text-[22px]'
+          }
+        >
+          account_balance
+        </span>
+        <p
+          className={
+            isChris
+              ? 'text-sm leading-relaxed text-white/70'
+              : 'text-label-md text-on-surface-variant leading-relaxed'
+          }
+        >
           Authorize{' '}
-          <strong className="text-on-surface font-mono">{formatMoney(checkout.amountCents)}</strong>.
-          Funds are captured only after your session completes successfully.
+          <strong className={isChris ? 'font-mono text-white' : 'text-on-surface font-mono'}>
+            {formatMoney(checkout.amountCents)}
+          </strong>
+          . Funds are captured only after your session completes successfully.
         </p>
       </div>
 
-      <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
+      <div
+        className={
+          isChris
+            ? 'rounded-xl border border-[#333333] bg-[#111111] p-5'
+            : 'rounded-xl border border-outline-variant bg-surface-container-lowest p-5'
+        }
+      >
         <PaymentElement options={{ layout: 'tabs' }} />
       </div>
 
       <FormAlert message={error} />
 
-      <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+      <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
         <button
           type="button"
           onClick={onBack}
-          className="sm:flex-1 py-3 rounded-lg border border-outline-variant text-label-md font-semibold text-on-surface-variant hover:bg-surface-container-low transition-colors"
+          className={
+            isChris
+              ? 'rounded-lg border border-[#333333] py-3 text-sm font-semibold text-white/70 transition-colors hover:bg-[#111111] sm:flex-1'
+              : 'sm:flex-1 py-3 rounded-lg border border-outline-variant text-label-md font-semibold text-on-surface-variant hover:bg-surface-container-low transition-colors'
+          }
         >
           Edit details
         </button>
@@ -89,7 +125,11 @@ function PaymentStepInner({
           type="button"
           disabled={!stripe || paying}
           onClick={handlePay}
-          className="sm:flex-[2] py-3.5 rounded-lg bg-primary text-on-primary text-label-md font-semibold hover:bg-primary-container disabled:opacity-50 transition-all"
+          className={
+            isChris
+              ? 'rounded-xl bg-white py-3.5 text-base font-semibold text-[#1c1c1c] transition-all hover:bg-gray-200 disabled:opacity-50 sm:flex-[2]'
+              : 'sm:flex-[2] py-3.5 rounded-lg bg-primary text-on-primary text-label-md font-semibold hover:bg-primary-container disabled:opacity-50 transition-all'
+          }
         >
           {paying ? 'Authorizing…' : `Authorize ${formatMoney(checkout.amountCents)}`}
         </button>
@@ -102,14 +142,37 @@ export function BookingPaymentStep({
   checkout,
   onBack,
   sessionRole,
+  variant = 'default',
 }: {
   checkout: BookingCheckoutState;
   onBack: () => void;
   sessionRole: SessionData['role'];
+  variant?: 'default' | 'chris';
 }) {
+  const elementsOptions =
+    variant === 'chris'
+      ? {
+          clientSecret: checkout.clientSecret,
+          appearance: {
+            theme: 'night' as const,
+            variables: {
+              colorBackground: '#111111',
+              colorText: '#ffffff',
+              colorDanger: '#ba1a1a',
+              borderRadius: '8px',
+            },
+          },
+        }
+      : { clientSecret: checkout.clientSecret };
+
   return (
-    <Elements stripe={stripePromise} options={{ clientSecret: checkout.clientSecret }}>
-      <PaymentStepInner checkout={checkout} onBack={onBack} sessionRole={sessionRole} />
+    <Elements stripe={stripePromise} options={elementsOptions}>
+      <PaymentStepInner
+        checkout={checkout}
+        onBack={onBack}
+        sessionRole={sessionRole}
+        variant={variant}
+      />
     </Elements>
   );
 }
