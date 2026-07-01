@@ -3,6 +3,10 @@
 import { isDemoAuthEnabled, isSupabaseAuthEnabled } from '@/lib/app-mode';
 import { resolvePresetLogin } from '@/lib/auth-presets';
 import { createSession } from '@/lib/session';
+import {
+  mapSupabaseSignInError,
+  mapSupabaseSignUpError,
+} from '@/lib/supabase/auth-error-message';
 import { createClient } from '@/lib/supabase/server';
 import { ensureMenteeUserRow } from '@/lib/user-profile';
 import { z } from 'zod';
@@ -62,8 +66,9 @@ export async function chrisWizardRegisterAction(
     });
 
     if (error) {
+      console.error('chrisWizardRegisterAction signUp:', error.message, error.code, error.status);
       return {
-        message: 'Could not create account. Try signing in or use a different email.',
+        message: mapSupabaseSignUpError(error),
         success: false,
       };
     }
@@ -121,7 +126,8 @@ export async function chrisWizardLoginAction(
     const supabase = await createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      return { message: 'Invalid email or password.', success: false };
+      console.error('chrisWizardLoginAction signIn:', error.message, error.code, error.status);
+      return { message: mapSupabaseSignInError(error), success: false };
     }
     return { success: true };
   }
