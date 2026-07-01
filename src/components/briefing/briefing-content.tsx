@@ -3,6 +3,7 @@
 import type { BriefingAgenda } from '@/lib/types';
 import type { BriefingPayload } from '@/lib/briefing-display';
 import {
+  briefingContentReady,
   isLegacySessionBriefing,
   isPreCallBrief,
   isSessionBriefingBundle,
@@ -10,6 +11,8 @@ import {
   resolveExpertBrief,
   resolveMenteeBrief,
 } from '@/lib/briefing-display';
+
+export { briefingContentReady };
 import { BriefingUpgradeBanner } from '@/components/briefing/briefing-upgrade-banner';
 
 function AgendaBlocks({ agenda }: { agenda: BriefingAgenda }) {
@@ -309,16 +312,6 @@ export function BriefingContent({
   }
 
   return null;
-}
-
-export function briefingContentReady(
-  briefing: BriefingPayload,
-  audience: 'mentee' | 'mentor',
-): boolean {
-  if (isPreCallBrief(briefing)) {
-    return audience === 'mentee';
-  }
-  return isSessionBriefingBundle(briefing) || isLegacySessionBriefing(briefing);
 }
 
 export { needsBriefingUpgrade };

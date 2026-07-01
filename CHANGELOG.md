@@ -2,6 +2,26 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.5.10.0] - 2026-07-01
+
+Chris campaign bookers now stay in the wizard after payment: a segmented progress overlay runs through authorization and brief generation, then a compact pre-call brief modal (copy or email) and a confirmation screen with next steps — without redirecting to the generic dashboard flow.
+
+### Added
+- Chris post-payment fulfillment overlay with segmented progress, pulsing in-progress segments, and brief polling (`useChrisBookingFulfillment`, fulfillment overlay, briefing modal, next-steps screen).
+- `GET /api/bookings/[id]/status` for Chris campaign booking + briefing polling.
+- `POST /api/book/briefing/email` to send the mentee pre-call brief on demand.
+- `formatMenteeBriefAsPlainText` helper and mentee brief email builder.
+- Proxy allowlist so signed-out visitors can open `/booking?campaign=chris` in full app mode.
+- E2E coverage for overlay-on-pay, in-flow brief reveal, and next steps.
+
+### Changed
+- Chris booking wizard orchestrates overlay → brief modal → next steps; generic `/booking` and dashboard `?booked=` flows unchanged.
+- `BookingPaymentStep` accepts Chris-only `onPaymentStarted` / `onPaymentComplete` / `onPaymentFailed` callbacks.
+- Session → payment step adds a preparing-checkout transition; brief modal is compact on desktop with taller scroll area.
+
+### Fixed
+- Signed-out users hitting Book on the Chris landing no longer redirect to `/auth` before the wizard.
+
 ## [0.5.9.1] - 2026-07-01
 
 Production Chris signup and `/auth` registration now show specific errors instead of a generic "use a different email" when Supabase rejects sign-up (duplicate account, email rate limit, blocked test domains).

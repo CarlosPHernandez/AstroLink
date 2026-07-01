@@ -63,6 +63,16 @@ export function resolveExpertBrief(
   return null;
 }
 
+export function briefingContentReady(
+  briefing: BriefingPayload,
+  audience: 'mentee' | 'mentor',
+): boolean {
+  if (isPreCallBrief(briefing)) {
+    return audience === 'mentee';
+  }
+  return isSessionBriefingBundle(briefing) || isLegacySessionBriefing(briefing);
+}
+
 export function resolveSessionObjectives(
   briefing: BriefingPayload | null,
   audience: 'mentee' | 'mentor',
@@ -86,3 +96,63 @@ export const BRIEFING_THINKING_STEPS = [
   'Structuring agenda & objectives…',
   'Compiling your brief…',
 ] as const;
+
+function appendAgendaLines(lines: string[], agenda: MenteeBriefingOutput['recommended_agenda']) {
+  lines.push('', 'Your session plan');
+  lines.push(`0–5 min: ${agenda.minutes_0_5}`);
+  lines.push(`5–20 min: ${agenda.minutes_5_20}`);
+  lines.push(`20–28 min: ${agenda.minutes_20_28}`);
+  lines.push(`28–30 min: ${agenda.minutes_28_30}`);
+}
+
+/** Plain-text mentee brief for clipboard + email (Chris post-payment modal). */
+export function formatMenteeBriefAsPlainText(briefing: BriefingPayload): string {
+  const mentee = resolveMenteeBrief(briefing);
+  if (mentee) {
+    const lines: string[] = [mentee.personal_intro, '', 'Your objectives'];
+    mentee.session_objectives.forEach((objective, index) => {
+      lines.push(`${index + 1}. ${objective}`);
+    });
+    appendAgendaLines(lines, mentee.recommended_agenda);
+    lines.push('', 'Your context', mentee.your_context, '', 'Questions to ask');
+    mentee.questions_to_ask.forEach((question, index) => {
+      lines.push(`${index + 1}. ${question}`);
+    });
+    if (mentee.suggested_resources.length > 0) {
+      lines.push('', 'Suggested resources');
+      mentee.suggested_resources.forEach((resource) => lines.push(`- ${resource}`));
+    }
+    return lines.join('\n');
+  }
+
+  if (isLegacySessionBriefing(briefing)) {
+    const lines: string[] = ['Session objectives'];
+    briefing.session_objectives.forEach((objective, index) => {
+      lines.push(`${index + 1}. ${objective}`);
+    });
+    lines.push('', 'Recommended agenda');
+    lines.push(`0–5 min: ${briefing.recommended_agenda.minutes_0_5}`);
+    lines.push(`5–20 min: ${briefing.recommended_agenda.minutes_5_20}`);
+    lines.push(`20–28 min: ${briefing.recommended_agenda.minutes_20_28}`);
+    lines.push(`28–30 min: ${briefing.recommended_agenda.minutes_28_30}`);
+    lines.push('', 'Your context', briefing.mentee_context_summary);
+    if (briefing.suggested_resources.length > 0) {
+      lines.push('', 'Suggested resources');
+      briefing.suggested_resources.forEach((resource) => lines.push(`- ${resource}`));
+    }
+    return lines.join('\n');
+  }
+
+  if (isPreCallBrief(briefing)) {
+    const lines: string[] = [briefing.one_line_summary, '', 'Context summary', briefing.buyer_context_summary];
+    if (briefing.proposed_questions.length > 0) {
+      lines.push('', 'Questions for your expert');
+      briefing.proposed_questions.forEach((question, index) => {
+        lines.push(`${index + 1}. ${question}`);
+      });
+    }
+    return lines.join('\n');
+  }
+
+  return '';
+}

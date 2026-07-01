@@ -18,6 +18,10 @@ import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-book
 import {
   computeBookingTotalCents,
 } from '@/lib/booking-pricing';
+import { ChrisBookingFulfillmentOverlay } from '@/components/chris-campaign/chris-booking-fulfillment-overlay';
+import { ChrisBookingNextSteps } from '@/components/chris-campaign/chris-booking-next-steps';
+import { ChrisBriefingModal } from '@/components/chris-campaign/chris-briefing-modal';
+import { useChrisBookingFulfillment } from '@/components/chris-campaign/use-chris-booking-fulfillment';
 import { BookBodySchema } from '@/lib/book-request-schema';
 import { getPostBookingDashboardPath } from '@/lib/dashboard-paths';
 import type { ListedExpert } from '@/lib/mentor-directory';
@@ -45,6 +49,14 @@ const BookingPaymentStep = dynamic(
 );
 
 type WizardStep = 'account' | 'session' | 'payment';
+
+/** Minimum perceived transition before revealing the payment summary step. */
+const SESSION_TO_PAYMENT_TRANSITION_MS = 600;
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 type CheckoutState = {
   bookingId: string;
@@ -292,7 +304,9 @@ export function ChrisBookingWizard({
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [stepTransitioning, setStepTransitioning] = useState(false);
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
+  const fulfillment = useChrisBookingFulfillment();
 
   const totalCents = useMemo(
     () =>
@@ -336,6 +350,7 @@ export function ChrisBookingWizard({
     setLoading(true);
     setError(null);
     setFieldErrors({});
+    fulfillment.beginPaymentOverlay();
 
     try {
       const res = await fetch('/api/book', {
@@ -352,6 +367,7 @@ export function ChrisBookingWizard({
       };
 
       if (!res.ok || !json.success) {
+        fulfillment.reset();
         if (json.fieldErrors) {
           setFieldErrors(json.fieldErrors);
           setError(json.error ?? formLevelSummary());
@@ -365,14 +381,16 @@ export function ChrisBookingWizard({
       }
 
       if (json.data.skipPayment) {
-        router.push(getPostBookingDashboardPath(session.role, json.data.bookingId));
         router.refresh();
+        void fulfillment.completePaymentAndFulfill(json.data.bookingId);
         return;
       }
 
+      fulfillment.dismissOverlay();
       setCheckout(json.data);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: unknown) {
+      fulfillment.reset();
       setError(err instanceof Error ? err.message : "We couldn't complete your booking. Try again.");
     } finally {
       setLoading(false);
@@ -380,6 +398,8 @@ export function ChrisBookingWizard({
   };
 
   const continueFromSession = () => {
+    if (stepTransitioning) return;
+
     const payload = {
       mentorId: mentor.id,
       serviceType: 'session_1on1' as const,
@@ -399,8 +419,54 @@ export function ChrisBookingWizard({
 
     setFieldErrors({});
     setError(null);
-    setStep('payment');
+    setStepTransitioning(true);
+
+    const advanceToPayment = () => {
+      setStep('payment');
+      setStepTransitioning(false);
+    };
+
+    if (prefersReducedMotion()) {
+      advanceToPayment();
+      return;
+    }
+
+    window.setTimeout(advanceToPayment, SESSION_TO_PAYMENT_TRANSITION_MS);
   };
+
+  const handleChrisPaymentStarted = (bookingId: string) => {
+    fulfillment.beginPaymentOverlay(bookingId);
+  };
+
+  const handleChrisPaymentComplete = (bookingId: string) => {
+    void fulfillment.completePaymentAndFulfill(bookingId);
+  };
+
+  const handleChrisPaymentFailed = () => {
+    fulfillment.reset();
+  };
+
+  const nextStepsDateLabel = fulfillment.scheduledAt
+    ? formatChrisSessionDate(fulfillment.scheduledAt.slice(0, 10))
+    : formatChrisSessionDate(displayDate);
+
+  if (fulfillment.view === 'next_steps' && fulfillment.bookingId) {
+    return (
+      <div
+        className="chris-landing min-h-screen bg-primary-container font-sans text-white"
+        data-testid="booking-chris-campaign"
+      >
+        <ChrisWizardHeader mentor={mentor} />
+        <main className="chris-mobile-max mx-auto flex w-full flex-col gap-lg px-md pb-40 pt-lg">
+          <ChrisBookingNextSteps
+            mentorName={fulfillment.mentorName || mentor.name}
+            sessionDateLabel={nextStepsDateLabel}
+            bookingId={fulfillment.bookingId}
+          />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -408,7 +474,36 @@ export function ChrisBookingWizard({
       data-testid="booking-chris-campaign"
     >
       <ChrisWizardHeader mentor={mentor} />
-      <ChrisWizardProgress step={checkout ? 'payment' : step} />
+      <ChrisWizardProgress
+        step={checkout || stepTransitioning || fulfillment.isOverlayActive ? 'payment' : step}
+      />
+
+      {fulfillment.overlayPhase ? (
+        <ChrisBookingFulfillmentOverlay
+          phase={fulfillment.overlayPhase}
+          thinkingStep={fulfillment.thinkingStep}
+          errorMessage={fulfillment.errorMessage}
+          onViewDashboard={
+            fulfillment.bookingId
+              ? () => {
+                  router.push(
+                    getPostBookingDashboardPath(session?.role ?? 'mentee', fulfillment.bookingId!),
+                  );
+                }
+              : undefined
+          }
+        />
+      ) : null}
+
+      {fulfillment.view === 'brief' && fulfillment.briefing && fulfillment.bookingId ? (
+        <ChrisBriefingModal
+          mentorName={fulfillment.mentorName || mentor.name}
+          briefing={fulfillment.briefing}
+          bookingId={fulfillment.bookingId}
+          userEmail={session?.email}
+          onClose={fulfillment.closeBrief}
+        />
+      ) : null}
 
       <main className="chris-mobile-max mx-auto flex w-full flex-col gap-lg px-md pb-40 pt-lg">
         {checkout?.clientSecret && session ? (
@@ -418,6 +513,9 @@ export function ChrisBookingWizard({
               onBack={() => setCheckout(null)}
               sessionRole={session.role}
               variant="chris"
+              onPaymentStarted={handleChrisPaymentStarted}
+              onPaymentComplete={handleChrisPaymentComplete}
+              onPaymentFailed={handleChrisPaymentFailed}
             />
           </div>
         ) : (
@@ -427,7 +525,11 @@ export function ChrisBookingWizard({
             ) : null}
 
             {step === 'session' ? (
-              <section className="chris-form-max mx-auto w-full">
+              <section
+                className={`chris-form-max mx-auto w-full transition-opacity duration-300 ${
+                  stepTransitioning ? 'pointer-events-none opacity-40' : 'opacity-100'
+                }`}
+              >
                 <div className="mb-lg space-y-xs">
                   <h1 className="text-[32px] font-semibold leading-tight text-white">
                     What do you want to cover?
@@ -522,10 +624,21 @@ export function ChrisBookingWizard({
                   <button
                     type="button"
                     data-testid="booking-wizard-continue-session"
+                    disabled={stepTransitioning}
                     onClick={continueFromSession}
-                    className="chris-form-max w-full rounded-lg bg-white py-sm text-base font-bold tracking-tight text-primary-container shadow-sm transition-transform hover:opacity-90 active:scale-[0.98]"
+                    className="chris-form-max flex w-full items-center justify-center gap-xs rounded-lg bg-white py-sm text-base font-bold tracking-tight text-primary-container shadow-sm transition-transform hover:opacity-90 active:scale-[0.98] disabled:opacity-70"
                   >
-                    Continue to Payment
+                    {stepTransitioning ? (
+                      <>
+                        <span
+                          className="h-4 w-4 animate-spin rounded-full border-2 border-primary-container border-t-transparent"
+                          aria-hidden
+                        />
+                        Preparing checkout…
+                      </>
+                    ) : (
+                      'Continue to Payment'
+                    )}
                   </button>
                   {!session ? (
                     <button
@@ -541,7 +654,7 @@ export function ChrisBookingWizard({
             ) : null}
 
             {step === 'payment' ? (
-              <section className="chris-form-max mx-auto w-full">
+              <section className="chris-form-max chris-fade-in-up mx-auto w-full">
                 <div className="mb-6 overflow-hidden rounded-2xl border border-[#333333] bg-[#111111] p-6">
                   <h2 className="mb-4 text-base font-medium text-white">
                     Session with {mentor.name}

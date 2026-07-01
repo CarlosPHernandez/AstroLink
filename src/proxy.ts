@@ -7,6 +7,7 @@ import {
   isWaitlistMode,
 } from './lib/app-mode';
 import { getDefaultPathAfterAuth } from './lib/auth-redirect';
+import { isChrisCampaignBookingEntry } from './lib/chris-campaign/chris-campaign-routes';
 import { resolveAppSessionFromAuthUser } from './lib/resolve-app-session';
 import { decryptSessionString, type SessionData } from './lib/session';
 import { createProxyClient, withSupabaseCookies } from './lib/supabase/proxy-client';
@@ -145,6 +146,18 @@ export async function proxy(request: NextRequest) {
 
   if (isProtectedRoute) {
     if (!session) {
+      if (
+        isChrisCampaignBookingEntry(
+          pathname,
+          request.nextUrl.searchParams.get('campaign'),
+        )
+      ) {
+        return finish(
+          NextResponse.next({
+            request: { headers: requestHeaders },
+          }),
+        );
+      }
       return finish(redirectToAuth(request, returnPath));
     }
 
