@@ -3,6 +3,7 @@ import {
   CHRIS_BOOKING_CAMPAIGN_QUERY,
   CHRIS_SESSION_DURATION_MINUTES,
 } from '@/lib/chris-campaign/chris-campaign-constants';
+import { sanitizeEarlyAccessReferrer } from '@/lib/waitlist/early-access-referrer-sanitize';
 
 export const BookBodySchema = z.object({
   mentorId: z.string().uuid({ message: 'Select a valid expert.' }).optional(),
@@ -26,6 +27,10 @@ export const BookBodySchema = z.object({
     .max(120, { message: 'Session length must be between 15 and 120 minutes.' })
     .optional(),
   campaign: z.literal(CHRIS_BOOKING_CAMPAIGN_QUERY).optional(),
+  marketingReferrer: z
+    .string()
+    .optional()
+    .transform((value) => sanitizeEarlyAccessReferrer(value)),
 }).superRefine((data, ctx) => {
   if (data.campaign !== CHRIS_BOOKING_CAMPAIGN_QUERY) {
     return;

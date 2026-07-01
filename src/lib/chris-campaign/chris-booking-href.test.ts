@@ -28,4 +28,12 @@ describe('chris-booking-href', () => {
       '/booking?mentor=chris-sembroski&campaign=chris&date=2026-07-15',
     );
   });
+
+  it('includes optional ref query for marketing attribution', () => {
+    expect(
+      getChrisBookingPath('chris-sembroski', { ref: 'chris-sembroski', date: '2026-07-15' }),
+    ).toBe(
+      '/booking?mentor=chris-sembroski&campaign=chris&date=2026-07-15&ref=chris-sembroski',
+    );
+  });
 });

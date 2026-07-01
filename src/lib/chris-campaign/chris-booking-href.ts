@@ -3,6 +3,8 @@ import { CHRIS_BOOKING_CAMPAIGN_QUERY } from '@/lib/chris-campaign/chris-campaig
 export type ChrisBookingHrefOptions = {
   /** ISO date (YYYY-MM-DD) from landing date strip — pre-fills booking schedule. */
   date?: string | null;
+  /** Marketing referrer from `?ref=` on the Chris landing URL. */
+  ref?: string | null;
 };
 
 /** Booking path for Chris campaign sessions (includes `campaign=chris`). */
@@ -17,6 +19,10 @@ export function getChrisBookingPath(
   const date = options?.date?.trim();
   if (date) {
     params.set('date', date);
+  }
+  const ref = options?.ref?.trim();
+  if (ref) {
+    params.set('ref', ref);
   }
   return `/booking?${params.toString()}`;
 }

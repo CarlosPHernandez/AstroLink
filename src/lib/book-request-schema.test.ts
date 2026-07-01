@@ -90,4 +90,21 @@ describe('BookBodySchema', () => {
       expect(result.error.flatten().fieldErrors.serviceType?.[0]).toContain('live 1:1');
     }
   });
+
+  it('sanitizes marketingReferrer on Chris bookings', () => {
+    expect(
+      BookBodySchema.parse({
+        ...validBody,
+        campaign: 'chris',
+        marketingReferrer: 'chris-sembroski',
+      }).marketingReferrer,
+    ).toBe('chris-sembroski');
+    expect(
+      BookBodySchema.parse({
+        ...validBody,
+        campaign: 'chris',
+        marketingReferrer: '<bad>',
+      }).marketingReferrer,
+    ).toBeUndefined();
+  });
 });
