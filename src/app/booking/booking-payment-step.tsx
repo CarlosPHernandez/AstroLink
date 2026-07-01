@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -25,11 +26,18 @@ function PaymentStepInner({
   onBack,
   sessionRole,
   variant = 'default',
+  onPaymentComplete,
+  onPaymentStarted,
+  onPaymentFailed,
 }: {
   checkout: BookingCheckoutState;
   onBack: () => void;
   sessionRole: SessionData['role'];
   variant?: 'default' | 'chris';
+  /** Chris campaign only — keeps user in wizard instead of dashboard redirect. */
+  onPaymentComplete?: (bookingId: string) => void;
+  onPaymentStarted?: (bookingId: string) => void;
+  onPaymentFailed?: () => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -39,8 +47,11 @@ function PaymentStepInner({
 
   const handlePay = async () => {
     if (!stripe || !elements) return;
-    setPaying(true);
-    setError(null);
+    flushSync(() => {
+      setPaying(true);
+      setError(null);
+    });
+    onPaymentStarted?.(checkout.bookingId);
 
     const postBookingPath = getPostBookingDashboardPath(sessionRole, checkout.bookingId);
     const { error: submitError } = await stripe.confirmPayment({
@@ -54,7 +65,14 @@ function PaymentStepInner({
     setPaying(false);
 
     if (submitError) {
+      onPaymentFailed?.();
       setError(submitError.message ?? 'Payment failed');
+      return;
+    }
+
+    if (onPaymentComplete) {
+      onPaymentComplete(checkout.bookingId);
+      router.refresh();
       return;
     }
 
@@ -143,11 +161,17 @@ export function BookingPaymentStep({
   onBack,
   sessionRole,
   variant = 'default',
+  onPaymentComplete,
+  onPaymentStarted,
+  onPaymentFailed,
 }: {
   checkout: BookingCheckoutState;
   onBack: () => void;
   sessionRole: SessionData['role'];
   variant?: 'default' | 'chris';
+  onPaymentComplete?: (bookingId: string) => void;
+  onPaymentStarted?: (bookingId: string) => void;
+  onPaymentFailed?: () => void;
 }) {
   const elementsOptions =
     variant === 'chris'
@@ -172,6 +196,9 @@ export function BookingPaymentStep({
         onBack={onBack}
         sessionRole={sessionRole}
         variant={variant}
+        onPaymentComplete={onPaymentComplete}
+        onPaymentStarted={onPaymentStarted}
+        onPaymentFailed={onPaymentFailed}
       />
     </Elements>
   );

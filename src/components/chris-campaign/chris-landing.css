@@ -28,6 +28,55 @@
   max-width: var(--chris-mobile-max);
 }
 
+/* Overlay / modal panels — never use max-w-xs|sm|md|lg (those map to --spacing-* = 8–32px). */
+.chris-landing .chris-overlay-panel {
+  width: min(100%, var(--chris-form-max));
+  min-width: 17.5rem;
+}
+
+.chris-landing .chris-brief-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  max-width: var(--chris-form-max);
+  max-height: min(40rem, calc(100dvh - 2rem));
+  border-radius: 1rem 1rem 0 0;
+  border: 1px solid #333333;
+  background: #1c1c1c;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
+}
+
+@media (min-width: 768px) {
+  .chris-landing .chris-brief-panel {
+    width: 22rem;
+    max-width: 22rem;
+    max-height: min(36rem, 88vh);
+    border-radius: 1rem;
+  }
+}
+
+.chris-landing .chris-sublabel-max {
+  max-width: 20rem;
+}
+
+@keyframes chrisSegmentPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+  50% {
+    opacity: 0.9;
+    border-color: rgba(255, 255, 255, 0.55);
+  }
+}
+
+.chris-landing .chris-segment-pulse {
+  animation: chrisSegmentPulse 1.6s ease-in-out infinite;
+}
+
 @keyframes chrisFadeInUp {
   0% {
     opacity: 0;
@@ -83,6 +132,10 @@
     opacity: 1;
     transform: none;
     animation: none;
+  }
+  .chris-landing .chris-segment-pulse {
+    animation: none;
+    opacity: 0.5;
   }
   .chris-landing .chris-portrait-breathe {
     animation: none;
