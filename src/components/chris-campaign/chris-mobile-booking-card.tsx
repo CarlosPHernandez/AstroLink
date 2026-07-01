@@ -8,10 +8,16 @@ import {
   useChrisCampaignDateSelection,
 } from '@/components/chris-campaign/chris-campaign-date-strip';
 import { getChrisBookingEntryHref } from '@/lib/chris-campaign/chris-booking-href';
+import {
+  CHRIS_PUBLIC_REFERRER,
+  CHRIS_WAITLIST_EMAIL_REFERRER,
+} from '@/lib/chris-campaign/chris-campaign-referrer';
+import { getChrisWaitlistHref } from '@/lib/chris-campaign/chris-waitlist-href';
 
 type ChrisMobileBookingCardProps = {
   bookingEnabled: boolean;
   isSignedIn: boolean;
+  marketingReferrer: string | null;
   mentorSlug: string;
   soldOut: boolean;
 };
@@ -19,6 +25,7 @@ type ChrisMobileBookingCardProps = {
 export function ChrisMobileBookingCard({
   bookingEnabled,
   isSignedIn,
+  marketingReferrer,
   mentorSlug,
   soldOut,
 }: ChrisMobileBookingCardProps) {
@@ -31,7 +38,7 @@ export function ChrisMobileBookingCard({
         <p className="text-sm font-light text-secondary-fixed-dim/80">
           Booking is not open yet.{' '}
           <Link
-            href="/early-access?ref=chris-sembroski"
+            href={getChrisWaitlistHref(CHRIS_PUBLIC_REFERRER)}
             className="text-tertiary-fixed-dim underline-offset-4 hover:underline"
           >
             Join the waitlist
@@ -49,7 +56,14 @@ export function ChrisMobileBookingCard({
         data-testid="chris-sold-out"
       >
         <p className="text-sm font-light text-secondary-fixed-dim/80">
-          All Chris Sembroski sessions are currently reserved. Check back if a spot opens.
+          All Chris Sembroski sessions are currently reserved.{' '}
+          <Link
+            href={getChrisWaitlistHref(CHRIS_WAITLIST_EMAIL_REFERRER)}
+            className="text-tertiary-fixed-dim underline-offset-4 hover:underline"
+          >
+            Join the waitlist
+          </Link>{' '}
+          for the next wave.
         </p>
       </div>
     );
@@ -59,6 +73,7 @@ export function ChrisMobileBookingCard({
     router.push(
       getChrisBookingEntryHref(mentorSlug, isSignedIn, {
         date: dateSelection.activeDate ?? undefined,
+        ref: marketingReferrer,
       }),
     );
   }

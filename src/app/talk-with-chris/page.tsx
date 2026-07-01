@@ -6,6 +6,7 @@ import {
   getChrisSlotCapFromEnv,
   isChrisBookingEnabled,
 } from '@/lib/chris-campaign/chris-campaign-config';
+import { parseChrisCampaignReferrer } from '@/lib/chris-campaign/chris-campaign-referrer';
 import { getChrisCampaignSlotSnapshot } from '@/lib/chris-campaign/chris-campaign-slots';
 import { getMentorBySlug } from '@/lib/mentor-directory';
 import { DEFAULT_MENTOR_IMAGE } from '@/lib/public-images';
@@ -18,7 +19,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function TalkWithChrisPage() {
+export default async function TalkWithChrisPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ref?: string }>;
+}) {
+  const { ref: refParam } = await searchParams;
+  const marketingReferrer = parseChrisCampaignReferrer(refParam ? `?ref=${refParam}` : '');
   const bookingEnabled = isChrisBookingEnabled();
   const mentorSlug = getChrisMentorSlug();
   const [session, expert] = await Promise.all([getSession(), getMentorBySlug(mentorSlug)]);
@@ -52,6 +59,7 @@ export default async function TalkWithChrisPage() {
         subtitle: expert?.role ?? 'Commercial Astronaut',
       }}
       isSignedIn={session !== null}
+      marketingReferrer={marketingReferrer ?? null}
       mentorSlug={mentorSlug}
       slotCap={slotCap}
       slotsRemaining={slotsRemaining}

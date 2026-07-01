@@ -10,6 +10,7 @@ type ChrisMobileLandingProps = {
   bookingEnabled: boolean;
   expertPortrait: ChrisExpertPortraitProps;
   isSignedIn: boolean;
+  marketingReferrer: string | null;
   mentorSlug: string;
   slotCap: number;
   slotsRemaining: number;
@@ -19,6 +20,7 @@ export function ChrisMobileLanding({
   bookingEnabled,
   expertPortrait,
   isSignedIn,
+  marketingReferrer,
   mentorSlug,
   slotCap,
   slotsRemaining,
@@ -66,6 +68,7 @@ export function ChrisMobileLanding({
         <ChrisMobileBookingCard
           bookingEnabled={bookingEnabled}
           isSignedIn={isSignedIn}
+          marketingReferrer={marketingReferrer}
           mentorSlug={mentorSlug}
           soldOut={soldOut}
         />
