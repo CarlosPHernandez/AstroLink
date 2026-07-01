@@ -29,6 +29,25 @@ CHRIS_STRIPE_PROMOTION_CODE=CHRIS2026
 
 Stripe keys must be **Live** mode in Production only. See [stripe-production-cutover.md](./stripe-production-cutover.md).
 
+## 2b. Supabase Auth (hosted project)
+
+Configure in [Supabase Dashboard → Authentication](https://supabase.com/dashboard/project/vwoizjesyyygmokfqpyy/auth/providers):
+
+| Setting | Launch value | Why |
+|---------|--------------|-----|
+| **Confirm email** | **Off** for Chris launch | Inline wizard must advance without an inbox confirmation step ([launch plan](../plans/chris-sembroski-launch.md)) |
+| **Site URL** | `https://www.astro-link.space` | OAuth and email redirect base |
+| **Redirect URLs** | `https://www.astro-link.space/**` | `/auth/confirm`, `/auth/callback` |
+| **Email rate limit** | Default; avoid rapid re-signups | Repeated register attempts hit `429 over_email_send_rate_limit` |
+
+**Production signup troubleshooting**
+
+- **"Use a different email" / generic error** — check Supabase **Auth → Logs**. Common causes:
+  - Email already exists → use **Sign in** on the wizard instead of Create account.
+  - `429` / `over_email_send_rate_limit` — wait ~1 hour or sign in if account was created.
+  - `email_address_invalid` — Supabase blocks disposable domains (e.g. `@test.com`). Use Gmail/iCloud with a `+alias`.
+- **Preview ops smoke** — set `ENABLE_DEMO_AUTH=true` on Vercel **Preview** only (not Production) to use seed presets without creating Auth users.
+
 ## 3. Marketing links
 
 | Audience | URL |
@@ -46,6 +65,8 @@ Referrer ids are documented in [marketing-referrer-taxonomy.md](./marketing-refe
 - [ ] `/` redirects to `/early-access`
 - [ ] CTA → `/booking?campaign=chris&…` wizard (Account step when signed out)
 - [ ] `?ref=chris-sembroski` survives landing → booking URL
+- [ ] **Sign in** with existing Supabase user OR register with a real inbox (not `@test.com`)
+- [ ] Supabase Auth → **Confirm email** is **Off** for launch (or confirm inbox before continuing wizard)
 - [ ] One test booking + refund in Stripe sandbox before live cutover
 
 ## 5. Admin ops

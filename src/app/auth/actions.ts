@@ -16,6 +16,10 @@ import {
   resolveAppSessionFromAuthUser,
 } from '@/lib/resolve-app-session';
 import { createSession, deleteSession, getSession } from '@/lib/session';
+import {
+  mapSupabaseSignInError,
+  mapSupabaseSignUpError,
+} from '@/lib/supabase/auth-error-message';
 import { createClient } from '@/lib/supabase/server';
 import { ensureMenteeUserRow } from '@/lib/user-profile';
 import { redirect } from 'next/navigation';
@@ -140,8 +144,9 @@ export async function loginAction(
     const supabase = await createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
+      console.error('loginAction signIn:', error.message, error.code, error.status);
       return {
-        message: 'Invalid email or password.',
+        message: mapSupabaseSignInError(error),
         success: false,
       };
     }
@@ -239,8 +244,9 @@ export async function registerAction(
     });
 
     if (error) {
+      console.error('registerAction signUp:', error.message, error.code, error.status);
       return {
-        message: 'Could not create account. Try signing in or use a different email.',
+        message: mapSupabaseSignUpError(error),
         success: false,
       };
     }
