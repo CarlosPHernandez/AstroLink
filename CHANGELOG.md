@@ -2,6 +2,23 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.5.9.0] - 2026-06-30
+
+Chris campaign launch ops: marketing referrer attribution from landing through booking, admin ops metrics panel, and sold-out waitlist routing.
+
+### Added
+- `bookings.marketing_referrer` column and partial index (migration `20260701120000`).
+- Chris campaign referrer parser (`chris-sembroski`, `early-signups`) and waitlist href helper.
+- Admin Chris campaign metrics: slot cap, bookings by status, bookings by marketing referrer.
+- Production launch checklist at `docs/how-to/chris-campaign-launch-checklist.md`.
+- PR4 scope doc at `docs/plans/chris-sembroski-launch-PR4-scope.md`.
+
+### Changed
+- `/talk-with-chris` and booking CTAs preserve `?ref=` through to `/booking` and POST `/api/book`.
+- Booking agent persists `marketing_referrer` on bookings and Stripe metadata.
+- Sold-out Chris forms link to `/early-access?ref=early-signups` instead of generic waitlist.
+- Admin dashboard shows Chris campaign ops panel when metrics API returns campaign data.
+
 ## [0.5.8.0] - 2026-06-30
 
 Chris Sembroski campaign visitors can now book a 45-minute session end-to-end: pick a date on the landing page, sign in or create an account inline, set session goals, and pay without leaving the campaign flow.
