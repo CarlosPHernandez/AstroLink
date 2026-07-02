@@ -2,6 +2,24 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.0.0] - 2026-07-02
+
+Gemini is now the primary AI provider for production agents, every LLM decision is logged for the Build with Gemini XPRIZE submission, and the early-access waitlist accepts more real-world email formats.
+
+### Added
+- Structured `LLM_DECISION` audit rows (`agent_id`, model, prompt hash, output summary) on every agent LLM call for XPRIZE T8 evidence.
+- Admin export at `GET /api/admin/audit-logs/export` (JSON download for judges) and live audit log listing at `GET /api/admin/audit-logs`.
+- `npm run smoke:briefing` integration test for end-to-end APX-02 via Gemini (gated by `SMOKE_BRIEFING=true`).
+- Permissive waitlist email validation — accepts non-traditional domains (e.g. `user@company`) while still requiring `local@host` shape.
+
+### Changed
+- Default Gemini model is `gemini-flash-latest` (replaces `gemini-2.0-flash`, which was quota-blocked on the hackathon key).
+- `.env.example` documents Gemini as the primary LLM provider for APX agents.
+- Early-access signup input uses `type="text"` so browser-native email validation no longer blocks odd-but-valid addresses.
+
+### Fixed
+- Waitlist signups failing with "invalid email" for addresses without a `.com`-style TLD.
+
 ## [0.5.10.0] - 2026-07-01
 
 Chris campaign bookers now stay in the wizard after payment: a segmented progress overlay runs through authorization and brief generation, then a compact pre-call brief modal (copy or email) and a confirmation screen with next steps — without redirecting to the generic dashboard flow.
