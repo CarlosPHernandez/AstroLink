@@ -9,11 +9,22 @@ import {
 import { DashboardSessionTranscript } from '@/components/session/dashboard-session-transcript';
 import { formatSessionWhen } from '@/lib/format';
 import { SERVICE_TYPE_LABELS, type BookingStatus, type ServiceType } from '@/lib/types';
+import { isJoinRoomEnabled, DEFAULT_JOIN_BEFORE_MINUTES } from '@/lib/join-window';
 
 function canMentorJoin(booking: MentorBookingView): boolean {
+  // Legacy name kept for the "should we consider rendering a join control" check.
   return Boolean(
     booking.dailyRoomUrl &&
       (booking.status === 'confirmed' || booking.status === 'completed'),
+  );
+}
+
+function isMentorJoinEnabled(booking: MentorBookingView): boolean {
+  return isJoinRoomEnabled(
+    booking.status,
+    booking.dailyRoomUrl,
+    booking.scheduledAt,
+    Date.now()
   );
 }
 
@@ -67,7 +78,8 @@ export function MentorConsultationCard({
 }) {
   const contextSummary = getMentorBookingContextSummary(booking);
   const goals = booking.matchReason ?? 'No goals recorded for this session.';
-  const canJoin = canMentorJoin(booking);
+  const hasJoinControl = canMentorJoin(booking);
+  const joinEnabled = hasJoinControl ? isMentorJoinEnabled(booking) : false;
   const serviceLabel =
     SERVICE_TYPE_LABELS[booking.serviceType as ServiceType] ?? booking.serviceType;
   const hasPrepBrief = isSessionBriefing(booking.briefing);
@@ -142,14 +154,26 @@ export function MentorConsultationCard({
               View prep brief
             </button>
           ) : null}
-          {canJoin ? (
-            <Link
-              href={`/session/${booking.id}`}
-              data-testid={`mentor-join-${booking.id}`}
-              className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-primary-container"
-            >
-              Join video room
-            </Link>
+          {hasJoinControl ? (
+            joinEnabled ? (
+              <Link
+                href={`/session/${booking.id}`}
+                data-testid={`mentor-join-${booking.id}`}
+                className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-primary-container"
+              >
+                Join video room
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled
+                data-testid={`mentor-join-${booking.id}`}
+                className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary/50 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white/70 cursor-not-allowed"
+                title={`Join room becomes available ${DEFAULT_JOIN_BEFORE_MINUTES} minutes before the session`}
+              >
+                Join video room
+              </button>
+            )
           ) : null}
         </div>
       )}

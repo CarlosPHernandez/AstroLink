@@ -16,6 +16,7 @@ import type { BriefingPayload } from '@/lib/briefing-display';
 import { SERVICE_TYPE_LABELS } from '@/lib/types';
 import { DashboardSessionTranscript } from '@/components/session/dashboard-session-transcript';
 import { formatSessionWhen } from '@/lib/format';
+import { isJoinRoomEnabled, DEFAULT_JOIN_BEFORE_MINUTES } from '@/lib/join-window';
 
 interface SessionData {
   userId: string;
@@ -46,6 +47,24 @@ export default function MenteeDashboardClient({
   const [localBriefings, setLocalBriefings] = useState<Record<string, BriefingPayload>>({});
   const [sidebar, setSidebar] = useState<BriefingSidebarState>({ mode: 'closed' });
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+
+  // Live "now" for enabling Join room buttons as the 15-minute window approaches.
+  // The authoritative gate is still enforced server-side when navigating to /session.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 15_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const getJoinState = useCallback((booking: MenteeBookingView) => {
+    const hasJoinControl =
+      !!booking.dailyRoomUrl &&
+      (booking.status === 'confirmed' || booking.status === 'completed');
+    const joinEnabled = hasJoinControl
+      ? isJoinRoomEnabled(booking.status, booking.dailyRoomUrl, booking.scheduledAt, now)
+      : false;
+    return { hasJoinControl, joinEnabled };
+  }, [now]);
 
   const { upcoming, past, nextUpcoming } = useMemo(
     () => partitionMenteeBookings(bookings),
@@ -162,9 +181,8 @@ export default function MenteeDashboardClient({
   function renderUpcomingCard(booking: MenteeBookingView) {
     const briefing = resolveBriefing(booking);
     const isGenerating = generatingId === booking.id;
-    const canJoin =
-      booking.dailyRoomUrl &&
-      (booking.status === 'confirmed' || booking.status === 'completed');
+
+    const { hasJoinControl, joinEnabled } = getJoinState(booking);
 
     return (
       <div
@@ -206,14 +224,26 @@ export default function MenteeDashboardClient({
                 {skipPayments ? 'Generate brief' : (booking.status === 'pending_payment' ? 'Brief (confirming payment)' : 'Generate brief')}
               </button>
             ) : null}
-            {canJoin ? (
-              <Link
-                href={`/session/${booking.id}`}
-                data-testid={`booking-join-${booking.id}`}
-                className="px-3 py-2 rounded-md bg-primary hover:bg-primary-container text-white font-semibold text-[10px] uppercase tracking-wider shadow-sm"
-              >
-                Join room
-              </Link>
+            {hasJoinControl ? (
+              joinEnabled ? (
+                <Link
+                  href={`/session/${booking.id}`}
+                  data-testid={`booking-join-${booking.id}`}
+                  className="px-3 py-2 rounded-md bg-primary hover:bg-primary-container text-white font-semibold text-[10px] uppercase tracking-wider shadow-sm"
+                >
+                  Join room
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  data-testid={`booking-join-${booking.id}`}
+                  className="px-3 py-2 rounded-md bg-primary/50 text-white/70 font-semibold text-[10px] uppercase tracking-wider cursor-not-allowed"
+                  title={`Join room becomes available ${DEFAULT_JOIN_BEFORE_MINUTES} minutes before the session`}
+                >
+                  Join room
+                </button>
+              )
             ) : null}
           </div>
         </div>
@@ -350,16 +380,27 @@ export default function MenteeDashboardClient({
                         Open brief
                       </button>
                     ) : null}
-                    {nextUpcoming.dailyRoomUrl &&
-                    (nextUpcoming.status === 'confirmed' ||
-                      nextUpcoming.status === 'completed') ? (
-                      <Link
-                        href={`/session/${nextUpcoming.id}`}
-                        className="px-4 py-2 rounded-md bg-primary text-white text-xs font-semibold uppercase tracking-wider shadow-sm"
-                      >
-                        Join video room
-                      </Link>
-                    ) : null}
+                    {(() => {
+                      const { hasJoinControl, joinEnabled } = getJoinState(nextUpcoming);
+                      if (!hasJoinControl) return null;
+                      return joinEnabled ? (
+                        <Link
+                          href={`/session/${nextUpcoming.id}`}
+                          className="px-4 py-2 rounded-md bg-primary text-white text-xs font-semibold uppercase tracking-wider shadow-sm"
+                        >
+                          Join video room
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          className="px-4 py-2 rounded-md bg-primary/50 text-white/70 text-xs font-semibold uppercase tracking-wider cursor-not-allowed"
+                          title={`Join video room becomes available ${DEFAULT_JOIN_BEFORE_MINUTES} minutes before the session`}
+                        >
+                          Join video room
+                        </button>
+                      );
+                    })()}
                   </div>
                 </section>
               ) : null}
