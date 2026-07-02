@@ -115,6 +115,11 @@ Return JSON only with:
         rateLimitKey: mentorDbId,
         systemInstruction,
         prompt: bio,
+        audit: {
+          agentId: this.agentId,
+          operation: 'bio_civil_servant_scan',
+          refId: mentorDbId,
+        },
         schema: {
           type: 'OBJECT',
           properties: {
@@ -158,6 +163,11 @@ Return valid JSON only. Use ISO dates (YYYY-MM-DD) for expiration_date when read
         prompt:
           'Analyze this NASA Outside Employment approval form for signatures, expirations, and restrictions.',
         files: [{ mimeType: 'application/pdf', data: pdfBuffer }],
+        audit: {
+          agentId: this.agentId,
+          operation: 'nf1860_parse',
+          refId: mentorDbId,
+        },
         schema: {
           type: 'OBJECT',
           properties: {

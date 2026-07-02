@@ -153,6 +153,11 @@ export class TranslationAgent {
           systemInstruction,
           prompt,
           schema: POST_SESSION_SCHEMA,
+          audit: {
+            agentId: this.agentId,
+            operation: 'recap_translation',
+            refId: bookingId,
+          },
         }),
       );
     }

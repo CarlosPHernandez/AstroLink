@@ -2,6 +2,12 @@ import 'server-only';
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import {
+  hashLlmPrompt,
+  logLlmDecision,
+  summarizeLlmOutput,
+  type LlmAuditContext,
+} from '@/lib/llm-audit';
 import { assertLlmRateLimit, isLlmRateLimitError, LlmRateLimitError } from '@/lib/llm-rate-limit';
 import { GoogleGenAI } from '@google/genai';
 import OpenAI from 'openai';
@@ -24,6 +30,8 @@ export type StructuredJsonRequest = {
   files?: { mimeType: string; data: Buffer }[];
   /** User or actor id for per-account LLM limits (e.g. mentee UUID). */
   rateLimitKey?: string;
+  /** When set, writes LLM_DECISION row to audit_log for XPRIZE T8 export. */
+  audit?: LlmAuditContext;
 };
 
 export type LlmProvider = 'openai' | 'gemini';
@@ -42,12 +50,12 @@ export function getLlmProvider(): LlmProvider {
 export const llmFlashModel =
   getLlmProvider() === 'openai'
     ? process.env.OPENAI_FLASH_MODEL?.trim() || 'gpt-4o-mini'
-    : process.env.GEMINI_FLASH_MODEL?.trim() || 'gemini-2.0-flash';
+    : process.env.GEMINI_FLASH_MODEL?.trim() || 'gemini-flash-latest';
 
 export const llmProModel =
   getLlmProvider() === 'openai'
     ? process.env.OPENAI_PRO_MODEL?.trim() || 'gpt-4o'
-    : process.env.GEMINI_PRO_MODEL?.trim() || 'gemini-2.0-flash';
+    : process.env.GEMINI_PRO_MODEL?.trim() || 'gemini-flash-latest';
 
 export function isE2eStubLlmEnabled(): boolean {
   return process.env.NODE_ENV !== 'production' && process.env.E2E_STUB_LLM === 'true';
@@ -216,7 +224,30 @@ export type PlainTextRequest = {
   rateLimitKey?: string;
   /** Live caption segments use higher per-booking limits (see llm-rate-limit). */
   rateLimitScope?: 'default' | 'caption';
+  /** When set, writes LLM_DECISION row to audit_log for XPRIZE T8 export. */
+  audit?: LlmAuditContext;
 };
+
+async function recordLlmDecision(
+  req: { model: string; systemInstruction: string; prompt: string; audit?: LlmAuditContext },
+  output: unknown,
+): Promise<void> {
+  if (!req.audit) {
+    return;
+  }
+
+  try {
+    await logLlmDecision({
+      context: req.audit,
+      provider: getLlmProvider(),
+      model: req.model,
+      promptHash: hashLlmPrompt(req.systemInstruction, req.prompt),
+      outputSummary: summarizeLlmOutput(output),
+    });
+  } catch (error) {
+    console.warn('LLM audit log failed (non-fatal)', error);
+  }
+}
 
 function localizePlainTextStub(prompt: string, systemInstruction: string): string {
   const haystack = `${systemInstruction}\n${prompt}`;
@@ -268,10 +299,13 @@ export async function generatePlainText(req: PlainTextRequest): Promise<string> 
 
   assertLlmRateLimit(req.rateLimitKey, { scope: req.rateLimitScope ?? 'default' });
 
-  if (getLlmProvider() === 'openai') {
-    return generatePlainTextOpenAI(req);
-  }
-  return generatePlainTextGemini(req);
+  const output =
+    getLlmProvider() === 'openai'
+      ? await generatePlainTextOpenAI(req)
+      : await generatePlainTextGemini(req);
+
+  await recordLlmDecision(req, output);
+  return output;
 }
 
 export async function generateStructuredJson<T>(req: StructuredJsonRequest): Promise<T> {
@@ -284,10 +318,13 @@ export async function generateStructuredJson<T>(req: StructuredJsonRequest): Pro
 
   assertLlmRateLimit(req.rateLimitKey);
 
-  if (getLlmProvider() === 'openai') {
-    return generateStructuredJsonOpenAI<T>(req);
-  }
-  return generateStructuredJsonGemini<T>(req);
+  const output =
+    getLlmProvider() === 'openai'
+      ? await generateStructuredJsonOpenAI<T>(req)
+      : await generateStructuredJsonGemini<T>(req);
+
+  await recordLlmDecision(req, output);
+  return output;
 }
 
 function formatLlmError(error: unknown): string {
