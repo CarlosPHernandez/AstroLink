@@ -1,13 +1,20 @@
 import { z } from 'zod';
 import { sanitizeEarlyAccessReferrer } from '@/lib/waitlist/early-access-referrer-sanitize';
+import {
+  isPermissiveEmailAddress,
+  normalizeWaitlistEmail,
+  WAITLIST_EMAIL_ERROR,
+  WAITLIST_EMAIL_MAX_LENGTH,
+} from '@/lib/waitlist/permissive-email';
 
 export const EarlyAccessBodySchema = z
   .object({
     email: z
       .string()
       .trim()
-      .toLowerCase()
-      .email({ message: 'Enter a valid email address.' }),
+      .max(WAITLIST_EMAIL_MAX_LENGTH, { message: WAITLIST_EMAIL_ERROR })
+      .transform(normalizeWaitlistEmail)
+      .refine(isPermissiveEmailAddress, { message: WAITLIST_EMAIL_ERROR }),
     referrer: z
       .string()
       .trim()

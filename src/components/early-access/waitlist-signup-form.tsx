@@ -5,6 +5,11 @@ import { useEffect, useRef, useState } from 'react';
 import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
 import { getEarlyAccessSuccessDisplay } from '@/lib/waitlist/early-access-success';
+import {
+  isPermissiveEmailAddress,
+  normalizeWaitlistEmail,
+  WAITLIST_EMAIL_ERROR,
+} from '@/lib/waitlist/permissive-email';
 import { parseEarlyAccessReferrer } from '@/lib/waitlist/early-access-referrer';
 import {
   trackWaitlistBadEmail,
@@ -103,10 +108,10 @@ export function WaitlistSignupForm({ defaultReferrer, analytics }: WaitlistSignu
     trackWaitlistSubmitAttempt(analytics.context);
     analytics.reportSubmitAttempt();
 
-    const trimmed = email.trim();
-    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    const trimmed = normalizeWaitlistEmail(email);
+    if (!isPermissiveEmailAddress(trimmed)) {
       markSubmitFail('invalid_email_client');
-      setFieldError('Enter a valid email address.');
+      setFieldError(WAITLIST_EMAIL_ERROR);
       return;
     }
 
@@ -124,7 +129,7 @@ export function WaitlistSignupForm({ defaultReferrer, analytics }: WaitlistSignu
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: trimmed.toLowerCase(),
+          email: trimmed,
           referrer,
           company: '',
         }),
@@ -227,9 +232,10 @@ export function WaitlistSignupForm({ defaultReferrer, analytics }: WaitlistSignu
               <input
                 id="early-access-email"
                 name="email"
-                type="email"
+                type="text"
                 autoComplete="email"
                 inputMode="email"
+                spellCheck={false}
                 placeholder="Your email address"
                 value={email}
                 onFocus={() => markFormStart('focus')}

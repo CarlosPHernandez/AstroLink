@@ -35,8 +35,7 @@ test.describe('Early access waitlist', () => {
     });
 
     await page.goto('/early-access');
-    // Use a value that passes native type=email but fails app validation (no TLD dot).
-    await page.getByLabel('Email').fill('waitlist@invalid');
+    await page.getByLabel('Email').fill('not-an-email');
     await page.getByRole('button', { name: 'Get early access' }).click();
 
     await expect(page.getByText('Enter a valid email address.')).toBeVisible();
