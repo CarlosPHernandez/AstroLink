@@ -2,6 +2,16 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.0.1] - 2026-07-02
+
+### Changed
+- Join room buttons ("Join room" / "Join video room") in mentee and mentor dashboards are now always visible for confirmed/completed sessions with a room, but render as disabled (with title hint) until 15 minutes before the scheduled time. The button activates automatically (live timer in mentee dashboard).
+- Added pure `src/lib/join-window.ts` helper (`isJoinRoomEnabled`, `getJoinPhase`) and `src/lib/join-window.test.ts`.
+- Titles and logic now reference the configured `DEFAULT_JOIN_BEFORE_MINUTES` (default 15) for consistency with server gate.
+
+### Fixed
+- Button no longer allows early clicks that could impact Daily.co usage (UI affordance; server gate in `/session/[bookingId]` and meeting token `nbf` remain the hard enforcement).
+
 ## [0.6.0.0] - 2026-07-02
 
 Gemini is now the primary AI provider for production agents, every LLM decision is logged for the Build with Gemini XPRIZE submission, and the early-access waitlist accepts more real-world email formats.
