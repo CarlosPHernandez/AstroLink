@@ -53,6 +53,7 @@ export class SessionAgent {
     }
 
     const synthesis = await this.generateSynthesis({
+      bookingId,
       rateLimitKey: booking.mentee_id,
       serviceType: booking.service_type,
       transcript,
@@ -109,6 +110,7 @@ export class SessionAgent {
    * Generates post-session summary and action items (using Gemini 2.5 Flash).
    */
   private async generateSynthesis(input: {
+    bookingId: string;
     rateLimitKey: string;
     serviceType: string;
     transcript: string;
@@ -136,6 +138,11 @@ export class SessionAgent {
         rateLimitKey: input.rateLimitKey,
         systemInstruction,
         prompt,
+        audit: {
+          agentId: this.agentId,
+          operation: 'session_synthesis',
+          refId: input.bookingId,
+        },
         schema: {
           type: 'OBJECT',
           properties: {

@@ -99,6 +99,11 @@ export async function translateTranscriptUtterances(params: {
           rateLimitKey: params.rateLimitKey,
           systemInstruction,
           prompt,
+          audit: {
+            agentId: 'APX-06',
+            operation: 'transcript_batch',
+            refId: params.bookingId,
+          },
         }),
       );
 

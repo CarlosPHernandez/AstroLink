@@ -288,6 +288,11 @@ export class BookingAgent {
         rateLimitKey: input.menteeId,
         systemInstruction: matchingSystemInstruction,
         prompt,
+        audit: {
+          agentId: this.agentId,
+          operation: 'expert_match',
+          refId: null,
+        },
         schema: {
           type: 'OBJECT',
           properties: {

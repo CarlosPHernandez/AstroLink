@@ -12,6 +12,7 @@ Examples:
 
 - `https://astro-link-sooty.vercel.app/early-access?ref=linkedin-jun-2026`
 - `https://astro-link-sooty.vercel.app/early-access?ref=partner-nasa-stem`
+- `https://www.astro-link.space/early-access?ref=partner-inspired24`
 
 Do **not** rely on raw query strings (`?utm_source=...` alone). If you use UTM parameters for analytics, still set `ref` to the canonical AstroLink id below.
 
@@ -25,7 +26,8 @@ Use **kebab-case**, stable for the life of a campaign (do not change mid-flight)
 | `space-newsletter-04` | Zen | Owned email newsletter issue |
 | `twitter-x-2026` | Zen | X / Twitter bio or posts |
 | `conference-<event-slug>` | Oliver | Event booth, talk QR, partner table |
-| `partner-<org-slug>` | Oliver | Co-marketing with a named org |
+| `partner-<org-slug>` | Oliver | Co-marketing with a named org (add a concrete row per partner when live) |
+| `partner-inspired24` | Inspired24 | Member email — early access closing notice (locked; do not rename mid-campaign) |
 | `outbound-<prospect-slug>` | Oliver | One-off link in a sales email (optional) |
 | `chris-sembroski` | Chris campaign | Public Chris promotion — `/talk-with-chris?ref=chris-sembroski` |
 | `early-signups` | Waitlist email | Chris waitlist email split — `/early-access?ref=early-signups` |

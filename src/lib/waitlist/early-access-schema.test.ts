@@ -7,6 +7,11 @@ describe('EarlyAccessBodySchema', () => {
     expect(result.email).toBe('test@example.com');
   });
 
+  it('accepts non-traditional domains without a TLD dot', () => {
+    const result = EarlyAccessBodySchema.parse({ email: 'waitlist@invalid' });
+    expect(result.email).toBe('waitlist@invalid');
+  });
+
   it('rejects invalid email', () => {
     const result = EarlyAccessBodySchema.safeParse({ email: 'not-an-email' });
     expect(result.success).toBe(false);

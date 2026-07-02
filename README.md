@@ -65,7 +65,7 @@ Structured decision logs for judges: [T8 in D1 plan](docs/d1-implementation-plan
 
 ## D1 local booking flow
 
-1. Set in `.env.local`: Supabase keys, `OPENAI_API_KEY` (or `GEMINI_API_KEY`), `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `DAILY_API_KEY`, and `SKIP_STRIPE_PAYMENTS=true` for local booking without Stripe.
+1. Set in `.env.local`: Supabase keys, `GEMINI_API_KEY` (`LLM_PROVIDER=gemini`), `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `DAILY_API_KEY`, and `SKIP_STRIPE_PAYMENTS=true` for local booking without Stripe.
 2. Run `npm run dev`, sign in as **Carlos** (`carlos@astrolink.ai` on `/auth` with demo auth enabled).
 3. Landing shows a six-card expert teaser; open the full roster at [`/experts`](http://localhost:3000/experts) (category filters, card grid, inline preview — desktop modal or mobile sheet). Click a name for the profile page (`/experts/[slug]`) or use **Book session** on a card for the fast path.
 4. Profile or card → **Book** → `/booking?mentor=chris-sembroski` → pay with Stripe test card `4242…`.
@@ -125,7 +125,7 @@ E2E bookings are tagged with spec-specific goals prefixes (`E2E:golden-path`, `E
 ## Getting Started
 
 ```bash
-cp .env.example .env.local   # fill Supabase, Stripe, Daily, GEMINI_API_KEY / OPENAI_API_KEY
+cp .env.example .env.local   # fill Supabase, Stripe, Daily, GEMINI_API_KEY (OpenAI optional fallback)
 npm ci
 npm run dev                  # http://localhost:3000
 ```

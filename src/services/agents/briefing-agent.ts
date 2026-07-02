@@ -30,6 +30,7 @@ export class BriefingAgent {
 
     if (service_type === 'session_1on1' || service_type === 'extended_session') {
       const briefing = await this.generateDualSessionBriefing({
+        bookingId,
         rateLimitKey: booking.mentee_id,
         buyerName: booking.users.full_name,
         buyerGoals: booking.match_reason || '',
@@ -49,6 +50,7 @@ export class BriefingAgent {
 
     if (service_type === 'pre_call_brief') {
       const preCallBrief = await this.generatePreCallBrief({
+        bookingId,
         rateLimitKey: booking.mentee_id,
         buyerGoals: booking.match_reason || '',
         buyerBackground: booking.intake_background || '',
@@ -72,6 +74,7 @@ export class BriefingAgent {
    * Dual-audience pre-session briefing: mentee (second person) + expert (third person).
    */
   private async generateDualSessionBriefing(input: {
+    bookingId: string;
     rateLimitKey: string;
     buyerName: string;
     buyerGoals: string;
@@ -94,6 +97,11 @@ export class BriefingAgent {
         systemInstruction: DUAL_SESSION_BRIEFING_SYSTEM_INSTRUCTION,
         prompt,
         schema: DUAL_SESSION_BRIEFING_SCHEMA,
+        audit: {
+          agentId: this.agentId,
+          operation: 'dual_session_briefing',
+          refId: input.bookingId,
+        },
       }),
     );
 
@@ -104,6 +112,7 @@ export class BriefingAgent {
    * Async pre-call brief: structures buyer context and questions before the expert session.
    */
   private async generatePreCallBrief(input: {
+    bookingId: string;
     rateLimitKey: string;
     buyerGoals: string;
     buyerBackground: string;
@@ -130,6 +139,11 @@ export class BriefingAgent {
         rateLimitKey: input.rateLimitKey,
         systemInstruction,
         prompt,
+        audit: {
+          agentId: this.agentId,
+          operation: 'pre_call_brief',
+          refId: input.bookingId,
+        },
         schema: {
           type: 'OBJECT',
           properties: {

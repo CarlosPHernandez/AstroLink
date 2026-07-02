@@ -89,6 +89,11 @@ export async function translateSegment(
       rateLimitScope: 'caption',
       systemInstruction,
       prompt,
+      audit: {
+        agentId: 'APX-06',
+        operation: 'caption_segment',
+        refId: input.bookingId,
+      },
     }),
   );
 
