@@ -1,5 +1,9 @@
 import type { Json } from '@/lib/database.types';
-import { CHRIS_SESSION_DURATION_MINUTES } from '@/lib/chris-campaign/chris-campaign-constants';
+import {
+  CHRIS_DISCOUNT_PERCENT,
+  CHRIS_ORIGINAL_PRICE_CENTS,
+  CHRIS_SESSION_DURATION_MINUTES,
+} from '@/lib/chris-campaign/chris-campaign-constants';
 import {
   ChrisCampaignSoldOutError,
   releaseChrisCampaignSlot,
@@ -117,6 +121,12 @@ export class BookingAgent {
       throw new Error('This expert is not available for booking.');
     }
 
+    // To update the base price for Stripe (before the Inspired24 discount):
+    // - For normal experts: edit `live_session_price_cents` in the mentors table (Supabase).
+    // - For this Chris 45-min case ($200 original): we override to CHRIS_ORIGINAL_PRICE_CENTS here.
+    //   (You can also adjust the mentor price in DB, but the override ensures exactly $200 gross.)
+    // - The 10% "Inspired24" discount is applied via Stripe (coupon from CHRIS_STRIPE_* env + promo code).
+
     const isChrisCampaign = Boolean(params.campaignId);
     const durationMinutes = isChrisCampaign
       ? CHRIS_SESSION_DURATION_MINUTES
@@ -125,12 +135,24 @@ export class BookingAgent {
     // Briefing (APX-02) is always included for live sessions as part of the standard offering.
     // Duration (slider) makes 1:1 price variable (prorated hourly rate from live_session_price_cents).
     const includePreCallBrief = params.serviceType === 'session_1on1';
-    const servicePriceCents = computeBookingTotalCents({
+    let servicePriceCents = computeBookingTotalCents({
       serviceType: params.serviceType,
       liveSessionPriceCents: mentor.live_session_price_cents,
       includePreCallBrief,
       durationMinutes,
     });
+
+    // For this specific Chris case: force original gross price to $200 for the 45-min session.
+    // (Overrides the prorated mentor hourly rate so the "original" before discount is exactly $200.)
+    if (isChrisCampaign) {
+      servicePriceCents = CHRIS_ORIGINAL_PRICE_CENTS;
+    }
+
+    // For Chris campaign, the UI shows discounted price (Inspired24 10%).
+    // PI is created with gross amount + discounts; display uses net for "authorize" text.
+    const displayAmountCents = isChrisCampaign
+      ? Math.round(servicePriceCents * (1 - CHRIS_DISCOUNT_PERCENT / 100))
+      : servicePriceCents;
 
     const skipPayments = isStripePaymentsSkipped();
 
@@ -217,7 +239,7 @@ export class BookingAgent {
         stripeClientSecret: null,
         skipPayment: true,
         matchReason: params.menteeGoals || matchReason,
-        amountCents: servicePriceCents,
+        amountCents: displayAmountCents,
       };
     }
 
@@ -241,7 +263,7 @@ export class BookingAgent {
       stripeClientSecret,
       skipPayment: false,
       matchReason: params.menteeGoals || matchReason,
-      amountCents: servicePriceCents,
+      amountCents: displayAmountCents,
     };
   }
 

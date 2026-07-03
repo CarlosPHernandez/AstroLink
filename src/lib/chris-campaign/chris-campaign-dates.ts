@@ -1,5 +1,5 @@
-/** First month Chris sessions can be scheduled (July 2026 launch window). */
-export const CHRIS_CAMPAIGN_BOOKING_START = new Date(Date.UTC(2026, 6, 1));
+/** First month Chris sessions can be scheduled (July 7 2026 launch window onward). */
+export const CHRIS_CAMPAIGN_BOOKING_START = new Date(Date.UTC(2026, 6, 7));
 
 export type ChrisCampaignDateTile = {
   isoDate: string;
@@ -71,7 +71,7 @@ export function getChrisCampaignMonthLabel(year: number, monthIndex: number): st
   return formatMonthLabel(year, monthIndex);
 }
 
-/** Bookable day tiles for a calendar month (only days on/after July 1, 2026). */
+/** Bookable day tiles for a calendar month (only days on/after July 7, 2026). */
 export function getChrisCampaignDatesForMonth(
   year: number,
   monthIndex: number,

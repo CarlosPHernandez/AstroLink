@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useMemo, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import {
   chrisWizardLoginAction,
   chrisWizardRegisterAction,
@@ -13,11 +13,14 @@ import {
 import '@/components/chris-campaign/chris-landing.css';
 import { FormAlert } from '@/components/forms/form-alert';
 import { FieldError } from '@/components/forms/field-error';
-import { CHRIS_BOOKING_CAMPAIGN_QUERY } from '@/lib/chris-campaign/chris-campaign-constants';
-import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-booking-mode';
 import {
-  computeBookingTotalCents,
-} from '@/lib/booking-pricing';
+  CHRIS_BOOKING_CAMPAIGN_QUERY,
+  CHRIS_DISCOUNT_NAME,
+  CHRIS_DISCOUNT_PERCENT,
+  CHRIS_ORIGINAL_PRICE_CENTS,
+} from '@/lib/chris-campaign/chris-campaign-constants';
+import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-booking-mode';
+
 import { ChrisBookingFulfillmentOverlay } from '@/components/chris-campaign/chris-booking-fulfillment-overlay';
 import { ChrisBookingNextSteps } from '@/components/chris-campaign/chris-booking-next-steps';
 import { ChrisBriefingModal } from '@/components/chris-campaign/chris-briefing-modal';
@@ -301,6 +304,7 @@ export function ChrisBookingWizard({
   const [scheduledAt, setScheduledAt] = useState(
     prefillScheduledAt ?? `${new Date().toISOString().slice(0, 10)}T12:00`,
   );
+  // Note: time is defaulted (day selection is the primary UI for the request phase per current scope).
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -308,16 +312,12 @@ export function ChrisBookingWizard({
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const fulfillment = useChrisBookingFulfillment();
 
-  const totalCents = useMemo(
-    () =>
-      computeBookingTotalCents({
-        serviceType: 'session_1on1',
-        liveSessionPriceCents: mentor.liveSessionPriceCents,
-        includePreCallBrief: false,
-        durationMinutes: chrisDurationMinutes,
-      }),
-    [mentor.liveSessionPriceCents, chrisDurationMinutes],
-  );
+  // Campaign-specific pricing display for the checkout summary (step 3).
+  // Original $200 for the 45-min session (this specific case), "Inspired24" 10% discount → $180.
+  // Note: the actual Stripe PI uses gross amount (set via mentor DB price or override) + discount coupon.
+  const CHRIS_FINAL_CENTS = Math.round(
+    CHRIS_ORIGINAL_PRICE_CENTS * (100 - CHRIS_DISCOUNT_PERCENT) / 100,
+  ); // $180 after discount
 
   const displayDate = prefillDate ?? scheduledAt.slice(0, 10);
 
@@ -675,10 +675,23 @@ export function ChrisBookingWizard({
                       <dd className="text-white">Included</dd>
                     </div>
                   </dl>
+
+                  {/* Pricing breakdown with original, Inspired24 discount, and final price */}
+                  <div className="mt-3 space-y-1.5 text-sm">
+                    <div className="flex justify-between text-white/60">
+                      <dt>Original price</dt>
+                      <dd className="text-white line-through">$200</dd>
+                    </div>
+                    <div className="flex justify-between text-white/60">
+                      <dt>{CHRIS_DISCOUNT_NAME} discount</dt>
+                      <dd className="text-[#4ade80]">-{CHRIS_DISCOUNT_PERCENT}%</dd>
+                    </div>
+                  </div>
+
                   <hr className="my-4 border-[#333333]" />
                   <div className="flex justify-between">
                     <span className="text-base font-bold text-white">Total</span>
-                    <span className="text-xl font-bold text-white">{formatMoney(totalCents)}</span>
+                    <span className="text-xl font-bold text-white">{formatMoney(CHRIS_FINAL_CENTS)}</span>
                   </div>
                 </div>
 

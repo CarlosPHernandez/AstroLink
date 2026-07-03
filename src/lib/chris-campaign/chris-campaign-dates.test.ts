@@ -29,11 +29,11 @@ describe('chris-campaign-dates', () => {
     });
   });
 
-  it('lists July 2026 dates from the first onward', () => {
+  it('lists July 2026 dates from the 7th onward', () => {
     const tiles = getChrisCampaignDatesForMonth(2026, 6);
-    expect(tiles[0]).toMatchObject({ isoDate: '2026-07-01', day: '1', weekday: 'WED' });
+    expect(tiles[0]).toMatchObject({ isoDate: '2026-07-07', day: '7', weekday: 'TUE' });
     expect(tiles.at(-1)?.isoDate).toBe('2026-07-31');
-    expect(tiles).toHaveLength(31);
+    expect(tiles).toHaveLength(25);
   });
 
   it('blocks months before July 2026', () => {
