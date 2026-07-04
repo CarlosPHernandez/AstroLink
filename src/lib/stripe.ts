@@ -9,7 +9,9 @@ export function getStripe(): Stripe {
   }
   if (!stripeClient) {
     stripeClient = new Stripe(stripeSecretKey, {
-      apiVersion: '2024-06-20',
+      // Pin to the API version this stripe package declares.
+      // Do not change this without also updating tests / expected behavior.
+      apiVersion: Stripe.API_VERSION,
     });
   }
   return stripeClient;
