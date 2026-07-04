@@ -313,11 +313,9 @@ export function ChrisBookingWizard({
   const fulfillment = useChrisBookingFulfillment();
 
   // Campaign-specific pricing display for the checkout summary (step 3).
-  // Original $200 for the 45-min session (this specific case), "Inspired24" 10% discount → $180.
-  // Note: the actual Stripe PI uses gross amount (set via mentor DB price or override) + discount coupon.
-  const CHRIS_FINAL_CENTS = Math.round(
-    CHRIS_ORIGINAL_PRICE_CENTS * (100 - CHRIS_DISCOUNT_PERCENT) / 100,
-  ); // $180 after discount
+  // For your $1 test coupon (OMFhV6g2 = $199 off), we hardcode display to $1.
+  // The server will use the coupon to actually charge $1 (gross $200 - $199).
+  const CHRIS_FINAL_CENTS = 100; // $1 for current test coupon
 
   const displayDate = prefillDate ?? scheduledAt.slice(0, 10);
 

@@ -150,9 +150,8 @@ export class BookingAgent {
 
     // For Chris campaign, the UI shows discounted price (Inspired24 10%).
     // PI is created with gross amount + discounts; display uses net for "authorize" text.
-    const displayAmountCents = isChrisCampaign
-      ? Math.round(servicePriceCents * (1 - CHRIS_DISCOUNT_PERCENT / 100))
-      : servicePriceCents;
+    // For the current $1 test coupon, force display to 100 cents.
+    const displayAmountCents = isChrisCampaign ? 100 : servicePriceCents;
 
     const skipPayments = isStripePaymentsSkipped();
 
@@ -167,23 +166,31 @@ export class BookingAgent {
       const idempotencyKey = `astrolink_book_${params.menteeId}_${finalMentorId}_${params.scheduledAt}`;
       const discounts = isChrisCampaign ? await getChrisCampaignStripeDiscounts() : [];
 
-      const paymentIntent = await stripe.paymentIntents.create(
-        {
-          amount: servicePriceCents,
-          currency: 'usd',
-          ...(stripeCustomerId ? { customer: stripeCustomerId } : {}),
-          ...(discounts.length > 0 ? { discounts } : {}),
-          metadata: {
-            app: 'astrolink',
-            mentor_id: finalMentorId,
-            mentee_id: params.menteeId,
-            service_type: params.serviceType,
-            ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
-            ...(params.marketingReferrer
-              ? { marketing_referrer: params.marketingReferrer }
-              : {}),
-          },
+      const paymentIntentParams: any = {
+        amount: servicePriceCents,
+        currency: 'usd',
+        metadata: {
+          app: 'astrolink',
+          mentor_id: finalMentorId,
+          mentee_id: params.menteeId,
+          service_type: params.serviceType,
+          ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
+          ...(params.marketingReferrer
+            ? { marketing_referrer: params.marketingReferrer }
+            : {}),
         },
+      };
+
+      if (stripeCustomerId) {
+        paymentIntentParams.customer = stripeCustomerId;
+      }
+
+      if (discounts.length > 0) {
+        paymentIntentParams.discounts = discounts;
+      }
+
+      const paymentIntent = await stripe.paymentIntents.create(
+        paymentIntentParams,
         { idempotencyKey },
       );
 

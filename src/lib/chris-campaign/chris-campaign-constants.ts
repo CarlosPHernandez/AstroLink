@@ -4,7 +4,9 @@ export const CHRIS_BOOKING_CAMPAIGN_QUERY = 'chris';
 /** Fixed live session length for Chris campaign bookings (UI + server). */
 export const CHRIS_SESSION_DURATION_MINUTES = 45;
 
-/** Original price for Chris 45-min session in this specific case ($200 before discount). */
+/** Original price for Chris 45-min session in this specific case ($200 before discount). 
+ *  For the $1 test coupon (amount_off 19900), the actual charge will be $1.
+ */
 export const CHRIS_ORIGINAL_PRICE_CENTS = 20000; // $200 flat for the 45 min session (not hourly)
 
 /** Marketing discount for Chris campaign (10% off). 
