@@ -9,9 +9,11 @@ export function getStripe(): Stripe {
   }
   if (!stripeClient) {
     stripeClient = new Stripe(stripeSecretKey, {
-      // Pin to the API version this stripe package declares.
-      // Do not change this without also updating tests / expected behavior.
-      apiVersion: Stripe.API_VERSION,
+      // Use a stable, widely-supported API version that definitely includes
+      // the `discounts` parameter on PaymentIntents.
+      // We cast because the package's types are locked to its own declared
+      // version literal (currently '2026-05-27.dahlia').
+      apiVersion: '2024-06-20' as any,
     });
   }
   return stripeClient;

@@ -313,8 +313,8 @@ export function ChrisBookingWizard({
   const fulfillment = useChrisBookingFulfillment();
 
   // Campaign-specific pricing display for the checkout summary (step 3).
-  // For your $1 test coupon (OMFhV6g2 = $199 off), we hardcode display to $1.
-  // The server will use the coupon to actually charge $1 (gross $200 - $199).
+  // For the $1 test coupon (OMFhV6g2, amount_off 19900), we hardcode $1.
+  // Server applies via discounts (coupon or promotion_code depending on ID format).
   const CHRIS_FINAL_CENTS = 100; // $1 for current test coupon
 
   const displayDate = prefillDate ?? scheduledAt.slice(0, 10);

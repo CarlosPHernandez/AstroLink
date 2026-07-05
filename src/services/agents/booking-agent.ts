@@ -186,6 +186,8 @@ export class BookingAgent {
       }
 
       if (discounts.length > 0) {
+        // Ensure we pass a proper array. The helper returns [{coupon: ...}]
+        // or we can support {promotion_code: ...} for promo codes.
         paymentIntentParams.discounts = discounts;
       }
 

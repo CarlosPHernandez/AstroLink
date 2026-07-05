@@ -5,7 +5,8 @@ export const CHRIS_BOOKING_CAMPAIGN_QUERY = 'chris';
 export const CHRIS_SESSION_DURATION_MINUTES = 45;
 
 /** Original price for Chris 45-min session in this specific case ($200 before discount). 
- *  For the $1 test coupon (amount_off 19900), the actual charge will be $1.
+ *  For the $1 test coupon (amount_off 19900 / id OMFhV6g2), the actual charge will be $1.
+ *  Use CHRIS_STRIPE_COUPON_ID or _PROMOTION_CODE in env (auto-detects format).
  */
 export const CHRIS_ORIGINAL_PRICE_CENTS = 20000; // $200 flat for the 45 min session (not hourly)
 
