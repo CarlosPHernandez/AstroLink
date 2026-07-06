@@ -2,15 +2,25 @@
 
 All notable changes to AstroLink are documented in this file.
 
-## [0.6.2.0] - 2026-07-06
+## [0.6.3.0] - 2026-07-06
+
+### Added
+- Production-safe booking payment confirmation fallback at `POST /api/bookings/[id]/confirm-payment` that verifies session access, Stripe PaymentIntent success, and AstroLink booking metadata before recording payment state.
+- Unique `transactions.stripe_payment_intent_id` index to prevent duplicate ledger rows when client reconciliation and Stripe webhook replay process the same PaymentIntent.
 
 ### Changed
 - Chris campaign checkout now charges the temporary $1 live-flow test amount directly on the PaymentIntent and records the original amount, charged amount, and pricing mode in Stripe metadata.
 - Chris campaign payment summary now shows the actual $199 live-test adjustment so the displayed total reconciles to $1.
+- Stripe webhook API paths now bypass proxy auth and waitlist handling before Stripe signature validation runs in the route handler.
+- Chris campaign post-payment polling now attempts production payment reconciliation once when a paid booking remains `pending_payment`.
+- Stripe production cutover docs now use the canonical no-redirect webhook URL and warn against `3xx` webhook targets.
 
 ### Fixed
 - Chris campaign bookings no longer send unsupported Stripe `discounts` data when creating PaymentIntents.
 - PaymentIntent regression coverage now verifies Chris campaign amount, metadata, idempotency, customer attachment, and absence of Stripe discounts.
+- Paid bookings can be reconciled to `confirmed` with exactly one transaction row even if the original Stripe webhook was delayed, redirected, or replayed.
+- Pending-payment bookings no longer generate APX-02 briefs before payment confirmation.
+- Post-payment fulfillment skips APX-02 generation when a display-ready brief already exists, avoiding duplicate fulfillment work on replay.
 
 ### Removed
 - Removed the unused Chris Stripe coupon/promotion-code helper, tests, env examples, and launch checklist instructions for configuring PaymentIntent discounts.

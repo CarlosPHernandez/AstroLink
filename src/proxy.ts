@@ -99,6 +99,10 @@ export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const returnPath = `${pathname}${search}`;
 
+  if (pathname === '/api/webhooks' || pathname.startsWith('/api/webhooks/')) {
+    return NextResponse.next();
+  }
+
   const { session, supabaseResponse } = await resolveSessionForProxy(request);
 
   const requestHeaders = new Headers(request.headers);

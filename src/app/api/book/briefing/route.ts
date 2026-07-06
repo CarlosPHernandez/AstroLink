@@ -44,6 +44,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 
+    if (booking.status !== 'confirmed' && booking.status !== 'completed') {
+      return NextResponse.json(
+        { success: false, error: 'Payment has not been confirmed for this booking.' },
+        { status: 409 },
+      );
+    }
+
     const briefingAgent = new BriefingAgent();
     const briefing = await briefingAgent.prepareBriefing(bookingId);
 
@@ -64,4 +71,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: message }, { status });
   }
 }
-

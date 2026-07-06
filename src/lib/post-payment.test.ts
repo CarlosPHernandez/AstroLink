@@ -45,7 +45,7 @@ describe('runConfirmedBookingFulfillment', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockBookingSingle.mockResolvedValue({
-      data: { id: 'booking-1', daily_room_url: null },
+      data: { id: 'booking-1', daily_room_url: null, briefing_json: null },
       error: null,
     });
     mockPrepareBriefing.mockResolvedValue({});
@@ -56,6 +56,22 @@ describe('runConfirmedBookingFulfillment', () => {
     await runConfirmedBookingFulfillment('booking-1');
 
     expect(mockPrepareBriefing).toHaveBeenCalledWith('booking-1');
+    expect(mockSendConfirmations).toHaveBeenCalledWith('booking-1');
+  });
+
+  it('skips briefing generation when a ready brief already exists', async () => {
+    mockBookingSingle.mockResolvedValueOnce({
+      data: {
+        id: 'booking-1',
+        daily_room_url: null,
+        briefing_json: { version: 2, mentee: {}, mentor: {} },
+      },
+      error: null,
+    });
+
+    await runConfirmedBookingFulfillment('booking-1');
+
+    expect(mockPrepareBriefing).not.toHaveBeenCalled();
     expect(mockSendConfirmations).toHaveBeenCalledWith('booking-1');
   });
 });

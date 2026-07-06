@@ -52,8 +52,9 @@ Still in **Live** mode:
 1. Go to **Developers** → **Webhooks**.
 2. Click **Add endpoint**.
 3. Endpoint URL: your production domain, e.g.
-   `https://astralink.ai/api/webhooks/stripe`
+   `https://astro-link.space/api/webhooks/stripe`
    (or the exact Vercel production domain you use).
+   Do not use a URL that redirects, including a `www` host or trailing-slash variant if either returns `3xx`; Stripe must receive a direct `2xx` response from the webhook handler.
 4. **Select events** (exactly these four — no more):
    - `payment_intent.succeeded`
    - `payment_intent.payment_failed`

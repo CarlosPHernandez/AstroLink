@@ -47,6 +47,8 @@ describe('resolveWaitlistRoute', () => {
     expect(resolveWaitlistRoute('/api/early-access', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/api/admin/metrics', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/api/webhooks/stripe', null)).toEqual({ action: 'allow' });
+    expect(resolveWaitlistRoute('/api/webhooks/stripe/', null)).toEqual({ action: 'allow' });
+    expect(resolveWaitlistRoute('/api/webhooks/daily/', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/api/book', null)).toEqual({ action: 'api_blocked' });
     expect(resolveWaitlistRoute('/api/auth/session', null)).toEqual({ action: 'api_blocked' });
   });

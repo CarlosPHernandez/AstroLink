@@ -143,6 +143,10 @@ export default function MenteeDashboardClient({
       return;
     }
 
+    if (booking.status === 'pending_payment') {
+      return;
+    }
+
     handledBookedRef.current = bookedId;
 
     const briefing = localBriefings[booking.id] ?? booking.briefing;
