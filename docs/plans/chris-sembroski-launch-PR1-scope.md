@@ -42,6 +42,6 @@
 - `src/app/booking/booking-client.tsx` (PR3)
 - `src/components/early-access/*` (PR2 copy only if needed)
 - `src/components/landing/*`
-- Stripe promo (PR3)
+- Stripe checkout amount (PR3)
 - E2E `e2e/talk-with-chris.spec.ts` (PR3)
 - `design/stitch/*` (PR2)
