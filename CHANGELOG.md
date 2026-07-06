@@ -5,12 +5,12 @@ All notable changes to AstroLink are documented in this file.
 ## [0.6.4.0] - 2026-07-06
 
 ### Changed
-- Chris campaign post-payment polling now retries server-owned payment confirmation with bounded backoff instead of relying on a one-shot client-side environment branch.
-- Client fallback payment confirmation now uses the same full fulfillment path as Stripe webhooks, including transaction recording, booking confirmation, Daily provisioning, and confirmation notifications.
+- Chris campaign checkout now asks the server to confirm payment with bounded backoff, so paid bookings do not depend on one browser attempt.
+- Browser payment confirmation now completes the same fulfillment work as Stripe webhooks, including transaction recording, booking confirmation, Daily provisioning, and confirmation notifications.
 
 ### Fixed
-- Paid Chris bookings that remain `pending_payment` after Stripe succeeds can now reconcile through `POST /api/bookings/[id]/confirm-payment` without waiting indefinitely on the AI brief overlay.
-- Confirmation fallback now handles dev-skipped bookings server-side without attempting Stripe retrieval and surfaces fatal auth/metadata errors in the overlay.
+- Paid Chris bookings that remain `pending_payment` after Stripe succeeds can now recover through `POST /api/bookings/[id]/confirm-payment` instead of waiting indefinitely on the AI brief overlay.
+- Local dev-skipped bookings now confirm server-side without a Stripe lookup, and buyers see explicit overlay errors for auth or metadata failures.
 
 ## [0.6.3.0] - 2026-07-06
 
