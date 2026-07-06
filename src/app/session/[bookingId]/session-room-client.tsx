@@ -364,8 +364,7 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
 
           {booking.gate === 'ready' &&
             !ended &&
-            !booking.tokenError &&
-            (booking.dailyJoinUrl || booking.e2eCaptionsStub) && (
+            (booking.dailyRoomUrl || booking.e2eCaptionsStub) && (
             <div data-testid="session-join-ready" className="w-full">
               <DailyCallRoom booking={booking} onEnded={() => setEnded(true)} />
               <p className="mt-3 text-center text-label-sm text-on-surface-variant">
@@ -375,21 +374,7 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             </div>
           )}
 
-          {booking.gate === 'ready' && !ended && booking.tokenError && (
-            <SessionGatePanel testId="session-token-error">
-              <h3 className="text-headline-md font-bold text-on-surface mb-2">Could not join room</h3>
-              <p className="text-body-md text-on-surface-variant mb-6">{booking.tokenError}</p>
-              <button
-                type="button"
-                onClick={() => window.location.reload()}
-                className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
-              >
-                Try again
-              </button>
-            </SessionGatePanel>
-          )}
-
-          {booking.gate === 'ready' && !ended && !booking.dailyJoinUrl && !booking.tokenError && (
+          {booking.gate === 'ready' && !ended && !booking.dailyRoomUrl && !booking.e2eCaptionsStub && (
             <SessionGatePanel testId="session-no-join-url">
               <p className="text-body-md text-on-surface-variant mb-6 text-pretty">
                 Video is unavailable — Daily is not configured for this environment.

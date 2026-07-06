@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { buildAuthorizedDailyJoinUrl } from '@/lib/daily';
 import { getBookingForSession } from '@/lib/booking-access';
 
 /**
@@ -21,13 +22,23 @@ export async function GET(
     return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
   }
 
-  if (booking.tokenError) {
-    return NextResponse.json({ error: booking.tokenError }, { status: 502 });
-  }
-
-  if (booking.gate !== 'ready' || !booking.dailyJoinUrl) {
+  if (booking.gate !== 'ready' || !booking.dailyRoomUrl) {
     return NextResponse.json({ error: 'Session is not ready for video' }, { status: 400 });
   }
 
-  return NextResponse.json({ joinUrl: booking.dailyJoinUrl });
+  try {
+    const joinUrl = await buildAuthorizedDailyJoinUrl({
+      roomUrl: booking.dailyRoomUrl,
+      userId: booking.viewerId,
+      userName: booking.viewerName,
+      isOwner: booking.sessionRole === 'mentor' || booking.sessionRole === 'admin',
+      scheduledAt: booking.scheduledAt,
+    });
+
+    return NextResponse.json({ joinUrl });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Meeting token failed';
+    console.error('[session] meeting token mint failed', { bookingId, message });
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
 }

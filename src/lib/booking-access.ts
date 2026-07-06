@@ -1,7 +1,6 @@
 import 'server-only';
 
 import {
-  buildAuthorizedDailyJoinUrl,
   isDailyTranscriptionEnabled,
   resolveSessionJoinPhase,
 } from '@/lib/daily';
@@ -31,8 +30,9 @@ export interface BookingSessionView {
   status: string;
   gate: SessionGate;
   sessionRole: SessionParticipantRole;
+  viewerId: string;
+  viewerName: string;
   dailyRoomUrl: string | null;
-  dailyJoinUrl: string | null;
   mentorName: string;
   menteeName: string;
   mentorId: string;
@@ -44,7 +44,6 @@ export interface BookingSessionView {
   e2eCaptionsStub: boolean;
   scheduledAt: string;
   briefing: BriefingPayload | null;
-  tokenError: string | null;
 }
 
 function resolveSessionRole(params: {
@@ -137,25 +136,6 @@ export async function getBookingForSession(
     scheduledAt: data.scheduled_at,
   });
 
-  let dailyJoinUrl: string | null = null;
-  let tokenError: string | null = null;
-
-  if (gate === 'ready' && data.daily_room_url && process.env.DAILY_API_KEY) {
-    try {
-      dailyJoinUrl = await buildAuthorizedDailyJoinUrl({
-        roomUrl: data.daily_room_url,
-        userId: session.userId,
-        userName: session.fullName,
-        isOwner: sessionRole === 'mentor' || sessionRole === 'admin',
-        scheduledAt: data.scheduled_at,
-      });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Meeting token failed';
-      tokenError = message;
-      console.error('[session] meeting token mint failed', { bookingId, message });
-    }
-  }
-
   const menteeUser = data.users as { full_name: string; preferred_locale: string | null } | null;
   const menteePreferredLocale: SupportedTargetLocale =
     menteeUser?.preferred_locale && isSupportedTargetLocale(menteeUser.preferred_locale)
@@ -175,8 +155,9 @@ export async function getBookingForSession(
       status: data.status,
       gate,
       sessionRole,
+      viewerId: session.userId,
+      viewerName: session.fullName,
       dailyRoomUrl: data.daily_room_url,
-      dailyJoinUrl,
       mentorName: mentor?.full_name ?? 'Expert',
       menteeName: menteeUser?.full_name ?? 'Guest',
       mentorId: data.mentor_id,
@@ -187,7 +168,6 @@ export async function getBookingForSession(
       e2eCaptionsStub,
       scheduledAt: data.scheduled_at,
       briefing: (data.briefing_json as BriefingPayload | null) ?? null,
-      tokenError,
     },
     forbidden: false,
   };
