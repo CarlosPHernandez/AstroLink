@@ -7,6 +7,10 @@ const mockAuditInsert = vi.hoisted(() => vi.fn());
 const mockGenerateStructuredJson = vi.hoisted(() => vi.fn());
 const mockReserveSlot = vi.hoisted(() => vi.fn());
 const mockReleaseSlot = vi.hoisted(() => vi.fn());
+const mockIsStripePaymentsSkipped = vi.hoisted(() => vi.fn());
+const mockStripePaymentIntentsCreate = vi.hoisted(() => vi.fn());
+const mockStripePaymentIntentsUpdate = vi.hoisted(() => vi.fn());
+const mockGetOrCreateStripeCustomerForMentee = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/supabase', () => ({
   supabaseAdmin: {
@@ -64,9 +68,23 @@ vi.mock('@/lib/booking-payments', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/booking-payments')>();
   return {
     ...actual,
-    isStripePaymentsSkipped: vi.fn(() => true),
+    isStripePaymentsSkipped: (...args: unknown[]) => mockIsStripePaymentsSkipped(...args),
   };
 });
+
+vi.mock('@/lib/stripe', () => ({
+  stripe: {
+    paymentIntents: {
+      create: (...args: unknown[]) => mockStripePaymentIntentsCreate(...args),
+      update: (...args: unknown[]) => mockStripePaymentIntentsUpdate(...args),
+    },
+  },
+}));
+
+vi.mock('@/lib/stripe-customer', () => ({
+  getOrCreateStripeCustomerForMentee: (...args: unknown[]) =>
+    mockGetOrCreateStripeCustomerForMentee(...args),
+}));
 
 import { BookingAgent } from '@/services/agents/booking-agent';
 
@@ -99,6 +117,13 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     });
     mockReserveSlot.mockResolvedValue(true);
     mockReleaseSlot.mockResolvedValue(undefined);
+    mockIsStripePaymentsSkipped.mockReturnValue(true);
+    mockStripePaymentIntentsCreate.mockResolvedValue({
+      id: 'pi_test_123',
+      client_secret: 'pi_test_secret_123',
+    });
+    mockStripePaymentIntentsUpdate.mockResolvedValue({ id: 'pi_test_123' });
+    mockGetOrCreateStripeCustomerForMentee.mockResolvedValue('cus_test_123');
   });
 
   afterEach(() => {
@@ -214,5 +239,91 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
         campaignId: 'chris-sembroski',
       }),
     ).rejects.toBeInstanceOf(ChrisCampaignSoldOutError);
+  });
+
+  it('creates Chris campaign PaymentIntent for the $1 live-flow test amount without Stripe discounts', async () => {
+    mockIsStripePaymentsSkipped.mockReturnValue(false);
+
+    const agent = new BookingAgent();
+    const result = await agent.bookSession({
+      menteeId: 'mentee-1',
+      mentorId: 'mentor-1',
+      serviceType: 'session_1on1',
+      scheduledAt: '2030-01-01T18:00:00.000Z',
+      menteeGoals: 'Learn about propulsion',
+      menteeBackground: 'Early-career engineer',
+      campaignId: 'chris-sembroski',
+      marketingReferrer: 'chris-sembroski',
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        bookingId: 'booking-1',
+        stripeClientSecret: 'pi_test_secret_123',
+        skipPayment: false,
+        amountCents: 100,
+      }),
+    );
+    expect(mockGetOrCreateStripeCustomerForMentee).toHaveBeenCalledWith('mentee-1');
+    expect(mockStripePaymentIntentsCreate).toHaveBeenCalledTimes(1);
+
+    const [paymentIntentParams, requestOptions] = mockStripePaymentIntentsCreate.mock.calls[0];
+    expect(paymentIntentParams).toEqual(
+      expect.objectContaining({
+        amount: 100,
+        currency: 'usd',
+        customer: 'cus_test_123',
+        metadata: expect.objectContaining({
+          app: 'astrolink',
+          mentor_id: 'mentor-1',
+          mentee_id: 'mentee-1',
+          service_type: 'session_1on1',
+          campaign_id: 'chris-sembroski',
+          marketing_referrer: 'chris-sembroski',
+          pricing_mode: 'chris_live_test_1_usd',
+          original_amount_cents: '20000',
+          charged_amount_cents: '100',
+          discount_label: 'Inspired24',
+        }),
+      }),
+    );
+    expect(paymentIntentParams).not.toHaveProperty('discounts');
+    expect(requestOptions).toEqual({
+      idempotencyKey: 'astrolink_book_mentee-1_mentor-1_2030-01-01T18:00:00.000Z',
+    });
+  });
+
+  it('keeps non-campaign PaymentIntent amount server-calculated without Chris pricing metadata', async () => {
+    mockIsStripePaymentsSkipped.mockReturnValue(false);
+
+    const agent = new BookingAgent();
+    const result = await agent.bookSession({
+      menteeId: 'mentee-1',
+      mentorId: 'mentor-1',
+      serviceType: 'session_1on1',
+      scheduledAt: '2030-01-02T18:00:00.000Z',
+      menteeGoals: 'Learn about propulsion',
+      menteeBackground: 'Early-career engineer',
+      durationMinutes: 30,
+    });
+
+    expect(result.amountCents).toBe(7500);
+    expect(mockReserveSlot).not.toHaveBeenCalled();
+    const [paymentIntentParams] = mockStripePaymentIntentsCreate.mock.calls[0];
+    expect(paymentIntentParams).toEqual(
+      expect.objectContaining({
+        amount: 7500,
+        currency: 'usd',
+        customer: 'cus_test_123',
+        metadata: expect.objectContaining({
+          app: 'astrolink',
+          mentor_id: 'mentor-1',
+          mentee_id: 'mentee-1',
+          service_type: 'session_1on1',
+        }),
+      }),
+    );
+    expect(paymentIntentParams).not.toHaveProperty('discounts');
+    expect(paymentIntentParams.metadata).not.toHaveProperty('pricing_mode');
   });
 });

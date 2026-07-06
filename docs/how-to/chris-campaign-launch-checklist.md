@@ -19,13 +19,7 @@ CHRIS_CAMPAIGN_ID=chris-sembroski
 ENABLE_DEMO_AUTH=false
 ```
 
-Optional promo (sandbox first, then live):
-
-```bash
-CHRIS_STRIPE_COUPON_ID=coupon_...
-# or
-CHRIS_STRIPE_PROMOTION_CODE=CHRIS2026
-```
+Chris campaign checkout currently charges the temporary live-flow test amount directly on the PaymentIntent. Do not configure a Stripe coupon or promotion code for this PaymentIntent path.
 
 Stripe keys must be **Live** mode in Production only. See [stripe-production-cutover.md](./stripe-production-cutover.md).
 

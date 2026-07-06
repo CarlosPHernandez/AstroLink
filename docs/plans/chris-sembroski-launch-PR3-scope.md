@@ -1,4 +1,4 @@
-# PR3 scope allowlist — Chris booking UI + 45 min + Stripe promo
+# PR3 scope allowlist — Chris booking UI + 45 min + Stripe checkout amount
 
 **Do not edit files outside this list in PR3.** PR4 owns launch ops.
 
@@ -6,8 +6,6 @@
 
 | Path | Purpose |
 |------|---------|
-| `src/lib/chris-campaign/chris-stripe-promo.ts` | Optional Stripe coupon/promo for Chris PaymentIntents |
-| `src/lib/chris-campaign/chris-stripe-promo.test.ts` | Promo resolver unit tests |
 | `src/lib/chris-campaign/chris-booking-mode.ts` | Client-safe Chris booking UI helpers (45 min, date prefill) |
 | `src/lib/chris-campaign/chris-booking-mode.test.ts` | Booking mode helper tests |
 | `e2e/talk-with-chris.spec.ts` | Landing → booking golden path with `campaign=chris` |
@@ -27,9 +25,8 @@
 | `src/lib/book-request-schema.ts` | Enforce 45 min + live 1:1 when `campaign=chris` |
 | `src/lib/book-request-schema.test.ts` | Chris campaign schema tests |
 | `src/app/api/book/route.ts` | Default/enforce Chris duration server-side |
-| `src/services/agents/booking-agent.ts` | Force 45 min + apply Stripe promo for campaign |
-| `src/services/agents/booking-agent.test.ts` | Campaign duration + promo tests |
-| `.env.example` | `CHRIS_STRIPE_COUPON_ID` / `CHRIS_STRIPE_PROMOTION_CODE` |
+| `src/services/agents/booking-agent.ts` | Force 45 min + apply campaign checkout amount |
+| `src/services/agents/booking-agent.test.ts` | Campaign duration + checkout amount tests |
 | `playwright.config.ts` | `CHRIS_BOOKING_ENABLED=true` for E2E |
 | `e2e/helpers/supabase-cleanup.ts` | Release campaign slots on E2E cleanup |
 | `docs/plans/chris-sembroski-launch.md` | PR3 scope link |
