@@ -46,6 +46,7 @@ export function useChrisBookingFulfillment() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fulfillAttemptedRef = useRef(false);
+  const paymentConfirmAttemptedRef = useRef(false);
   const briefingAttemptedRef = useRef(false);
   const activeRef = useRef(false);
 
@@ -82,6 +83,22 @@ export function useChrisBookingFulfillment() {
       body: JSON.stringify({ bookingId: id }),
     });
   }, []);
+
+  const tryConfirmPayment = useCallback(async (id: string) => {
+    if (paymentConfirmAttemptedRef.current) {
+      return;
+    }
+    paymentConfirmAttemptedRef.current = true;
+
+    if (process.env.NODE_ENV !== 'production') {
+      await tryDevFulfill(id);
+      return;
+    }
+
+    await fetch(`/api/bookings/${id}/confirm-payment`, {
+      method: 'POST',
+    });
+  }, [tryDevFulfill]);
 
   const tryGenerateBriefing = useCallback(async (id: string): Promise<BriefingPayload | null> => {
     if (briefingAttemptedRef.current) {
@@ -135,7 +152,7 @@ export function useChrisBookingFulfillment() {
         setScheduledAt(status.scheduledAt);
 
         if (status.status === 'pending_payment') {
-          await tryDevFulfill(id);
+          await tryConfirmPayment(id);
           await delay(POLL_INTERVAL_MS);
           continue;
         }
@@ -172,6 +189,7 @@ export function useChrisBookingFulfillment() {
       activeRef.current = true;
       setBookingId(id);
       fulfillAttemptedRef.current = false;
+      paymentConfirmAttemptedRef.current = false;
       briefingAttemptedRef.current = false;
       setErrorMessage(null);
 
@@ -193,6 +211,7 @@ export function useChrisBookingFulfillment() {
 
   const reset = useCallback(() => {
     activeRef.current = false;
+    paymentConfirmAttemptedRef.current = false;
     setOverlayPhase(null);
     setView('wizard');
     setBookingId(null);

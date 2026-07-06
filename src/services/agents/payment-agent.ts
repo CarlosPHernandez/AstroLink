@@ -13,6 +13,7 @@ export class PaymentAgent {
     grossAmountCents: number;
     platformFeeCents: number;
     destinationStripeAccount: string;
+    confirmBooking?: boolean;
     metadata: {
       booking_id: string;
       mentor_id: string;
@@ -33,7 +34,29 @@ export class PaymentAgent {
 
     const mentorPayoutCents = params.grossAmountCents - platformFeeCents;
 
-    // 2. Insert transaction state with idempotency guard (UNIQUE on stripe_event_id now enforced at DB)
+    const { data: existingTransaction, error: existingTransactionErr } = await supabaseAdmin
+      .from('transactions')
+      .select('id')
+      .eq('stripe_payment_intent_id', params.paymentIntentId)
+      .maybeSingle();
+
+    if (existingTransactionErr) {
+      throw new Error(`Failed to check transaction: ${existingTransactionErr.message}`);
+    }
+
+    if (existingTransaction) {
+      if (params.confirmBooking !== false) {
+        await supabaseAdmin
+          .from('bookings')
+          .update({ status: 'confirmed' })
+          .eq('id', params.metadata.booking_id);
+      }
+      return { processed: true, alreadyRecorded: true };
+    }
+
+    // 2. Insert transaction state with idempotency guards:
+    // - stripe_payment_intent_id handles client fallback + webhook replay
+    // - stripe_event_id handles Stripe duplicate deliveries
     const { error: txErr } = await supabaseAdmin.from('transactions').insert({
       booking_id: params.metadata.booking_id,
       stripe_payment_intent_id: params.paymentIntentId,
@@ -48,17 +71,25 @@ export class PaymentAgent {
     if (txErr) {
       // Check for unique key constraint (already processed)
       if (txErr.code === '23505') {
-        console.log(`Transaction for stripe_event_id ${params.stripeEventId} already processed.`);
+        console.log(`Transaction for payment intent ${params.paymentIntentId} already processed.`);
+        if (params.confirmBooking !== false) {
+          await supabaseAdmin
+            .from('bookings')
+            .update({ status: 'confirmed' })
+            .eq('id', params.metadata.booking_id);
+        }
         return { processed: true };
       }
       throw new Error(`Failed to log transaction: ${txErr.message}`);
     }
 
     // 3. Update booking status to confirmed (payment captured; ready for session)
-    await supabaseAdmin
-      .from('bookings')
-      .update({ status: 'confirmed' })
-      .eq('id', params.metadata.booking_id);
+    if (params.confirmBooking !== false) {
+      await supabaseAdmin
+        .from('bookings')
+        .update({ status: 'confirmed' })
+        .eq('id', params.metadata.booking_id);
+    }
 
     await this.logAudit('PAYMENT_CONFIRMED', params.metadata.booking_id, {
       gross: params.grossAmountCents,

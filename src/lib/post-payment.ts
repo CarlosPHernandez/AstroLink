@@ -4,6 +4,7 @@ import {
   isDevSkippedPaymentIntent,
   isStripePaymentsSkipped,
 } from '@/lib/booking-payments';
+import { briefingContentReady, type BriefingPayload } from '@/lib/briefing-display';
 import { canProvisionDailyRoom, provisionDailyRoomForBooking } from '@/lib/daily';
 import { supabaseAdmin } from '@/lib/supabase';
 import { BriefingAgent } from '@/services/agents/briefing-agent';
@@ -16,7 +17,7 @@ import { PaymentAgent } from '@/services/agents/payment-agent';
 export async function runConfirmedBookingFulfillment(bookingId: string) {
   const { data: booking, error } = await supabaseAdmin
     .from('bookings')
-    .select('id, daily_room_url')
+    .select('id, daily_room_url, briefing_json')
     .eq('id', bookingId)
     .single();
 
@@ -24,8 +25,11 @@ export async function runConfirmedBookingFulfillment(bookingId: string) {
     throw new Error(`Booking not found: ${bookingId}`);
   }
 
-  const briefingAgent = new BriefingAgent();
-  await briefingAgent.prepareBriefing(bookingId);
+  const briefing = (booking.briefing_json as BriefingPayload | null) ?? null;
+  if (!briefing || !briefingContentReady(briefing, 'mentee')) {
+    const briefingAgent = new BriefingAgent();
+    await briefingAgent.prepareBriefing(bookingId);
+  }
 
   if (!booking.daily_room_url && canProvisionDailyRoom()) {
     await provisionDailyRoomForBooking(bookingId);
@@ -65,10 +69,7 @@ export async function confirmBookingWithoutPayment(bookingId: string) {
   return { bookingId, alreadyProcessed: false };
 }
 
-/**
- * Idempotent D1 fulfillment after Stripe immediate-capture PaymentIntent succeeds.
- */
-export async function fulfillBookingAfterPayment(params: {
+export async function recordBookingPaymentSucceeded(params: {
   stripeEventId: string;
   paymentIntentId: string;
   grossAmountCents: number;
@@ -79,16 +80,12 @@ export async function fulfillBookingAfterPayment(params: {
 }) {
   const { data: booking, error } = await supabaseAdmin
     .from('bookings')
-    .select('id, status, daily_room_url')
+    .select('id, status')
     .eq('stripe_payment_intent_id', params.paymentIntentId)
     .single();
 
   if (error || !booking) {
     throw new Error(`No booking for payment intent ${params.paymentIntentId}`);
-  }
-
-  if (booking.status === 'confirmed' || booking.status === 'completed') {
-    return { bookingId: booking.id, alreadyProcessed: true };
   }
 
   if (isDevSkippedPaymentIntent(params.paymentIntentId) || isStripePaymentsSkipped()) {
@@ -102,6 +99,7 @@ export async function fulfillBookingAfterPayment(params: {
     grossAmountCents: params.grossAmountCents,
     platformFeeCents: params.platformFeeCents,
     destinationStripeAccount: params.destinationStripeAccount,
+    confirmBooking: booking.status !== 'completed',
     metadata: {
       booking_id: booking.id,
       mentor_id: params.mentorId,
@@ -109,7 +107,31 @@ export async function fulfillBookingAfterPayment(params: {
     },
   });
 
-  await runConfirmedBookingFulfillment(booking.id);
+  return {
+    bookingId: booking.id,
+    alreadyProcessed: booking.status === 'confirmed' || booking.status === 'completed',
+  };
+}
 
-  return { bookingId: booking.id, alreadyProcessed: false };
+/**
+ * Idempotent D1 fulfillment after Stripe immediate-capture PaymentIntent succeeds.
+ */
+export async function fulfillBookingAfterPayment(params: {
+  stripeEventId: string;
+  paymentIntentId: string;
+  grossAmountCents: number;
+  platformFeeCents: number;
+  destinationStripeAccount: string;
+  mentorId: string;
+  menteeId: string;
+}) {
+  const result = await recordBookingPaymentSucceeded(params);
+
+  if (isDevSkippedPaymentIntent(params.paymentIntentId) || isStripePaymentsSkipped()) {
+    return result;
+  }
+
+  await runConfirmedBookingFulfillment(result.bookingId);
+
+  return result;
 }
