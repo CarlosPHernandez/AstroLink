@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
-import { recordBookingPaymentSucceeded } from '@/lib/post-payment';
+import {
+  isDevSkippedPaymentIntent,
+  isStripePaymentsSkipped,
+} from '@/lib/booking-payments';
+import { fulfillBookingAfterPayment } from '@/lib/post-payment';
 import { getSession } from '@/lib/session';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
@@ -63,6 +67,23 @@ export async function POST(
     );
   }
 
+  if (
+    isDevSkippedPaymentIntent(booking.stripe_payment_intent_id) ||
+    isStripePaymentsSkipped()
+  ) {
+    const result = await fulfillBookingAfterPayment({
+      stripeEventId: `client_confirm_${booking.stripe_payment_intent_id}`,
+      paymentIntentId: booking.stripe_payment_intent_id,
+      grossAmountCents: 0,
+      platformFeeCents: 0,
+      destinationStripeAccount: 'platform',
+      mentorId: booking.mentor_id,
+      menteeId: booking.mentee_id,
+    });
+
+    return NextResponse.json({ success: true, data: result });
+  }
+
   const paymentIntent = await stripe.paymentIntents.retrieve(booking.stripe_payment_intent_id);
   if (paymentIntent.status !== 'succeeded') {
     return NextResponse.json(
@@ -81,7 +102,7 @@ export async function POST(
   const platformFee =
     paymentIntent.application_fee_amount ?? Math.round(paymentIntent.amount * 0.2);
 
-  const result = await recordBookingPaymentSucceeded({
+  const result = await fulfillBookingAfterPayment({
     stripeEventId: `client_confirm_${paymentIntent.id}`,
     paymentIntentId: paymentIntent.id,
     grossAmountCents: paymentIntent.amount,
