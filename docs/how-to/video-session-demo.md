@@ -56,7 +56,7 @@ npm run dev
 ## Two-user join proof
 
 - Mentee and mentor must each open `/session/[bookingId]` while logged in as the correct user.
-- Room is `privacy: private`; join URL includes a short-lived meeting token minted server-side per page load.
+- Room is `privacy: private`; the call UI fetches a join URL with a short-lived meeting token when the participant joins.
 - Unauthenticated users redirect to sign-in. Wrong participant gets forbidden (dashboard redirect).
 
 ## Failure cheatsheet
@@ -111,7 +111,7 @@ Production-safe retry without dev tools: `POST /api/session/provision` with `{ "
 ## Security talking points
 
 1. **App gate**: only mentee, mentor, or admin can open `/session/[id]`.
-2. **Daily gate**: private room + short-lived meeting token per authorized load.
+2. **Daily gate**: private room + short-lived meeting token per authorized join.
 3. **Media**: encrypted in transit via Daily (WebRTC); AstroLink does not store recordings in D1.
 
 Do not claim HIPAA or stored E2E review unless D2 compliance features ship.

@@ -19,7 +19,7 @@ two-person session is about 60 participant-minutes.
 |------|------------------|-------|
 | Room provisioning | After payment or skip-Stripe fulfillment, a private Daily room is created if `DAILY_API_KEY` exists and `daily_room_url` is empty. | `src/lib/post-payment.ts`, `src/lib/daily.ts` |
 | Room identity | Room name is deterministic from booking ID; room URL is saved on `bookings.daily_room_url`. | `src/lib/daily.ts` |
-| Join authorization | Only the mentee, mentor, or admin can open `/session/[bookingId]`; the server mints a Daily meeting token for each page load. | `src/lib/booking-access.ts` |
+| Join authorization | Only the mentee, mentor, or admin can open `/session/[bookingId]`; the server mints a Daily meeting token only when the participant joins. | `src/lib/booking-access.ts`, `src/app/api/session/[bookingId]/join-url/route.ts` |
 | Daily room settings | Private room, chat enabled, video/audio on, 48h default expiry or scheduled time + 4h. | `src/lib/daily.ts` |
 | Completion | Daily `meeting.ended` webhook drives APX-03 recap, Stripe capture, and `completed` status. | `src/app/api/webhooks/daily/route.ts`, `src/lib/post-session.ts` |
 | Existing quota pattern | LLM calls use an env-driven in-memory rate limiter. | `src/lib/llm-rate-limit.ts` |

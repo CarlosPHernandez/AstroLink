@@ -18,8 +18,8 @@ Pay / fulfill          Provision room           Open session page          Call 
 
 Stripe webhook   →    post-payment.ts    →    GET /session/[id]    →    DailyCallRoom
 or dev fulfill        provisionDailyRoom       getBookingForSession       hang up in Daily
-                      (private room)           mint meeting token
-                      save daily_room_url      createCallObject + ?t=
+                      (private room)           render gated session shell
+                      save daily_room_url      fetch join URL on join
                                                       │
                                                       ▼
                                                POST /api/webhooks/daily
@@ -33,17 +33,17 @@ or dev fulfill        provisionDailyRoom       getBookingForSession       hang u
 
 ## Design decisions
 
-### Private rooms + per-load meeting tokens
+### Private rooms + on-join meeting tokens
 
 Daily private rooms reject joins without a valid meeting token. AstroLink:
 
 1. Creates the room once after payment (`provisionDailyRoomForBooking`).
 2. Stores only the **room URL** on the booking.
-3. Mints a **short-lived token** on each authorized page load (`buildAuthorizedDailyJoinUrl`).
+3. Mints a **short-lived token** only when the authorized participant joins (`GET /api/session/[bookingId]/join-url`).
 
 Legacy columns `mentee_token` and `mentor_token` are cleared on provision. Tokens are never persisted.
 
-**Trade-off:** Extra Daily API call on every session page load. Acceptable for D1 volume; cache later if needed.
+**Trade-off:** The join action depends on a server round trip, but browsing or refreshing the session page no longer spends a Daily token request.
 
 ### Two-layer access control
 
@@ -83,7 +83,7 @@ As of D3 Phase 3, `/session/[id]` uses `@daily-co/daily-js` `createCallObject()`
 - Mentors see **Captions on for buyer** when the mentee locale ≠ `en`.
 - After `completed`, `SessionTranscriptPanel` loads utterances via `GET .../transcript` and optional batch localize.
 
-Private rooms, per-load meeting tokens, and webhook-driven completion are unchanged from D1.
+Private rooms, on-join meeting tokens, and webhook-driven completion are unchanged from D1.
 
 ## What D1 explicitly does not do
 

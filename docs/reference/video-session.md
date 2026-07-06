@@ -1,6 +1,6 @@
 # Video session reference
 
-Live 1:1 sessions use [Daily.co](https://www.daily.co/) for WebRTC video. AstroLink provisions **private** rooms after payment, mints **meeting tokens** server-side per page load, and completes bookings when Daily sends `meeting.ended`.
+Live 1:1 sessions use [Daily.co](https://www.daily.co/) for WebRTC video. AstroLink provisions **private** rooms after payment, mints **meeting tokens** server-side when a participant joins, and completes bookings when Daily sends `meeting.ended`.
 
 ## Environment variables
 
@@ -25,7 +25,7 @@ See [.env.example](../../.env.example) for the full list.
 | `pending_payment` | `pending_payment` | any | Payment required; no call UI |
 | `payment_failed` | `payment_failed` | any | Payment failed message |
 | `provisioning` | `confirmed` | missing | "Room preparing" + auto-retry |
-| `ready` | `confirmed` | present | `DailyCallRoom` (`createCallObject`) with tokenized join |
+| `ready` | `confirmed` | present | `DailyCallRoom` (`createCallObject`) with tokenized join URL fetched on join |
 | `completed` | `completed` | any | Session ended; link to recap |
 | `unavailable` | other | any | Generic unavailable state |
 
@@ -43,7 +43,7 @@ Anyone else gets `forbidden: true` (redirect to dashboard).
 
 ### `GET /session/[bookingId]`
 
-Server page. Calls `getBookingForSession()`, renders `SessionRoomClient` with gate, role, caption flags, and optional `dailyJoinUrl`.
+Server page. Calls `getBookingForSession()`, renders `SessionRoomClient` with gate, role, room URL, and caption flags. It does not mint a Daily token during page render.
 
 ### `POST /api/webhooks/daily`
 

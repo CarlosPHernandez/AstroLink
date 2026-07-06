@@ -72,7 +72,7 @@ Structured decision logs for judges: [T8 in D1 plan](docs/d1-implementation-plan
 4. After authorize, either:
    - Forward webhooks: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`, or
    - Dev fulfill: `POST /api/book/fulfill` with `{ "bookingId": "<uuid>" }` (development only).
-5. Mentee dashboard shows APX-02 briefing; **Join session** opens `/session/[bookingId]` with a server-minted Daily token (private room).
+5. Mentee dashboard shows APX-02 briefing; **Join session** opens `/session/[bookingId]`; the call UI requests a server-minted Daily token only when the participant joins the private room.
 
 ## Repository layout
 
