@@ -2,6 +2,19 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.2.0] - 2026-07-06
+
+### Changed
+- Chris campaign checkout now charges the temporary $1 live-flow test amount directly on the PaymentIntent and records the original amount, charged amount, and pricing mode in Stripe metadata.
+- Chris campaign payment summary now shows the actual $199 live-test adjustment so the displayed total reconciles to $1.
+
+### Fixed
+- Chris campaign bookings no longer send unsupported Stripe `discounts` data when creating PaymentIntents.
+- PaymentIntent regression coverage now verifies Chris campaign amount, metadata, idempotency, customer attachment, and absence of Stripe discounts.
+
+### Removed
+- Removed the unused Chris Stripe coupon/promotion-code helper, tests, env examples, and launch checklist instructions for configuring PaymentIntent discounts.
+
 ## [0.6.1.0] - 2026-07-06
 
 ### Changed
