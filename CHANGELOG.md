@@ -2,6 +2,15 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.1.0] - 2026-07-06
+
+### Changed
+- Session pages now defer Daily meeting token minting until the participant actually joins the room instead of minting during the initial page load.
+
+### Fixed
+- Session page loads no longer make avoidable Daily token requests for ready bookings that users view without joining.
+- Join URL generation now returns route-level errors when Daily token minting fails, keeping the session page render path lightweight.
+
 ## [0.6.0.1] - 2026-07-02
 
 ### Changed
