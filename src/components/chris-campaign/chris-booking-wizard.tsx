@@ -16,8 +16,8 @@ import { FieldError } from '@/components/forms/field-error';
 import {
   CHRIS_BOOKING_CAMPAIGN_QUERY,
   CHRIS_DISCOUNT_NAME,
-  CHRIS_DISCOUNT_PERCENT,
   CHRIS_ORIGINAL_PRICE_CENTS,
+  CHRIS_TEST_PAYMENT_AMOUNT_CENTS,
 } from '@/lib/chris-campaign/chris-campaign-constants';
 import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-booking-mode';
 
@@ -312,12 +312,9 @@ export function ChrisBookingWizard({
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const fulfillment = useChrisBookingFulfillment();
 
-  // Campaign-specific pricing display for the checkout summary (step 3).
-  // For the $1 test coupon (OMFhV6g2, amount_off 19900), we hardcode $1.
-  // Server applies via discounts (coupon or promotion_code depending on ID format).
-  const CHRIS_FINAL_CENTS = 100; // $1 for current test coupon
-
   const displayDate = prefillDate ?? scheduledAt.slice(0, 10);
+  const chrisLiveTestAdjustmentCents =
+    CHRIS_ORIGINAL_PRICE_CENTS - CHRIS_TEST_PAYMENT_AMOUNT_CENTS;
 
   const submitBooking = async () => {
     if (!session) {
@@ -678,18 +675,20 @@ export function ChrisBookingWizard({
                   <div className="mt-3 space-y-1.5 text-sm">
                     <div className="flex justify-between text-white/60">
                       <dt>Original price</dt>
-                      <dd className="text-white line-through">$200</dd>
+                      <dd className="text-white line-through">{formatMoney(CHRIS_ORIGINAL_PRICE_CENTS)}</dd>
                     </div>
                     <div className="flex justify-between text-white/60">
-                      <dt>{CHRIS_DISCOUNT_NAME} discount</dt>
-                      <dd className="text-[#4ade80]">-{CHRIS_DISCOUNT_PERCENT}%</dd>
+                      <dt>{CHRIS_DISCOUNT_NAME} live-flow test price</dt>
+                      <dd className="text-[#4ade80]">
+                        -{formatMoney(chrisLiveTestAdjustmentCents)}
+                      </dd>
                     </div>
                   </div>
 
                   <hr className="my-4 border-[#333333]" />
                   <div className="flex justify-between">
                     <span className="text-base font-bold text-white">Total</span>
-                    <span className="text-xl font-bold text-white">{formatMoney(CHRIS_FINAL_CENTS)}</span>
+                    <span className="text-xl font-bold text-white">{formatMoney(CHRIS_TEST_PAYMENT_AMOUNT_CENTS)}</span>
                   </div>
                 </div>
 

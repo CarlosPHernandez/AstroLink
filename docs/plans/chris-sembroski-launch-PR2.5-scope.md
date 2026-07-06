@@ -32,7 +32,7 @@
 ## Explicitly out of scope (later PRs)
 
 - `src/app/booking/booking-client.tsx` date wiring (PR3)
-- Stripe promo, 45 min UI enforcement (PR3)
+- Stripe checkout amount, 45 min UI enforcement (PR3)
 - E2E `e2e/talk-with-chris.spec.ts` (PR3)
 - Referrer analytics wiring beyond preserving `?ref=` in URLs (PR4)
 - `database.types.ts` regeneration

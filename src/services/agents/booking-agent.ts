@@ -1,15 +1,16 @@
+import type Stripe from 'stripe';
 import type { Json } from '@/lib/database.types';
 import {
-  CHRIS_DISCOUNT_PERCENT,
+  CHRIS_DISCOUNT_NAME,
   CHRIS_ORIGINAL_PRICE_CENTS,
   CHRIS_SESSION_DURATION_MINUTES,
+  CHRIS_TEST_PAYMENT_AMOUNT_CENTS,
 } from '@/lib/chris-campaign/chris-campaign-constants';
 import {
   ChrisCampaignSoldOutError,
   releaseChrisCampaignSlot,
   reserveChrisCampaignSlot,
 } from '@/lib/chris-campaign/chris-campaign-slots';
-import { getChrisCampaignStripeDiscounts } from '@/lib/chris-campaign/chris-stripe-promo';
 import { computeBookingTotalCents } from '@/lib/booking-pricing';
 import {
   createDevSkippedPaymentIntentId,
@@ -121,11 +122,11 @@ export class BookingAgent {
       throw new Error('This expert is not available for booking.');
     }
 
-    // To update the base price for Stripe (before the Inspired24 discount):
+    // To update the base price for Stripe:
     // - For normal experts: edit `live_session_price_cents` in the mentors table (Supabase).
     // - For this Chris 45-min case ($200 original): we override to CHRIS_ORIGINAL_PRICE_CENTS here.
     //   (You can also adjust the mentor price in DB, but the override ensures exactly $200 gross.)
-    // - The 10% "Inspired24" discount is applied via Stripe (coupon from CHRIS_STRIPE_* env + promo code).
+    // - During the live-flow test, Stripe is charged the final $1 amount directly.
 
     const isChrisCampaign = Boolean(params.campaignId);
     const durationMinutes = isChrisCampaign
@@ -148,10 +149,10 @@ export class BookingAgent {
       servicePriceCents = CHRIS_ORIGINAL_PRICE_CENTS;
     }
 
-    // For Chris campaign, the UI shows discounted price (Inspired24 10%).
-    // PI is created with gross amount + discounts; display uses net for "authorize" text.
-    // For the current $1 test coupon, force display to 100 cents.
-    const displayAmountCents = isChrisCampaign ? 100 : servicePriceCents;
+    const stripeAmountCents = isChrisCampaign
+      ? CHRIS_TEST_PAYMENT_AMOUNT_CENTS
+      : servicePriceCents;
+    const displayAmountCents = stripeAmountCents;
 
     const skipPayments = isStripePaymentsSkipped();
 
@@ -164,10 +165,9 @@ export class BookingAgent {
       const stripeCustomerId = await getOrCreateStripeCustomerForMentee(params.menteeId);
 
       const idempotencyKey = `astrolink_book_${params.menteeId}_${finalMentorId}_${params.scheduledAt}`;
-      const discounts = isChrisCampaign ? await getChrisCampaignStripeDiscounts() : [];
 
-      const paymentIntentParams: any = {
-        amount: servicePriceCents,
+      const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
+        amount: stripeAmountCents,
         currency: 'usd',
         metadata: {
           app: 'astrolink',
@@ -175,6 +175,14 @@ export class BookingAgent {
           mentee_id: params.menteeId,
           service_type: params.serviceType,
           ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
+          ...(isChrisCampaign
+            ? {
+                pricing_mode: 'chris_live_test_1_usd',
+                original_amount_cents: String(CHRIS_ORIGINAL_PRICE_CENTS),
+                charged_amount_cents: String(CHRIS_TEST_PAYMENT_AMOUNT_CENTS),
+                discount_label: CHRIS_DISCOUNT_NAME,
+              }
+            : {}),
           ...(params.marketingReferrer
             ? { marketing_referrer: params.marketingReferrer }
             : {}),
@@ -183,12 +191,6 @@ export class BookingAgent {
 
       if (stripeCustomerId) {
         paymentIntentParams.customer = stripeCustomerId;
-      }
-
-      if (discounts.length > 0) {
-        // Ensure we pass a proper array. The helper returns [{coupon: ...}]
-        // or we can support {promotion_code: ...} for promo codes.
-        paymentIntentParams.discounts = discounts;
       }
 
       const paymentIntent = await stripe.paymentIntents.create(

@@ -35,7 +35,7 @@
 
 - Mobile-first Stitch screen (`mobile-refined-experience.html`) — PR2 ships desktop HUD; basic responsive fallback only
 - `src/app/booking/booking-client.tsx` (PR3)
-- Stripe promo, 45 min UI enforcement (PR3)
+- Stripe checkout amount, 45 min UI enforcement (PR3)
 - E2E `e2e/talk-with-chris.spec.ts` (PR3)
 - Referrer analytics wiring beyond preserving `?ref=` in URLs (PR4)
 - `database.types.ts` regeneration

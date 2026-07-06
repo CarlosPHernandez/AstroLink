@@ -59,7 +59,7 @@ Apply migration `20260627120000_booking_campaigns.sql` to hosted Supabase before
 | **PR1** | Campaign infra: routing, slots, auth, booking API, placeholder landing |
 | **PR2** | Full Stitch `/talk-with-chris` landing (desktop HUD) |
 | **PR2.5** | Mobile Stitch landing + tablet/desktop HUD split (`md` breakpoint) |
-| **PR3** | Booking UI, 45 min fixed, Stripe promo code |
+| **PR3** | Booking UI, 45 min fixed, Stripe checkout amount |
 | **PR3.5** | Inline booking wizard (Account → Session → Pay), desktop date picker |
 | **PR4** | Launch ops, referrer split, prod checklist |
 
@@ -82,6 +82,6 @@ Apply migration `20260627120000_booking_campaigns.sql` to hosted Supabase before
 
 ## Deferred (later PRs)
 
-- Promo code UI on Pay step (env-only for now)
+- Promo code UI on Pay step (deferred unless the flow moves to a Stripe surface that supports native discounts)
 - `database.types.ts` regeneration after migration apply
 - Public experts directory while Chris campaign is live
