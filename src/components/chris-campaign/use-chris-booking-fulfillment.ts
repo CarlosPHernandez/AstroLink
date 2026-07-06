@@ -10,6 +10,8 @@ import type { BookingStatus } from '@/lib/types';
 const PHASE_DELAY_MS = 400;
 const POLL_INTERVAL_MS = 1500;
 const POLL_TIMEOUT_MS = 60_000;
+const MAX_PAYMENT_CONFIRM_ATTEMPTS = 6;
+const PAYMENT_CONFIRM_RETRY_DELAYS_MS = [0, 1500, 3000, 5000, 8000, 13000] as const;
 
 type BookingStatusResponse = {
   success?: boolean;
@@ -22,6 +24,33 @@ type BookingStatusResponse = {
     briefing: BriefingPayload | null;
   };
 };
+
+type ConfirmPaymentResponse = {
+  success?: boolean;
+  error?: string;
+};
+
+type ConfirmPaymentResult =
+  | { state: 'confirmed' }
+  | { state: 'retry'; message?: string }
+  | { state: 'fatal'; message: string };
+
+export function classifyConfirmPaymentFailure(
+  status: number,
+  message?: string,
+): ConfirmPaymentResult {
+  const fallbackMessage = message || 'Could not confirm payment yet.';
+
+  if (status === 409 && /not confirmed yet/i.test(fallbackMessage)) {
+    return { state: 'retry', message: fallbackMessage };
+  }
+
+  if (status >= 500 || status === 0) {
+    return { state: 'retry', message: fallbackMessage };
+  }
+
+  return { state: 'fatal', message: fallbackMessage };
+}
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
@@ -45,8 +74,9 @@ export function useChrisBookingFulfillment() {
   const [thinkingStep, setThinkingStep] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const fulfillAttemptedRef = useRef(false);
-  const paymentConfirmAttemptedRef = useRef(false);
+  const paymentConfirmAttemptsRef = useRef(0);
+  const paymentConfirmInFlightRef = useRef(false);
+  const nextPaymentConfirmAtRef = useRef(0);
   const briefingAttemptedRef = useRef(false);
   const activeRef = useRef(false);
 
@@ -72,33 +102,57 @@ export function useChrisBookingFulfillment() {
     return json.data;
   }, []);
 
-  const tryDevFulfill = useCallback(async (id: string) => {
-    if (process.env.NODE_ENV === 'production' || fulfillAttemptedRef.current) {
-      return;
+  const tryConfirmPayment = useCallback(async (id: string): Promise<ConfirmPaymentResult> => {
+    if (paymentConfirmInFlightRef.current) {
+      return { state: 'retry' };
     }
-    fulfillAttemptedRef.current = true;
-    await fetch('/api/book/fulfill', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookingId: id }),
-    });
+
+    const now = Date.now();
+    if (now < nextPaymentConfirmAtRef.current) {
+      return { state: 'retry' };
+    }
+
+    const attempt = paymentConfirmAttemptsRef.current;
+    if (attempt >= MAX_PAYMENT_CONFIRM_ATTEMPTS) {
+      return {
+        state: 'fatal',
+        message: 'Payment confirmation is taking longer than expected. You can view your dashboard and try again.',
+      };
+    }
+
+    paymentConfirmAttemptsRef.current = attempt + 1;
+    const retryDelay =
+      PAYMENT_CONFIRM_RETRY_DELAYS_MS[
+        Math.min(attempt + 1, PAYMENT_CONFIRM_RETRY_DELAYS_MS.length - 1)
+      ];
+    nextPaymentConfirmAtRef.current = now + retryDelay;
+    paymentConfirmInFlightRef.current = true;
+
+    try {
+      const res = await fetch(`/api/bookings/${id}/confirm-payment`, {
+        method: 'POST',
+      });
+      const json = (await res.json().catch(() => null)) as ConfirmPaymentResponse | null;
+
+      if (res.ok && json?.success) {
+        return { state: 'confirmed' };
+      }
+
+      if (!json) {
+        return {
+          state: 'fatal',
+          message: 'Payment confirmation returned an unreadable response. Please open your dashboard.',
+        };
+      }
+
+      return classifyConfirmPaymentFailure(res.status, json.error);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Network error confirming payment.';
+      return classifyConfirmPaymentFailure(0, message);
+    } finally {
+      paymentConfirmInFlightRef.current = false;
+    }
   }, []);
-
-  const tryConfirmPayment = useCallback(async (id: string) => {
-    if (paymentConfirmAttemptedRef.current) {
-      return;
-    }
-    paymentConfirmAttemptedRef.current = true;
-
-    if (process.env.NODE_ENV !== 'production') {
-      await tryDevFulfill(id);
-      return;
-    }
-
-    await fetch(`/api/bookings/${id}/confirm-payment`, {
-      method: 'POST',
-    });
-  }, [tryDevFulfill]);
 
   const tryGenerateBriefing = useCallback(async (id: string): Promise<BriefingPayload | null> => {
     if (briefingAttemptedRef.current) {
@@ -152,7 +206,12 @@ export function useChrisBookingFulfillment() {
         setScheduledAt(status.scheduledAt);
 
         if (status.status === 'pending_payment') {
-          await tryConfirmPayment(id);
+          const confirmResult = await tryConfirmPayment(id);
+          if (confirmResult.state === 'fatal') {
+            setOverlayPhase('error');
+            setErrorMessage(confirmResult.message);
+            return;
+          }
           await delay(POLL_INTERVAL_MS);
           continue;
         }
@@ -180,7 +239,7 @@ export function useChrisBookingFulfillment() {
         'Your brief is taking longer than expected. You can view your dashboard and try again.',
       );
     },
-    [pollBookingStatus, tryDevFulfill, tryGenerateBriefing],
+    [pollBookingStatus, tryConfirmPayment, tryGenerateBriefing],
   );
 
   /** After payment succeeds — advance segments and poll for the brief. */
@@ -188,8 +247,9 @@ export function useChrisBookingFulfillment() {
     async (id: string) => {
       activeRef.current = true;
       setBookingId(id);
-      fulfillAttemptedRef.current = false;
-      paymentConfirmAttemptedRef.current = false;
+      paymentConfirmAttemptsRef.current = 0;
+      paymentConfirmInFlightRef.current = false;
+      nextPaymentConfirmAtRef.current = 0;
       briefingAttemptedRef.current = false;
       setErrorMessage(null);
 
@@ -211,7 +271,9 @@ export function useChrisBookingFulfillment() {
 
   const reset = useCallback(() => {
     activeRef.current = false;
-    paymentConfirmAttemptedRef.current = false;
+    paymentConfirmAttemptsRef.current = 0;
+    paymentConfirmInFlightRef.current = false;
+    nextPaymentConfirmAtRef.current = 0;
     setOverlayPhase(null);
     setView('wizard');
     setBookingId(null);

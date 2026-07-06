@@ -8,6 +8,7 @@ const mockUpdate = vi.hoisted(() => vi.fn());
 const mockSelectEq = vi.hoisted(() => vi.fn());
 const mockHandlePaymentSucceeded = vi.hoisted(() => vi.fn());
 const mockHandlePaymentFailed = vi.hoisted(() => vi.fn());
+const mockFulfillBookingAfterPayment = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/stripe', () => ({
   stripe: {
@@ -24,7 +25,8 @@ vi.mock('@/lib/supabase', () => ({
 }));
 
 vi.mock('@/lib/post-payment', () => ({
-  fulfillBookingAfterPayment: vi.fn().mockResolvedValue({ bookingId: 'b1' }),
+  fulfillBookingAfterPayment: (...args: unknown[]) =>
+    mockFulfillBookingAfterPayment(...args),
 }));
 
 vi.mock('@/services/agents/payment-agent', () => ({
@@ -71,6 +73,7 @@ describe('stripe webhook (hardened for immediate capture + shared account)', () 
     });
     mockInsert.mockResolvedValue({ error: null });
     mockSelectEq.mockResolvedValue({ data: { id: 'booking-123' }, error: null });
+    mockFulfillBookingAfterPayment.mockResolvedValue({ bookingId: 'b1' });
   });
 
   it('rejects missing signature', async () => {
@@ -122,6 +125,35 @@ describe('stripe webhook (hardened for immediate capture + shared account)', () 
     // Simulate duplicate inside fulfill (the 23505 is inside handle now)
     const res = await POST(makeRequest('{}'));
     expect(res.status).toBe(200);
+  });
+
+  it('routes payment_intent.succeeded through shared booking fulfillment', async () => {
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_success',
+      type: 'payment_intent.succeeded',
+      data: {
+        object: {
+          id: 'pi_success',
+          metadata: { app: 'astrolink', mentor_id: 'mentor-1', mentee_id: 'mentee-1' },
+          amount: 100,
+          application_fee_amount: null,
+          transfer_data: null,
+        },
+      },
+    });
+
+    const res = await POST(makeRequest('{}'));
+
+    expect(res.status).toBe(200);
+    expect(mockFulfillBookingAfterPayment).toHaveBeenCalledWith({
+      stripeEventId: 'evt_success',
+      paymentIntentId: 'pi_success',
+      grossAmountCents: 100,
+      platformFeeCents: 20,
+      destinationStripeAccount: 'platform',
+      mentorId: 'mentor-1',
+      menteeId: 'mentee-1',
+    });
   });
 
   it('constructEvent failure returns 400', async () => {

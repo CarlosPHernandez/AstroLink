@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockGetSession = vi.hoisted(() => vi.fn());
 const mockRetrievePaymentIntent = vi.hoisted(() => vi.fn());
-const mockRecordBookingPaymentSucceeded = vi.hoisted(() => vi.fn());
+const mockFulfillBookingAfterPayment = vi.hoisted(() => vi.fn());
+const mockIsDevSkippedPaymentIntent = vi.hoisted(() => vi.fn());
+const mockIsStripePaymentsSkipped = vi.hoisted(() => vi.fn());
 const mockSingle = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/session', () => ({
@@ -17,9 +19,14 @@ vi.mock('@/lib/stripe', () => ({
   },
 }));
 
+vi.mock('@/lib/booking-payments', () => ({
+  isDevSkippedPaymentIntent: (...args: unknown[]) => mockIsDevSkippedPaymentIntent(...args),
+  isStripePaymentsSkipped: () => mockIsStripePaymentsSkipped(),
+}));
+
 vi.mock('@/lib/post-payment', () => ({
-  recordBookingPaymentSucceeded: (...args: unknown[]) =>
-    mockRecordBookingPaymentSucceeded(...args),
+  fulfillBookingAfterPayment: (...args: unknown[]) =>
+    mockFulfillBookingAfterPayment(...args),
 }));
 
 vi.mock('@/lib/supabase', () => ({
@@ -72,13 +79,15 @@ describe('POST /api/bookings/[id]/confirm-payment', () => {
         mentor_id: 'mentor-1',
       },
     });
-    mockRecordBookingPaymentSucceeded.mockResolvedValue({
+    mockIsDevSkippedPaymentIntent.mockReturnValue(false);
+    mockIsStripePaymentsSkipped.mockReturnValue(false);
+    mockFulfillBookingAfterPayment.mockResolvedValue({
       bookingId,
       alreadyProcessed: false,
     });
   });
 
-  it('records confirmed payment for a succeeded PaymentIntent', async () => {
+  it('runs full fulfillment for a succeeded PaymentIntent', async () => {
     const res = await callRoute();
 
     expect(res.status).toBe(200);
@@ -87,7 +96,7 @@ describe('POST /api/bookings/[id]/confirm-payment', () => {
       data: { bookingId, alreadyProcessed: false },
     });
     expect(mockRetrievePaymentIntent).toHaveBeenCalledWith('pi_123');
-    expect(mockRecordBookingPaymentSucceeded).toHaveBeenCalledWith({
+    expect(mockFulfillBookingAfterPayment).toHaveBeenCalledWith({
       stripeEventId: 'client_confirm_pi_123',
       paymentIntentId: 'pi_123',
       grossAmountCents: 100,
@@ -105,7 +114,7 @@ describe('POST /api/bookings/[id]/confirm-payment', () => {
 
     expect(res.status).toBe(401);
     expect(mockRetrievePaymentIntent).not.toHaveBeenCalled();
-    expect(mockRecordBookingPaymentSucceeded).not.toHaveBeenCalled();
+    expect(mockFulfillBookingAfterPayment).not.toHaveBeenCalled();
   });
 
   it('rejects users who do not own the booking', async () => {
@@ -118,7 +127,7 @@ describe('POST /api/bookings/[id]/confirm-payment', () => {
 
     expect(res.status).toBe(403);
     expect(mockRetrievePaymentIntent).not.toHaveBeenCalled();
-    expect(mockRecordBookingPaymentSucceeded).not.toHaveBeenCalled();
+    expect(mockFulfillBookingAfterPayment).not.toHaveBeenCalled();
   });
 
   it('allows admins to confirm a booking payment', async () => {
@@ -130,7 +139,7 @@ describe('POST /api/bookings/[id]/confirm-payment', () => {
     const res = await callRoute();
 
     expect(res.status).toBe(200);
-    expect(mockRecordBookingPaymentSucceeded).toHaveBeenCalled();
+    expect(mockFulfillBookingAfterPayment).toHaveBeenCalled();
   });
 
   it('returns 404 when the booking is missing', async () => {
@@ -155,7 +164,32 @@ describe('POST /api/bookings/[id]/confirm-payment', () => {
 
     expect(res.status).toBe(409);
     expect(mockRetrievePaymentIntent).not.toHaveBeenCalled();
-    expect(mockRecordBookingPaymentSucceeded).not.toHaveBeenCalled();
+    expect(mockFulfillBookingAfterPayment).not.toHaveBeenCalled();
+  });
+
+  it('fulfills dev-skipped PaymentIntents without retrieving from Stripe', async () => {
+    mockSingle.mockResolvedValueOnce({
+      data: {
+        ...booking,
+        stripe_payment_intent_id: 'dev_skip_123',
+      },
+      error: null,
+    });
+    mockIsDevSkippedPaymentIntent.mockReturnValueOnce(true);
+
+    const res = await callRoute();
+
+    expect(res.status).toBe(200);
+    expect(mockRetrievePaymentIntent).not.toHaveBeenCalled();
+    expect(mockFulfillBookingAfterPayment).toHaveBeenCalledWith({
+      stripeEventId: 'client_confirm_dev_skip_123',
+      paymentIntentId: 'dev_skip_123',
+      grossAmountCents: 0,
+      platformFeeCents: 0,
+      destinationStripeAccount: 'platform',
+      mentorId: 'mentor-1',
+      menteeId: 'mentee-1',
+    });
   });
 
   it('rejects PaymentIntents that have not succeeded', async () => {
@@ -173,7 +207,7 @@ describe('POST /api/bookings/[id]/confirm-payment', () => {
     const res = await callRoute();
 
     expect(res.status).toBe(409);
-    expect(mockRecordBookingPaymentSucceeded).not.toHaveBeenCalled();
+    expect(mockFulfillBookingAfterPayment).not.toHaveBeenCalled();
   });
 
   it('rejects PaymentIntents with mismatched metadata', async () => {
@@ -191,6 +225,6 @@ describe('POST /api/bookings/[id]/confirm-payment', () => {
     const res = await callRoute();
 
     expect(res.status).toBe(409);
-    expect(mockRecordBookingPaymentSucceeded).not.toHaveBeenCalled();
+    expect(mockFulfillBookingAfterPayment).not.toHaveBeenCalled();
   });
 });
