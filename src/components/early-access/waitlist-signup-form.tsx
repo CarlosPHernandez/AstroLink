@@ -80,7 +80,7 @@ export function WaitlistSignupForm({ defaultReferrer, analytics }: WaitlistSignu
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, [analytics.context, analytics.reportFormView]);
+  }, [analytics, analytics.context, analytics.reportFormView]);
 
   function markFormStart(via: WaitlistFormStartVia) {
     if (sentFormStartRef.current) return;

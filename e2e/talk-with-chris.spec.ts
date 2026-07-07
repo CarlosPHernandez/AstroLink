@@ -47,7 +47,7 @@ test.describe('Chris campaign landing → booking', () => {
 
     await expect(page.getByTestId('chris-fulfillment-overlay')).toBeVisible({ timeout: 5_000 });
     await expect(page.getByTestId('chris-segmented-progress')).toBeVisible();
-    await expect(page.getByText(/authorizing payment/i)).toBeVisible();
+    await expect(page.getByText(/processing payment/i)).toBeVisible();
 
     const response = await page.waitForResponse(
       (res) => res.url().includes('/api/book') && res.request().method() === 'POST',
@@ -59,6 +59,24 @@ test.describe('Chris campaign landing → booking', () => {
     const briefingModal = page.getByTestId('chris-briefing-modal');
     await expect(briefingModal).toBeVisible({ timeout: 90_000 });
     await expect(briefingModal.getByText(STUB_OBJECTIVE, { exact: true })).toBeVisible();
+
+    let emailSendCount = 0;
+    await page.route('**/api/book/briefing/email', async (route) => {
+      emailSendCount += 1;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true }),
+      });
+    });
+    const emailButton = briefingModal.getByTestId('chris-brief-email');
+    await expect(emailButton).toBeEnabled();
+    await emailButton.click();
+    await expect(emailButton).toHaveText('Send again');
+    await expect(emailButton).toBeEnabled();
+    await expect(briefingModal.getByText(/^Sent/)).toBeVisible();
+    await emailButton.click();
+    expect(emailSendCount).toBe(2);
 
     await briefingModal.getByTestId('chris-brief-close').click();
 

@@ -19,7 +19,7 @@ CHRIS_CAMPAIGN_ID=chris-sembroski
 ENABLE_DEMO_AUTH=false
 ```
 
-Chris campaign checkout currently charges the temporary live-flow test amount directly on the PaymentIntent. Do not configure a Stripe coupon or promotion code for this PaymentIntent path.
+Chris campaign checkout charges the discounted launch amount ($180) directly on the PaymentIntent. Do not configure a Stripe coupon or promotion code for this PaymentIntent path.
 
 Stripe keys must be **Live** mode in Production only. See [stripe-production-cutover.md](./stripe-production-cutover.md).
 

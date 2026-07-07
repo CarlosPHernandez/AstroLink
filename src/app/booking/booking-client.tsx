@@ -294,7 +294,7 @@ function CheckoutSummary({
           )}
           <p className="text-label-sm text-on-surface-variant leading-relaxed">
             {step === 2
-              ? 'Authorization only — charged after your session ends.'
+              ? 'Payment is collected when you book. Refunds follow the cancellation policy.'
               : 'Final price confirmed on the next step.'}
           </p>
         </div>
@@ -302,7 +302,7 @@ function CheckoutSummary({
 
       <ul className="space-y-2.5 px-1">
         {[
-          { icon: 'shield', text: 'Payment held in escrow until the call ends' },
+          { icon: 'shield', text: 'Full refund when cancelled at least 24 hours before start' },
           { icon: 'auto_awesome', text: 'AI briefing prepared before you join' },
           { icon: 'lock', text: 'Encrypted Daily video room' },
         ].map((item) => (
@@ -350,11 +350,14 @@ export default function BookingClient({
   });
 
   useEffect(() => {
-    setPendingSlug(mentor?.slug ?? null);
-    if (mentor) {
-      setShowPicker(false);
-    }
-  }, [mentor?.slug, mentor]);
+    const frame = window.requestAnimationFrame(() => {
+      setPendingSlug(mentor?.slug ?? null);
+      if (mentor) {
+        setShowPicker(false);
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [mentor]);
 
   const activeMentor = useMemo(() => {
     if (pendingSlug) {
@@ -531,7 +534,7 @@ export default function BookingClient({
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] font-mono uppercase tracking-wider text-on-surface-variant leading-none mb-1">
-                      {step === 1 ? 'Booking a session with' : 'Authorizing payment for'}
+                      {step === 1 ? 'Booking a session with' : 'Payment for'}
                     </p>
                     <h1 className="text-headline-lg-mobile sm:text-headline-lg font-bold tracking-tight text-on-surface truncate">
                       {activeMentor.name}

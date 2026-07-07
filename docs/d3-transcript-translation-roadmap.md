@@ -30,7 +30,7 @@ See [transcript-translation-case-studies.md](./explanation/transcript-translatio
 | Zoom / Teams / Meet | Generic meeting translation (30–100+ langs) | **Expert-session context**: brief objectives, aerospace glossary, paid SLA |
 | DeepL / Google Translate API | Text translation API | **Session-native**: utterance timing, speaker roles, recap structure |
 | Interprefy / KUDO | Human + hybrid interpretation | **Async-first, escalate later**: AI captions at scale; human for ITAR/consent slices (D4) |
-| Otter.ai | Meeting notes + transcription | **Vertical**: aerospace experts, escrow, compliance trail |
+| Otter.ai | Meeting notes + transcription | **Vertical**: aerospace experts, paid-session context, compliance trail |
 
 ---
 

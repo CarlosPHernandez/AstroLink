@@ -21,7 +21,8 @@ export type IntakeModerationFlag =
 
 /** Stub: always allow until Gemini compliance-agent triage ships (see docs/d2-next-steps.md). */
 export async function screenBookingIntake(
-  _input: IntakeModerationInput,
+  input: IntakeModerationInput,
 ): Promise<IntakeModerationResult> {
+  void input;
   return { allowed: true };
 }

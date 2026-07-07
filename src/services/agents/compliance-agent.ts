@@ -25,7 +25,7 @@ export class ComplianceAgent {
     const bioCheck = await this.scanBioForCivilServantSignal(mentorDbId, params.bio);
     const isCivilServant = params.isCivilServantDeclared || bioCheck.is_civil_servant_flag;
 
-    let complianceStatus: ComplianceStatus = isCivilServant ? 'document_required' : 'awaiting_human_approval';
+    const complianceStatus: ComplianceStatus = isCivilServant ? 'document_required' : 'awaiting_human_approval';
 
     if (isCivilServant) {
       await this.logAudit('CIVIL_SERVANT_DETECTED', mentorDbId, { bioCheck });

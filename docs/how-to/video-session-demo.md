@@ -1,6 +1,6 @@
 # Video session demo runbook
 
-Production-ready rehearsal for the D1 golden path: pay → Daily room → `/session/[bookingId]` → `meeting.ended` → capture + recap.
+Production-ready rehearsal for the D1 golden path: pay → Daily room → `/session/[bookingId]` → `meeting.ended` → recap + payout bookkeeping.
 
 See also [d1-implementation-plan.md](../d1-implementation-plan.md) and [d2-next-steps.md](../d2-next-steps.md).
 
@@ -37,10 +37,10 @@ npm run dev
 2. Mentee dashboard: confirm status `confirmed`, **View brief**, **Join room**.
 3. Second browser: sign in as mentor → mentor dashboard → **Join room** for the same booking.
 4. Both land on `/session/[id]` with light shell + `DailyCallRoom` (tokenized private room via `createCallObject`).
-5. **End the call inside Daily’s UI** (hang up). The header **End session** button only updates local UI; it does **not** capture payment.
+5. **End the call inside Daily’s UI** (hang up). The header **End session** button only updates local UI; payment was already collected at booking time.
 6. Within ~1 minute: booking `completed`, mentee sees English recap on `/session/[id]` and dashboard.
 7. With transcription enabled: recap content should reference call topics (RPO, delta-V, etc.) after `transcript.ready-to-download`, not the empty-transcript apology template.
-8. Stripe (if used): payment intent `requires_capture` → captured after step 5 (`meeting.ended`).
+8. Stripe (if used): payment intent is collected when the booking is made; mentor payout remains an internal post-session process.
 
 ## Live captions demo (D3 Phase 3 — bidirectional)
 
@@ -69,12 +69,12 @@ npm run dev
 | Call UI “something went wrong” / no camera on phone | Plain HTTP on LAN IP blocks camera/mic | `npm run dev:lan` → `https://<LAN-IP>:3000` on phone; session page shows steps |
 | Booking stuck `confirmed`, no recap | `meeting.ended` webhook missed | Re-end call in Daily, or dev simulate (below) |
 | Booking `completed` but recap is generic apology | Transcription off or `transcript.ready` missed | Set `DAILY_TRANSCRIPTION_ENABLED=true`; subscribe webhook; or `simulate_transcript_ready` |
-| Escrow not captured | Webhook never ran | Same as above; escrow stays authorized until capture |
+| Booking not completed after call | Webhook never ran | Same as above; payment remains collected and the session needs completion recovery |
 
 ## No-show / webhook miss
 
 - Business completion for D1 is driven by Daily `meeting.ended`, not the cosmetic **End session** button.
-- If the webhook never arrives, the booking stays `confirmed` and Stripe stays in `requires_capture` until manual recovery or D2 reconciliation.
+- If the webhook never arrives, the booking stays `confirmed` until manual recovery or D2 reconciliation.
 - For demos, use the dev operator to simulate `meeting.ended` (development only).
 
 ## Dev operator (development only)

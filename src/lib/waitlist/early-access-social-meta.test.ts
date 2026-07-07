@@ -2,7 +2,6 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import {
   absolutePublicAssetUrl,
   buildEarlyAccessMetadata,
-  EARLY_ACCESS_PAGE_DESCRIPTION,
   EARLY_ACCESS_PAGE_TITLE,
   EARLY_ACCESS_TWITTER_PLAYER_HEIGHT,
   EARLY_ACCESS_TWITTER_PLAYER_WIDTH,

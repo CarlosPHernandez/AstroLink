@@ -117,7 +117,7 @@ export default function MentorDashboardClient({
     [localBriefings],
   );
 
-  function openBriefingPanel(booking: MentorBookingView, briefing: BriefingPayload) {
+  const openBriefingPanel = useCallback((booking: MentorBookingView, briefing: BriefingPayload) => {
     setSidebar({
       mode: 'ready',
       bookingId: booking.id,
@@ -125,9 +125,9 @@ export default function MentorDashboardClient({
       audience: 'mentor',
       briefing,
     });
-  }
+  }, []);
 
-  async function generateBriefing(booking: MentorBookingView) {
+  const generateBriefing = useCallback(async (booking: MentorBookingView) => {
     setGeneratingId(booking.id);
     setSidebar({
       mode: 'thinking',
@@ -170,7 +170,7 @@ export default function MentorDashboardClient({
     } finally {
       setGeneratingId(null);
     }
-  }
+  }, [router]);
 
   function handleViewPrepBrief(booking: MentorBookingView) {
     const briefing = resolveBriefing(booking);
@@ -193,8 +193,10 @@ export default function MentorDashboardClient({
 
   useEffect(() => {
     if (mentorProfile) {
-      setProfile(mentorProfile);
+      const frame = window.requestAnimationFrame(() => setProfile(mentorProfile));
+      return () => window.cancelAnimationFrame(frame);
     }
+    return undefined;
   }, [mentorProfile]);
 
   useEffect(() => {
@@ -214,23 +216,21 @@ export default function MentorDashboardClient({
     }
 
     handledPrepRef.current = prepId;
-    setActiveTab('sessions');
-
-    const briefing = localBriefings[booking.id] ?? booking.briefing;
-    if (briefing) {
-      openBriefingPanel(booking, briefing);
-    } else {
-      void generateBriefing(booking);
-    }
-
-    requestAnimationFrame(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setActiveTab('sessions');
+      const briefing = localBriefings[booking.id] ?? booking.briefing;
+      if (briefing) {
+        openBriefingPanel(booking, briefing);
+      } else {
+        void generateBriefing(booking);
+      }
       document
         .querySelector(`[data-testid="mentor-booking-${prepId}"]`)
         ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      router.replace('/dashboard/mentor', { scroll: false });
     });
-
-    router.replace('/dashboard/mentor', { scroll: false });
-  }, [prepId, bookings, localBriefings, router]);
+    return () => window.cancelAnimationFrame(frame);
+  }, [prepId, bookings, generateBriefing, localBriefings, openBriefingPanel, router]);
 
   const handleSaveProfile = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

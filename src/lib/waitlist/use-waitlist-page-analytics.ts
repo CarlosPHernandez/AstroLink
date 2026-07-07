@@ -53,7 +53,7 @@ export function useWaitlistPageAnalytics({
   defaultReferrer,
   expert,
 }: UseWaitlistPageAnalyticsOptions): WaitlistFormAnalytics {
-  const mountedAtRef = useRef<number>(Date.now());
+  const mountedAtRef = useRef<number>(0);
   const sentExitRef = useRef(false);
   const sentAbandonRef = useRef(false);
   const progressRef = useRef<FormProgress>({
@@ -79,7 +79,8 @@ export function useWaitlistPageAnalytics({
     sentExitRef.current = true;
 
     const progress = progressRef.current;
-    const dwell = dwellBucket(Date.now() - mountedAtRef.current);
+    const mountedAt = mountedAtRef.current || Date.now();
+    const dwell = dwellBucket(Date.now() - mountedAt);
     const outcome = resolvePageExitOutcome(progress);
 
     if (progress.formStarted && !progress.signedUp && !sentAbandonRef.current) {

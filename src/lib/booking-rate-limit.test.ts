@@ -54,10 +54,10 @@ describe('booking-rate-limit (sliding window, per-user preferred)', () => {
 
     try {
       assertBookingRateLimit('u-x');
-    } catch (e) {
-      expect(isBookingRateLimitError(e)).toBe(true);
-      if (isBookingRateLimitError(e)) {
-        expect(e.retryAfterMs).toBeGreaterThan(0);
+    } catch (error) {
+      expect(isBookingRateLimitError(error)).toBe(true);
+      if (isBookingRateLimitError(error)) {
+        expect(error.retryAfterMs).toBeGreaterThan(0);
       }
     }
   });

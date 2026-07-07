@@ -82,15 +82,19 @@ export function useChrisBookingFulfillment() {
 
   useEffect(() => {
     if (overlayPhase !== 'generating_brief') {
-      setThinkingStep(0);
-      return;
+      const frame = window.requestAnimationFrame(() => setThinkingStep(0));
+      return () => window.cancelAnimationFrame(frame);
     }
 
+    const frame = window.requestAnimationFrame(() => setThinkingStep(0));
     const interval = window.setInterval(() => {
       setThinkingStep((index) => (index + 1) % BRIEFING_THINKING_STEPS.length);
     }, 2200);
 
-    return () => window.clearInterval(interval);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearInterval(interval);
+    };
   }, [overlayPhase]);
 
   const pollBookingStatus = useCallback(async (id: string): Promise<BookingStatusResponse['data'] | null> => {
@@ -172,7 +176,7 @@ export function useChrisBookingFulfillment() {
     return json.data.briefing;
   }, []);
 
-  /** Show segment progress immediately when the user taps Pay / Authorize. */
+  /** Show segment progress immediately when the user taps Pay. */
   const beginPaymentOverlay = useCallback((id?: string) => {
     flushSync(() => {
       activeRef.current = true;

@@ -51,36 +51,30 @@ function sidebarCopy(audience: 'mentee' | 'mentor') {
 
 export function BriefingSidebar({ state, onClose, onRegenerate }: BriefingSidebarProps) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [mounted, setMounted] = useState(false);
   const [entered, setEntered] = useState(false);
 
   const isOpen = state.mode !== 'closed';
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setEntered(false);
-      return;
-    }
-
-    const frame = requestAnimationFrame(() => setEntered(true));
+    const frame = requestAnimationFrame(() => setEntered(isOpen));
     return () => cancelAnimationFrame(frame);
-  }, [isOpen, state.mode]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (state.mode !== 'thinking') {
-      setStepIndex(0);
-      return;
+      const frame = requestAnimationFrame(() => setStepIndex(0));
+      return () => cancelAnimationFrame(frame);
     }
 
+    const frame = requestAnimationFrame(() => setStepIndex(0));
     const interval = window.setInterval(() => {
       setStepIndex((i) => (i + 1) % BRIEFING_THINKING_STEPS.length);
     }, 2200);
 
-    return () => window.clearInterval(interval);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearInterval(interval);
+    };
   }, [state.mode]);
 
   useEffect(() => {
@@ -104,7 +98,7 @@ export function BriefingSidebar({ state, onClose, onRegenerate }: BriefingSideba
     };
   }, [isOpen, onClose]);
 
-  if (!mounted || state.mode === 'closed') {
+  if (state.mode === 'closed' || typeof document === 'undefined') {
     return null;
   }
 

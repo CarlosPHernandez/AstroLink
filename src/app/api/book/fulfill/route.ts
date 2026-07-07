@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
     if (paymentIntent.status !== 'requires_capture' && paymentIntent.status !== 'succeeded') {
       return NextResponse.json(
-        { error: `Payment not authorized yet (status: ${paymentIntent.status})` },
+        { error: `Payment not complete yet (status: ${paymentIntent.status})` },
         { status: 400 }
       );
     }
@@ -77,4 +77,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

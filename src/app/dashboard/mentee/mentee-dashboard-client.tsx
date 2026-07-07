@@ -78,7 +78,7 @@ export default function MenteeDashboardClient({
     [localBriefings],
   );
 
-  function openBriefingPanel(booking: MenteeBookingView, briefing: BriefingPayload) {
+  const openBriefingPanel = useCallback((booking: MenteeBookingView, briefing: BriefingPayload) => {
     setSidebar({
       mode: 'ready',
       bookingId: booking.id,
@@ -86,9 +86,9 @@ export default function MenteeDashboardClient({
       audience: 'mentee',
       briefing,
     });
-  }
+  }, []);
 
-  async function generateBriefing(booking: MenteeBookingView) {
+  const generateBriefing = useCallback(async (booking: MenteeBookingView) => {
     setGeneratingId(booking.id);
     setSidebar({
       mode: 'thinking',
@@ -131,7 +131,7 @@ export default function MenteeDashboardClient({
     } finally {
       setGeneratingId(null);
     }
-  }
+  }, [router]);
 
   useEffect(() => {
     if (!bookedId || handledBookedRef.current === bookedId) {
@@ -149,21 +149,18 @@ export default function MenteeDashboardClient({
 
     handledBookedRef.current = bookedId;
 
-    const briefing = localBriefings[booking.id] ?? booking.briefing;
-    if (briefing) {
-      setSidebar({
-        mode: 'ready',
-        bookingId: booking.id,
-        counterpartyName: booking.mentorName,
-        audience: 'mentee',
-        briefing,
-      });
-    } else {
-      void generateBriefing(booking);
-    }
+    const frame = window.requestAnimationFrame(() => {
+      const briefing = localBriefings[booking.id] ?? booking.briefing;
+      if (briefing) {
+        openBriefingPanel(booking, briefing);
+      } else {
+        void generateBriefing(booking);
+      }
 
-    router.replace('/dashboard/mentee', { scroll: false });
-  }, [bookedId, bookings, localBriefings, router]);
+      router.replace('/dashboard/mentee', { scroll: false });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [bookedId, bookings, generateBriefing, localBriefings, openBriefingPanel, router]);
 
   // Auto-refresh a few times if the just-booked item is still pending_payment.
   // Lets the Stripe webhook (succeeded -> fulfill -> confirmed + room) catch up and

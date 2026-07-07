@@ -21,7 +21,7 @@ two-person session is about 60 participant-minutes.
 | Room identity | Room name is deterministic from booking ID; room URL is saved on `bookings.daily_room_url`. | `src/lib/daily.ts` |
 | Join authorization | Only the mentee, mentor, or admin can open `/session/[bookingId]`; the server mints a Daily meeting token for each page load. | `src/lib/booking-access.ts` |
 | Daily room settings | Private room, chat enabled, video/audio on, 48h default expiry or scheduled time + 4h. | `src/lib/daily.ts` |
-| Completion | Daily `meeting.ended` webhook drives APX-03 recap, Stripe capture, and `completed` status. | `src/app/api/webhooks/daily/route.ts`, `src/lib/post-session.ts` |
+| Completion | Daily `meeting.ended` webhook drives APX-03 recap, payout bookkeeping, and `completed` status. | `src/app/api/webhooks/daily/route.ts`, `src/lib/post-session.ts` |
 | Existing quota pattern | LLM calls use an env-driven in-memory rate limiter. | `src/lib/llm-rate-limit.ts` |
 | Demo runbook | Chris/Carlos demo flow exists, but does not yet include Daily account spend controls. | `docs/how-to/video-session-demo.md` |
 
@@ -33,7 +33,7 @@ two-person session is about 60 participant-minutes.
 4. Mint join tokens only during an intended session window.
 5. Track used and reserved participant-minutes against a conservative budget.
 6. Preserve the existing D1 user flow: booking -> room -> `/session/[id]` ->
-   Daily webhook -> recap/capture.
+   Daily webhook -> recap/payout bookkeeping.
 
 ## Non-goals for this review pass
 

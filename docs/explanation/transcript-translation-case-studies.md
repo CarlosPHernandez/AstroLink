@@ -25,7 +25,7 @@ How others ship multilingual meeting intelligence, and what AstroLink should cop
 | Copy | Avoid | Differentiate |
 |------|-------|---------------|
 | Sub-2s caption UX expectation | Generic glossary-free MT for technical domains | Aerospace term preservation + APX-02 context |
-| Translated summaries as premium AI value | Building a general meeting product | Paid expert session + escrow + recap as product unit |
+| Translated summaries as premium AI value | Building a general meeting product | Paid expert session + immediate-charge booking + recap as product unit |
 
 **AstroLink v1 equivalent:** Phase 3 live captions + Phase 2 localized APX-03 recap — scoped to `/session/[id]`, not a Zoom competitor.
 
@@ -168,7 +168,7 @@ quadrantChart
 | Live translated captions | ✅ | ✅ | ✅ | Phase 3 |
 | Localized AI summary | ✅ | ✅ | ✅ | Phase 2 |
 | Aerospace glossary | ❌ | ❌ | ❌ | ✅ |
-| Paid expert + escrow | ❌ | ❌ | ❌ | ✅ |
+| Paid expert booking | ❌ | ❌ | ❌ | ✅ |
 | Pre-call AI context in translation | ❌ | ❌ | ❌ | ✅ (APX-02) |
 | Compliance transcript trail | Partial | Partial | Partial | ✅ (canonical EN) |
 

@@ -32,7 +32,8 @@ export function getMediaOriginSnapshot(): MediaOriginSnapshot {
 }
 
 /** Page origin is fixed for a document lifetime; no live updates to subscribe to. */
-export function subscribeMediaOrigin(_onStoreChange: () => void): () => void {
+export function subscribeMediaOrigin(onStoreChange: () => void): () => void {
+  void onStoreChange;
   return () => {};
 }
 

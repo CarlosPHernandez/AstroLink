@@ -95,7 +95,9 @@ export function DailyCallRoom({ booking, onEnded }: DailyCallRoomProps) {
     transcriptionUnavailable: daily.transcriptionUnavailable,
   });
 
-  handleUtteranceRef.current = captions.handleUtterance;
+  useEffect(() => {
+    handleUtteranceRef.current = captions.handleUtterance;
+  }, [captions.handleUtterance]);
 
   const local = daily.participants.find((p) => p.local);
   const remotes = daily.participants.filter((p) => !p.local);

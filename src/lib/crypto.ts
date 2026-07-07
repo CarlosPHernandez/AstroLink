@@ -2,7 +2,6 @@ import crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12; // 12 bytes IV is standard for GCM
-const AUTH_TAG_LENGTH = 16; // 16 bytes auth tag is standard
 
 // Get the encryption key from environment variable
 // Must be 32 bytes for AES-256 (256 bits)

@@ -1,11 +1,21 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import type { Json } from '@/lib/database.types';
+import {
+  releaseChrisCampaignSlot,
+  shouldReleaseChrisCampaignSlotForStatus,
+} from '@/lib/chris-campaign/chris-campaign-slots';
 import { syncMentorStripeAccountStatus } from '@/lib/mentor-stripe-connect';
 import { fulfillBookingAfterPayment } from '@/lib/post-payment';
 import { PaymentAgent } from '@/services/agents/payment-agent';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
+
+type StripeRefundBookingRow = {
+  id: string;
+  status: string;
+  campaign_id?: string | null;
+};
 
 export async function POST(request: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -64,10 +74,13 @@ export async function POST(request: Request) {
         paymentIntent.application_fee_amount ??
         Math.round(paymentIntent.amount * 0.2);
 
+      const rawDestination = paymentIntent.transfer_data?.destination;
       const destination =
-        typeof paymentIntent.transfer_data?.destination === 'string'
-          ? paymentIntent.transfer_data.destination
-          : (paymentIntent.transfer_data?.destination as any)?.toString?.() ?? 'platform';
+        typeof rawDestination === 'string'
+          ? rawDestination
+          : rawDestination && typeof rawDestination === 'object' && 'id' in rawDestination
+            ? String(rawDestination.id)
+            : 'platform';
 
       await fulfillBookingAfterPayment({
         stripeEventId: event.id,
@@ -99,12 +112,30 @@ export async function POST(request: Request) {
       const charge = event.data.object as Stripe.Charge;
       const piId = typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
       if (piId) {
-        const { data: booking } = await supabaseAdmin
-          .from('bookings')
-          .select('id')
+        const { data: booking } = await (
+          supabaseAdmin.from('bookings') as unknown as {
+            select: (cols: string) => {
+              eq: (
+                col: string,
+                value: string,
+              ) => {
+                maybeSingle: () => Promise<{
+                  data: StripeRefundBookingRow | null;
+                  error: { message: string } | null;
+                }>;
+              };
+            };
+          }
+        )
+          .select('id, status, campaign_id')
           .eq('stripe_payment_intent_id', piId)
           .maybeSingle();
         if (booking) {
+          const campaignId = booking.campaign_id;
+          const releaseCampaignSlot = shouldReleaseChrisCampaignSlotForStatus(
+            booking.status,
+            campaignId,
+          );
           // Reconcile: mark tx refunded (webhook is source of truth for external refunds too)
           await supabaseAdmin
             .from('transactions')
@@ -120,6 +151,19 @@ export async function POST(request: Request) {
             ref_id: booking.id,
             payload: { charge_id: charge.id, payment_intent_id: piId } as Json,
           });
+          if (releaseCampaignSlot) {
+            await releaseChrisCampaignSlot(campaignId);
+            await supabaseAdmin.from('audit_log').insert({
+              agent_id: 'APX-05',
+              event: 'CHRIS_CAMPAIGN_SLOT_RELEASED',
+              ref_id: booking.id,
+              payload: {
+                campaign_id: campaignId,
+                previous_status: booking.status,
+                reason: 'stripe_charge_refunded_webhook',
+              } as Json,
+            });
+          }
         }
       }
       return NextResponse.json({ received: true });
@@ -127,7 +171,13 @@ export async function POST(request: Request) {
 
     if (event.type === 'charge.dispute.created') {
       const dispute = event.data.object as Stripe.Dispute;
-      const chargeId = typeof dispute.charge === 'string' ? dispute.charge : (dispute.charge as any)?.id;
+      const rawCharge = dispute.charge;
+      const chargeId =
+        typeof rawCharge === 'string'
+          ? rawCharge
+          : rawCharge && typeof rawCharge === 'object' && 'id' in rawCharge
+            ? rawCharge.id
+            : null;
       if (chargeId) {
         // Best-effort: find tx/booking via recent charge? We can look up via audit or leave for ops.
         // Simpler: escalate any dispute on our platform to pending_review (ops will trace via Stripe dashboard + audit).
@@ -192,4 +242,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
