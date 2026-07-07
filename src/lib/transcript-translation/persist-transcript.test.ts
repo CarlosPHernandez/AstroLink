@@ -2,7 +2,6 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 const mockMaybeSingle = vi.hoisted(() => vi.fn());
 const mockInsert = vi.hoisted(() => vi.fn());
-const mockUpdate = vi.hoisted(() => vi.fn());
 const mockEq = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/supabase', () => ({

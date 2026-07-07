@@ -10,9 +10,7 @@ export function getStripe(): Stripe {
   if (!stripeClient) {
     stripeClient = new Stripe(stripeSecretKey, {
       // Use a stable API version for PaymentIntent + Payment Element behavior.
-      // We cast because the package's types are locked to its own declared
-      // version literal (currently '2026-05-27.dahlia').
-      apiVersion: '2024-06-20' as any,
+      apiVersion: '2026-05-27.dahlia',
     });
   }
   return stripeClient;

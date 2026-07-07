@@ -45,6 +45,8 @@ const bookingRow = {
   match_reason: 'Learn about cubesat propulsion',
   briefing_json: { session_objectives: ['Discuss thruster options'] },
   daily_room_url: 'https://daily.example/room',
+  campaign_id: null,
+  duration_minutes: 30,
   users: { full_name: 'Carlos', email: 'carlos@example.com' },
   mentors: { full_name: 'Chris', email: 'chris@example.com' },
 };
@@ -85,9 +87,47 @@ describe('NotificationAgent', () => {
     await agent.sendBookingConfirmations('booking-1');
 
     expect(mockEmailSender).toHaveBeenCalledTimes(2);
+    expect(mockEmailSender.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        to: 'carlos@example.com',
+        attachments: [expect.objectContaining({ filename: 'astrolink-session.ics' })],
+      }),
+    );
     expect(mockDeliveryInsert).toHaveBeenCalledTimes(2);
     expect(mockAuditInsert).toHaveBeenCalledWith(
       expect.objectContaining({ event: 'NOTIFICATION_SENT' }),
+    );
+  });
+
+  it('sends Chris campaign mentee email as a date-hold ticket without calendar attachment', async () => {
+    mockBookingSingle.mockResolvedValue({
+      data: {
+        ...bookingRow,
+        campaign_id: 'chris-sembroski',
+        duration_minutes: 45,
+      },
+      error: null,
+    });
+    const agent = new NotificationAgent(mockEmailSender);
+
+    await agent.sendBookingConfirmations('booking-1');
+
+    expect(mockEmailSender).toHaveBeenCalledTimes(2);
+    expect(mockEmailSender.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        to: 'carlos@example.com',
+        subject: "You're booked with Chris",
+        attachments: undefined,
+      }),
+    );
+    expect(mockEmailSender.mock.calls[0][0].html).toContain('Admit One');
+    expect(mockEmailSender.mock.calls[0][0].html).toContain('45-minute session with Chris');
+    expect(mockEmailSender.mock.calls[0][0].html).not.toContain('Times shown in UTC');
+    expect(mockEmailSender.mock.calls[1][0]).toEqual(
+      expect.objectContaining({
+        to: 'chris@example.com',
+        attachments: [expect.objectContaining({ filename: 'astrolink-session.ics' })],
+      }),
     );
   });
 

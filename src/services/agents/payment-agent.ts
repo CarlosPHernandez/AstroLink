@@ -83,7 +83,7 @@ export class PaymentAgent {
       throw new Error(`Failed to log transaction: ${txErr.message}`);
     }
 
-    // 3. Update booking status to confirmed (payment captured; ready for session)
+    // 3. Update booking status to confirmed (payment collected; ready for session)
     if (params.confirmBooking !== false) {
       await supabaseAdmin
         .from('bookings')
@@ -103,7 +103,7 @@ export class PaymentAgent {
    * Marks a booking completed at session end.
    * (Capture now happens at booking time via immediate-capture PaymentIntent; this is post-session fulfillment only.)
    */
-  async captureEscrowPayment(bookingId: string, stripePaymentIntentId: string) {
+  async completePostSessionPaymentBookkeeping(bookingId: string, stripePaymentIntentId: string) {
     if (stripePaymentIntentId.startsWith('dev_skip_')) {
       await supabaseAdmin.from('bookings').update({ status: 'completed' }).eq('id', bookingId);
       return { success: true, skipped: true };

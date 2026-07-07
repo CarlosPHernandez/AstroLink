@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { Json } from '@/lib/database.types';
-import { releaseChrisCampaignSlot } from '@/lib/chris-campaign/chris-campaign-slots';
+import {
+  releaseChrisCampaignSlot,
+  shouldReleaseChrisCampaignSlotForStatus,
+} from '@/lib/chris-campaign/chris-campaign-slots';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getSession } from '@/lib/session';
@@ -77,10 +80,10 @@ export async function POST(
     }
 
     const campaignId = booking.campaign_id;
-    const releaseCampaignSlot =
-      booking.status === 'pending_payment' &&
-      typeof campaignId === 'string' &&
-      campaignId.length > 0;
+    const releaseCampaignSlot = shouldReleaseChrisCampaignSlotForStatus(
+      booking.status,
+      campaignId,
+    );
 
     const policy = computeCancellationRefund(booking.scheduled_at);
 
@@ -129,7 +132,8 @@ export async function POST(
         ref_id: booking.id,
         payload: {
           campaign_id: campaignId,
-          reason: 'pending_payment_cancelled',
+          previous_status: booking.status,
+          reason: refundId ? 'booking_refunded' : 'booking_cancelled',
         } as Json,
       });
     }

@@ -426,8 +426,8 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             <SessionGatePanel testId="session-ended-local">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Session ended</h3>
               <p className="text-body-md text-on-surface-variant mb-6 text-pretty">
-                Post-session synthesis and payment capture run when everyone leaves the Daily call
-                (webhook). Check your dashboard in a minute for the summary.
+                Post-session synthesis and payout bookkeeping run when everyone leaves the Daily
+                call (webhook). Check your dashboard in a minute for the summary.
               </p>
               <Link
                 href={exitHref}

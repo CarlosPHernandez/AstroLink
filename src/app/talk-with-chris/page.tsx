@@ -32,7 +32,6 @@ export default async function TalkWithChrisPage({
   const slotCapDefault = getChrisSlotCapFromEnv();
 
   let slotCap = slotCapDefault;
-  let slotsReserved = 0;
   let slotsRemaining = slotCapDefault;
 
   if (bookingEnabled) {
@@ -40,7 +39,6 @@ export default async function TalkWithChrisPage({
       const snapshot = await getChrisCampaignSlotSnapshot(getChrisCampaignId());
       if (snapshot) {
         slotCap = snapshot.slotCap;
-        slotsReserved = snapshot.slotsReserved;
         slotsRemaining = snapshot.slotsRemaining;
       }
     } catch {

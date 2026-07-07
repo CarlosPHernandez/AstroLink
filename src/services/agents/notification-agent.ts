@@ -20,6 +20,8 @@ type BookingRow = {
   match_reason: string | null;
   briefing_json: unknown;
   daily_room_url: string | null;
+  campaign_id?: string | null;
+  duration_minutes?: number | null;
   users: { full_name: string; email: string } | null;
   mentors: { full_name: string; email: string } | null;
 };
@@ -55,7 +57,7 @@ export class NotificationAgent {
     const { data, error } = await supabaseAdmin
       .from('bookings')
       .select(
-        'id, scheduled_at, service_type, match_reason, briefing_json, daily_room_url, users(full_name, email), mentors(full_name, email)',
+        'id, scheduled_at, service_type, match_reason, briefing_json, daily_room_url, campaign_id, duration_minutes, users(full_name, email), mentors(full_name, email)',
       )
       .eq('id', bookingId)
       .single();
@@ -79,6 +81,8 @@ export class NotificationAgent {
       matchReason: row.match_reason,
       briefingJson: row.briefing_json,
       dailyRoomUrl: row.daily_room_url,
+      campaignId: row.campaign_id ?? null,
+      durationMinutes: row.duration_minutes ?? null,
       menteeName: mentee.full_name,
       menteeEmail: mentee.email,
       mentorName: mentor.full_name,
@@ -113,7 +117,7 @@ export class NotificationAgent {
       to: email,
       subject: built.subject,
       html: built.html,
-      attachments: [built.attachment],
+      attachments: built.attachment ? [built.attachment] : undefined,
     });
 
     if ('skipped' in result) {

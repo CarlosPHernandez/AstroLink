@@ -13,7 +13,6 @@ import {
   sendPhoneOtpAction,
   signInWithXAction,
   verifyPhoneOtpAction,
-  type ActionState,
 } from './actions';
 
 type EntryMode = 'choose' | 'phone' | 'email';

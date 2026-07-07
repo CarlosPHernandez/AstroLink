@@ -1,10 +1,11 @@
 import type Stripe from 'stripe';
 import type { Json } from '@/lib/database.types';
 import {
+  CHRIS_DISCOUNT_PERCENT,
   CHRIS_DISCOUNT_NAME,
+  CHRIS_LAUNCH_PRICE_CENTS,
   CHRIS_ORIGINAL_PRICE_CENTS,
   CHRIS_SESSION_DURATION_MINUTES,
-  CHRIS_TEST_PAYMENT_AMOUNT_CENTS,
 } from '@/lib/chris-campaign/chris-campaign-constants';
 import {
   ChrisCampaignSoldOutError,
@@ -57,7 +58,7 @@ export class BookingAgent {
     }
 
     try {
-      return await this.createBookingAfterSlotReserve(params, campaignSlotReserved);
+      return await this.createBookingAfterSlotReserve(params);
     } catch (error) {
       if (campaignSlotReserved && params.campaignId) {
         try {
@@ -87,7 +88,6 @@ export class BookingAgent {
       campaignId?: string;
       marketingReferrer?: string;
     },
-    _campaignSlotReserved: boolean,
   ) {
     let finalMentorId = params.mentorId;
     let matchReason = 'User selected mentor directly.';
@@ -126,7 +126,7 @@ export class BookingAgent {
     // - For normal experts: edit `live_session_price_cents` in the mentors table (Supabase).
     // - For this Chris 45-min case ($200 original): we override to CHRIS_ORIGINAL_PRICE_CENTS here.
     //   (You can also adjust the mentor price in DB, but the override ensures exactly $200 gross.)
-    // - During the live-flow test, Stripe is charged the final $1 amount directly.
+    // - For Chris launch bookings, Stripe is charged the discounted launch amount directly.
 
     const isChrisCampaign = Boolean(params.campaignId);
     const durationMinutes = isChrisCampaign
@@ -150,7 +150,7 @@ export class BookingAgent {
     }
 
     const stripeAmountCents = isChrisCampaign
-      ? CHRIS_TEST_PAYMENT_AMOUNT_CENTS
+      ? CHRIS_LAUNCH_PRICE_CENTS
       : servicePriceCents;
     const displayAmountCents = stripeAmountCents;
 
@@ -177,10 +177,11 @@ export class BookingAgent {
           ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
           ...(isChrisCampaign
             ? {
-                pricing_mode: 'chris_live_test_1_usd',
+                pricing_mode: `chris_launch_discount_${CHRIS_DISCOUNT_PERCENT}_percent`,
                 original_amount_cents: String(CHRIS_ORIGINAL_PRICE_CENTS),
-                charged_amount_cents: String(CHRIS_TEST_PAYMENT_AMOUNT_CENTS),
+                charged_amount_cents: String(CHRIS_LAUNCH_PRICE_CENTS),
                 discount_label: CHRIS_DISCOUNT_NAME,
+                discount_percent: String(CHRIS_DISCOUNT_PERCENT),
               }
             : {}),
           ...(params.marketingReferrer

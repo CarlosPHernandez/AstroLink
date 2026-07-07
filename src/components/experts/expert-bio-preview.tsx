@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import { getBioPreview, isBioLong } from '@/lib/expert-bio';
 
@@ -17,12 +17,9 @@ const bioTextClass =
   'text-sm text-on-surface-variant font-light leading-relaxed';
 
 export function ExpertBioPreview({ bio, variant }: ExpertBioPreviewProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expandedState, setExpandedState] = useState({ bio, expanded: false });
+  const expanded = expandedState.bio === bio ? expandedState.expanded : false;
   const long = isBioLong(bio);
-
-  useEffect(() => {
-    setExpanded(false);
-  }, [bio]);
 
   const wrapperClass =
     variant === 'panel'
@@ -45,7 +42,7 @@ export function ExpertBioPreview({ bio, variant }: ExpertBioPreviewProps) {
       </div>
       <button
         type="button"
-        onClick={() => setExpanded((value) => !value)}
+        onClick={() => setExpandedState({ bio, expanded: !expanded })}
         className="mt-2 inline-flex shrink-0 items-center gap-1.5 self-start text-[11px] font-mono font-semibold uppercase tracking-wider text-primary transition-colors hover:text-primary/70"
         aria-expanded={expanded}
       >

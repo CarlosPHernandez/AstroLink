@@ -72,7 +72,7 @@ export function decryptSessionString(encrypted: string): SessionData | null {
       return null;
     }
     return data;
-  } catch (e) {
+  } catch {
     return null;
   }
 }

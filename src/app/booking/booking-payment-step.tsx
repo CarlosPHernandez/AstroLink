@@ -107,11 +107,13 @@ function PaymentStepInner({
               : 'text-label-md text-on-surface-variant leading-relaxed'
           }
         >
-          Authorize{' '}
+          Pay{' '}
           <strong className={isChris ? 'font-mono text-white' : 'text-on-surface font-mono'}>
             {formatMoney(checkout.amountCents)}
           </strong>
-          . Funds are captured only after your session completes successfully.
+          {' '}
+          when you book. Refunds follow the cancellation policy; mentor payout is handled
+          after session completion.
         </p>
       </div>
 
@@ -149,7 +151,7 @@ function PaymentStepInner({
               : 'sm:flex-[2] py-3.5 rounded-lg bg-primary text-on-primary text-label-md font-semibold hover:bg-primary-container disabled:opacity-50 transition-all'
           }
         >
-          {paying ? 'Authorizing…' : `Authorize ${formatMoney(checkout.amountCents)}`}
+          {paying ? 'Processing…' : `Pay ${formatMoney(checkout.amountCents)}`}
         </button>
       </div>
     </div>

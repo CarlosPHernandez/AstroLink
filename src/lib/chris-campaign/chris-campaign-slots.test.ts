@@ -15,6 +15,7 @@ import {
   getChrisCampaignSlotSnapshot,
   releaseChrisCampaignSlot,
   reserveChrisCampaignSlot,
+  shouldReleaseChrisCampaignSlotForStatus,
 } from '@/lib/chris-campaign/chris-campaign-slots';
 
 describe('chris-campaign-slots', () => {
@@ -48,6 +49,15 @@ describe('chris-campaign-slots', () => {
     expect(mockRpc).toHaveBeenCalledWith('booking_campaign_release', {
       p_campaign_id: 'chris-sembroski',
     });
+  });
+
+  it('releases slots only for non-terminal campaign bookings', () => {
+    expect(shouldReleaseChrisCampaignSlotForStatus('confirmed', 'chris-sembroski')).toBe(true);
+    expect(shouldReleaseChrisCampaignSlotForStatus('pending_payment', 'chris-sembroski')).toBe(true);
+    expect(shouldReleaseChrisCampaignSlotForStatus('cancelled', 'chris-sembroski')).toBe(false);
+    expect(shouldReleaseChrisCampaignSlotForStatus('refunded', 'chris-sembroski')).toBe(false);
+    expect(shouldReleaseChrisCampaignSlotForStatus('completed', 'chris-sembroski')).toBe(false);
+    expect(shouldReleaseChrisCampaignSlotForStatus('confirmed', null)).toBe(false);
   });
 
   it('computes slots remaining from campaign row', async () => {

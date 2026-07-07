@@ -163,7 +163,7 @@ function FeeEstimator({ hourlyRateDollars }: { hourlyRateDollars: number }) {
     <div className="rounded-lg border border-outline-variant bg-surface p-5">
       <h3 className="text-sm font-semibold text-on-surface">Session payout estimator</h3>
       <p className="mt-1 text-xs text-on-surface-variant">
-        AstroLink holds payment until the session ends, then captures and splits{' '}
+        AstroLink collects payment when buyers book. After session completion, we record{' '}
         {Math.round(MENTOR_SHARE_RATE * 100)}% to you / {Math.round(PLATFORM_FEE_RATE * 100)}%
         platform fee. Rate: {formatMoney(hourlyRateDollars * 100)}/hr.
       </p>
@@ -319,7 +319,7 @@ export function MentorPayoutsPanel({
               ? 'Stripe is turned off in this environment. Earnings above reflect test bookings only.'
               : payoutStatus === 'manual'
                 ? 'Payouts are processed manually at launch. Your 80% mentor share is recorded per session; bank transfers are handled by AstroLink ops until Stripe Connect goes live.'
-                : 'Connect your bank account via Stripe to receive mentor payouts after sessions are captured.'}
+                : 'Connect your bank account via Stripe to receive mentor payouts after completed sessions.'}
           </p>
 
           {stripeConnectAccountId ? (

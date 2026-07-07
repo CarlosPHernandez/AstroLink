@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { NextResponse } from 'next/server';
 
 const mockConstructEvent = vi.hoisted(() => vi.fn());
 const mockSupabaseFrom = vi.hoisted(() => vi.fn());
@@ -9,6 +8,7 @@ const mockSelectEq = vi.hoisted(() => vi.fn());
 const mockHandlePaymentSucceeded = vi.hoisted(() => vi.fn());
 const mockHandlePaymentFailed = vi.hoisted(() => vi.fn());
 const mockFulfillBookingAfterPayment = vi.hoisted(() => vi.fn());
+const mockReleaseChrisCampaignSlot = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/stripe', () => ({
   stripe: {
@@ -39,6 +39,16 @@ vi.mock('@/services/agents/payment-agent', () => ({
 vi.mock('@/lib/mentor-stripe-connect', () => ({
   syncMentorStripeAccountStatus: vi.fn(),
 }));
+
+vi.mock('@/lib/chris-campaign/chris-campaign-slots', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/chris-campaign/chris-campaign-slots')>(
+    '@/lib/chris-campaign/chris-campaign-slots',
+  );
+  return {
+    ...actual,
+    releaseChrisCampaignSlot: (...args: unknown[]) => mockReleaseChrisCampaignSlot(...args),
+  };
+});
 
 import { POST } from './route';
 
@@ -74,6 +84,7 @@ describe('stripe webhook (hardened for immediate capture + shared account)', () 
     mockInsert.mockResolvedValue({ error: null });
     mockSelectEq.mockResolvedValue({ data: { id: 'booking-123' }, error: null });
     mockFulfillBookingAfterPayment.mockResolvedValue({ bookingId: 'b1' });
+    mockReleaseChrisCampaignSlot.mockResolvedValue(undefined);
   });
 
   it('rejects missing signature', async () => {
@@ -104,7 +115,15 @@ describe('stripe webhook (hardened for immediate capture + shared account)', () 
     expect(mockHandlePaymentFailed).toHaveBeenCalledWith('booking-123');
   });
 
-  it('handles charge.refunded and sets refunded status', async () => {
+  it('handles charge.refunded, sets refunded status, and releases Chris slot once', async () => {
+    mockSelectEq.mockResolvedValueOnce({
+      data: {
+        id: 'booking-123',
+        status: 'confirmed',
+        campaign_id: 'chris-sembroski',
+      },
+      error: null,
+    });
     mockConstructEvent.mockReturnValue({
       id: 'evt_ref',
       type: 'charge.refunded',
@@ -112,8 +131,34 @@ describe('stripe webhook (hardened for immediate capture + shared account)', () 
     });
     const res = await POST(makeRequest('{}'));
     expect(res.status).toBe(200);
-    // audit insert or tx update called via from()
-    expect(mockSupabaseFrom).toHaveBeenCalled();
+    expect(mockReleaseChrisCampaignSlot).toHaveBeenCalledWith('chris-sembroski');
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'CHRIS_CAMPAIGN_SLOT_RELEASED',
+        ref_id: 'booking-123',
+      }),
+    );
+  });
+
+  it('does not release a Chris slot when a refunded webhook replays for terminal booking status', async () => {
+    mockSelectEq.mockResolvedValueOnce({
+      data: {
+        id: 'booking-123',
+        status: 'refunded',
+        campaign_id: 'chris-sembroski',
+      },
+      error: null,
+    });
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_ref_replay',
+      type: 'charge.refunded',
+      data: { object: { id: 'ch_ref', payment_intent: 'pi_ref' } },
+    });
+
+    const res = await POST(makeRequest('{}'));
+
+    expect(res.status).toBe(200);
+    expect(mockReleaseChrisCampaignSlot).not.toHaveBeenCalled();
   });
 
   it('idempotent replay (23505 on tx insert) is treated as processed (via fulfill path)', async () => {

@@ -10,6 +10,23 @@ export class ChrisCampaignSoldOutError extends Error {
   }
 }
 
+const CAMPAIGN_SLOT_RELEASE_TERMINAL_STATUSES = new Set([
+  'cancelled',
+  'completed',
+  'refunded',
+]);
+
+export function shouldReleaseChrisCampaignSlotForStatus(
+  status: string,
+  campaignId: string | null | undefined,
+): campaignId is string {
+  return (
+    typeof campaignId === 'string' &&
+    campaignId.length > 0 &&
+    !CAMPAIGN_SLOT_RELEASE_TERMINAL_STATUSES.has(status)
+  );
+}
+
 export async function reserveChrisCampaignSlot(campaignId: string): Promise<boolean> {
   // RPC added in 20260627120000_booking_campaigns.sql (types regenerated after migration apply).
   const { data, error } = await (

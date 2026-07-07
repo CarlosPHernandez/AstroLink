@@ -169,7 +169,7 @@ export default function ExpertProfileClient({
             </div>
 
             <p className="mt-3 text-[10px] text-on-surface-variant font-light">
-              30-minute encrypted video session • AI briefing included • Payment held until call ends
+              30-minute encrypted video session • AI briefing included • Refundable up to 24 hours before start
             </p>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default function ExpertProfileClient({
               </Link>
 
               <p className="mt-3 text-[10px] text-on-surface-variant font-light leading-relaxed">
-                30-minute encrypted video session • AI briefing included • Payment held until call ends
+                30-minute encrypted video session • AI briefing included • Refundable up to 24 hours before start
               </p>
 
               <dl className="mt-5 pt-5 border-t border-outline-variant/60 space-y-3 text-sm">
@@ -371,7 +371,7 @@ export default function ExpertProfileClient({
 
           <ul className="space-y-4 text-body-md text-on-surface-variant font-light">
             {[
-              { icon: 'shield', text: 'Payment held in escrow until the call ends — you only pay for value delivered' },
+              { icon: 'shield', text: 'Payment is collected when you book; full refund when cancelled at least 24 hours before start' },
               { icon: 'auto_awesome', text: 'AI-generated pre-call briefing tailored to your goals and the expert’s background' },
               { icon: 'lock', text: 'Private, encrypted Daily video room with per-participant tokens' },
             ].map((item, idx) => (

@@ -16,8 +16,9 @@ import { FieldError } from '@/components/forms/field-error';
 import {
   CHRIS_BOOKING_CAMPAIGN_QUERY,
   CHRIS_DISCOUNT_NAME,
+  CHRIS_DISCOUNT_PERCENT,
+  CHRIS_LAUNCH_PRICE_CENTS,
   CHRIS_ORIGINAL_PRICE_CENTS,
-  CHRIS_TEST_PAYMENT_AMOUNT_CENTS,
 } from '@/lib/chris-campaign/chris-campaign-constants';
 import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-booking-mode';
 
@@ -296,8 +297,10 @@ export function ChrisBookingWizard({
 
   useEffect(() => {
     if (session && step === 'account') {
-      setStep('session');
+      const frame = window.requestAnimationFrame(() => setStep('session'));
+      return () => window.cancelAnimationFrame(frame);
     }
+    return undefined;
   }, [session, step]);
   const [goals, setGoals] = useState('');
   const [background, setBackground] = useState('');
@@ -313,8 +316,8 @@ export function ChrisBookingWizard({
   const fulfillment = useChrisBookingFulfillment();
 
   const displayDate = prefillDate ?? scheduledAt.slice(0, 10);
-  const chrisLiveTestAdjustmentCents =
-    CHRIS_ORIGINAL_PRICE_CENTS - CHRIS_TEST_PAYMENT_AMOUNT_CENTS;
+  const chrisLaunchDiscountCents =
+    CHRIS_ORIGINAL_PRICE_CENTS - CHRIS_LAUNCH_PRICE_CENTS;
 
   const submitBooking = async () => {
     if (!session) {
@@ -678,9 +681,11 @@ export function ChrisBookingWizard({
                       <dd className="text-white line-through">{formatMoney(CHRIS_ORIGINAL_PRICE_CENTS)}</dd>
                     </div>
                     <div className="flex justify-between text-white/60">
-                      <dt>{CHRIS_DISCOUNT_NAME} live-flow test price</dt>
+                      <dt>
+                        {CHRIS_DISCOUNT_NAME} launch discount ({CHRIS_DISCOUNT_PERCENT}% off)
+                      </dt>
                       <dd className="text-[#4ade80]">
-                        -{formatMoney(chrisLiveTestAdjustmentCents)}
+                        -{formatMoney(chrisLaunchDiscountCents)}
                       </dd>
                     </div>
                   </div>
@@ -688,7 +693,7 @@ export function ChrisBookingWizard({
                   <hr className="my-4 border-[#333333]" />
                   <div className="flex justify-between">
                     <span className="text-base font-bold text-white">Total</span>
-                    <span className="text-xl font-bold text-white">{formatMoney(CHRIS_TEST_PAYMENT_AMOUNT_CENTS)}</span>
+                    <span className="text-xl font-bold text-white">{formatMoney(CHRIS_LAUNCH_PRICE_CENTS)}</span>
                   </div>
                 </div>
 

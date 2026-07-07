@@ -18,9 +18,12 @@ type BookingPaymentRow = {
 };
 
 function paymentIntentDestination(paymentIntent: Stripe.PaymentIntent): string {
-  return typeof paymentIntent.transfer_data?.destination === 'string'
-    ? paymentIntent.transfer_data.destination
-    : (paymentIntent.transfer_data?.destination as any)?.toString?.() ?? 'platform';
+  const rawDestination = paymentIntent.transfer_data?.destination;
+  return typeof rawDestination === 'string'
+    ? rawDestination
+    : rawDestination && typeof rawDestination === 'object' && 'id' in rawDestination
+      ? String(rawDestination.id)
+      : 'platform';
 }
 
 function paymentIntentMetadataMatches(

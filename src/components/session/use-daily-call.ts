@@ -270,10 +270,10 @@ export function useDailyCall(options: UseDailyCallOptions) {
           }
         },
       };
-      setStatus('joined');
+      const frame = window.requestAnimationFrame(() => setStatus('joined'));
       return () => {
+        window.cancelAnimationFrame(frame);
         delete w.__ASTROLINK_E2E_CAPTIONS__;
-        setStatus('left');
       };
     }
 

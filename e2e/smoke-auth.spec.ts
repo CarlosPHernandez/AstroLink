@@ -42,7 +42,6 @@ test.describe('Auth and landing smoke', () => {
 
   test('mentee session bootstrap lands on mentee dashboard', async ({ browser }) => {
     const context = await browser.newContext({ storageState: emptyStorage });
-    const page = await context.newPage();
     const tempAuth = path.join(os.tmpdir(), `astrolink-e2e-mentee-${Date.now()}.json`);
     await createStorageState('mentee', tempAuth);
     await context.close();

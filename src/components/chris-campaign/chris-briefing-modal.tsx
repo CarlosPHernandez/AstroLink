@@ -125,14 +125,9 @@ export function ChrisBriefingModal({
   bookingId,
   onClose,
 }: ChrisBriefingModalProps) {
-  const [mounted, setMounted] = useState(false);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle');
   const [emailState, setEmailState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [emailError, setEmailError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -148,7 +143,7 @@ export function ChrisBriefingModal({
     };
   }, [onClose]);
 
-  if (!mounted) {
+  if (typeof document === 'undefined') {
     return null;
   }
 
@@ -235,16 +230,21 @@ export function ChrisBriefingModal({
             <button
               type="button"
               data-testid="chris-brief-email"
-              disabled={emailState === 'sending' || emailState === 'sent'}
+              disabled={emailState === 'sending'}
               onClick={() => void handleSendEmail()}
               className="w-full rounded-lg bg-white py-sm text-sm font-bold tracking-tight text-[#1c1c1c] transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               {emailState === 'sending'
                 ? 'Sending…'
                 : emailState === 'sent'
-                  ? `Sent${userEmail ? ` to ${userEmail}` : ''}`
+                  ? 'Send again'
                   : 'Send to my email'}
             </button>
+            {emailState === 'sent' ? (
+              <p className="text-center text-xs text-[#4ade80]">
+                Sent{userEmail ? ` to ${userEmail}` : ''}
+              </p>
+            ) : null}
             <button
               type="button"
               data-testid="chris-brief-copy"

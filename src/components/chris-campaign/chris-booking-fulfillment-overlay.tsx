@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { BRIEFING_THINKING_STEPS } from '@/lib/briefing-display';
 import { ChrisSegmentedProgress } from '@/components/chris-campaign/chris-segmented-progress';
@@ -19,7 +19,7 @@ const PHASE_SEGMENTS: Record<ChrisFulfillmentOverlayPhase, number> = {
 };
 
 const PHASE_LABELS: Record<ChrisFulfillmentOverlayPhase, string> = {
-  authorizing: 'Authorizing payment…',
+  authorizing: 'Processing payment…',
   payment_success: 'Payment confirmed',
   generating_brief: 'Generating your pre-call brief',
   error: 'Something went wrong',
@@ -38,12 +38,6 @@ export function ChrisBookingFulfillmentOverlay({
   errorMessage,
   onViewDashboard,
 }: ChrisBookingFulfillmentOverlayProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -51,7 +45,7 @@ export function ChrisBookingFulfillmentOverlay({
     };
   }, []);
 
-  if (!mounted) {
+  if (typeof document === 'undefined') {
     return null;
   }
 

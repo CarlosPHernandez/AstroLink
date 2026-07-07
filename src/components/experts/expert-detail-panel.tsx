@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { ExpertDetailContent } from './expert-detail-content';
@@ -19,11 +19,6 @@ export function ExpertDetailPanel({
   onClose,
 }: ExpertDetailPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -45,7 +40,7 @@ export function ExpertDetailPanel({
     panelRef.current?.focus({ preventScroll: true });
   }, [expert.slug]);
 
-  if (!mounted) {
+  if (typeof document === 'undefined') {
     return null;
   }
 

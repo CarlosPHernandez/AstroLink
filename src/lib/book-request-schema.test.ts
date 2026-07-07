@@ -52,7 +52,8 @@ describe('BookBodySchema', () => {
   });
 
   it('allows omitting mentorId for APX-01 matching', () => {
-    const { mentorId: _mentorId, ...withoutMentor } = validBody;
+    const withoutMentor = { ...validBody };
+    delete withoutMentor.mentorId;
     expect(BookBodySchema.parse(withoutMentor).mentorId).toBeUndefined();
   });
 

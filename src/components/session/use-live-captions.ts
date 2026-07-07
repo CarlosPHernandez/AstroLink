@@ -43,7 +43,6 @@ const DEFAULT_TRANSLATION_PAUSE_MS = 60_000;
 type PendingTranslation = {
   segmentId: string;
   placeholderId: string;
-  mapped: TranscriptUtterance;
   label: string;
   sourceLocale: string;
   targetLocale: SupportedTargetLocale;
@@ -71,6 +70,7 @@ export function useLiveCaptions(options: UseLiveCaptionsOptions) {
   const pendingBySegmentRef = useRef<Map<string, PendingTranslation>>(new Map());
   const translationPausedRef = useRef(false);
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const runTranslationRef = useRef<(pending: PendingTranslation) => void>(() => {});
 
   useEffect(() => {
     return () => {
@@ -130,7 +130,7 @@ export function useLiveCaptions(options: UseLiveCaptionsOptions) {
 
   const runTranslation = useCallback(
     async (pending: PendingTranslation) => {
-      const { placeholderId, segmentId, mapped, label, sourceLocale, targetLocale, rawText } =
+      const { placeholderId, segmentId, label, sourceLocale, targetLocale, rawText } =
         pending;
 
       try {
@@ -202,13 +202,17 @@ export function useLiveCaptions(options: UseLiveCaptionsOptions) {
         if (nextId) {
           const nextPending = pendingBySegmentRef.current.get(nextId);
           if (nextPending) {
-            void runTranslation(nextPending);
+            void runTranslationRef.current(nextPending);
           }
         }
       }
     },
     [bookingId, finalizeLine, scheduleTranslationResume],
   );
+
+  useEffect(() => {
+    runTranslationRef.current = runTranslation;
+  }, [runTranslation]);
 
   const scheduleTranslation = useCallback(
     (pending: PendingTranslation) => {
@@ -305,7 +309,6 @@ export function useLiveCaptions(options: UseLiveCaptionsOptions) {
       scheduleTranslation({
         segmentId: mapped.id,
         placeholderId,
-        mapped,
         label,
         sourceLocale: direction.sourceLocale,
         targetLocale: direction.targetLocale,

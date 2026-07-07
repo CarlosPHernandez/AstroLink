@@ -26,7 +26,7 @@ Per [Stripe Connect best practices](https://docs.stripe.com/connect/saas-platfor
 | Charge type | **Destination charges** | Already shipped: `transfer_data.destination` + `application_fee_amount` on PaymentIntent (`booking-agent.ts`) |
 | Connected account API | **v1 Express (existing)** | `ComplianceAgent` provisions `type: 'express'`. Migrate to Accounts v2 (`POST /v2/core/accounts`) in a follow-up — not blocking this UI pass |
 | Payout visibility | **Express Dashboard login link** | Mentors view bank payouts in Stripe; we surface summary from our `transactions` ledger |
-| Webhooks (required today) | `payment_intent.*` | Already handled → APX-05 escrow |
+| Webhooks (required today) | `payment_intent.*` | Already handled for immediate-charge booking payments |
 | Webhooks (groundwork) | `account.updated`, `payout.paid` | Sync `stripe_onboarding_completed`; audit payout events for future `mentor_payouts` table |
 | Security | Signature verify + env secrets | `STRIPE_WEBHOOK_SECRET`; never log keys; use RAK in production |
 
@@ -36,9 +36,9 @@ Per [Stripe Connect best practices](https://docs.stripe.com/connect/saas-platfor
 
 **Transactions** (`public.transactions`) — earnings source of truth:
 
-- `pending` — payment authorized, escrow not captured
-- `completed` — capture succeeded after session
-- `failed` — payment or capture failed
+- `pending` — payment collected; mentor payout not yet marked complete
+- `completed` — session completed and transaction is ready for mentor payout accounting
+- `failed` — payment or payout bookkeeping failed
 
 **Manual payouts** (PR2, shipped):
 
@@ -73,7 +73,7 @@ Future: Stripe `payout.*` webhook mirror — manual lines remain source of truth
 
 | # | Decision | Rationale |
 |---|----------|-----------|
-| 1 | Earnings from `transactions`, not live Stripe Balance API | Matches escrow/capture model; works in skip-Stripe dev |
+| 1 | Earnings from `transactions`, not live Stripe Balance API | Matches our payment ledger; works in skip-Stripe dev |
 | 2 | Keep v1 Express accounts | Avoid breaking `ComplianceAgent` in this pass |
 | 3 | Merge earnings + bank into one tab | Reduces nav noise after slop cleanup |
 | 4 | `account.updated` webhook updates `stripe_onboarding_completed` | Single source for Connect readiness |

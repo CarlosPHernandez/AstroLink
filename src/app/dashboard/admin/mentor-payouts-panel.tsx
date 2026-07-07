@@ -88,17 +88,27 @@ export function MentorPayoutsPanel() {
   }, []);
 
   useEffect(() => {
-    void loadMentors();
+    const frame = window.requestAnimationFrame(() => {
+      void loadMentors();
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [loadMentors]);
 
   useEffect(() => {
     if (mentors.length > 0 && !selectedMentorId) {
-      setSelectedMentorId(mentors[0]!.mentorId);
+      const frame = window.requestAnimationFrame(() => {
+        setSelectedMentorId(mentors[0]!.mentorId);
+      });
+      return () => window.cancelAnimationFrame(frame);
     }
+    return undefined;
   }, [mentors, selectedMentorId]);
 
   useEffect(() => {
-    void loadMentorDetail(selectedMentorId);
+    const frame = window.requestAnimationFrame(() => {
+      void loadMentorDetail(selectedMentorId);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [selectedMentorId, loadMentorDetail]);
 
   function toggleTransaction(id: string) {

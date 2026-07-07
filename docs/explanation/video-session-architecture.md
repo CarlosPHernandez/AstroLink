@@ -27,7 +27,7 @@ or dev fulfill        provisionDailyRoom       getBookingForSession       hang u
                                                       │
                                                       ▼
                                                post-session.ts
-                                               recap + Stripe capture
+                                               recap + payout bookkeeping
                                                status → completed
 ```
 

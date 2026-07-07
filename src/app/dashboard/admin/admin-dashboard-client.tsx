@@ -91,7 +91,10 @@ export default function AdminDashboardClient({ session }: { session: SessionData
   }, []);
 
   useEffect(() => {
-    void loadWaitlist();
+    const frame = window.requestAnimationFrame(() => {
+      void loadWaitlist();
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [loadWaitlist]);
 
   return (
