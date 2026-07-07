@@ -2,6 +2,24 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.5.0] - 2026-07-07
+
+### Added
+- Chris campaign confirmation emails now render a dark, email-safe "Admit One" ticket with Chris's portrait, reserved-date details, 45-minute service copy, and a dashboard CTA.
+- Confirmation email unit coverage now verifies Chris campaign date-hold behavior, absence of calendar attachments, and non-Chris email compatibility.
+
+### Changed
+- Chris launch bookings now use the $180 launch price path instead of the temporary $1 live-flow test price.
+- Customer-facing Chris payment copy now describes immediate payment collection and the cancellation/refund policy instead of authorization or escrow language.
+- Chris confirmation emails show the reserved date only, explain that time selection happens after Chris confirms availability, and omit UTC/calendar-file language.
+- Notification delivery now loads booking campaign and duration fields so campaign-specific confirmation templates can be selected safely.
+- The Chris pre-call brief email button can be used again after a successful send while showing the last sent status.
+
+### Fixed
+- Chris campaign slot accounting now reopens a slot when eligible paid bookings are cancelled or externally refunded, with idempotent release guards.
+- Stripe refund and booking cancellation flows now include Chris slot-release audit context.
+- Launch readiness lint issues in the payment, Chris flow, and session surfaces are cleaned so the lint gate passes.
+
 ## [0.6.4.0] - 2026-07-06
 
 ### Changed
