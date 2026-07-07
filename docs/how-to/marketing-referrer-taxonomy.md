@@ -12,13 +12,15 @@ Examples:
 
 - `https://astro-link-sooty.vercel.app/early-access?ref=linkedin-jun-2026`
 - `https://astro-link-sooty.vercel.app/early-access?ref=partner-nasa-stem`
-- `https://www.astro-link.space/early-access?ref=partner-inspired24`
+- `https://astro-link.space/early-access?ref=partner-inspired24` (use the production canonical from `getAppBaseUrl()` / `astro-link.space`. A www variant is acceptable for user-facing links if your domain redirects it.)
 
 Do **not** rely on raw query strings (`?utm_source=...` alone). If you use UTM parameters for analytics, still set `ref` to the canonical AstroLink id below.
 
 ## Allowed `ref` values
 
 Use **kebab-case**, stable for the life of a campaign (do not change mid-flight).
+
+Use the same host as your production canonical (`getAppBaseUrl()` → `https://astro-link.space`).
 
 | `ref` | Owner | Use when |
 |-------|-------|----------|

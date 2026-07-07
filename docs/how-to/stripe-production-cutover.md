@@ -51,10 +51,9 @@ Still in **Live** mode:
 
 1. Go to **Developers** → **Webhooks**.
 2. Click **Add endpoint**.
-3. Endpoint URL: your production domain, e.g.
-   `https://astro-link.space/api/webhooks/stripe`
-   (or the exact Vercel production domain you use).
-   Do not use a URL that redirects, including a `www` host or trailing-slash variant if either returns `3xx`; Stripe must receive a direct `2xx` response from the webhook handler.
+3. Endpoint URL: use the **exact direct (non-redirecting) canonical**.
+   - Preferred: `https://astro-link.space/api/webhooks/stripe`
+   - **Critical**: The URL you register **must return a direct 2xx** from the handler. Do not use a URL that 3xx-redirects (www vs apex, trailing slash, etc.). Stripe follows redirects but this increases latency/retry risk and can mask delivery problems. The handler must see the POST directly.
 4. **Select events** (exactly these four — no more):
    - `payment_intent.succeeded`
    - `payment_intent.payment_failed`
@@ -64,6 +63,27 @@ Still in **Live** mode:
 6. Copy the **Signing secret** (`whsec_...`). This becomes your production `STRIPE_WEBHOOK_SECRET`.
 
 **Important**: This webhook is completely separate from any webhook you registered inside the AstroLink sandbox.
+
+### 2b. Verify the Live Webhook (required before real charges)
+After deploying the production env vars:
+
+1. In Stripe Dashboard (Live) → Developers → Webhooks, open your endpoint.
+2. Click **Send test event** and choose `payment_intent.succeeded`.
+3. In the delivery attempt details:
+   - HTTP status must be **200**.
+   - Response body should contain `{"received": true}` (or similar success from the route).
+   - There must be **no 308 (or other 3xx)** shown in redirect / response fields.
+4. Check Vercel production function logs for a line like:
+   ```
+   [stripe-webhook] host= astro-link.space
+   ```
+   (or the exact direct host you registered).
+5. Repeat the test event for `payment_intent.payment_failed` and `charge.refunded`.
+6. Only after clean 200 deliveries on test events proceed to a real small live charge.
+
+If you see redirects, either:
+- Re-register the webhook using the final resolved URL, **or**
+- Adjust your Vercel custom domain settings so the registered URL serves the handler directly (no platform redirect).
 
 ### 3. Configure Vercel Production Environment Variables
 

@@ -30,8 +30,8 @@ Configure in [Supabase Dashboard → Authentication](https://supabase.com/dashbo
 | Setting | Launch value | Why |
 |---------|--------------|-----|
 | **Confirm email** | **Off** for Chris launch | Inline wizard must advance without an inbox confirmation step ([launch plan](../plans/chris-sembroski-launch.md)) |
-| **Site URL** | `https://www.astro-link.space` | OAuth and email redirect base |
-| **Redirect URLs** | `https://www.astro-link.space/**` | `/auth/confirm`, `/auth/callback` |
+| **Site URL** | `https://astro-link.space` (non-www canonical) | OAuth and email redirect base. Add `https://www.astro-link.space/**` as an *additional* redirect URL only if you want to support both for user convenience. |
+| **Redirect URLs** | `https://astro-link.space/**` (primary) | `/auth/confirm`, `/auth/callback`. Align with `NEXT_PUBLIC_APP_URL` and the direct webhook URL. |
 | **Email rate limit** | Default; avoid rapid re-signups | Repeated register attempts hit `429 over_email_send_rate_limit` |
 
 **Production signup troubleshooting**
@@ -46,8 +46,8 @@ Configure in [Supabase Dashboard → Authentication](https://supabase.com/dashbo
 
 | Audience | URL |
 |----------|-----|
-| Chris public promotion | `https://www.astro-link.space/talk-with-chris?ref=chris-sembroski` |
-| Waitlist email split | `https://www.astro-link.space/early-access?ref=early-signups` |
+| Chris public promotion | `https://astro-link.space/talk-with-chris?ref=chris-sembroski` (use the canonical non-www; www redirects are acceptable for users) |
+| Waitlist email split | `https://astro-link.space/early-access?ref=early-signups` |
 | Sold-out fallback (auto) | `/early-access?ref=early-signups` from Chris landing |
 
 Referrer ids are documented in [marketing-referrer-taxonomy.md](./marketing-referrer-taxonomy.md).
@@ -62,6 +62,7 @@ Referrer ids are documented in [marketing-referrer-taxonomy.md](./marketing-refe
 - [ ] **Sign in** with existing Supabase user OR register with a real inbox (not `@test.com`)
 - [ ] Supabase Auth → **Confirm email** is **Off** for launch (or confirm inbox before continuing wizard)
 - [ ] One test booking + refund in Stripe sandbox before live cutover
+- [ ] **Live webhook + Chris payment smoke (after live keys)**: Register webhook to direct `https://astro-link.space/api/webhooks/stripe`. Send test `payment_intent.succeeded` from Stripe Live dashboard → receives clean 200 (no 308). Then complete a real $1 Chris test charge via the wizard. Verify: webhook delivery 200 + `{"received":true}`, booking becomes `confirmed`, transaction recorded, Chris "You're booked with Chris" email sent (check notification_deliveries), no stuck `pending_payment`. Capture logs. Restore launch price after.
 
 ## 5. Admin ops
 

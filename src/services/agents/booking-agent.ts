@@ -177,7 +177,8 @@ export class BookingAgent {
           ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
           ...(isChrisCampaign
             ? {
-                pricing_mode: `chris_launch_discount_${CHRIS_DISCOUNT_PERCENT}_percent`,
+                // TEMP: using test pricing_mode for $1 live test to match previous runs
+                pricing_mode: 'chris_live_test_1_usd',
                 original_amount_cents: String(CHRIS_ORIGINAL_PRICE_CENTS),
                 charged_amount_cents: String(CHRIS_LAUNCH_PRICE_CENTS),
                 discount_label: CHRIS_DISCOUNT_NAME,

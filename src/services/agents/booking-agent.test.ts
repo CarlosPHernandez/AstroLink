@@ -241,7 +241,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     ).rejects.toBeInstanceOf(ChrisCampaignSoldOutError);
   });
 
-  it('creates Chris campaign PaymentIntent for the $180 launch amount without Stripe discounts', async () => {
+  it('creates Chris campaign PaymentIntent for the $1 test launch amount (TEMP for live testing)', async () => {
     mockIsStripePaymentsSkipped.mockReturnValue(false);
 
     const agent = new BookingAgent();
@@ -261,7 +261,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
         bookingId: 'booking-1',
         stripeClientSecret: 'pi_test_secret_123',
         skipPayment: false,
-        amountCents: 18000,
+        amountCents: 100, // TEMP $1 live test price
       }),
     );
     expect(mockGetOrCreateStripeCustomerForMentee).toHaveBeenCalledWith('mentee-1');
@@ -270,7 +270,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     const [paymentIntentParams, requestOptions] = mockStripePaymentIntentsCreate.mock.calls[0];
     expect(paymentIntentParams).toEqual(
       expect.objectContaining({
-        amount: 18000,
+        amount: 100, // TEMP $1 test
         currency: 'usd',
         customer: 'cus_test_123',
         metadata: expect.objectContaining({
@@ -280,9 +280,9 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
           service_type: 'session_1on1',
           campaign_id: 'chris-sembroski',
           marketing_referrer: 'chris-sembroski',
-          pricing_mode: 'chris_launch_discount_10_percent',
+          pricing_mode: 'chris_live_test_1_usd', // TEMP for $1 live test
           original_amount_cents: '20000',
-          charged_amount_cents: '18000',
+          charged_amount_cents: '100',
           discount_label: 'Inspired24',
           discount_percent: '10',
         }),

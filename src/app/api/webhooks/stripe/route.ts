@@ -18,6 +18,9 @@ type StripeRefundBookingRow = {
 };
 
 export async function POST(request: Request) {
+  const incomingHost = request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? 'unknown';
+  console.log('[stripe-webhook] host=', incomingHost);
+
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
     return NextResponse.json({ error: 'STRIPE_WEBHOOK_SECRET not configured' }, { status: 500 });
