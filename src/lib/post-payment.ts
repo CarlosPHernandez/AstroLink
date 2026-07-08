@@ -6,6 +6,7 @@ import {
 } from '@/lib/booking-payments';
 import { briefingContentReady, type BriefingPayload } from '@/lib/briefing-display';
 import { canProvisionDailyRoom, provisionDailyRoomForBooking } from '@/lib/daily';
+import { isLlmRateLimitError } from '@/lib/llm';
 import { supabaseAdmin } from '@/lib/supabase';
 import { BriefingAgent } from '@/services/agents/briefing-agent';
 import { NotificationAgent } from '@/services/agents/notification-agent';
@@ -27,12 +28,26 @@ export async function runConfirmedBookingFulfillment(bookingId: string) {
 
   const briefing = (booking.briefing_json as BriefingPayload | null) ?? null;
   if (!briefing || !briefingContentReady(briefing, 'mentee')) {
-    const briefingAgent = new BriefingAgent();
-    await briefingAgent.prepareBriefing(bookingId);
+    try {
+      const briefingAgent = new BriefingAgent();
+      await briefingAgent.prepareBriefing(bookingId);
+    } catch (err: unknown) {
+      if (isLlmRateLimitError(err)) {
+        console.warn(`Briefing rate limited for booking ${bookingId}, will be retriable from dashboard.`);
+      } else {
+        console.error(`Briefing generation failed for booking ${bookingId}:`, err);
+      }
+      // Do not throw — payment confirmation, tx, and other fulfillment (daily, email) should still succeed.
+      // User can retry brief generation manually from the mentee dashboard.
+    }
   }
 
   if (!booking.daily_room_url && canProvisionDailyRoom()) {
-    await provisionDailyRoomForBooking(bookingId);
+    try {
+      await provisionDailyRoomForBooking(bookingId);
+    } catch (err) {
+      console.error(`Daily room provisioning failed for booking ${bookingId}:`, err);
+    }
   }
 
   const notificationAgent = new NotificationAgent();

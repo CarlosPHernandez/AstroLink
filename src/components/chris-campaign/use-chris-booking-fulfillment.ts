@@ -169,8 +169,12 @@ export function useChrisBookingFulfillment() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ bookingId: id }),
     });
-    const json = (await res.json()) as { success?: boolean; data?: { briefing: BriefingPayload } };
-    if (!res.ok || !json.success || !json.data?.briefing) {
+    const json = (await res.json().catch(() => null)) as { success?: boolean; data?: { briefing: BriefingPayload }; error?: string } | null;
+
+    if (!res.ok || !json?.success || !json.data?.briefing) {
+      if (json?.error) {
+        console.warn('Briefing generation returned error (may be rate limit):', json.error);
+      }
       return null;
     }
     return json.data.briefing;
