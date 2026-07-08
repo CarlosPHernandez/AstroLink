@@ -188,7 +188,12 @@ async function generateStructuredJsonOpenAI<T>(req: StructuredJsonRequest): Prom
     throw new Error('OpenAI returned an empty structured response');
   }
 
-  return JSON.parse(text) as T;
+  const output = JSON.parse(text) as T;
+
+  // Attach usage for cost logging (platform revenue attribution)
+  (output as any).__openaiUsage = response.usage;
+
+  return output;
 }
 
 async function generateStructuredJsonGemini<T>(req: StructuredJsonRequest): Promise<T> {
@@ -214,7 +219,12 @@ async function generateStructuredJsonGemini<T>(req: StructuredJsonRequest): Prom
     },
   });
 
-  return JSON.parse(response.text || '{}') as T;
+  const output = JSON.parse(response.text || '{}') as T;
+
+  // Attach usage so the common record can log it
+  (output as any).__geminiUsage = response.usageMetadata;
+
+  return output;
 }
 
 export type PlainTextRequest = {
@@ -236,13 +246,54 @@ async function recordLlmDecision(
     return;
   }
 
+  // Extract attached usage from provider responses (for cost tracking)
+  const anyOut = output as any;
+  let usage: import('@/lib/llm-audit').LlmUsage | undefined;
+
+  const provider = getLlmProvider();
+
+  if (anyOut?.__geminiUsage) {
+    const um = anyOut.__geminiUsage;
+    usage = {
+      promptTokens: um.promptTokenCount,
+      completionTokens: um.candidatesTokenCount,
+      totalTokens: um.totalTokenCount,
+    };
+    delete anyOut.__geminiUsage;
+  } else if (anyOut?.__openaiUsage) {
+    const u = anyOut.__openaiUsage;
+    usage = {
+      promptTokens: u.prompt_tokens,
+      completionTokens: u.completion_tokens,
+      totalTokens: u.total_tokens,
+    };
+    delete anyOut.__openaiUsage;
+  }
+
+  // Very rough cost estimate (USD cents) — update rates as needed.
+  // Gemini flash is cheap; this is mainly for "platform revenue pays for AI" accounting.
+  if (usage && usage.totalTokens) {
+    if (provider === 'gemini') {
+      // ~ $0.075 / M input, $0.30 / M output for flash (conservative)
+      const inputCents = ((usage.promptTokens ?? 0) / 1_000_000) * 0.0075 * 100;
+      const outputCents = ((usage.completionTokens ?? 0) / 1_000_000) * 0.03 * 100;
+      usage.estimatedCostCents = Math.round(inputCents + outputCents);
+    } else {
+      // gpt-4o-mini approx $0.15/M in, $0.60/M out
+      const inputCents = ((usage.promptTokens ?? 0) / 1_000_000) * 0.015 * 100;
+      const outputCents = ((usage.completionTokens ?? 0) / 1_000_000) * 0.06 * 100;
+      usage.estimatedCostCents = Math.round(inputCents + outputCents);
+    }
+  }
+
   try {
     await logLlmDecision({
       context: req.audit,
-      provider: getLlmProvider(),
+      provider,
       model: req.model,
       promptHash: hashLlmPrompt(req.systemInstruction, req.prompt),
       outputSummary: summarizeLlmOutput(output),
+      usage,
     });
   } catch (error) {
     console.warn('LLM audit log failed (non-fatal)', error);
@@ -340,9 +391,10 @@ function formatLlmError(error: unknown): string {
     message.includes('RESOURCE_EXHAUSTED') ||
     message.includes('quota') ||
     message.includes('rate limit') ||
-    message.includes('429')
+    message.includes('429') ||
+    message.includes('prepayment credits')
   ) {
-    return `${message} — LLM quota/rate limit hit. Retry later or switch provider via LLM_PROVIDER.`;
+    return `${message} — LLM quota/rate limit hit (Gemini prepaid credits may be depleted). Retry later, top up at https://ai.studio/projects, or switch provider via LLM_PROVIDER.`;
   }
   return message;
 }

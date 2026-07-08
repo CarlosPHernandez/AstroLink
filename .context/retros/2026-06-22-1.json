@@ -1,0 +1,42 @@
+{
+  "date": "2026-06-22",
+  "window": "since-2026-06-10",
+  "metrics": {
+    "commits": 73,
+    "contributors": 1,
+    "prs_merged": 27,
+    "insertions": 18407,
+    "deletions": 3484,
+    "net_loc": 14923,
+    "test_loc_ratio_est": 0.28,
+    "active_days": 12,
+    "sessions": 22,
+    "deep_sessions": 2,
+    "avg_session_minutes": 16,
+    "feat_pct": 0.27,
+    "fix_pct": 0.18,
+    "peak_hour": 15,
+    "features_shipped": 11
+  },
+  "authors": {
+    "CarlosPHernandez": {
+      "commits": 73,
+      "insertions": 18407,
+      "deletions": 3484,
+      "top_area": "mentor dashboard + waitlist/SEO"
+    }
+  },
+  "version_range": ["0.1.6.1", "0.5.0.0"],
+  "streak_days": 9,
+  "personal_streak_days": 9,
+  "ship_of_period": {
+    "title": "Mentor dashboard ops PR1–PR5",
+    "version": "0.4.7.0 → 0.5.0.0",
+    "prs": ["#47", "#48", "#49", "#50", "#51"]
+  },
+  "test_health": {
+    "total_test_files": 79,
+    "test_files_changed": 63
+  },
+  "tweetable": "Since Jun 10: v0.1.6 → v0.5.0, 27 PRs — waitlist machine, SEO, full mentor payouts stack | 9d streak"
+}
