@@ -196,6 +196,9 @@ export default function LandingSignedInShell({
         <div className="max-w-[1200px] mx-auto py-10 px-lg flex flex-col md:flex-row justify-between items-center gap-md">
           <div className="font-bold text-on-surface tracking-tight">AstroLink</div>
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-on-surface-variant font-mono text-[10px]">
+            <a href="/press" className="hover:text-on-surface transition-colors">
+              Press
+            </a>
             <a href="/privacy" className="hover:text-on-surface transition-colors">
               Privacy
             </a>
