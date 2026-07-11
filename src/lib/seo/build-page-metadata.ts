@@ -8,6 +8,8 @@ import {
   EARLY_ACCESS_TITLE,
   EXPERTS_INDEX_DESCRIPTION,
   EXPERTS_INDEX_TITLE,
+  PRESS_DESCRIPTION,
+  PRESS_TITLE,
   PRIVACY_DESCRIPTION,
   PRIVACY_TITLE,
   SITE_NAME,
@@ -52,6 +54,20 @@ function expertDescription(expert: { name: string; role: string; bio: string }):
 
 export function buildPageMetadata(input: BuildPageMetadataInput): Metadata {
   switch (input.pageType) {
+    case 'press':
+      return {
+        ...baseMetadata('/press'),
+        title: PRESS_TITLE,
+        description: PRESS_DESCRIPTION,
+        robots: { index: true, follow: true },
+        openGraph: {
+          title: PRESS_TITLE,
+          description: PRESS_DESCRIPTION,
+          url: productionUrl('/press'),
+          siteName: SITE_NAME,
+        },
+      };
+
     case 'privacy':
       return {
         ...baseMetadata('/privacy'),

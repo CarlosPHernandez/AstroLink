@@ -16,6 +16,10 @@ export const PRIVACY_TITLE = 'Privacy Policy | AstroLink';
 export const PRIVACY_DESCRIPTION =
   'How AstroLink collects, uses, and protects your personal information.';
 
+export const PRESS_TITLE = 'Press | AstroLink';
+export const PRESS_DESCRIPTION =
+  'News and announcements from AstroLink — verified aerospace expert sessions and platform updates.';
+
 export function truncateMetaDescription(text: string, max = 160): string {
   const normalized = text.trim().replace(/\s+/g, ' ');
   if (normalized.length <= max) return normalized;

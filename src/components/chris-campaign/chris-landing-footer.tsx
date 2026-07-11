@@ -13,6 +13,12 @@ export function ChrisLandingFooter({ copyrightYear }: ChrisLandingFooterProps) {
         </div>
         <div className="flex space-x-8">
           <Link
+            href="/press"
+            className="chris-footer-link text-sm font-light text-secondary-fixed-dim transition-colors duration-200 hover:text-tertiary-fixed-dim"
+          >
+            Press
+          </Link>
+          <Link
             href="/privacy"
             className="chris-footer-link text-sm font-light text-secondary-fixed-dim transition-colors duration-200 hover:text-tertiary-fixed-dim"
           >

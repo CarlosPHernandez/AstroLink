@@ -8,7 +8,7 @@ import {
   isChrisJoinRedirectPath,
 } from '@/lib/chris-campaign/chris-campaign-routes';
 
-export const WAITLIST_PUBLIC_PAGES = ['/early-access', '/privacy'] as const;
+export const WAITLIST_PUBLIC_PAGES = ['/early-access', '/press', '/privacy'] as const;
 
 export type WaitlistRedirectDestination = '/early-access' | typeof CHRIS_CAMPAIGN_LANDING_PATH;
 

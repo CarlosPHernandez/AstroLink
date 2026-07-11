@@ -73,6 +73,9 @@ export default function LandingPage({ experts }: { experts: ListedExpert[] }) {
             </span>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-on-surface-variant font-mono text-[10px]">
+            <a href="/press" className="hover:text-on-surface transition-colors">
+              Press
+            </a>
             <a href="/privacy" className="hover:text-on-surface transition-colors">
               Privacy
             </a>

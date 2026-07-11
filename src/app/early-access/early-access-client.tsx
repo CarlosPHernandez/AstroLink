@@ -39,9 +39,14 @@ export default function EarlyAccessClient({
       <footer className="pb-8">
         <div className="max-w-[var(--spacing-container-max)] mx-auto px-md sm:px-lg flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-on-surface-variant/70">
           <span>© {copyrightYear} AstroLink</span>
-          <Link href="/privacy" className="hover:text-on-surface transition-colors">
-            Privacy
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/press" className="hover:text-on-surface transition-colors">
+              Press
+            </Link>
+            <Link href="/privacy" className="hover:text-on-surface transition-colors">
+              Privacy
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
