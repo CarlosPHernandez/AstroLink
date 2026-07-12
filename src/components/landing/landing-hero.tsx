@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { prefersReducedMotion } from '@/components/landing/landing-scroll-reveal';
 import Image from 'next/image';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { toOptimizedImageUrl } from '@/lib/public-images';
@@ -26,6 +27,7 @@ type LandingHeroProps = {
 
 export default function LandingHero({ experts }: LandingHeroProps) {
   const [visibleMessages, setVisibleMessages] = useState(0);
+  const visualRef = useRef<HTMLDivElement>(null);
   const heroExpert = experts[0] ?? null;
   const heroImage = heroExpert
     ? toOptimizedImageUrl(heroExpert.imageUrl)
@@ -67,12 +69,47 @@ export default function LandingHero({ experts }: LandingHeroProps) {
     };
   }, []);
 
+  useEffect(() => {
+    const el = visualRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      const traveled = Math.min(rect.height, Math.max(0, -rect.top));
+      const progress = rect.height > 0 ? traveled / rect.height : 0;
+      el.style.setProperty('--landing-hero-scroll', String(progress));
+    };
+
+    if (prefersReducedMotion()) {
+      el.style.setProperty('--landing-hero-scroll', '0');
+      return;
+    }
+
+    let frame: number | null = null;
+    const onScroll = () => {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        update();
+      });
+    };
+
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
   return (
     <section className="pt-8 sm:pt-12 pb-16 sm:pb-24">
       <div className="max-w-[1200px] mx-auto px-md sm:px-lg text-center">
         <h1
           data-testid="landing-hero-title"
-          className="font-landing-display text-[1.75rem] sm:text-4xl lg:text-[2.75rem] font-semibold tracking-tight text-neutral-900 leading-[1.12]"
+          className="landing-hero-intro font-landing-display text-[1.75rem] sm:text-4xl lg:text-[2.75rem] font-semibold tracking-tight text-neutral-900 leading-[1.12]"
         >
           When the stakes are orbital,
           <br className="hidden sm:block" />
@@ -83,8 +120,12 @@ export default function LandingHero({ experts }: LandingHeroProps) {
         </p>
       </div>
 
-      <div className="relative max-w-[920px] mx-auto mt-12 sm:mt-16 px-md sm:px-lg">
-        <div className="relative mx-auto w-full max-w-[640px] aspect-[4/5] sm:aspect-[5/6] overflow-hidden rounded-sm">
+      <div
+        ref={visualRef}
+        className="landing-hero-visual relative max-w-[920px] mx-auto mt-12 sm:mt-16 px-md sm:px-lg"
+        style={{ '--landing-hero-scroll': '0' } as CSSProperties}
+      >
+        <div className="landing-hero-image-wrap relative mx-auto w-full max-w-[640px] aspect-[4/5] sm:aspect-[5/6] overflow-hidden rounded-sm">
           <Image
             src={heroImage}
             alt={heroAlt}

@@ -419,12 +419,104 @@ body {
   z-index: 2;
 }
 
-@media (min-width: 640px) {
-  .landing-story-float-left {
-    max-width: 14rem;
+/* Scroll reveal (intersection) */
+.landing-reveal {
+  opacity: 0;
+  transition:
+    opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-reveal-up {
+  transform: translate3d(0, 28px, 0);
+}
+
+.landing-reveal-left {
+  transform: translate3d(-36px, 0, 0);
+}
+
+.landing-reveal-right {
+  transform: translate3d(36px, 0, 0);
+}
+
+.landing-reveal-scale {
+  transform: scale(0.96);
+}
+
+.landing-reveal-visible.landing-reveal-up,
+.landing-reveal-visible.landing-reveal-left,
+.landing-reveal-visible.landing-reveal-right {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.landing-reveal-visible.landing-reveal-scale {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Scroll-linked parallax (story + hero) */
+.landing-scroll-section {
+  --p: var(--landing-scroll-progress, 0);
+}
+
+.landing-scroll-float-left {
+  opacity: calc(0.15 + var(--p) * 0.85);
+  transform: translate3d(calc((1 - var(--p)) * -44px), calc((1 - var(--p)) * 32px), 0);
+}
+
+.landing-scroll-card-left {
+  opacity: calc(0.1 + var(--p) * 0.9);
+  transform: translate3d(calc((1 - var(--p)) * -60px), calc((1 - var(--p)) * 40px), 0);
+}
+
+.landing-scroll-portrait {
+  transform: translate3d(0, calc((1 - var(--p)) * 40px), 0)
+    scale(calc(0.93 + var(--p) * 0.07));
+}
+
+.landing-scroll-float-right {
+  opacity: calc(0.15 + var(--p) * 0.85);
+  transform: translate3d(calc((1 - var(--p)) * 44px), calc((1 - var(--p)) * 32px), 0);
+}
+
+.landing-scroll-card-right {
+  opacity: calc(0.1 + var(--p) * 0.9);
+  transform: translate3d(calc((1 - var(--p)) * 60px), calc((1 - var(--p)) * -28px), 0);
+}
+
+.landing-hero-intro {
+  animation: landing-hero-chat-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.landing-hero-visual {
+  --hs: var(--landing-hero-scroll, 0);
+}
+
+.landing-hero-image-wrap {
+  transform: translate3d(0, calc(var(--hs) * -36px), 0)
+    scale(calc(1 - var(--hs) * 0.04));
+}
+
+.landing-hero-phone {
+  transform: translate3d(0, calc(var(--hs) * -72px), 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 
-  .landing-story-float-right {
-    max-width: 16rem;
+  .landing-scroll-float-left,
+  .landing-scroll-card-left,
+  .landing-scroll-portrait,
+  .landing-scroll-float-right,
+  .landing-scroll-card-right,
+  .landing-hero-image-wrap,
+  .landing-hero-phone {
+    opacity: 1;
+    transform: none;
   }
 }
