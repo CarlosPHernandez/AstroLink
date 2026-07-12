@@ -343,8 +343,16 @@ body {
   --font-landing-display: var(--font-montserrat), ui-sans-serif, sans-serif;
   --font-landing-body: var(--font-montserrat), ui-sans-serif, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
-  --landing-accent: #1a5fd1;
-  --landing-canvas: #f7f6f2;
+  --landing-canvas: #f7f8fa;
+  --landing-surface: #ffffff;
+  --landing-surface-soft: #f1f3f6;
+  --landing-border: #dde2ea;
+  --landing-text: #171a1f;
+  --landing-muted: #66717f;
+  --landing-faint: #9aa3ae;
+  --landing-accent: #1859d4;
+  --landing-accent-hover: #1247ae;
+  --landing-ink: #0e1420;
 }
 
 .landing-mission .font-landing-display {
@@ -373,7 +381,7 @@ body {
 
 .landing-mission-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #94a3b8 transparent;
+  scrollbar-color: var(--landing-faint) transparent;
 }
 
 .landing-mission-scroll::-webkit-scrollbar {
@@ -381,7 +389,7 @@ body {
 }
 
 .landing-mission-scroll::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--landing-border);
   border-radius: 999px;
 }
 
@@ -590,8 +598,8 @@ body {
 .landing-hero-image-fade {
   background: linear-gradient(
     to top,
-    var(--landing-canvas, #f7f6f2) 0%,
-    rgba(247, 246, 242, 0.72) 18%,
+    var(--landing-canvas, #f7f8fa) 0%,
+    color-mix(in srgb, var(--landing-canvas, #f7f8fa) 72%, transparent) 18%,
     transparent 48%
   );
 }

@@ -5,9 +5,9 @@ import { type CSSProperties } from 'react';
 import { useLandingScrollProgress } from '@/components/landing/landing-scroll-reveal';
 
 const BENEFITS = [
-  { line1: 'Verified experts', line2: 'with mission pedigree' },
-  { line1: 'Live 1:1 video', line2: 'not chatbot autocomplete' },
-  { line1: 'Clear pricing', line2: 'before you book' },
+  { line1: 'Astronauts and operators', line2: 'within reach' },
+  { line1: 'Career paths and projects', line2: 'from people who know' },
+  { line1: 'Free account access', line2: 'before you book' },
 ] as const;
 
 export function LandingBenefits() {
@@ -17,7 +17,7 @@ export function LandingBenefits() {
     <section
       ref={sectionRef}
       id="pipeline"
-      className="landing-benefits-section scroll-mt-20 py-16 sm:py-36 border-t border-neutral-200/60"
+      className="landing-benefits-section scroll-mt-20 py-16 sm:py-36 border-t border-[var(--landing-border)]"
       style={
         {
           '--landing-scroll-progress': '0',
@@ -34,26 +34,26 @@ export function LandingBenefits() {
               key={benefit.line1}
               className={`landing-benefit-item landing-benefit-item-${index + 1}`}
             >
-              <span className="font-landing-display text-[1.625rem] sm:text-[2rem] lg:text-4xl font-semibold tracking-tight text-neutral-900 leading-[1.12] block">
+              <span className="font-landing-display text-[1.625rem] sm:text-[2rem] lg:text-4xl font-semibold tracking-tight text-[var(--landing-text)] leading-[1.12] block">
                 {benefit.line1}
                 <br />
-                <span className="text-neutral-400">{benefit.line2}</span>
+                <span className="text-[var(--landing-faint)]">{benefit.line2}</span>
               </span>
             </h2>
           ))}
         </div>
 
-        <p className="landing-benefits-copy mt-20 sm:mt-28 text-center text-sm sm:text-base text-neutral-500 max-w-[var(--max-width-prose)] mx-auto leading-relaxed">
-          AI pulls from manuals and forums. AstroLink mentors answer from flight logs, launch
-          authority, and years on console — then stand behind the recommendation on a live call.
+        <p className="landing-benefits-copy mt-20 sm:mt-28 text-center text-sm sm:text-base text-[var(--landing-muted)] max-w-[var(--max-width-prose)] mx-auto leading-relaxed">
+          AstroLink is for students, career-switchers, teams, and curious people who want real
+          conversations with people who have worked, flown, built, and trained in space.
         </p>
 
         <div className="landing-benefits-cta mt-12 flex justify-center">
           <Link
-            href="/auth"
-            className="inline-flex items-center justify-center rounded-full bg-[#1a5fd1] px-8 py-3.5 text-sm font-semibold text-white hover:bg-[#164fb3] transition-colors"
+            href="/auth?mode=signup&redirect=%2Fexperts"
+            className="inline-flex items-center justify-center rounded-full bg-[var(--landing-accent)] px-8 py-3.5 text-sm font-semibold text-white hover:bg-[var(--landing-accent-hover)] transition-colors"
           >
-            Book a session
+            Unlock access
           </Link>
         </div>
       </div>
