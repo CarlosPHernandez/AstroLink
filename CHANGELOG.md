@@ -2,6 +2,22 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.6.0] - 2026-07-11
+
+### Added
+- Signed-out home now uses a Phia-inspired light editorial layout with Montserrat typography, scroll-linked reveal animations, and parallax depth on hero and story sections.
+- Landing hero highlights Chris Sembroski with a clickable portrait, animated AI chat preview, mission prompt bar, and trust strip for verified experts, live video, and clear pricing.
+- Featured expert helpers centralize Chris (hero) and Eiman (story and editor's picks) portrait sources, with unit coverage for slug and asset resolution.
+- Mobile landing layouts stack hero phone and portrait cleanly, shorten the mission prompt, and disable parallax on small screens.
+
+### Changed
+- Marketing copy now says "experts" instead of "operators" across landing sections.
+- Expert directory on the home page uses portrait-focused editor's picks without hourly rate badges on cards.
+- E2E smoke auth expectations updated for the new hero test id and portrait-only expert cards.
+
+### Removed
+- Retired the dark comparison section and legacy landing comparison component in favor of the new editorial flow.
+
 ## [0.6.5.0] - 2026-07-07
 
 ### Added
