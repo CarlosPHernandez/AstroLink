@@ -71,7 +71,7 @@ test.describe('Auth and landing smoke', () => {
     await page.goto('/');
     await expect(page.getByTestId('signed-in-home')).toBeVisible();
     await expect(page.getByTestId('signed-in-cta-book')).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Book verified space experts/i })).toHaveCount(0);
+    await expect(page.getByTestId('landing-hero-title')).toHaveCount(0);
     await expect(page.getByTestId('expert-card-chris-sembroski')).toBeVisible();
   });
 
@@ -81,10 +81,9 @@ test.describe('Auth and landing smoke', () => {
     test('marketing landing shows hero and expert roster', async ({ page }) => {
       await page.goto('/');
       await expect(page.getByTestId('signed-in-home')).toHaveCount(0);
-      await expect(page.getByRole('heading', { name: /Book verified space experts/i })).toBeVisible();
+      await expect(page.getByTestId('landing-hero-title')).toBeVisible();
       await expect(page.getByTestId('expert-card-chris-sembroski')).toBeVisible();
-      await expect(page.getByText('Chris Sembroski')).toBeVisible();
-      await expect(page.getByTestId('expert-card-chris-sembroski')).toContainText('$250/hr');
+      await expect(page.getByTestId('view-all-experts')).toBeVisible();
     });
   });
 });

@@ -1,15 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { MaterialIcon } from '@/components/ui/material-icon';
+import { LandingScrollReveal } from '@/components/landing/landing-scroll-reveal';
+import { landingFeaturedPortrait, orderLandingExperts } from '@/lib/landing-featured-expert';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 
 const TEASER_COUNT = 6;
 
-export default function ExpertDirectory({ experts }: { experts: ListedExpert[] }) {
+type ExpertDirectoryProps = {
+  experts: ListedExpert[];
+  variant?: 'default' | 'mission';
+};
+
+export default function ExpertDirectory({ experts, variant = 'default' }: ExpertDirectoryProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const filteredExperts =
@@ -17,7 +24,71 @@ export default function ExpertDirectory({ experts }: { experts: ListedExpert[] }
       ? experts
       : experts.filter((e) => e.category === selectedCategory);
 
-  const teaserExperts = filteredExperts.slice(0, TEASER_COUNT);
+  const teaserExperts = orderLandingExperts(filteredExperts).slice(0, TEASER_COUNT);
+
+  if (variant === 'mission') {
+    return (
+      <section id="directory" className="border-t border-neutral-200/60 py-16 sm:py-24 scroll-mt-20">
+        <div className="max-w-[1200px] mx-auto px-md sm:px-lg">
+          <header className="mb-8 sm:mb-10 flex items-end justify-between gap-4">
+            <LandingScrollReveal as="h2" variant="up">
+              <span className="font-landing-display text-xl sm:text-2xl font-semibold text-neutral-900 tracking-tight block">
+                Editor&apos;s picks
+              </span>
+            </LandingScrollReveal>
+            <LandingScrollReveal delay={80} variant="up">
+              <Link
+                href="/experts"
+                data-testid="view-all-experts"
+                className="text-sm text-neutral-500 hover:text-neutral-900 transition-colors shrink-0"
+              >
+                See all
+              </Link>
+            </LandingScrollReveal>
+          </header>
+
+          {teaserExperts.length === 0 ? (
+            <p className="text-sm text-neutral-500 py-8">
+              No listed experts right now. Check Supabase seed data and that mentors are approved and
+              listed.
+            </p>
+          ) : (
+            <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory landing-mission-scroll -mx-4 px-4 sm:-mx-0 sm:px-0">
+              {teaserExperts.map((expert, index) => {
+                const portrait = landingFeaturedPortrait(expert);
+                return (
+                <LandingScrollReveal
+                  key={expert.id}
+                  delay={index * 90}
+                  variant="scale"
+                  className="snap-start shrink-0 w-[min(44vw,180px)] sm:w-[200px] md:w-[220px]"
+                >
+                  <Link
+                    href={`/experts/${expert.slug}`}
+                    data-testid={`expert-card-${expert.slug}`}
+                    aria-label={expert.name}
+                    className="block group"
+                  >
+                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-neutral-200">
+                      <Image
+                        src={portrait.src}
+                        alt=""
+                        fill
+                        priority={index === 0}
+                        className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                        sizes="220px"
+                      />
+                    </div>
+                  </Link>
+                </LandingScrollReveal>
+              );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section

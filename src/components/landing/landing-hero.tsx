@@ -1,233 +1,179 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import Link from 'next/link';
+import { useEffect, useState, type CSSProperties } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { MaterialIcon } from '@/components/ui/material-icon';
+import { useLandingHeroParallax } from '@/components/landing/landing-scroll-reveal';
+import { landingHeroPortrait } from '@/lib/landing-featured-expert';
+import type { ListedExpert } from '@/lib/mentor-directory';
 
-const HERO_MODALITIES = ['text', 'video', 'call'] as const;
+const AI_CHAT = [
+  { role: 'user' as const, text: 'Second-stage thrust is oscillating late in the burn. What should we check?' },
+  {
+    role: 'assistant' as const,
+    text: 'Review combustion stability margins and injector geometry against published references.',
+  },
+  {
+    role: 'assistant' as const,
+    text: 'I don\u2019t have your engine logs or flight telemetry. General reference only.',
+  },
+] as const;
 
-export default function LandingHero() {
-  const [heroState, setHeroState] = useState<'text' | 'video' | 'call'>('text');
-  const autoCycleRef = useRef<NodeJS.Timeout | null>(null);
+const CHAT_STEP_MS = 2600;
+const CHAT_PAUSE_MS = 3800;
 
-  const startHeroCycle = useCallback(() => {
-    if (autoCycleRef.current) clearInterval(autoCycleRef.current);
-    autoCycleRef.current = setInterval(() => {
-      setHeroState((current) => {
-        const nextIndex = (HERO_MODALITIES.indexOf(current) + 1) % HERO_MODALITIES.length;
-        return HERO_MODALITIES[nextIndex];
-      });
-    }, 5000);
-  }, []);
+type LandingHeroProps = {
+  experts: ListedExpert[];
+};
 
-  const pauseHeroCycle = useCallback(() => {
-    if (autoCycleRef.current) clearInterval(autoCycleRef.current);
-    autoCycleRef.current = null;
-  }, []);
+export default function LandingHero({ experts }: LandingHeroProps) {
+  const [visibleMessages, setVisibleMessages] = useState(0);
+  const visualRef = useLandingHeroParallax<HTMLDivElement>();
+  const { src: heroImage, alt: heroAlt, href: heroHref } = landingHeroPortrait(experts);
 
   useEffect(() => {
-    startHeroCycle();
-    return () => {
-      if (autoCycleRef.current) clearInterval(autoCycleRef.current);
-    };
-  }, [startHeroCycle]);
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setVisibleMessages(AI_CHAT.length);
+      return;
+    }
 
-  const handleStateTrigger = (state: 'text' | 'video' | 'call') => {
-    setHeroState(state);
-    startHeroCycle();
-  };
+    let cancelled = false;
+    let step = 0;
+    let timer: ReturnType<typeof setTimeout>;
+
+    const run = () => {
+      if (cancelled) return;
+
+      if (step < AI_CHAT.length) {
+        setVisibleMessages(step + 1);
+        step += 1;
+        timer = setTimeout(run, step === 1 ? 800 : CHAT_STEP_MS);
+        return;
+      }
+
+      timer = setTimeout(() => {
+        if (cancelled) return;
+        setVisibleMessages(0);
+        step = 0;
+        timer = setTimeout(run, 600);
+      }, CHAT_PAUSE_MS);
+    };
+
+    timer = setTimeout(run, 600);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, []);
 
   return (
-          <div
-            className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10 lg:gap-12 items-center mt-6 md:mt-8"
-            onMouseEnter={pauseHeroCycle}
-            onMouseLeave={startHeroCycle}
-          >
-            {/* Demo card */}
-            <div className="md:col-span-7 transition-stage relative h-auto md:h-[520px] w-full flex flex-col items-center justify-center">
-              {/* Mobile modality tabs */}
-              <div className="flex justify-center gap-2 mb-4 md:hidden w-full max-w-[480px]">
-                {HERO_MODALITIES.map((state) => (
-                  <button
-                    key={state}
-                    type="button"
-                    onClick={() => handleStateTrigger(state)}
-                    className={`flex-1 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg border transition-all cursor-pointer ${
-                      heroState === state
-                        ? 'bg-primary text-white border-primary shadow-sm'
-                        : 'border-outline-variant bg-surface-container-lowest text-on-surface-variant'
-                    }`}
-                  >
-                    {state === 'text' ? 'Text' : state === 'video' ? 'Video' : 'Live Call'}
-                  </button>
-                ))}
-              </div>
+    <section className="pt-6 sm:pt-12 pb-12 sm:pb-24">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-md lg:px-lg text-center">
+        <h1
+          data-testid="landing-hero-title"
+          className="landing-hero-intro font-landing-display text-[1.625rem] leading-[1.14] sm:text-4xl lg:text-[2.75rem] font-semibold tracking-tight text-neutral-900 sm:leading-[1.12]"
+        >
+          When the stakes are orbital,
+          <br className="hidden sm:block" />
+          {' '}you need a human who&apos;s been there.
+        </h1>
+        <p className="landing-hero-subcopy mt-3 sm:mt-4 text-[0.9375rem] sm:text-base text-neutral-500 max-w-[var(--max-width-prose)] mx-auto leading-relaxed px-1">
+          Book verified experts for live 1:1 sessions — not another autocomplete answer.
+        </p>
 
-              <div className="relative z-10 w-full max-w-[480px] aspect-[4/5] max-h-[min(70vh,520px)] md:max-h-none bg-surface-container-lowest rounded-2xl p-5 sm:p-xl flex flex-col floating-card-shadow">
-                {/* State 1: Text a Question */}
-                {heroState === 'text' && (
-                  <div className="flex flex-col h-full animate-fade-in justify-between">
-                    <div>
-                      <div className="flex items-center gap-sm mb-lg">
-                        <MaterialIcon name="chat_bubble" className="text-primary" size={28} />
-                        <span className="font-headline-md text-headline-md font-medium tracking-tight">Text a Question</span>
-                      </div>
-                      
-                      {/* Message Thread */}
-                      <div className="space-y-lg flex flex-col justify-end mt-8">
-                        <div className="bg-surface-container-low p-lg rounded-2xl rounded-bl-sm self-start max-w-[85%] text-body-md text-on-surface leading-relaxed">
-                          &ldquo;How do I optimize flight system models to prevent latency anomalies during suborbital re-entry transitions?&rdquo;
-                        </div>
-                        
-                        <div className="flex items-start gap-sm justify-end">
-                          <div className="bg-primary-container text-white p-md rounded-2xl rounded-br-sm max-w-[85%] self-end">
-                            <div className="flex items-center gap-sm">
-                              <MaterialIcon name="play_circle" className="text-white cursor-pointer" size={24} fill />
-                              <div className="h-1 w-24 bg-white/30 rounded-full relative overflow-hidden">
-                                <div className="absolute top-0 left-0 h-full w-2/3 bg-white"></div>
-                              </div>
-                              <span className="font-label-sm text-label-sm tracking-wider">0:45</span>
-                            </div>
-                          </div>
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-outline-variant bg-surface-container-low flex-shrink-0">
-                            <Image src="/karsen-kitchen.webp" alt="Karsen Kitchen" fill className="object-cover" sizes="32px"/>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+        <Link
+          href="/auth"
+          className="landing-hero-prompt group mt-6 sm:mt-10 mx-auto flex w-full max-w-[var(--max-width-prose)] items-center gap-2.5 sm:gap-3 rounded-full border border-neutral-200 bg-white px-3.5 sm:px-5 py-3 sm:py-3.5 text-left shadow-[0_12px_40px_-18px_rgba(0,0,0,0.15)] transition-shadow hover:shadow-[0_16px_44px_-16px_rgba(0,0,0,0.2)]"
+        >
+          <span className="flex-1 min-w-0 text-[0.8125rem] sm:text-base text-neutral-400 group-hover:text-neutral-500 transition-colors">
+            <span className="sm:hidden">Ask a mission question...</span>
+            <span className="hidden sm:inline">What mission question do you need answered?</span>
+          </span>
+          <span className="inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-[#1a5fd1] text-white">
+            <MaterialIcon name="arrow_forward" size={16} />
+          </span>
+        </Link>
+      </div>
 
-                    <div className="mt-auto pt-4 border-t border-outline-variant flex flex-col xs:flex-row xs:justify-between xs:items-center gap-1 text-label-sm text-on-surface-variant font-mono uppercase tracking-wider">
-                      <span>VERIFIED INSTRUCTOR</span>
-                      <span className="text-emerald-600 font-bold">● KARSEN KITCHEN ACTIVE</span>
-                    </div>
-                  </div>
-                )}
+      <div
+        ref={visualRef}
+        className="landing-hero-visual relative max-w-[920px] mx-auto mt-8 sm:mt-14 px-4 sm:px-md lg:px-lg"
+        style={
+          {
+            '--landing-hero-scroll': '0',
+            '--landing-hero-scroll-raw': '0',
+          } as CSSProperties
+        }
+      >
+        <Link
+          href={heroHref}
+          className="landing-hero-image-wrap landing-hero-portrait block relative mx-auto w-full max-w-[min(92vw,420px)] sm:max-w-[640px] aspect-[3/4] sm:aspect-[5/6] overflow-hidden rounded-sm"
+        >
+          <Image
+            src={heroImage}
+            alt={heroAlt}
+            fill
+            priority
+            className="object-cover object-top"
+            sizes="(max-width: 640px) 92vw, 640px"
+          />
+          <div className="landing-hero-image-fade pointer-events-none absolute inset-0" aria-hidden />
+        </Link>
 
-                {/* State 2: Request Video */}
-                {heroState === 'video' && (
-                  <div className="flex flex-col h-full animate-fade-in justify-between">
-                    <div>
-                      <div className="flex items-center gap-sm mb-lg">
-                        <MaterialIcon name="videocam" className="text-primary" size={28} />
-                        <span className="font-headline-md text-headline-md font-medium tracking-tight">Request a Video</span>
-                      </div>
-                      
-                      {/* Real Image of Gwynne Shotwell inside video response */}
-                      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-outline-variant bg-surface-container-low group">
-                        <Image
-                          src="/chris_sembroski.webp"
-                          alt="Chris Sembroski"
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 480px) 90vw, 360px"
-                        />
-                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                          <div className="w-12 h-12 rounded-full bg-white/95 flex items-center justify-center shadow-lg transition-transform group-hover:scale-105">
-                            <MaterialIcon name="play_arrow" className="text-primary" size={28} />
-                          </div>
-                        </div>
-                        
-                        <div className="absolute bottom-lg left-lg right-lg bg-surface-container-lowest/90 backdrop-blur-xl px-lg py-md rounded-xl flex items-center justify-between border border-surface-variant/50">
-                          <span className="font-label-md text-label-md text-on-surface font-medium">Video Response Ready</span>
-                          <MaterialIcon name="play_arrow" className="text-primary" size={24} />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-auto pt-4 border-t border-outline-variant flex flex-col xs:flex-row xs:justify-between xs:items-center gap-1 text-label-sm text-on-surface-variant font-mono uppercase tracking-wider">
-                      <span className="font-mono text-on-surface-variant">Response format: VIDEO</span>
-                      <span className="font-bold text-on-surface">CHRIS SEMBROSKI</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* State 3: Live 1:1 Calls */}
-                {heroState === 'call' && (
-                  <div className="flex flex-col h-full animate-fade-in justify-between">
-                    <div>
-                      <div className="flex items-center gap-sm mb-lg">
-                        <MaterialIcon name="call" className="text-primary" size={28} />
-                        <span className="font-headline-md text-headline-md font-medium tracking-tight">Live 1:1 Calls</span>
-                      </div>
-                      
-                      <div className="flex flex-col items-center justify-center py-6 text-center">
-                        <div className="relative mb-6">
-                          {/* Pulsing visual circles */}
-                          <div className="w-32 h-32 rounded-full border border-primary-container/20 flex items-center justify-center relative bg-surface-container-low shadow-inner animate-[pulse_3s_ease-in-out_infinite]">
-                            <div className="w-24 h-24 rounded-full bg-primary-container/5 flex items-center justify-center relative overflow-hidden border border-outline-variant shadow-md">
-                              <Image src="/eiman.webp" alt="Dr. Eiman Jahangir" fill className="object-cover" sizes="96px"/>
-                            </div>
-                          </div>
-                          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-surface-container-highest text-on-surface px-md py-xs rounded-full font-label-sm text-label-sm border border-surface-variant/50 shadow-sm font-semibold">
-                            $5.83/min
-                          </div>
-                        </div>
-                        
-                        <h4 className="font-headline-md text-headline-md font-medium tracking-tight text-on-surface">Connecting to Expert...</h4>
-                        <p className="font-body-md text-body-md text-on-surface-variant font-light">Secure, encrypted connection</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-auto pt-4 border-t border-outline-variant flex flex-col xs:flex-row xs:justify-between xs:items-center gap-1 text-label-sm text-on-surface-variant font-mono uppercase tracking-wider">
-                      <span>ROUTE ID: MED-OPX</span>
-                      <span className="text-on-surface font-bold">DR. EIMAN JAHANGIR</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-6 md:hidden w-full max-w-[480px]">
-                <Link
-                  href="/auth"
-                  className="block w-full bg-primary text-on-primary py-3.5 rounded-xl font-headline-md text-sm font-semibold hover:bg-primary-container active:scale-95 transition-all shadow-sm uppercase tracking-wider text-center cursor-pointer"
-                >
-                  Start Exploration
-                </Link>
-              </div>
+        <div
+          className="landing-hero-phone relative sm:absolute sm:right-8 lg:right-12 sm:-bottom-10 mx-auto mt-6 sm:mt-0 w-full sm:w-[300px] max-w-[var(--max-width-prose)] sm:max-w-none"
+          aria-label="AI chat preview"
+        >
+          <div className="landing-hero-phone-shell rounded-[1.75rem] sm:rounded-[2rem] border border-neutral-200/80 bg-white p-2.5 sm:p-3 shadow-[0_20px_50px_-14px_rgba(0,0,0,0.18)] sm:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.18)]">
+            <div className="flex items-center justify-between px-2 pb-2 text-[10px] text-neutral-400">
+              <span>General chat</span>
+              <span>AI assistant</span>
             </div>
-
-            {/* Modality list + CTA (desktop) */}
-            <div className="hidden md:flex md:col-span-5 flex-col justify-between gap-8 pl-2 lg:pl-4 min-h-[520px]">
-              <div className="space-y-xl">
-                {HERO_MODALITIES.map((state) => (
-                  <div
-                    key={state}
-                    onClick={() => handleStateTrigger(state)}
-                    className={`relative pl-lg cursor-pointer transition-opacity duration-500 ${
-                      heroState === state
-                        ? 'opacity-100'
-                        : 'opacity-30 hover:opacity-70'
-                    }`}
-                  >
-                    {heroState === state && <div className="active-indicator" />}
-                    <h3 className="font-headline-md text-headline-md text-on-surface mb-sm font-medium tracking-tight">
-                      {state === 'text'
-                        ? 'Text a Question'
-                        : state === 'video'
-                        ? 'Request a Video'
-                        : 'Live 1:1 Calls'}
-                    </h3>
-                    <p className="font-body-md text-body-md text-on-surface-variant font-light leading-relaxed">
-                      {state === 'text'
-                        ? 'Send a direct DM. Get a real audio or text response back.'
-                        : state === 'video'
-                        ? 'Drop a question or a custom prompt. Get a recorded video reply.'
-                        : 'Book direct, face-to-face time and pay strictly by the minute.'}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-4">
-                <Link
-                  href="/auth"
-                  className="inline-block bg-primary text-on-primary px-xxl py-md rounded-xl font-headline-md text-base font-semibold hover:bg-primary-container active:scale-95 transition-all shadow-sm uppercase tracking-wider cursor-pointer"
+            <div className="rounded-[1.25rem] sm:rounded-[1.4rem] bg-neutral-50 px-3 py-3.5 sm:py-4 min-h-[190px] sm:min-h-[250px] flex flex-col justify-end gap-2">
+              {AI_CHAT.slice(0, visibleMessages).map((message, index) => (
+                <p
+                  key={`${message.role}-${index}-${visibleMessages}`}
+                  className={`landing-hero-chat-line text-[11px] sm:text-xs leading-snug rounded-2xl px-3 py-2 max-w-[94%] sm:max-w-[92%] ${
+                    message.role === 'user'
+                      ? 'ml-auto bg-neutral-900 text-white rounded-br-sm'
+                      : 'mr-auto bg-white text-neutral-600 border border-neutral-200 rounded-bl-sm'
+                  }`}
                 >
-                  Start Exploration
-                </Link>
-              </div>
+                  {message.text}
+                </p>
+              ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="landing-hero-actions mt-8 sm:mt-12 flex flex-col items-stretch sm:items-center justify-center gap-2.5 sm:flex-row sm:gap-4 px-4 sm:px-md max-w-[var(--max-width-prose)] sm:max-w-none mx-auto">
+        <Link
+          href="/auth"
+          className="inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-[#1a5fd1] px-8 py-3.5 text-sm font-semibold text-white hover:bg-[#164fb3] transition-colors"
+        >
+          Book a session
+        </Link>
+        <Link
+          href="/experts"
+          className="inline-flex w-full sm:w-auto items-center justify-center rounded-full border border-neutral-300 bg-white px-8 py-3.5 text-sm font-semibold text-neutral-700 hover:border-neutral-400 hover:text-neutral-900 transition-colors"
+        >
+          Browse experts
+        </Link>
+      </div>
+
+      <ul className="landing-hero-trust mt-5 sm:mt-6 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-0 text-center text-xs sm:text-sm text-neutral-400 px-4">
+        <li>Verified experts</li>
+        <li aria-hidden className="hidden sm:inline px-2">
+          ·
+        </li>
+        <li>Live 1:1 video</li>
+        <li aria-hidden className="hidden sm:inline px-2">
+          ·
+        </li>
+        <li>Clear pricing</li>
+      </ul>
+    </section>
   );
 }
