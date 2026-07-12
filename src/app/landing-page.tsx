@@ -12,7 +12,7 @@ export default function LandingPage({ experts }: { experts: ListedExpert[] }) {
       <main>
         <LandingHero experts={experts} />
         <LandingBenefits />
-        <LandingStory />
+        <LandingStory experts={experts} />
         <ExpertDirectory experts={experts} variant="mission" />
       </main>
 

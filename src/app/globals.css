@@ -423,24 +423,29 @@ body {
 .landing-reveal {
   opacity: 0;
   transition:
-    opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 1s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 1s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .landing-reveal-up {
-  transform: translate3d(0, 28px, 0);
+  transform: translate3d(0, 52px, 0);
+  filter: blur(6px);
 }
 
 .landing-reveal-left {
-  transform: translate3d(-36px, 0, 0);
+  transform: translate3d(-64px, 12px, 0);
+  filter: blur(5px);
 }
 
 .landing-reveal-right {
-  transform: translate3d(36px, 0, 0);
+  transform: translate3d(64px, 12px, 0);
+  filter: blur(5px);
 }
 
 .landing-reveal-scale {
-  transform: scale(0.96);
+  transform: scale(0.9) translate3d(0, 24px, 0);
+  filter: blur(4px);
 }
 
 .landing-reveal-visible.landing-reveal-up,
@@ -448,58 +453,109 @@ body {
 .landing-reveal-visible.landing-reveal-right {
   opacity: 1;
   transform: translate3d(0, 0, 0);
+  filter: blur(0);
 }
 
 .landing-reveal-visible.landing-reveal-scale {
   opacity: 1;
-  transform: scale(1);
+  transform: scale(1) translate3d(0, 0, 0);
+  filter: blur(0);
 }
 
-/* Scroll-linked parallax (story + hero) */
-.landing-scroll-section {
+/* Scroll-linked parallax (story + benefits + hero) */
+.landing-scroll-section,
+.landing-benefits-section {
   --p: var(--landing-scroll-progress, 0);
+  --pe: var(--p-early, var(--p));
+  --pm: var(--p-mid, var(--p));
+  --pl: var(--p-late, var(--p));
 }
 
 .landing-scroll-float-left {
-  opacity: calc(0.15 + var(--p) * 0.85);
-  transform: translate3d(calc((1 - var(--p)) * -44px), calc((1 - var(--p)) * 32px), 0);
+  opacity: calc(0.02 + var(--pe) * 0.98);
+  transform: translate3d(calc((1 - var(--pe)) * -120px), calc((1 - var(--pe)) * 72px), 0);
+  filter: blur(calc((1 - var(--pe)) * 8px));
 }
 
 .landing-scroll-card-left {
-  opacity: calc(0.1 + var(--p) * 0.9);
-  transform: translate3d(calc((1 - var(--p)) * -60px), calc((1 - var(--p)) * 40px), 0);
+  opacity: calc(var(--pe));
+  transform: translate3d(calc((1 - var(--pe)) * -160px), calc((1 - var(--pe)) * 96px), 0)
+    rotate(calc((1 - var(--pe)) * -5deg));
+  filter: blur(calc((1 - var(--pe)) * 6px));
 }
 
 .landing-scroll-portrait {
-  transform: translate3d(0, calc((1 - var(--p)) * 40px), 0)
-    scale(calc(0.93 + var(--p) * 0.07));
+  transform: translate3d(-50%, calc((1 - var(--pl)) * 100px), 0)
+    scale(calc(0.84 + var(--pl) * 0.16));
+  filter: blur(calc((1 - var(--pl)) * 10px));
 }
 
 .landing-scroll-float-right {
-  opacity: calc(0.15 + var(--p) * 0.85);
-  transform: translate3d(calc((1 - var(--p)) * 44px), calc((1 - var(--p)) * 32px), 0);
+  opacity: calc(0.02 + var(--pl) * 0.98);
+  transform: translate3d(calc((1 - var(--pl)) * 130px), calc((1 - var(--pl)) * 64px), 0);
+  filter: blur(calc((1 - var(--pl)) * 8px));
 }
 
 .landing-scroll-card-right {
-  opacity: calc(0.1 + var(--p) * 0.9);
-  transform: translate3d(calc((1 - var(--p)) * 60px), calc((1 - var(--p)) * -28px), 0);
+  opacity: calc(var(--pl));
+  transform: translate3d(calc((1 - var(--pl)) * 170px), calc((1 - var(--pl)) * -88px), 0)
+    rotate(calc((1 - var(--pl)) * 6deg));
+  filter: blur(calc((1 - var(--pl)) * 6px));
+}
+
+.landing-benefit-item {
+  opacity: calc(0.08 + var(--bp, 0) * 0.92);
+  transform: translate3d(0, calc((1 - var(--bp, 0)) * 110px), 0)
+    scale(calc(0.9 + var(--bp, 0) * 0.1));
+  filter: blur(calc((1 - var(--bp, 0)) * 7px));
+  will-change: transform, opacity, filter;
+}
+
+.landing-benefit-item-1 {
+  --bp: var(--pm);
+}
+
+.landing-benefit-item-2 {
+  --bp: clamp(0, calc((var(--pm) - 0.12) / 0.88), 1);
+}
+
+.landing-benefit-item-3 {
+  --bp: clamp(0, calc((var(--pm) - 0.24) / 0.76), 1);
+}
+
+.landing-benefits-copy {
+  opacity: calc(0.1 + var(--pl) * 0.9);
+  transform: translate3d(0, calc((1 - var(--pl)) * 48px), 0);
+  filter: blur(calc((1 - var(--pl)) * 4px));
+}
+
+.landing-benefits-cta {
+  opacity: calc(var(--pl));
+  transform: translate3d(0, calc((1 - var(--pl)) * 32px), 0) scale(calc(0.94 + var(--pl) * 0.06));
 }
 
 .landing-hero-intro {
-  animation: landing-hero-chat-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: landing-hero-chat-in 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.landing-hero-subcopy {
+  animation: landing-hero-chat-in 1s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
 }
 
 .landing-hero-visual {
   --hs: var(--landing-hero-scroll, 0);
+  --hsr: var(--landing-hero-scroll-raw, 0);
 }
 
 .landing-hero-image-wrap {
-  transform: translate3d(0, calc(var(--hs) * -36px), 0)
-    scale(calc(1 - var(--hs) * 0.04));
+  transform: translate3d(0, calc(var(--hs) * -96px), 0)
+    scale(calc(1 - var(--hs) * 0.1));
+  filter: blur(calc(var(--hs) * 2px));
 }
 
 .landing-hero-phone {
-  transform: translate3d(0, calc(var(--hs) * -72px), 0);
+  transform: translate3d(calc(var(--hs) * 56px), calc(var(--hs) * -140px), 0)
+    rotate(calc(var(--hs) * 8deg));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -514,9 +570,13 @@ body {
   .landing-scroll-portrait,
   .landing-scroll-float-right,
   .landing-scroll-card-right,
+  .landing-benefit-item,
+  .landing-benefits-copy,
+  .landing-benefits-cta,
   .landing-hero-image-wrap,
   .landing-hero-phone {
     opacity: 1;
     transform: none;
+    filter: none;
   }
 }

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import { LandingScrollReveal } from '@/components/landing/landing-scroll-reveal';
+import { landingFeaturedPortrait, orderLandingExperts } from '@/lib/landing-featured-expert';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 
 const TEASER_COUNT = 6;
@@ -23,7 +24,7 @@ export default function ExpertDirectory({ experts, variant = 'default' }: Expert
       ? experts
       : experts.filter((e) => e.category === selectedCategory);
 
-  const teaserExperts = filteredExperts.slice(0, TEASER_COUNT);
+  const teaserExperts = orderLandingExperts(filteredExperts).slice(0, TEASER_COUNT);
 
   if (variant === 'mission') {
     return (
@@ -53,7 +54,9 @@ export default function ExpertDirectory({ experts, variant = 'default' }: Expert
             </p>
           ) : (
             <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory landing-mission-scroll -mx-md px-md sm:-mx-0 sm:px-0">
-              {teaserExperts.map((expert, index) => (
+              {teaserExperts.map((expert, index) => {
+                const portrait = landingFeaturedPortrait(expert);
+                return (
                 <LandingScrollReveal
                   key={expert.id}
                   delay={index * 90}
@@ -68,7 +71,7 @@ export default function ExpertDirectory({ experts, variant = 'default' }: Expert
                   >
                     <div className="relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-neutral-200">
                       <Image
-                        src={toOptimizedImageUrl(expert.imageUrl)}
+                        src={portrait.src}
                         alt=""
                         fill
                         priority={index === 0}
@@ -78,7 +81,8 @@ export default function ExpertDirectory({ experts, variant = 'default' }: Expert
                     </div>
                   </Link>
                 </LandingScrollReveal>
-              ))}
+              );
+              })}
             </div>
           )}
         </div>

@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { prefersReducedMotion } from '@/components/landing/landing-scroll-reveal';
+import { useEffect, useState, type CSSProperties } from 'react';
 import Image from 'next/image';
+import { prefersReducedMotion, useLandingHeroParallax } from '@/components/landing/landing-scroll-reveal';
+import {
+  findLandingFeaturedExpert,
+  landingFeaturedPortrait,
+} from '@/lib/landing-featured-expert';
 import type { ListedExpert } from '@/lib/mentor-directory';
-import { toOptimizedImageUrl } from '@/lib/public-images';
 
 const AI_CHAT = [
   { role: 'user' as const, text: 'Second-stage thrust is oscillating late in the burn. What should we check?' },
@@ -27,12 +30,9 @@ type LandingHeroProps = {
 
 export default function LandingHero({ experts }: LandingHeroProps) {
   const [visibleMessages, setVisibleMessages] = useState(0);
-  const visualRef = useRef<HTMLDivElement>(null);
-  const heroExpert = experts[0] ?? null;
-  const heroImage = heroExpert
-    ? toOptimizedImageUrl(heroExpert.imageUrl)
-    : '/chris_sembroski.webp';
-  const heroAlt = heroExpert?.name ?? 'Verified aerospace expert';
+  const visualRef = useLandingHeroParallax<HTMLDivElement>();
+  const featuredExpert = findLandingFeaturedExpert(experts);
+  const { src: heroImage, alt: heroAlt } = landingFeaturedPortrait(featuredExpert);
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -69,43 +69,8 @@ export default function LandingHero({ experts }: LandingHeroProps) {
     };
   }, []);
 
-  useEffect(() => {
-    const el = visualRef.current;
-    if (!el) return;
-
-    const update = () => {
-      const rect = el.getBoundingClientRect();
-      const traveled = Math.min(rect.height, Math.max(0, -rect.top));
-      const progress = rect.height > 0 ? traveled / rect.height : 0;
-      el.style.setProperty('--landing-hero-scroll', String(progress));
-    };
-
-    if (prefersReducedMotion()) {
-      el.style.setProperty('--landing-hero-scroll', '0');
-      return;
-    }
-
-    let frame: number | null = null;
-    const onScroll = () => {
-      if (frame !== null) return;
-      frame = window.requestAnimationFrame(() => {
-        frame = null;
-        update();
-      });
-    };
-
-    update();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-      if (frame !== null) window.cancelAnimationFrame(frame);
-    };
-  }, []);
-
   return (
-    <section className="pt-8 sm:pt-12 pb-16 sm:pb-24">
+    <section className="pt-8 sm:pt-12 pb-20 sm:pb-28">
       <div className="max-w-[1200px] mx-auto px-md sm:px-lg text-center">
         <h1
           data-testid="landing-hero-title"
@@ -115,7 +80,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
           <br className="hidden sm:block" />
           {' '}you need a human who&apos;s been there.
         </h1>
-        <p className="mt-4 text-sm sm:text-base text-neutral-500 max-w-[var(--max-width-prose)] mx-auto">
+        <p className="landing-hero-subcopy mt-4 text-sm sm:text-base text-neutral-500 max-w-[var(--max-width-prose)] mx-auto">
           Book verified operators for live 1:1 sessions — not another autocomplete answer.
         </p>
       </div>
@@ -123,7 +88,12 @@ export default function LandingHero({ experts }: LandingHeroProps) {
       <div
         ref={visualRef}
         className="landing-hero-visual relative max-w-[920px] mx-auto mt-12 sm:mt-16 px-md sm:px-lg"
-        style={{ '--landing-hero-scroll': '0' } as CSSProperties}
+        style={
+          {
+            '--landing-hero-scroll': '0',
+            '--landing-hero-scroll-raw': '0',
+          } as CSSProperties
+        }
       >
         <div className="landing-hero-image-wrap relative mx-auto w-full max-w-[640px] aspect-[4/5] sm:aspect-[5/6] overflow-hidden rounded-sm">
           <Image
