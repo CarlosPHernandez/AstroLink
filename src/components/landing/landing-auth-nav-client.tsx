@@ -17,7 +17,23 @@ function dashboardPath(role: SessionData['role']) {
   return '/dashboard/mentee';
 }
 
-export function LandingAuthNavClient() {
+export function LandingAuthNavClient({
+  theme = 'light',
+  ctaStyle = 'default',
+}: {
+  theme?: 'light' | 'dark';
+  ctaStyle?: 'default' | 'pill';
+}) {
+  const isDark = theme === 'dark';
+  const isPill = ctaStyle === 'pill' && !isDark;
+  const muted = isDark
+    ? 'text-slate-400 hover:text-white'
+    : 'text-neutral-600 hover:text-neutral-900';
+  const cta = isDark
+    ? 'bg-blue-500 text-white hover:bg-blue-400 rounded-md'
+    : isPill
+      ? 'bg-[#1a5fd1] text-white hover:bg-[#164fb3] rounded-full'
+      : 'bg-primary text-on-primary hover:bg-primary-container rounded-md';
   const [session, setSession] = useState<SessionData | null>(null);
 
   useEffect(() => {
@@ -38,20 +54,20 @@ export function LandingAuthNavClient() {
   if (session) {
     return (
       <div className="flex items-center gap-sm sm:gap-lg">
-        <span className="text-sm text-on-surface-variant font-medium hidden sm:inline">
+        <span className={`text-sm font-medium hidden sm:inline ${isDark ? 'text-slate-300' : 'text-on-surface-variant'}`}>
           Welcome, {session.fullName.split(' ')[0]}
         </span>
         <form action={logoutAction}>
           <button
             type="submit"
-            className="text-on-surface-variant font-label-md text-xs sm:text-label-md hover:text-primary transition-colors cursor-pointer"
+            className={`font-label-md text-xs sm:text-label-md transition-colors cursor-pointer ${muted}`}
           >
             Sign Out
           </button>
         </form>
         <Link
           href={dashboardPath(session.role)}
-          className="bg-primary text-on-primary px-3 py-2 sm:px-lg sm:py-sm rounded-md font-label-md text-xs sm:text-label-md hover:bg-primary-container active:scale-95 transition-all shadow-sm"
+          className={`px-3 py-2 sm:px-lg sm:py-sm rounded-md font-label-md text-xs sm:text-label-md active:scale-95 transition-all shadow-sm ${cta}`}
         >
           Dashboard
         </Link>
@@ -63,15 +79,15 @@ export function LandingAuthNavClient() {
     <div className="flex items-center gap-sm sm:gap-lg">
       <Link
         href="/auth"
-        className="text-on-surface-variant font-label-md text-xs sm:text-label-md hover:text-primary transition-colors"
+        className={`font-label-md text-xs sm:text-label-md transition-colors ${muted}`}
       >
         Sign In
       </Link>
       <Link
         href="/auth"
-        className="bg-primary text-on-primary px-3.5 py-2 sm:px-lg sm:py-sm rounded-md font-label-md text-xs sm:text-label-md hover:bg-primary-container active:scale-95 transition-all shadow-sm"
+        className={`px-3.5 py-2 sm:px-5 sm:py-2.5 font-label-md text-xs sm:text-sm active:scale-95 transition-all ${isPill ? '' : 'shadow-sm'} ${cta}`}
       >
-        Launch Mission
+        {isPill ? 'Book a session' : 'Launch Mission'}
       </Link>
     </div>
   );
