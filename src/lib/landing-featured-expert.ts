@@ -2,13 +2,33 @@ import type { ListedExpert } from '@/lib/mentor-directory';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 
 export const LANDING_FEATURED_EXPERT_SLUG = 'eiman';
+export const LANDING_HERO_EXPERT_SLUG = 'chris-sembroski';
 
 const EIMAN_PORTRAIT = '/eiman.webp';
+const CHRIS_PORTRAIT = '/chris_sembroski.webp';
 
 function isEimanExpert(expert: ListedExpert): boolean {
   const slug = expert.slug.toLowerCase();
   const name = expert.name.toLowerCase();
   return slug === LANDING_FEATURED_EXPERT_SLUG || slug.includes('eiman') || name.includes('eiman');
+}
+
+function isChrisExpert(expert: ListedExpert): boolean {
+  const slug = expert.slug.toLowerCase();
+  const name = expert.name.toLowerCase();
+  return (
+    slug === LANDING_HERO_EXPERT_SLUG ||
+    slug.includes('chris-sembroski') ||
+    name.includes('chris sembroski')
+  );
+}
+
+export function findLandingHeroExpert(experts: ListedExpert[]): ListedExpert | null {
+  return (
+    experts.find((expert) => expert.slug === LANDING_HERO_EXPERT_SLUG) ??
+    experts.find((expert) => isChrisExpert(expert)) ??
+    null
+  );
 }
 
 export function findLandingFeaturedExpert(experts: ListedExpert[]): ListedExpert | null {
@@ -23,6 +43,19 @@ export function orderLandingExperts(experts: ListedExpert[]): ListedExpert[] {
   const featured = findLandingFeaturedExpert(experts);
   if (!featured) return experts;
   return [featured, ...experts.filter((expert) => expert.id !== featured.id)];
+}
+
+export function landingHeroPortrait(experts: ListedExpert[]): { src: string; alt: string } {
+  const heroExpert = findLandingHeroExpert(experts);
+  if (heroExpert && isChrisExpert(heroExpert)) {
+    return { src: CHRIS_PORTRAIT, alt: heroExpert.name };
+  }
+
+  if (heroExpert) {
+    return { src: toOptimizedImageUrl(heroExpert.imageUrl), alt: heroExpert.name };
+  }
+
+  return { src: CHRIS_PORTRAIT, alt: 'Chris Sembroski, verified aerospace expert' };
 }
 
 export function landingFeaturedPortrait(expert: ListedExpert | null): { src: string; alt: string } {

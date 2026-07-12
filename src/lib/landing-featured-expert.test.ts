@@ -3,6 +3,7 @@ import type { ListedExpert } from '@/lib/mentor-directory';
 import {
   findLandingFeaturedExpert,
   landingFeaturedPortrait,
+  landingHeroPortrait,
   orderLandingExperts,
 } from '@/lib/landing-featured-expert';
 
@@ -43,5 +44,14 @@ describe('landing-featured-expert', () => {
   it('finds Eiman by slug', () => {
     const found = findLandingFeaturedExpert([expert('chris-sembroski', 'Chris')]);
     expect(found).toBeNull();
+  });
+
+  it('uses Chris for the hero portrait', () => {
+    const portrait = landingHeroPortrait([
+      expert('eiman', 'Eiman Ahmad'),
+      expert('chris-sembroski', 'Chris Sembroski'),
+    ]);
+    expect(portrait.src).toBe('/chris_sembroski.webp');
+    expect(portrait.alt).toBe('Chris Sembroski');
   });
 });

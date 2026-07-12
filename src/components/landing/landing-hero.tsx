@@ -2,11 +2,8 @@
 
 import { useEffect, useState, type CSSProperties } from 'react';
 import Image from 'next/image';
-import { prefersReducedMotion, useLandingHeroParallax } from '@/components/landing/landing-scroll-reveal';
-import {
-  findLandingFeaturedExpert,
-  landingFeaturedPortrait,
-} from '@/lib/landing-featured-expert';
+import { useLandingHeroParallax } from '@/components/landing/landing-scroll-reveal';
+import { landingHeroPortrait } from '@/lib/landing-featured-expert';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 const AI_CHAT = [
@@ -31,8 +28,7 @@ type LandingHeroProps = {
 export default function LandingHero({ experts }: LandingHeroProps) {
   const [visibleMessages, setVisibleMessages] = useState(0);
   const visualRef = useLandingHeroParallax<HTMLDivElement>();
-  const featuredExpert = findLandingFeaturedExpert(experts);
-  const { src: heroImage, alt: heroAlt } = landingFeaturedPortrait(featuredExpert);
+  const { src: heroImage, alt: heroAlt } = landingHeroPortrait(experts);
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
