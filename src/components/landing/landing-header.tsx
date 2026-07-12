@@ -11,10 +11,10 @@ export function LandingHeader() {
         >
           AstroLink
         </Link>
-        <nav className="flex items-center gap-4 sm:gap-8 shrink-0">
+        <nav className="flex items-center gap-3 sm:gap-8 shrink-0">
           <Link
             href="/experts"
-            className="hidden sm:inline text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+            className="text-xs sm:text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
           >
             Experts
           </Link>

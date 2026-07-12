@@ -53,7 +53,7 @@ export default function ExpertDirectory({ experts, variant = 'default' }: Expert
               listed.
             </p>
           ) : (
-            <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory landing-mission-scroll -mx-md px-md sm:-mx-0 sm:px-0">
+            <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory landing-mission-scroll -mx-4 px-4 sm:-mx-0 sm:px-0">
               {teaserExperts.map((expert, index) => {
                 const portrait = landingFeaturedPortrait(expert);
                 return (
@@ -61,7 +61,7 @@ export default function ExpertDirectory({ experts, variant = 'default' }: Expert
                   key={expert.id}
                   delay={index * 90}
                   variant="scale"
-                  className="snap-start shrink-0 w-[160px] sm:w-[200px] md:w-[220px]"
+                  className="snap-start shrink-0 w-[min(44vw,180px)] sm:w-[200px] md:w-[220px]"
                 >
                   <Link
                     href={`/experts/${expert.slug}`}

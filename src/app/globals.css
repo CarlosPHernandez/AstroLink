@@ -605,6 +605,31 @@ body {
   animation: landing-hero-phone-float 7s ease-in-out infinite;
 }
 
+@media (max-width: 639px) {
+  .landing-benefit-item {
+    --bp: var(--pm);
+    opacity: calc(0.35 + var(--bp) * 0.65);
+    transform: translate3d(0, calc((1 - var(--bp)) * 48px), 0)
+      scale(calc(0.96 + var(--bp) * 0.04));
+    filter: blur(calc((1 - var(--bp)) * 3px));
+  }
+
+  .landing-benefit-item-2,
+  .landing-benefit-item-3 {
+    --bp: var(--pm);
+  }
+
+  .landing-scroll-section .landing-scroll-float-left,
+  .landing-scroll-section .landing-scroll-card-left,
+  .landing-scroll-section .landing-scroll-portrait,
+  .landing-scroll-section .landing-scroll-float-right,
+  .landing-scroll-section .landing-scroll-card-right {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-reveal {
     opacity: 1;

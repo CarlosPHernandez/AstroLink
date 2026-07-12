@@ -167,7 +167,16 @@ export function useLandingHeroParallax<T extends HTMLElement>() {
     const el = ref.current;
     if (!el) return;
 
+    const shouldDisableParallax = () =>
+      prefersReducedMotion() || window.matchMedia('(max-width: 639px)').matches;
+
     const update = () => {
+      if (shouldDisableParallax()) {
+        el.style.setProperty('--landing-hero-scroll', '0');
+        el.style.setProperty('--landing-hero-scroll-raw', '0');
+        return;
+      }
+
       const rect = el.getBoundingClientRect();
       const traveled = Math.min(rect.height * 1.15, Math.max(0, -rect.top));
       const progress = rect.height > 0 ? traveled / (rect.height * 1.15) : 0;
@@ -175,12 +184,6 @@ export function useLandingHeroParallax<T extends HTMLElement>() {
       el.style.setProperty('--landing-hero-scroll', String(eased));
       el.style.setProperty('--landing-hero-scroll-raw', String(progress));
     };
-
-    if (prefersReducedMotion()) {
-      el.style.setProperty('--landing-hero-scroll', '0');
-      el.style.setProperty('--landing-hero-scroll-raw', '0');
-      return;
-    }
 
     const onScroll = () => {
       if (frameRef.current !== null) return;
