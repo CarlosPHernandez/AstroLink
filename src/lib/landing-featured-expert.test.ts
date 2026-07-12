@@ -53,5 +53,6 @@ describe('landing-featured-expert', () => {
     ]);
     expect(portrait.src).toBe('/chris_sembroski.webp');
     expect(portrait.alt).toBe('Chris Sembroski');
+    expect(portrait.href).toBe('/experts/chris-sembroski');
   });
 });

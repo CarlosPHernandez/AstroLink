@@ -45,17 +45,33 @@ export function orderLandingExperts(experts: ListedExpert[]): ListedExpert[] {
   return [featured, ...experts.filter((expert) => expert.id !== featured.id)];
 }
 
-export function landingHeroPortrait(experts: ListedExpert[]): { src: string; alt: string } {
+export function landingHeroPortrait(experts: ListedExpert[]): {
+  src: string;
+  alt: string;
+  href: string;
+} {
   const heroExpert = findLandingHeroExpert(experts);
+  const href = heroExpert
+    ? `/experts/${heroExpert.slug}`
+    : `/experts/${LANDING_HERO_EXPERT_SLUG}`;
+
   if (heroExpert && isChrisExpert(heroExpert)) {
-    return { src: CHRIS_PORTRAIT, alt: heroExpert.name };
+    return { src: CHRIS_PORTRAIT, alt: heroExpert.name, href };
   }
 
   if (heroExpert) {
-    return { src: toOptimizedImageUrl(heroExpert.imageUrl), alt: heroExpert.name };
+    return {
+      src: toOptimizedImageUrl(heroExpert.imageUrl),
+      alt: heroExpert.name,
+      href,
+    };
   }
 
-  return { src: CHRIS_PORTRAIT, alt: 'Chris Sembroski, verified aerospace expert' };
+  return {
+    src: CHRIS_PORTRAIT,
+    alt: 'Chris Sembroski, verified aerospace expert',
+    href: `/experts/${LANDING_HERO_EXPERT_SLUG}`,
+  };
 }
 
 export function landingFeaturedPortrait(expert: ListedExpert | null): { src: string; alt: string } {
