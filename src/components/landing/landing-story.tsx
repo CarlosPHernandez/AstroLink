@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { LandingComparisonSlider } from '@/components/landing/landing-comparison-slider';
 import {
   prefersReducedMotion,
@@ -14,13 +14,13 @@ import {
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 const GENERIC_CARD = {
-  label: 'Public internet',
-  body: 'Aerospace is competitive. Build relevant projects, network, and keep applying.',
+  label: 'From the internet',
+  body: 'Compiled from forums and search results — not accountable, not your path.',
 } as const;
 
 const EXPERT_CARD = {
-  label: 'AstroLink expert',
-  body: 'Bring your goal, class project, or career question and talk it through live.',
+  label: 'From AstroLink',
+  body: 'A verified operator who has done the work — live, 1:1, on your actual question.',
 } as const;
 
 type LandingStoryProps = {
@@ -36,21 +36,17 @@ function StoryHeading({
   subtitle: string;
   align?: 'left' | 'right';
 }) {
+  const alignClass = align === 'right' ? 'sm:ml-auto sm:text-right' : '';
+
   return (
-    <p
-      className={`text-base font-semibold text-[var(--landing-text)] leading-snug ${
-        align === 'right' ? 'text-right' : ''
-      }`}
-    >
-      {title}
-      <span
-        className={`block text-[var(--landing-faint)] font-normal mt-1.5 text-sm ${
-          align === 'right' ? 'sm:text-base' : ''
-        }`}
-      >
+    <div className={`max-w-[30ch] ${alignClass}`}>
+      <h2 className="font-landing-display text-[1.375rem] sm:text-2xl font-semibold tracking-tight text-[var(--landing-text)] leading-[1.14]">
+        {title}
+      </h2>
+      <p className="mt-2 text-sm sm:text-[0.9375rem] text-[var(--landing-muted)] leading-relaxed">
         {subtitle}
-      </span>
-    </p>
+      </p>
+    </div>
   );
 }
 
@@ -69,15 +65,21 @@ function StoryQuoteCard({
     <div
       className={
         isExpert
-          ? 'rounded-xl bg-[var(--landing-ink)] p-4 sm:p-5 shadow-[0_16px_42px_-16px_rgba(14,20,32,0.3)]'
-          : 'rounded-xl bg-[var(--landing-surface)] border border-[var(--landing-border)] p-4 sm:p-5 shadow-[0_16px_42px_-18px_rgba(14,20,32,0.18)]'
+          ? 'rounded-lg bg-[var(--landing-ink)] px-4 py-4 sm:px-5 sm:py-[1.125rem] shadow-[0_14px_36px_-18px_rgba(14,20,32,0.28)]'
+          : 'rounded-lg bg-[var(--landing-surface)] border border-[var(--landing-border)] px-4 py-4 sm:px-5 sm:py-[1.125rem] shadow-[0_12px_32px_-20px_rgba(14,20,32,0.14)]'
       }
       data-testid={isExpert ? 'landing-story-expert-card' : 'landing-story-generic-card'}
     >
-      <p className="text-[10px] uppercase text-[var(--landing-faint)] mb-2">{label}</p>
       <p
-        className={`text-sm leading-relaxed ${
-          isExpert ? 'text-[var(--landing-border)]' : 'text-[var(--landing-muted)]'
+        className={`mb-2 text-xs ${
+          isExpert ? 'text-[color:color-mix(in_srgb,var(--landing-border)_88%,transparent)]' : 'text-[var(--landing-faint)]'
+        }`}
+      >
+        {label}
+      </p>
+      <p
+        className={`text-[0.875rem] sm:text-sm leading-relaxed ${
+          isExpert ? 'text-[color:color-mix(in_srgb,var(--landing-border)_95%,white)]' : 'text-[var(--landing-muted)]'
         }`}
       >
         {body}
@@ -88,8 +90,8 @@ function StoryQuoteCard({
 
 function StoryPortrait({ src, alt }: { src: string; alt: string }) {
   return (
-    <div className="relative mx-auto aspect-[9/16] w-full max-w-[360px] overflow-hidden rounded-sm">
-      <Image src={src} alt={alt} fill className="object-cover object-top" sizes="(max-width: 640px) 280px, 360px" />
+    <div className="landing-story-portrait-frame relative mx-auto aspect-[9/16] w-full max-w-[300px] overflow-hidden rounded-sm border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_20px_48px_-28px_rgba(14,20,32,0.22)]">
+      <Image src={src} alt={alt} fill className="object-cover object-top" sizes="(max-width: 640px) 260px, 300px" />
     </div>
   );
 }
@@ -105,17 +107,17 @@ function StoryStaticDesktop({
 }) {
   return (
     <div
-      className="hidden sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-8 lg:gap-12"
+      className="hidden sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-10 lg:gap-14"
       data-testid="landing-story-static"
     >
-      <div className="space-y-5">
+      <div className="space-y-6">
         {genericHeadline}
         <StoryQuoteCard {...GENERIC_CARD} variant="generic" />
       </div>
 
-      <div className="w-full max-w-[320px]">{portrait}</div>
+      <div className="w-full max-w-[300px]">{portrait}</div>
 
-      <div className="space-y-5">
+      <div className="space-y-6">
         {expertHeadline}
         <StoryQuoteCard {...EXPERT_CARD} variant="expert" />
       </div>
@@ -134,24 +136,24 @@ function StoryScrubDesktop({
 }) {
   return (
     <div className="landing-story-pin hidden sm:flex sm:items-center sm:justify-center" data-testid="landing-story-scrub-desktop">
-      <div className="landing-story-stage relative mx-auto h-[min(78vh,700px)] w-full max-w-[1040px]">
-        <div className="landing-story-generic-headline absolute left-0 top-[6%] max-w-[280px]">
+      <div className="landing-story-stage relative mx-auto h-[min(76vh,680px)] w-full max-w-[1040px]">
+        <div className="landing-story-generic-headline absolute left-0 top-[8%] max-w-[300px]">
           {genericHeadline}
         </div>
 
-        <div className="landing-story-generic-card absolute left-6 lg:left-10 top-[26%] w-[min(42vw,250px)]">
+        <div className="landing-story-generic-card absolute left-4 lg:left-8 top-[28%] w-[min(40vw,260px)]">
           <StoryQuoteCard {...GENERIC_CARD} variant="generic" />
         </div>
 
-        <div className="landing-story-portrait absolute left-1/2 top-[18%] w-full max-w-[min(34vw,320px)]">
+        <div className="landing-story-portrait absolute left-1/2 top-[20%] w-full max-w-[min(32vw,300px)]">
           {portrait}
         </div>
 
-        <div className="landing-story-expert-headline absolute right-0 top-[10%] max-w-[300px]">
+        <div className="landing-story-expert-headline absolute right-0 top-[12%] max-w-[300px]">
           {expertHeadline}
         </div>
 
-        <div className="landing-story-expert-card absolute right-6 lg:right-10 bottom-[14%] w-[min(42vw,270px)]">
+        <div className="landing-story-expert-card absolute right-4 lg:right-8 bottom-[16%] w-[min(40vw,270px)]">
           <StoryQuoteCard {...EXPERT_CARD} variant="expert" />
         </div>
       </div>
@@ -169,14 +171,14 @@ export function LandingStory({ experts }: LandingStoryProps) {
   const genericHeadline = (
     <StoryHeading
       title="Generic online answers"
-      subtitle="Search results, forums, and advice that was not meant for you."
+      subtitle="Search results and forum threads that were not written for your situation."
     />
   );
 
   const expertHeadline = (
     <StoryHeading
       title="Private expert access"
-      subtitle="A person who can tell you what the path actually felt like."
+      subtitle="Someone who can tell you what the path actually felt like — not what an algorithm summarized."
       align="right"
     />
   );
@@ -188,18 +190,10 @@ export function LandingStory({ experts }: LandingStoryProps) {
   return (
     <section
       ref={sectionRef}
-      className={`landing-scroll-section landing-story-scrub py-10 sm:py-0 overflow-hidden${
-        reducedMotion ? ' landing-story-scrub--static' : ''
+      className={`landing-scroll-section landing-story-scrub border-t border-[var(--landing-border)] py-14 sm:py-0 overflow-hidden${
+        reducedMotion ? ' landing-story-scrub--static sm:py-20' : ''
       }`}
       data-testid="landing-story-scrub"
-      style={
-        {
-          '--landing-scroll-progress': '0',
-          '--p-early': '0',
-          '--p-mid': '0',
-          '--p-late': '0',
-        } as CSSProperties
-      }
     >
       <div className="max-w-[1200px] mx-auto px-4 sm:px-md lg:px-lg">
         <div className="sm:hidden">
@@ -212,19 +206,24 @@ export function LandingStory({ experts }: LandingStoryProps) {
           />
         </div>
 
-        {reducedMotion ? (
-          <StoryStaticDesktop
-            portrait={portrait}
-            genericHeadline={genericHeadline}
-            expertHeadline={expertHeadline}
-          />
-        ) : (
-          <StoryScrubDesktop
-            portrait={portrait}
-            genericHeadline={genericHeadline}
-            expertHeadline={expertHeadline}
-          />
-        )}
+        <div className="hidden sm:contents">
+          {reducedMotion ? (
+            <StoryStaticDesktop
+              portrait={portrait}
+              genericHeadline={genericHeadline}
+              expertHeadline={expertHeadline}
+            />
+          ) : (
+            <>
+              <StoryScrubDesktop
+                portrait={portrait}
+                genericHeadline={genericHeadline}
+                expertHeadline={expertHeadline}
+              />
+              <div className="landing-story-scroll-tail" aria-hidden data-testid="landing-story-scroll-tail" />
+            </>
+          )}
+        </div>
       </div>
     </section>
   );

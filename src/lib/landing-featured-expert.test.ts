@@ -31,15 +31,15 @@ describe('landing-featured-expert', () => {
   it('prioritizes Eiman in roster order', () => {
     const ordered = orderLandingExperts([
       expert('chris-sembroski', 'Chris Sembroski'),
-      expert('eiman', 'Eiman Ahmad'),
+      expert('eiman', 'Eiman Jahangir'),
     ]);
     expect(ordered[0]?.slug).toBe('eiman');
   });
 
   it('uses local Eiman portrait asset', () => {
-    const portrait = landingFeaturedPortrait(expert('eiman', 'Eiman Ahmad'));
+    const portrait = landingFeaturedPortrait(expert('eiman', 'Eiman Jahangir'));
     expect(portrait.src).toBe('/eiman.webp');
-    expect(portrait.alt).toBe('Eiman Ahmad');
+    expect(portrait.alt).toBe('Eiman Jahangir');
   });
 
   it('finds Eiman by slug', () => {
@@ -49,7 +49,7 @@ describe('landing-featured-expert', () => {
 
   it('uses Chris for the hero portrait', () => {
     const portrait = landingHeroPortrait([
-      expert('eiman', 'Eiman Ahmad'),
+      expert('eiman', 'Eiman Jahangir'),
       expert('chris-sembroski', 'Chris Sembroski'),
     ]);
     expect(portrait.src).toBe('/chris_sembroski.webp');
@@ -60,25 +60,26 @@ describe('landing-featured-expert', () => {
   it('routes propulsion goals to Eiman', () => {
     const roster = [
       expert('chris-sembroski', 'Chris Sembroski'),
-      expert('eiman', 'Eiman Ahmad'),
+      expert('eiman', 'Eiman Jahangir'),
     ];
     const matched = pickLandingRelayExpert('How do ion propulsion engines scale?', roster);
     expect(matched.slug).toBe('eiman');
     expect(matched.portraitSrc).toBe('/eiman.webp');
   });
 
-  it('uses Eiman fallback for propulsion when roster lacks her', () => {
+  it('uses Eiman Jahangir fallback for propulsion when roster lacks her', () => {
     const matched = pickLandingRelayExpert('How do rocket engines work?', [
       expert('chris-sembroski', 'Chris Sembroski'),
     ]);
     expect(matched.slug).toBe('eiman');
+    expect(matched.name).toBe('Eiman Jahangir');
     expect(matched.portraitSrc).toBe('/eiman.webp');
   });
 
   it('routes career goals to Chris', () => {
     const roster = [
       expert('chris-sembroski', 'Chris Sembroski'),
-      expert('eiman', 'Eiman Ahmad'),
+      expert('eiman', 'Eiman Jahangir'),
     ];
     const matched = pickLandingRelayExpert('How do I become an astronaut?', roster);
     expect(matched.slug).toBe('chris-sembroski');

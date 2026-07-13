@@ -3,6 +3,7 @@ import { toOptimizedImageUrl } from '@/lib/public-images';
 
 export const LANDING_FEATURED_EXPERT_SLUG = 'eiman';
 export const LANDING_HERO_EXPERT_SLUG = 'chris-sembroski';
+export const EIMAN_JAHANGIR_NAME = 'Eiman Jahangir';
 
 const EIMAN_PORTRAIT = '/eiman.webp';
 const CHRIS_PORTRAIT = '/chris_sembroski.webp';
@@ -83,7 +84,7 @@ export function landingFeaturedPortrait(expert: ListedExpert | null): { src: str
     return { src: toOptimizedImageUrl(expert.imageUrl), alt: expert.name };
   }
 
-  return { src: EIMAN_PORTRAIT, alt: 'Eiman, verified aerospace expert' };
+  return { src: EIMAN_PORTRAIT, alt: `${EIMAN_JAHANGIR_NAME}, verified aerospace expert` };
 }
 
 export type LandingRelayExpert = {
@@ -132,11 +133,11 @@ const CHRIS_RELAY_FALLBACK: LandingRelayExpert = {
 
 const EIMAN_RELAY_FALLBACK: LandingRelayExpert = {
   slug: LANDING_FEATURED_EXPERT_SLUG,
-  name: 'Eiman Ahmad',
+  name: EIMAN_JAHANGIR_NAME,
   firstName: 'Eiman',
   role: 'Propulsion & systems engineer',
   portraitSrc: EIMAN_PORTRAIT,
-  portraitAlt: 'Eiman Ahmad',
+  portraitAlt: EIMAN_JAHANGIR_NAME,
   profileHref: `/experts/${LANDING_FEATURED_EXPERT_SLUG}`,
 };
 

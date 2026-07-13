@@ -23,7 +23,7 @@ export function LandingComparisonSlider({
 }: LandingComparisonSliderProps) {
   const labelId = useId();
   const trackRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState(38);
+  const [position, setPosition] = useState(42);
 
   const updateFromClientX = useCallback((clientX: number) => {
     const track = trackRef.current;
@@ -51,23 +51,23 @@ export function LandingComparisonSlider({
   };
 
   return (
-    <div className="landing-comparison-slider flex flex-col gap-5" data-testid="landing-comparison-slider">
+    <div className="landing-comparison-slider flex flex-col gap-8" data-testid="landing-comparison-slider">
       <div>{beforeHeading}</div>
 
       <div
         ref={trackRef}
-        className="landing-comparison-track relative min-h-[148px] overflow-hidden rounded-xl border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_16px_42px_-18px_rgba(14,20,32,0.18)] touch-none select-none"
+        className="landing-comparison-track relative min-h-[156px] overflow-hidden rounded-lg border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_12px_32px_-20px_rgba(14,20,32,0.14)] touch-none select-none"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <div className="absolute inset-0 p-4" aria-hidden={position >= 99}>
+        <div className="absolute inset-0 p-3 sm:p-4" aria-hidden={position >= 99}>
           {genericCard}
         </div>
 
         <div
-          className="absolute inset-0 p-4 bg-[var(--landing-ink)]"
+          className="absolute inset-0 p-3 sm:p-4"
           style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
           aria-hidden={position <= 1}
         >
@@ -75,17 +75,15 @@ export function LandingComparisonSlider({
         </div>
 
         <div
-          className="landing-comparison-divider pointer-events-none absolute inset-y-0 z-10 w-px bg-[var(--landing-accent)]"
+          className="landing-comparison-divider pointer-events-none absolute inset-y-3 z-10 w-px bg-[var(--landing-border)]"
           style={{ left: `${position}%` }}
           aria-hidden
         />
         <div
-          className="landing-comparison-handle pointer-events-none absolute top-1/2 z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)] text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--landing-muted)] shadow-[0_10px_24px_-12px_rgba(14,20,32,0.35)]"
+          className="landing-comparison-handle pointer-events-none absolute top-1/2 z-10 h-10 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--landing-ink)]"
           style={{ left: `${position}%` }}
           aria-hidden
-        >
-          ⇔
-        </div>
+        />
 
         <label htmlFor={labelId} className="sr-only">
           Compare generic online answers with AstroLink expert access
@@ -102,7 +100,9 @@ export function LandingComparisonSlider({
         />
       </div>
 
-      <div className="mx-auto w-full max-w-[280px]">{portrait}</div>
+      <p className="text-center text-xs text-[var(--landing-faint)]">Drag to compare</p>
+
+      <div className="mx-auto w-full max-w-[260px]">{portrait}</div>
 
       <div>{afterHeading}</div>
     </div>

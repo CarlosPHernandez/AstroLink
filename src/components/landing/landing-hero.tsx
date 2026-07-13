@@ -101,7 +101,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
         </p>
 
         <form
-          className="landing-hero-prompt group mt-6 sm:mt-10 mx-auto flex w-full max-w-[var(--max-width-prose)] items-center gap-2.5 sm:gap-3 rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3.5 sm:px-5 py-3 sm:py-3.5 text-left shadow-[0_14px_42px_-20px_rgba(14,20,32,0.22)] transition-shadow focus-within:shadow-[0_18px_48px_-18px_rgba(14,20,32,0.26)] hover:shadow-[0_18px_48px_-18px_rgba(14,20,32,0.26)]"
+          className="landing-hero-prompt group mx-auto mt-6 sm:mt-10 flex w-full max-w-[var(--max-width-prose)] items-center gap-2.5 sm:gap-3 rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)] px-4 sm:px-5 py-3 sm:py-3.5 text-left shadow-[0_12px_36px_-22px_rgba(14,20,32,0.2)] transition-[box-shadow,border-color] duration-300 hover:border-[color:color-mix(in_srgb,var(--landing-border)_70%,var(--landing-muted))] focus-within:border-[var(--landing-border)] focus-within:shadow-[0_16px_40px_-20px_rgba(14,20,32,0.24)]"
           onSubmit={handleGoalSubmit}
         >
           <label htmlFor="landing-goal" className="sr-only">
@@ -113,14 +113,14 @@ export default function LandingHero({ experts }: LandingHeroProps) {
             value={goal}
             onChange={(event) => setGoal(event.target.value)}
             placeholder="What do you want to learn about space?"
-            className="min-w-0 flex-1 bg-transparent text-[0.8125rem] sm:text-base text-[var(--landing-text)] placeholder:text-[var(--landing-faint)] focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-[0.875rem] sm:text-base text-[var(--landing-text)] placeholder:text-[var(--landing-faint)] focus:outline-none"
             autoComplete="off"
             data-testid="landing-goal-input"
           />
           <button
             type="submit"
             aria-label="Send your learning goal"
-            className="inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-[var(--landing-accent)] text-white transition-colors hover:bg-[var(--landing-accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--landing-surface)]"
+            className="inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-[var(--landing-ink)] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--landing-surface)]"
             data-testid="landing-goal-submit"
           >
             <MaterialIcon name="arrow_forward" size={16} />

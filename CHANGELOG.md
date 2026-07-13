@@ -5,7 +5,7 @@ All notable changes to AstroLink are documented in this file.
 ## [0.6.7.0] - 2026-07-12
 
 ### Added
-- Landing hero now routes typed learning goals to verified experts (Chris Sembroski or Eiman Ahmad) with avatar, name, and word-by-word expert replies instead of a generic AI chat loop.
+- Landing hero now routes typed learning goals to verified experts (Chris Sembroski or Eiman Jahangir) with avatar, name, and word-by-word expert replies instead of a generic AI chat loop.
 - Story section adds a desktop scroll-scrub comparison (generic internet answers crossfade to AstroLink expert access) and a mobile before/after drag slider.
 - Landing motion tokens, chat display helpers, and pinned scroll progress utilities with unit tests.
 
