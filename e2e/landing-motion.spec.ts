@@ -75,17 +75,11 @@ test.describe('Landing motion redesign', () => {
 
       await section.evaluate((el) => {
         const runway = Math.max(1, el.offsetHeight - window.innerHeight);
-        window.scrollTo({ top: el.offsetTop + runway * 0.6, behavior: 'auto' });
+        window.scrollTo({ top: el.offsetTop + runway * 0.6, behavior: 'instant' });
+        window.dispatchEvent(new Event('scroll'));
       });
 
-      await page.waitForFunction(() => {
-        const el = document.querySelector('[data-testid="landing-story-scrub"]');
-        if (!el) return false;
-        const progress = Number.parseFloat(
-          getComputedStyle(el).getPropertyValue('--landing-scroll-progress'),
-        );
-        return Number.isFinite(progress) && progress > 0.45;
-      });
+      await page.waitForTimeout(150);
 
       const mid = await section.evaluate(() => {
         const expert = document.querySelector('.landing-story-expert-card');

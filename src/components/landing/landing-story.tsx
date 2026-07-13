@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { LandingComparisonSlider } from '@/components/landing/landing-comparison-slider';
 import {
   prefersReducedMotion,
@@ -194,14 +194,6 @@ export function LandingStory({ experts }: LandingStoryProps) {
         reducedMotion ? ' landing-story-scrub--static sm:py-20' : ''
       }`}
       data-testid="landing-story-scrub"
-      style={
-        {
-          '--landing-scroll-progress': '0',
-          '--p-early': '0',
-          '--p-mid': '0',
-          '--p-late': '0',
-        } as CSSProperties
-      }
     >
       <div className="max-w-[1200px] mx-auto px-4 sm:px-md lg:px-lg">
         <div className="sm:hidden">
