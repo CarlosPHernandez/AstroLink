@@ -134,7 +134,7 @@ Desktop (pinned ~100vh runway):
 - **40–70%:** Crossfade — generic card opacity down, expert card opacity up.
 - **70–100%:** Expert card locks; copy right: “Private expert access.”
 
-Mobile: horizontal **swipe or drag slider** (before | after) — avoids 115vh dead zone.
+Mobile: horizontal **swipe or drag slider** (before | after) — avoids scroll dead zone. Desktop runway tightened to **138vh** (was 210vh).
 
 ### Benefits section — simplify
 
@@ -188,9 +188,10 @@ Current blur + 110px translate is cinematic but expensive. Replace with:
 
 ### PR4 — Polish & QA
 
-- [ ] Playwright: goal submit → expert header → no unlock panel
-- [ ] `prefers-reduced-motion` screenshot pass
-- [ ] `/design-review` before/after on 375px + 1280px
+- [x] Playwright: goal submit → expert header → no unlock panel
+- [x] Story scroll-scrub + mobile slider + reduced-motion E2E
+- [x] Hero goal prompt — minimal editorial pill (no icon/eyebrow/kbd chrome)
+- [ ] `/design-review` before/after on 375px + 1280px (manual visual pass)
 
 ---
 

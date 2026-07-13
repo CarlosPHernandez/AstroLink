@@ -13,10 +13,10 @@ export function LandingBenefits() {
   return (
     <section
       id="pipeline"
-      className="scroll-mt-20 border-t border-[var(--landing-border)] py-16 sm:py-36"
+      className="scroll-mt-20 border-t border-[var(--landing-border)] py-14 sm:py-24 lg:py-28"
     >
       <div className="max-w-[1200px] mx-auto px-md sm:px-lg">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 sm:gap-14 md:gap-10 text-center md:text-left min-h-0 sm:min-h-[55vh] items-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 lg:gap-12 text-center md:text-left items-start md:items-center">
           {BENEFITS.map((benefit, index) => (
             <LandingScrollReveal
               key={benefit.line1}
@@ -25,16 +25,16 @@ export function LandingBenefits() {
               variant="up"
               className="m-0"
             >
-              <span className="font-landing-display text-[1.625rem] sm:text-[2rem] lg:text-4xl font-semibold tracking-tight text-[var(--landing-text)] leading-[1.12] block">
+              <span className="font-landing-display text-[1.5rem] sm:text-[1.875rem] lg:text-[2.125rem] font-semibold tracking-tight text-[var(--landing-text)] leading-[1.14] block">
                 {benefit.line1}
                 <br />
-                <span className="text-[var(--landing-faint)]">{benefit.line2}</span>
+                <span className="text-[var(--landing-muted)] font-medium">{benefit.line2}</span>
               </span>
             </LandingScrollReveal>
           ))}
         </div>
 
-        <LandingScrollReveal as="p" delay={120} variant="up" className="mt-20 sm:mt-28 text-center text-sm sm:text-base text-[var(--landing-muted)] max-w-[var(--max-width-prose)] mx-auto leading-relaxed">
+        <LandingScrollReveal as="p" delay={120} variant="up" className="mt-14 sm:mt-20 text-center text-sm sm:text-base text-[var(--landing-muted)] max-w-[var(--max-width-prose)] mx-auto leading-relaxed">
           AstroLink is for students, career-switchers, teams, and curious people who want real
           conversations with people who have worked, flown, built, and trained in space.
         </LandingScrollReveal>
