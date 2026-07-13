@@ -85,3 +85,95 @@ export function landingFeaturedPortrait(expert: ListedExpert | null): { src: str
 
   return { src: EIMAN_PORTRAIT, alt: 'Eiman, verified aerospace expert' };
 }
+
+export type LandingRelayExpert = {
+  slug: string;
+  name: string;
+  firstName: string;
+  role: string;
+  portraitSrc: string;
+  portraitAlt: string;
+  profileHref: string;
+};
+
+const PROPULSION_GOAL_PATTERN =
+  /propulsion|engine|rocket|thrust|combustion|nozzle|fuel|launch vehicle|ion drive/i;
+const CAREER_GOAL_PATTERN =
+  /astronaut|career|intern|internship|job|work in space|break into|how do i become|where should i start/i;
+
+function toLandingRelayExpert(expert: ListedExpert): LandingRelayExpert {
+  let portraitSrc = toOptimizedImageUrl(expert.imageUrl);
+  if (isChrisExpert(expert)) {
+    portraitSrc = CHRIS_PORTRAIT;
+  } else if (isEimanExpert(expert)) {
+    portraitSrc = EIMAN_PORTRAIT;
+  }
+
+  return {
+    slug: expert.slug,
+    name: expert.name,
+    firstName: expert.name.trim().split(/\s+/)[0] ?? expert.name,
+    role: expert.role,
+    portraitSrc,
+    portraitAlt: expert.name,
+    profileHref: `/experts/${expert.slug}`,
+  };
+}
+
+const CHRIS_RELAY_FALLBACK: LandingRelayExpert = {
+  slug: LANDING_HERO_EXPERT_SLUG,
+  name: 'Chris Sembroski',
+  firstName: 'Chris',
+  role: 'Inspiration4 Astronaut & Aerospace Engineer',
+  portraitSrc: CHRIS_PORTRAIT,
+  portraitAlt: 'Chris Sembroski',
+  profileHref: `/experts/${LANDING_HERO_EXPERT_SLUG}`,
+};
+
+const EIMAN_RELAY_FALLBACK: LandingRelayExpert = {
+  slug: LANDING_FEATURED_EXPERT_SLUG,
+  name: 'Eiman Ahmad',
+  firstName: 'Eiman',
+  role: 'Propulsion & systems engineer',
+  portraitSrc: EIMAN_PORTRAIT,
+  portraitAlt: 'Eiman Ahmad',
+  profileHref: `/experts/${LANDING_FEATURED_EXPERT_SLUG}`,
+};
+
+/** Pick Chris or Eiman to personify the expert relay after a learning-goal submit. */
+export function pickLandingRelayExpert(goal: string, experts: ListedExpert[]): LandingRelayExpert {
+  const chris = findLandingHeroExpert(experts);
+  const eiman = findLandingFeaturedExpert(experts);
+  const trimmed = goal.trim();
+
+  if (PROPULSION_GOAL_PATTERN.test(trimmed)) {
+    return eiman ? toLandingRelayExpert(eiman) : EIMAN_RELAY_FALLBACK;
+  }
+
+  if (CAREER_GOAL_PATTERN.test(trimmed)) {
+    return chris ? toLandingRelayExpert(chris) : CHRIS_RELAY_FALLBACK;
+  }
+
+  const picked = trimmed.length % 2 === 0 ? (chris ?? eiman) : (eiman ?? chris);
+  if (picked) {
+    return toLandingRelayExpert(picked);
+  }
+
+  return trimmed.length % 2 === 0 ? CHRIS_RELAY_FALLBACK : EIMAN_RELAY_FALLBACK;
+}
+
+export function landingRelayReplyIntro(expert: LandingRelayExpert): string {
+  if (expert.slug === LANDING_HERO_EXPERT_SLUG || expert.name.toLowerCase().includes('chris')) {
+    return "I've walked this path — worth talking through what actually moved the needle, not generic advice from the internet.";
+  }
+
+  if (expert.slug === LANDING_FEATURED_EXPERT_SLUG || expert.name.toLowerCase().includes('eiman')) {
+    return "Questions like this benefit from someone who's built and operated real hardware — not a compiled summary.";
+  }
+
+  return `A verified expert like ${expert.firstName} can help you with that — live, 1:1.`;
+}
+
+export function landingRelayReplyCta(expert: LandingRelayExpert): string {
+  return `Create a free account to explore ${expert.firstName} and other verified experts who fit your goal.`;
+}

@@ -1,104 +1,150 @@
 'use client';
 
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import { useLandingHeroParallax } from '@/components/landing/landing-scroll-reveal';
-import { landingHeroPortrait } from '@/lib/landing-featured-expert';
+import { useLandingHeroChat } from '@/components/landing/use-landing-hero-chat';
+import {
+  landingHeroPortrait,
+  landingRelayReplyCta,
+  landingRelayReplyIntro,
+  pickLandingRelayExpert,
+  type LandingRelayExpert,
+} from '@/lib/landing-featured-expert';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
-const AI_CHAT = [
-  { role: 'user' as const, text: 'Second-stage thrust is oscillating late in the burn. What should we check?' },
-  {
-    role: 'assistant' as const,
-    text: 'Review combustion stability margins and injector geometry against published references.',
-  },
-  {
-    role: 'assistant' as const,
-    text: 'I don\u2019t have your engine logs or flight telemetry. General reference only.',
-  },
-] as const;
+const UNLOCK_HREF = '/auth?mode=signup&redirect=%2Fexperts';
+const PENDING_GOAL_STORAGE_KEY = 'astrolink.pendingLearningGoal';
 
-const CHAT_STEP_MS = 2600;
-const CHAT_PAUSE_MS = 3800;
+const DEMO_CHAT = [
+  { role: 'user' as const, text: 'I want to work in space. Where should I start?' },
+  {
+    role: 'expert' as const,
+    text: 'Worth mapping classes, internships, and first projects with someone who has actually done the work.',
+  },
+  {
+    role: 'expert' as const,
+    text: 'Ask your own question above to see who in the network fits your goal.',
+  },
+];
+
+function buildSubmittedChat(goal: string, expert: LandingRelayExpert) {
+  return [
+    { role: 'user' as const, text: goal },
+    { role: 'expert' as const, text: landingRelayReplyIntro(expert) },
+    { role: 'expert' as const, text: landingRelayReplyCta(expert) },
+  ];
+}
 
 type LandingHeroProps = {
   experts: ListedExpert[];
 };
 
 export default function LandingHero({ experts }: LandingHeroProps) {
-  const [visibleMessages, setVisibleMessages] = useState(0);
+  const [goal, setGoal] = useState('');
+  const [submittedGoal, setSubmittedGoal] = useState<string | null>(null);
+  const [relayExpert, setRelayExpert] = useState<LandingRelayExpert | null>(null);
   const visualRef = useLandingHeroParallax<HTMLDivElement>();
-  const { src: heroImage, alt: heroAlt, href: heroHref } = landingHeroPortrait(experts);
+  const phoneRef = useRef<HTMLDivElement>(null);
+  const { src: heroImage, alt: heroAlt } = landingHeroPortrait(experts);
 
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setVisibleMessages(AI_CHAT.length);
+  const chatMessages = useMemo(() => {
+    if (submittedGoal && relayExpert) {
+      return buildSubmittedChat(submittedGoal, relayExpert);
+    }
+    return DEMO_CHAT;
+  }, [submittedGoal, relayExpert]);
+
+  const { lines, isComplete } = useLandingHeroChat({
+    messages: chatMessages,
+    loop: submittedGoal === null,
+    typeExpertReplies: submittedGoal !== null,
+  });
+
+  const handleGoalSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmedGoal = goal.trim();
+    if (!trimmedGoal) {
       return;
     }
 
-    let cancelled = false;
-    let step = 0;
-    let timer: ReturnType<typeof setTimeout>;
+    const matchedExpert = pickLandingRelayExpert(trimmedGoal, experts);
 
-    const run = () => {
-      if (cancelled) return;
+    try {
+      window.sessionStorage.setItem(PENDING_GOAL_STORAGE_KEY, trimmedGoal);
+      window.sessionStorage.setItem('astrolink.pendingRelayExpertSlug', matchedExpert.slug);
+    } catch {
+      // Browsers can block storage; the unlock flow still works without persistence.
+    }
 
-      if (step < AI_CHAT.length) {
-        setVisibleMessages(step + 1);
-        step += 1;
-        timer = setTimeout(run, step === 1 ? 800 : CHAT_STEP_MS);
-        return;
-      }
-
-      timer = setTimeout(() => {
-        if (cancelled) return;
-        setVisibleMessages(0);
-        step = 0;
-        timer = setTimeout(run, 600);
-      }, CHAT_PAUSE_MS);
-    };
-
-    timer = setTimeout(run, 600);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, []);
+    setRelayExpert(matchedExpert);
+    setSubmittedGoal(trimmedGoal);
+    phoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
 
   return (
     <section className="pt-6 sm:pt-12 pb-12 sm:pb-24">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-md lg:px-lg text-center">
         <h1
           data-testid="landing-hero-title"
-          className="landing-hero-intro font-landing-display text-[1.625rem] leading-[1.14] sm:text-4xl lg:text-[2.75rem] font-semibold tracking-tight text-neutral-900 sm:leading-[1.12]"
+          className="landing-hero-intro font-landing-display text-[1.625rem] leading-[1.14] sm:text-4xl lg:text-[2.75rem] font-semibold tracking-tight text-[var(--landing-text)] sm:leading-[1.12]"
         >
-          When the stakes are orbital,
+          Talk to people who have
           <br className="hidden sm:block" />
-          {' '}you need a human who&apos;s been there.
+          {' '}actually done the work in space.
         </h1>
-        <p className="landing-hero-subcopy mt-3 sm:mt-4 text-[0.9375rem] sm:text-base text-neutral-500 max-w-[var(--max-width-prose)] mx-auto leading-relaxed px-1">
-          Book verified experts for live 1:1 sessions — not another autocomplete answer.
+        <p className="landing-hero-subcopy mt-3 sm:mt-4 text-[0.9375rem] sm:text-base text-[var(--landing-muted)] max-w-[var(--max-width-prose)] mx-auto leading-relaxed px-1">
+          Ask a question below — we&apos;ll match you with a verified astronaut or engineer, not a
+          generic AI answer.
         </p>
 
-        <Link
-          href="/auth"
-          className="landing-hero-prompt group mt-6 sm:mt-10 mx-auto flex w-full max-w-[var(--max-width-prose)] items-center gap-2.5 sm:gap-3 rounded-full border border-neutral-200 bg-white px-3.5 sm:px-5 py-3 sm:py-3.5 text-left shadow-[0_12px_40px_-18px_rgba(0,0,0,0.15)] transition-shadow hover:shadow-[0_16px_44px_-16px_rgba(0,0,0,0.2)]"
+        <form
+          className="landing-hero-prompt group mt-6 sm:mt-10 mx-auto flex w-full max-w-[var(--max-width-prose)] items-center gap-2.5 sm:gap-3 rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3.5 sm:px-5 py-3 sm:py-3.5 text-left shadow-[0_14px_42px_-20px_rgba(14,20,32,0.22)] transition-shadow focus-within:shadow-[0_18px_48px_-18px_rgba(14,20,32,0.26)] hover:shadow-[0_18px_48px_-18px_rgba(14,20,32,0.26)]"
+          onSubmit={handleGoalSubmit}
         >
-          <span className="flex-1 min-w-0 text-[0.8125rem] sm:text-base text-neutral-400 group-hover:text-neutral-500 transition-colors">
-            <span className="sm:hidden">Ask a mission question...</span>
-            <span className="hidden sm:inline">What mission question do you need answered?</span>
-          </span>
-          <span className="inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-[#1a5fd1] text-white">
+          <label htmlFor="landing-goal" className="sr-only">
+            What do you want to learn about space?
+          </label>
+          <input
+            id="landing-goal"
+            type="text"
+            value={goal}
+            onChange={(event) => setGoal(event.target.value)}
+            placeholder="What do you want to learn about space?"
+            className="min-w-0 flex-1 bg-transparent text-[0.8125rem] sm:text-base text-[var(--landing-text)] placeholder:text-[var(--landing-faint)] focus:outline-none"
+            autoComplete="off"
+            data-testid="landing-goal-input"
+          />
+          <button
+            type="submit"
+            aria-label="Send your learning goal"
+            className="inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-[var(--landing-accent)] text-white transition-colors hover:bg-[var(--landing-accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--landing-surface)]"
+            data-testid="landing-goal-submit"
+          >
             <MaterialIcon name="arrow_forward" size={16} />
-          </span>
-        </Link>
+          </button>
+        </form>
+
+        {!submittedGoal ? (
+          <p className="landing-hero-actions mt-5 text-xs sm:text-sm text-[var(--landing-faint)]">
+            Free to browse.{' '}
+            <Link
+              href={UNLOCK_HREF}
+              className="text-[var(--landing-muted)] underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
+            >
+              Create account
+            </Link>{' '}
+            when you&apos;re ready.
+          </p>
+        ) : null}
       </div>
 
       <div
         ref={visualRef}
-        className="landing-hero-visual relative max-w-[920px] mx-auto mt-8 sm:mt-14 px-4 sm:px-md lg:px-lg"
+        className={`landing-hero-visual relative max-w-[920px] mx-auto mt-8 sm:mt-14 px-4 sm:px-md lg:px-lg${submittedGoal ? ' landing-hero-visual--goal-active' : ''}`}
+        data-testid={submittedGoal ? 'landing-hero-goal-active' : undefined}
         style={
           {
             '--landing-hero-scroll': '0',
@@ -106,10 +152,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
           } as CSSProperties
         }
       >
-        <Link
-          href={heroHref}
-          className="landing-hero-image-wrap landing-hero-portrait block relative mx-auto w-full max-w-[min(92vw,420px)] sm:max-w-[640px] aspect-[3/4] sm:aspect-[5/6] overflow-hidden rounded-sm"
-        >
+        <div className="landing-hero-image-wrap landing-hero-portrait relative mx-auto w-full max-w-[min(92vw,420px)] sm:max-w-[640px] aspect-[3/4] sm:aspect-[5/6] overflow-hidden rounded-sm">
           <Image
             src={heroImage}
             alt={heroAlt}
@@ -119,60 +162,100 @@ export default function LandingHero({ experts }: LandingHeroProps) {
             sizes="(max-width: 640px) 92vw, 640px"
           />
           <div className="landing-hero-image-fade pointer-events-none absolute inset-0" aria-hidden />
-        </Link>
+        </div>
 
         <div
-          className="landing-hero-phone relative sm:absolute sm:right-8 lg:right-12 sm:-bottom-10 mx-auto mt-6 sm:mt-0 w-full sm:w-[300px] max-w-[var(--max-width-prose)] sm:max-w-none"
-          aria-label="AI chat preview"
+          ref={phoneRef}
+          className={`landing-hero-phone relative sm:absolute sm:right-8 lg:right-12 sm:-bottom-10 mx-auto mt-6 sm:mt-0 w-full sm:w-[300px] max-w-[var(--max-width-prose)] sm:max-w-none${submittedGoal ? ' landing-hero-phone--active' : ''}`}
+          aria-label="Expert relay preview"
+          aria-live={submittedGoal ? 'polite' : undefined}
         >
-          <div className="landing-hero-phone-shell rounded-[1.75rem] sm:rounded-[2rem] border border-neutral-200/80 bg-white p-2.5 sm:p-3 shadow-[0_20px_50px_-14px_rgba(0,0,0,0.18)] sm:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.18)]">
-            <div className="flex items-center justify-between px-2 pb-2 text-[10px] text-neutral-400">
-              <span>General chat</span>
-              <span>AI assistant</span>
-            </div>
-            <div className="rounded-[1.25rem] sm:rounded-[1.4rem] bg-neutral-50 px-3 py-3.5 sm:py-4 min-h-[190px] sm:min-h-[250px] flex flex-col justify-end gap-2">
-              {AI_CHAT.slice(0, visibleMessages).map((message, index) => (
-                <p
-                  key={`${message.role}-${index}-${visibleMessages}`}
-                  className={`landing-hero-chat-line text-[11px] sm:text-xs leading-snug rounded-2xl px-3 py-2 max-w-[94%] sm:max-w-[92%] ${
-                    message.role === 'user'
-                      ? 'ml-auto bg-neutral-900 text-white rounded-br-sm'
-                      : 'mr-auto bg-white text-neutral-600 border border-neutral-200 rounded-bl-sm'
-                  }`}
+          <div className="landing-hero-phone-shell rounded-[1.75rem] sm:rounded-[2rem] border border-[color:var(--landing-border)] bg-[var(--landing-surface)] p-2.5 sm:p-3 shadow-[0_22px_56px_-18px_rgba(14,20,32,0.22)] sm:shadow-[0_26px_64px_-16px_rgba(14,20,32,0.22)]">
+            {relayExpert && submittedGoal ? (
+              <div
+                className="landing-hero-relay-header flex items-center gap-2 px-2 pb-2.5 border-b border-[var(--landing-border)]/80"
+                data-testid="landing-hero-relay-expert"
+              >
+                <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full ring-2 ring-[color:var(--landing-accent)]/20">
+                  <Image
+                    src={relayExpert.portraitSrc}
+                    alt={relayExpert.portraitAlt}
+                    fill
+                    className="object-cover object-top"
+                    sizes="32px"
+                  />
+                </div>
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="truncate text-[11px] font-semibold text-[var(--landing-text)]">
+                    {relayExpert.name}
+                  </p>
+                  <p className="truncate text-[9px] text-[var(--landing-faint)]">{relayExpert.role}</p>
+                </div>
+                <span className="shrink-0 rounded-full bg-[var(--landing-surface-soft)] px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--landing-muted)]">
+                  Verified
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between px-2 pb-2 text-[10px] text-[var(--landing-faint)]">
+                <span>Your question</span>
+                <span>Expert relay</span>
+              </div>
+            )}
+
+            <div className="rounded-[1.25rem] sm:rounded-[1.4rem] bg-[var(--landing-surface-soft)] px-3 py-3.5 sm:py-4 min-h-[190px] sm:min-h-[250px] flex flex-col justify-end gap-2">
+              {lines.map((line, index) =>
+                line.role === 'user' ? (
+                  <p
+                    key={`user-${index}-${line.displayText.length}`}
+                    data-testid={index === 0 ? 'landing-hero-user-message' : undefined}
+                    className="landing-hero-chat-line ml-auto max-w-[94%] sm:max-w-[92%] rounded-2xl rounded-br-sm bg-[var(--landing-ink)] px-3 py-2 text-[11px] sm:text-xs leading-snug text-white"
+                  >
+                    {line.displayText}
+                  </p>
+                ) : (
+                  <div
+                    key={`expert-${index}-${line.displayText.length}`}
+                    className="landing-hero-chat-line mr-auto max-w-[94%] sm:max-w-[92%]"
+                  >
+                    {relayExpert && submittedGoal ? (
+                      <p className="mb-1 px-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--landing-faint)]">
+                        {relayExpert.firstName} · verified expert
+                      </p>
+                    ) : null}
+                    <p className="rounded-2xl rounded-bl-sm border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3 py-2 text-[11px] sm:text-xs leading-snug text-[var(--landing-muted)]">
+                      <span className={line.isTyping ? 'landing-hero-typing-cursor' : undefined}>
+                        {line.displayText}
+                      </span>
+                    </p>
+                  </div>
+                ),
+              )}
+
+              {submittedGoal && isComplete ? (
+                <Link
+                  href={UNLOCK_HREF}
+                  className="landing-hero-relay-cta mt-1 inline-flex items-center justify-center gap-1 rounded-full px-3 py-2 text-[11px] sm:text-xs font-semibold text-[var(--landing-accent)] transition-colors hover:text-[var(--landing-accent-hover)]"
+                  data-testid="landing-hero-journey-cta"
                 >
-                  {message.text}
-                </p>
-              ))}
+                  Continue your journey
+                  <MaterialIcon name="arrow_forward" size={14} />
+                </Link>
+              ) : null}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="landing-hero-actions mt-8 sm:mt-12 flex flex-col items-stretch sm:items-center justify-center gap-2.5 sm:flex-row sm:gap-4 px-4 sm:px-md max-w-[var(--max-width-prose)] sm:max-w-none mx-auto">
-        <Link
-          href="/auth"
-          className="inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-[#1a5fd1] px-8 py-3.5 text-sm font-semibold text-white hover:bg-[#164fb3] transition-colors"
-        >
-          Book a session
-        </Link>
-        <Link
-          href="/experts"
-          className="inline-flex w-full sm:w-auto items-center justify-center rounded-full border border-neutral-300 bg-white px-8 py-3.5 text-sm font-semibold text-neutral-700 hover:border-neutral-400 hover:text-neutral-900 transition-colors"
-        >
-          Browse experts
-        </Link>
-      </div>
-
-      <ul className="landing-hero-trust mt-5 sm:mt-6 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-0 text-center text-xs sm:text-sm text-neutral-400 px-4">
+      <ul className="landing-hero-trust mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-0 text-center text-xs sm:text-sm text-[var(--landing-faint)] px-4">
         <li>Verified experts</li>
         <li aria-hidden className="hidden sm:inline px-2">
           ·
         </li>
-        <li>Live 1:1 video</li>
+        <li>Free account to browse</li>
         <li aria-hidden className="hidden sm:inline px-2">
           ·
         </li>
-        <li>Clear pricing</li>
+        <li>Live 1:1 video</li>
       </ul>
     </section>
   );

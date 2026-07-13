@@ -11,7 +11,19 @@ import {
 type LandingScrollProgressOptions = {
   /** Wider scroll runway — section animates across more of the viewport travel */
   extended?: boolean;
+  /** Sticky-pin runway — progress 0→1 while the section scrolls through its pin height */
+  pinned?: boolean;
 };
+
+export function computePinnedScrollProgress(
+  rectTop: number,
+  sectionHeight: number,
+  viewportHeight: number,
+) {
+  const runway = sectionHeight - viewportHeight;
+  if (runway <= 0) return 1;
+  return clamp01(-rectTop / runway);
+}
 
 type LandingScrollRevealProps<T extends ElementType> = {
   as?: T;
@@ -105,6 +117,7 @@ export function useLandingScrollProgress<T extends HTMLElement>(
   const progressRef = useRef(-1);
   const frameRef = useRef<number | null>(null);
   const extended = options.extended ?? false;
+  const pinned = options.pinned ?? false;
 
   useEffect(() => {
     const el = ref.current;
@@ -128,10 +141,14 @@ export function useLandingScrollProgress<T extends HTMLElement>(
     const update = () => {
       const rect = el.getBoundingClientRect();
       const viewport = window.innerHeight;
-      const enterAt = extended ? viewport * 0.96 : viewport * 0.9;
-      const exitAt = extended ? -rect.height * 0.35 : viewport * 0.05;
-      const span = enterAt - exitAt;
-      const raw = span > 0 ? (enterAt - rect.top) / span : 1;
+      const raw = pinned
+        ? computePinnedScrollProgress(rect.top, el.offsetHeight, viewport)
+        : (() => {
+            const enterAt = extended ? viewport * 0.96 : viewport * 0.9;
+            const exitAt = extended ? -rect.height * 0.35 : viewport * 0.05;
+            const span = enterAt - exitAt;
+            return span > 0 ? (enterAt - rect.top) / span : 1;
+          })();
       setVars(raw);
     };
 
@@ -154,7 +171,7 @@ export function useLandingScrollProgress<T extends HTMLElement>(
         window.cancelAnimationFrame(frameRef.current);
       }
     };
-  }, [extended]);
+  }, [extended, pinned]);
 
   return ref;
 }

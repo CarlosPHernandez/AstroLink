@@ -28,27 +28,25 @@ export default function ExpertDirectory({ experts, variant = 'default' }: Expert
 
   if (variant === 'mission') {
     return (
-      <section id="directory" className="border-t border-neutral-200/60 py-16 sm:py-24 scroll-mt-20">
+      <section id="directory" className="border-t border-[var(--landing-border)] py-16 sm:py-24 scroll-mt-20">
         <div className="max-w-[1200px] mx-auto px-md sm:px-lg">
-          <header className="mb-8 sm:mb-10 flex items-end justify-between gap-4">
-            <LandingScrollReveal as="h2" variant="up">
-              <span className="font-landing-display text-xl sm:text-2xl font-semibold text-neutral-900 tracking-tight block">
-                Editor&apos;s picks
-              </span>
-            </LandingScrollReveal>
-            <LandingScrollReveal delay={80} variant="up">
-              <Link
-                href="/experts"
-                data-testid="view-all-experts"
-                className="text-sm text-neutral-500 hover:text-neutral-900 transition-colors shrink-0"
-              >
-                See all
-              </Link>
+          <header className="mb-8 sm:mb-10 max-w-[var(--max-width-prose)]">
+            <LandingScrollReveal as="div" variant="up">
+              <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[var(--landing-faint)]">
+                Private expert network
+              </p>
+              <h2 className="mt-2 font-landing-display text-xl sm:text-2xl font-semibold text-[var(--landing-text)] tracking-tight">
+                Proof of access before the full roster.
+              </h2>
+              <p className="mt-2 text-sm sm:text-base leading-relaxed text-[var(--landing-muted)]">
+                Create a free account to see available astronauts, engineers, operators, and career
+                mentors. Public visitors see a preview, not the full directory.
+              </p>
             </LandingScrollReveal>
           </header>
 
           {teaserExperts.length === 0 ? (
-            <p className="text-sm text-neutral-500 py-8">
+            <p className="text-sm text-[var(--landing-muted)] py-8">
               No listed experts right now. Check Supabase seed data and that mentors are approved and
               listed.
             </p>
@@ -57,34 +55,59 @@ export default function ExpertDirectory({ experts, variant = 'default' }: Expert
               {teaserExperts.map((expert, index) => {
                 const portrait = landingFeaturedPortrait(expert);
                 return (
-                <LandingScrollReveal
-                  key={expert.id}
-                  delay={index * 90}
-                  variant="scale"
-                  className="snap-start shrink-0 w-[min(44vw,180px)] sm:w-[200px] md:w-[220px]"
-                >
-                  <Link
-                    href={`/experts/${expert.slug}`}
-                    data-testid={`expert-card-${expert.slug}`}
-                    aria-label={expert.name}
-                    className="block group"
+                  <LandingScrollReveal
+                    key={expert.id}
+                    delay={index * 90}
+                    variant="scale"
+                    className="snap-start shrink-0 w-[min(58vw,210px)] sm:w-[210px] md:w-[230px]"
                   >
-                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-neutral-200">
+                    <article
+                      className="overflow-hidden rounded-lg border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_18px_48px_-26px_rgba(14,20,32,0.22)]"
+                      data-testid={`locked-expert-card-${index}`}
+                    >
+                    <div className="relative aspect-[3/4] w-full overflow-hidden bg-[var(--landing-surface-soft)]">
                       <Image
                         src={portrait.src}
                         alt=""
                         fill
                         priority={index === 0}
-                        className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                        className="object-cover blur-[3px] scale-[1.02] saturate-[0.86]"
                         sizes="220px"
                       />
+                      <div className="absolute inset-0 bg-[var(--landing-ink)]/12" aria-hidden />
+                      <div className="absolute left-3 top-3 rounded-full border border-white/40 bg-white/80 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--landing-text)] backdrop-blur">
+                        Verified
+                      </div>
+                      <div className="absolute inset-x-3 bottom-3 rounded-md bg-[var(--landing-surface)]/88 p-3 backdrop-blur">
+                        <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--landing-faint)]">
+                          Unlock to view
+                        </p>
+                        <p className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-[var(--landing-text)]">
+                          {expert.role}
+                        </p>
+                      </div>
                     </div>
-                  </Link>
-                </LandingScrollReveal>
-              );
+                    <div className="p-3">
+                      <p className="truncate text-xs text-[var(--landing-muted)]">
+                        {expert.employer}
+                      </p>
+                    </div>
+                  </article>
+                  </LandingScrollReveal>
+                );
               })}
             </div>
           )}
+
+          <LandingScrollReveal delay={120} variant="up" className="mt-8">
+            <Link
+              href="/auth?mode=signup&redirect=%2Fexperts"
+              data-testid="unlock-private-network"
+              className="inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-[var(--landing-accent)] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--landing-accent-hover)]"
+            >
+              Create free account to view experts
+            </Link>
+          </LandingScrollReveal>
         </div>
       </section>
     );

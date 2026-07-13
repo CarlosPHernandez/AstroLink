@@ -21,9 +21,11 @@ type EmailTab = 'login' | 'signup';
 export default function AuthPageClient({ supabaseAuth }: { supabaseAuth: boolean }) {
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get('redirect') ?? '';
+  const initialEmailTab: EmailTab = searchParams.get('mode') === 'signup' ? 'signup' : 'login';
+  const initialEntryMode: EntryMode = initialEmailTab === 'signup' ? 'email' : supabaseAuth ? 'choose' : 'email';
 
-  const [entryMode, setEntryMode] = useState<EntryMode>(supabaseAuth ? 'choose' : 'email');
-  const [emailTab, setEmailTab] = useState<EmailTab>('login');
+  const [entryMode, setEntryMode] = useState<EntryMode>(initialEntryMode);
+  const [emailTab, setEmailTab] = useState<EmailTab>(initialEmailTab);
   const [phone, setPhone] = useState('');
 
   const [loginState, loginFormAction, loginPending] = useActionState(loginAction, undefined);
@@ -63,7 +65,7 @@ export default function AuthPageClient({ supabaseAuth }: { supabaseAuth: boolean
                 : 'Sign in with your phone'
               : emailTab === 'login'
                 ? 'Sign in to your account'
-                : 'Create your account'}
+                : 'Unlock the expert network'}
           </p>
         </div>
 
