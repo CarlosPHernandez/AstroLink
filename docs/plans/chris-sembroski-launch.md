@@ -1,12 +1,15 @@
 # Chris Sembroski Launch
 
-**Branch:** `main` (PR1–PR3.5 shipped through v0.5.8.0)
-**Public URL:** `https://<prod>/talk-with-chris?ref=chris-sembroski`
+**Branch:** `main` (PR1–PR4 shipped; go-live dual pricing + waitlist email templates + July 20 window on main as of 2026-07-14)
+**Public URL:** `https://astro-link.space/talk-with-chris?ref=chris-sembroski` (social) or `?ref=early-signups` (waitlist $180)
+**Ops runbook:** [../how-to/chris-campaign-launch-checklist.md](../how-to/chris-campaign-launch-checklist.md) — prefer that over this plan for production cutover
 **Design assets:** Google Stitch web + mobile → `design/stitch/talk-with-chris/`
 
 ## Goal
 
-Ship 10 limited paid sessions with Chris Sembroski while keeping `APP_MODE=waitlist` on production. Opens the booking funnel only when `CHRIS_BOOKING_ENABLED=true`; hides the public experts directory; drives traffic from Chris promotion and waitlist email split.
+Ship limited paid sessions with Chris Sembroski while keeping `APP_MODE=waitlist` on production. Opens the booking funnel only when `CHRIS_BOOKING_ENABLED=true`; hides the public experts directory; drives traffic from Chris promotion and waitlist email split.
+
+**Post-PR4 product (go-live):** dual price ($180 `early-signups` / $200 public+social), scarcity UI only for early-access, earliest bookable day **2026-07-20**, default `CHRIS_SLOT_CAP=15`.
 
 ## Naming (no public “wave” language)
 
@@ -44,7 +47,7 @@ APP_MODE=waitlist + CHRIS_BOOKING_ENABLED=true
 ```bash
 APP_MODE=waitlist
 CHRIS_BOOKING_ENABLED=true
-CHRIS_SLOT_CAP=10
+CHRIS_SLOT_CAP=15
 CHRIS_MENTOR_SLUG=chris-sembroski
 CHRIS_CAMPAIGN_ID=chris-sembroski
 ENABLE_DEMO_AUTH=false

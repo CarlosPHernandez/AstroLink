@@ -1,8 +1,8 @@
 # Chris Sembroski Early Waitlist → $180 Booking Sequence
 
 **Automation name:** `Chris Sembroski Early Waitlist to $180 Booking Sequence`  
-**Branch:** `feat/resend-email-workflows`  
-**Goal:** Convert ~36 early waitlist contacts into paid 45-minute 1:1 sessions with Chris at **$180**, **15 slots**, without fighting the existing post-payment emails (confirmation + AI brief).
+**Status:** Templates shipped on `main` (PRs #73–#74). Production blast is still **manual** in Resend Broadcasts / ESP — paste HTML from code; the app does not auto-send this marketing sequence.  
+**Goal:** Convert early waitlist contacts into paid 45-minute 1:1 sessions with Chris at **$180** (`ref=early-signups`), **15 slots**, without fighting the existing post-payment emails (confirmation + AI brief).
 
 ## From address
 
