@@ -159,7 +159,7 @@ export async function loginAction(
   let role: 'mentor' | 'mentee' | 'admin' = 'mentee';
   let fullName = '';
   // public.users.id is uuid — non-uuid ids fail ensureMenteeUserRow inserts.
-  let userId = randomUUID();
+  let userId: string = randomUUID();
   let isPreset = false;
 
   if (preset) {
@@ -265,7 +265,7 @@ export async function registerAction(
     };
   }
 
-  let userId = randomUUID();
+  let userId: string = randomUUID();
   const preset = resolvePresetLogin(email);
   if (preset) {
     userId = preset.userId;
