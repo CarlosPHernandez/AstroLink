@@ -69,7 +69,22 @@ export async function ensureMenteeUserRow(params: {
   });
 
   if (insertErr) {
-    console.error('ensureMenteeUserRow insert:', insertErr.message);
+    // Race with auth trigger or concurrent signup: email/id already present.
+    const { data: raced, error: raceLookupErr } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (!raceLookupErr && raced?.id) {
+      return raced.id;
+    }
+
+    console.error('ensureMenteeUserRow insert:', insertErr.message, {
+      code: insertErr.code,
+      userId: params.userId,
+      email,
+    });
     throw new Error('Could not create user profile.');
   }
 
