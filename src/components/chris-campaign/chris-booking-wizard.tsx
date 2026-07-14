@@ -17,10 +17,14 @@ import {
   CHRIS_BOOKING_CAMPAIGN_QUERY,
   CHRIS_DISCOUNT_NAME,
   CHRIS_DISCOUNT_PERCENT,
-  CHRIS_LAUNCH_PRICE_CENTS,
   CHRIS_ORIGINAL_PRICE_CENTS,
 } from '@/lib/chris-campaign/chris-campaign-constants';
 import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-booking-mode';
+import {
+  chrisEarlyAccessDiscountCents,
+  resolveChrisChargeCents,
+  resolveChrisPricingTier,
+} from '@/lib/chris-campaign/chris-pricing';
 
 import { ChrisBookingFulfillmentOverlay } from '@/components/chris-campaign/chris-booking-fulfillment-overlay';
 import { ChrisBookingNextSteps } from '@/components/chris-campaign/chris-booking-next-steps';
@@ -316,8 +320,10 @@ export function ChrisBookingWizard({
   const fulfillment = useChrisBookingFulfillment();
 
   const displayDate = prefillDate ?? scheduledAt.slice(0, 10);
-  const chrisLaunchDiscountCents =
-    CHRIS_ORIGINAL_PRICE_CENTS - CHRIS_LAUNCH_PRICE_CENTS;
+  const chrisPricingTier = resolveChrisPricingTier(marketingReferrer);
+  const chrisChargeCents = resolveChrisChargeCents(marketingReferrer);
+  const chrisLaunchDiscountCents = chrisEarlyAccessDiscountCents(marketingReferrer);
+  const isEarlyAccessPricing = chrisPricingTier === 'early_access';
 
   const submitBooking = async () => {
     if (!session) {
@@ -674,26 +680,36 @@ export function ChrisBookingWizard({
                     </div>
                   </dl>
 
-                  {/* Pricing breakdown with original, Inspired24 discount, and final price */}
-                  <div className="mt-3 space-y-1.5 text-sm">
-                    <div className="flex justify-between text-white/60">
-                      <dt>Original price</dt>
-                      <dd className="text-white line-through">{formatMoney(CHRIS_ORIGINAL_PRICE_CENTS)}</dd>
+                  {/* Early-access: show list + discount. Public/social: flat $200. */}
+                  {isEarlyAccessPricing ? (
+                    <div className="mt-3 space-y-1.5 text-sm">
+                      <div className="flex justify-between text-white/60">
+                        <dt>Original price</dt>
+                        <dd className="text-white line-through">
+                          {formatMoney(CHRIS_ORIGINAL_PRICE_CENTS)}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between text-white/60">
+                        <dt>
+                          {CHRIS_DISCOUNT_NAME} launch discount ({CHRIS_DISCOUNT_PERCENT}% off)
+                        </dt>
+                        <dd className="text-[#4ade80]">
+                          -{formatMoney(chrisLaunchDiscountCents)}
+                        </dd>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-white/60">
-                      <dt>
-                        {CHRIS_DISCOUNT_NAME} launch discount ({CHRIS_DISCOUNT_PERCENT}% off)
-                      </dt>
-                      <dd className="text-[#4ade80]">
-                        -{formatMoney(chrisLaunchDiscountCents)}
-                      </dd>
+                  ) : (
+                    <div className="mt-3 text-sm text-white/60">
+                      <p>Full session price (public booking).</p>
                     </div>
-                  </div>
+                  )}
 
                   <hr className="my-4 border-[#333333]" />
                   <div className="flex justify-between">
                     <span className="text-base font-bold text-white">Total</span>
-                    <span className="text-xl font-bold text-white">{formatMoney(CHRIS_LAUNCH_PRICE_CENTS)}</span>
+                    <span className="text-xl font-bold text-white">
+                      {formatMoney(chrisChargeCents)}
+                    </span>
                   </div>
                 </div>
 

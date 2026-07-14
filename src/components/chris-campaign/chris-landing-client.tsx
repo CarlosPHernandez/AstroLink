@@ -11,6 +11,7 @@ import { ChrisLandingFooter } from '@/components/chris-campaign/chris-landing-fo
 import { ChrisQuestionQueue } from '@/components/chris-campaign/chris-question-queue';
 import { ChrisRequestSessionForm } from '@/components/chris-campaign/chris-request-session-form';
 import { ChrisSlotIndicator } from '@/components/chris-campaign/chris-slot-indicator';
+import { showChrisSlotScarcity } from '@/lib/chris-campaign/chris-pricing';
 
 type ChrisLandingClientProps = {
   bookingEnabled: boolean;
@@ -33,6 +34,8 @@ export function ChrisLandingClient({
   slotCap,
   slotsRemaining,
 }: ChrisLandingClientProps) {
+  const showSlots = showChrisSlotScarcity(marketingReferrer);
+  // Server still enforces cap for all refs; UI sold-out only when scarcity is shown.
   const soldOut = bookingEnabled && slotsRemaining <= 0;
 
   return (
@@ -47,6 +50,7 @@ export function ChrisLandingClient({
           mentorSlug={mentorSlug}
           slotCap={slotCap}
           slotsRemaining={slotsRemaining}
+          showSlotScarcity={showSlots}
         />
       </div>
 
@@ -63,7 +67,9 @@ export function ChrisLandingClient({
           >
             <div className="z-10 flex w-full max-w-[42rem] flex-col items-center space-y-8 text-center md:items-start md:space-y-10 md:text-left lg:w-[50%]">
               <div className="flex w-full flex-col items-center space-y-6 md:items-start">
-                <ChrisSlotIndicator slotCap={slotCap} slotsRemaining={slotsRemaining} />
+                {showSlots ? (
+                  <ChrisSlotIndicator slotCap={slotCap} slotsRemaining={slotsRemaining} />
+                ) : null}
                 <h1 className="chris-fade-in-up chris-delay-200 chris-copy-max w-full text-3xl font-semibold leading-[1.1] tracking-tight text-white sm:text-4xl md:text-[2.5rem] lg:text-6xl">
                   Office hours with verified space operators — not A.I.
                 </h1>

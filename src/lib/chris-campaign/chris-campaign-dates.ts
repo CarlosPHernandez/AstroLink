@@ -1,6 +1,9 @@
 /** First month Chris sessions can be scheduled (July 7 2026 launch window onward). */
 export const CHRIS_CAMPAIGN_BOOKING_START = new Date(Date.UTC(2026, 6, 7));
 
+/** Calendar day for date-hold tiles / validation (Eastern Time). */
+export const CHRIS_BOOKING_DATE_TIMEZONE = 'America/New_York';
+
 export type ChrisCampaignDateTile = {
   isoDate: string;
   month: string;
@@ -39,6 +42,38 @@ function toDateTile(date: Date): ChrisCampaignDateTile {
   return { isoDate, month, day, weekday };
 }
 
+/** YYYY-MM-DD for `now` in America/New_York (handles EST/EDT). */
+export function calendarDateInEastern(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: CHRIS_BOOKING_DATE_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
+}
+
+/**
+ * Earliest bookable calendar day: max(campaign start, today Eastern).
+ * Returns YYYY-MM-DD.
+ */
+export function getChrisMinBookableIsoDate(now: Date = new Date()): string {
+  const campaignStartIso = CHRIS_CAMPAIGN_BOOKING_START.toISOString().slice(0, 10);
+  const todayEastern = calendarDateInEastern(now);
+  return todayEastern > campaignStartIso ? todayEastern : campaignStartIso;
+}
+
+/** True when scheduledAt (ISO or datetime-local) is on/after min bookable day. */
+export function isChrisScheduledDateBookable(
+  scheduledAt: string,
+  now: Date = new Date(),
+): boolean {
+  const day = scheduledAt.trim().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+    return false;
+  }
+  return day >= getChrisMinBookableIsoDate(now);
+}
+
 /** Months navigable in the landing date strip (start month + forward horizon). */
 export function getChrisCampaignBookingMonthCount(horizonMonths = 12): number {
   return Math.max(1, horizonMonths);
@@ -71,14 +106,19 @@ export function getChrisCampaignMonthLabel(year: number, monthIndex: number): st
   return formatMonthLabel(year, monthIndex);
 }
 
-/** Bookable day tiles for a calendar month (only days on/after July 7, 2026). */
+/**
+ * Bookable day tiles for a calendar month.
+ * Only days on/after campaign start and on/after today (Eastern).
+ */
 export function getChrisCampaignDatesForMonth(
   year: number,
   monthIndex: number,
+  now: Date = new Date(),
 ): ChrisCampaignDateTile[] {
   const monthStart = utcMonthStart(year, monthIndex);
   const monthEnd = utcMonthStart(year, monthIndex + 1);
   const tiles: ChrisCampaignDateTile[] = [];
+  const minIso = getChrisMinBookableIsoDate(now);
 
   for (
     let cursor = new Date(monthStart);
@@ -88,7 +128,11 @@ export function getChrisCampaignDatesForMonth(
     if (cursor < CHRIS_CAMPAIGN_BOOKING_START) {
       continue;
     }
-    tiles.push(toDateTile(new Date(cursor)));
+    const tile = toDateTile(new Date(cursor));
+    if (tile.isoDate < minIso) {
+      continue;
+    }
+    tiles.push(tile);
   }
 
   return tiles;

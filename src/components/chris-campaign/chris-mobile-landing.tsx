@@ -14,6 +14,8 @@ type ChrisMobileLandingProps = {
   mentorSlug: string;
   slotCap: number;
   slotsRemaining: number;
+  /** Early-access waitlist only — hide for Chris social / full price. */
+  showSlotScarcity?: boolean;
 };
 
 export function ChrisMobileLanding({
@@ -24,7 +26,9 @@ export function ChrisMobileLanding({
   mentorSlug,
   slotCap,
   slotsRemaining,
+  showSlotScarcity = true,
 }: ChrisMobileLandingProps) {
+  // Cap is shared; always block booking when sold out even if scarcity UI is hidden.
   const soldOut = bookingEnabled && slotsRemaining <= 0;
 
   return (
@@ -48,11 +52,13 @@ export function ChrisMobileLanding({
           aria-hidden="true"
         />
         <div className="absolute bottom-0 left-0 z-20 flex w-full flex-col gap-3 p-6">
-          <ChrisSlotIndicator
-            slotCap={slotCap}
-            slotsRemaining={slotsRemaining}
-            variant="hero"
-          />
+          {showSlotScarcity ? (
+            <ChrisSlotIndicator
+              slotCap={slotCap}
+              slotsRemaining={slotsRemaining}
+              variant="hero"
+            />
+          ) : null}
           <h1 className="chris-text-gradient text-[2rem] font-semibold leading-[1.2] tracking-tight">
             Office hours with verified space operators — not A.I.
           </h1>

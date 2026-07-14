@@ -3,6 +3,7 @@ import {
   CHRIS_BOOKING_CAMPAIGN_QUERY,
   CHRIS_SESSION_DURATION_MINUTES,
 } from '@/lib/chris-campaign/chris-campaign-constants';
+import { isChrisScheduledDateBookable } from '@/lib/chris-campaign/chris-campaign-dates';
 import { sanitizeEarlyAccessReferrer } from '@/lib/waitlist/early-access-referrer-sanitize';
 
 export const BookBodySchema = z.object({
@@ -52,6 +53,14 @@ export const BookBodySchema = z.object({
       code: 'custom',
       message: `Chris sessions are ${CHRIS_SESSION_DURATION_MINUTES} minutes.`,
       path: ['durationMinutes'],
+    });
+  }
+
+  if (!isChrisScheduledDateBookable(data.scheduledAt)) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Choose a session date on or after today.',
+      path: ['scheduledAt'],
     });
   }
 });

@@ -1,10 +1,13 @@
+import {
+  CHRIS_SOCIAL_REFERRER,
+  CHRIS_WAITLIST_EMAIL_REFERRER,
+} from '@/lib/chris-campaign/chris-campaign-constants';
 import { parseEarlyAccessReferrer } from '@/lib/waitlist/early-access-referrer';
 
 /** Public Chris promotion links: /talk-with-chris?ref=chris-sembroski */
 export const CHRIS_PUBLIC_REFERRER = 'chris-sembroski';
 
-/** Waitlist email split for Chris campaign: /early-access?ref=early-signups */
-export const CHRIS_WAITLIST_EMAIL_REFERRER = 'early-signups';
+export { CHRIS_SOCIAL_REFERRER, CHRIS_WAITLIST_EMAIL_REFERRER };
 
 /**
  * Parse `?ref=` from Chris landing or booking URLs.

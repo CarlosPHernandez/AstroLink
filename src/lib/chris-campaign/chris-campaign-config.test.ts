@@ -23,7 +23,7 @@ describe('chris-campaign-config', () => {
     );
     expect(getChrisCampaignId()).toBe('chris-sembroski');
     expect(getChrisMentorSlug()).toBe('chris-sembroski');
-    expect(getChrisSlotCapFromEnv()).toBe(10);
+    expect(getChrisSlotCapFromEnv()).toBe(15);
   });
 
   it('reads overrides from env', async () => {
