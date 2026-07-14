@@ -39,9 +39,7 @@ export function ChrisMobileLanding({
       data-testid="chris-mobile-landing"
     >
       <div className="relative h-[50vh] w-full shrink-0 overflow-hidden">
-        <div
-          className={`h-full w-full ${videoPlaying ? '' : 'chris-portrait-breathe'}`}
-        >
+        <div className={`h-full w-full ${videoPlaying ? '' : 'chris-portrait-breathe'}`}>
           <ExpertIntroMedia
             name={expertPortrait.name}
             imageUrl={expertPortrait.imageUrl}
