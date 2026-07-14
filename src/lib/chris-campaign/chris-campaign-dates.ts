@@ -1,5 +1,5 @@
-/** First month Chris sessions can be scheduled (July 7 2026 launch window onward). */
-export const CHRIS_CAMPAIGN_BOOKING_START = new Date(Date.UTC(2026, 6, 7));
+/** First day Chris sessions can be scheduled (July 20 2026 onward — heads-up for Chris). */
+export const CHRIS_CAMPAIGN_BOOKING_START = new Date(Date.UTC(2026, 6, 20));
 
 /** Calendar day for date-hold tiles / validation (Eastern Time). */
 export const CHRIS_BOOKING_DATE_TIMEZONE = 'America/New_York';

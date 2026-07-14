@@ -80,14 +80,14 @@ export function ChrisMobileBookingCard({
 
   return (
     <div
-      className="chris-glass-card mb-4 flex flex-col gap-4 border-white/10 py-4 shadow-2xl"
+      className="mb-4 flex flex-col gap-4 border-0 bg-transparent py-4 shadow-none"
       data-testid="chris-mobile-booking-card"
     >
       <div className="flex flex-col gap-2 px-4">
         <p className="text-xs font-medium uppercase tracking-widest text-outline-variant/70">
           Choose your 1:1 call
         </p>
-        <ChrisCampaignDateStrip {...dateSelection} />
+        <ChrisCampaignDateStrip {...dateSelection} compact />
       </div>
 
       <button

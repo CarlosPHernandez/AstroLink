@@ -7,7 +7,7 @@ const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Default local time prefill when landing passes a campaign date (noon).
  *  Time selection is day-only for the current request/approval flow (see plan).
- *  Chris days start 2026-07-07.
+ *  Chris days start 2026-07-20.
  */
 export function chrisCampaignDateToDatetimeLocal(isoDate: string): string | null {
   if (!ISO_DATE_PATTERN.test(isoDate)) {
