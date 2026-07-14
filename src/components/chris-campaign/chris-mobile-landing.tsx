@@ -39,7 +39,7 @@ export function ChrisMobileLanding({
       data-testid="chris-mobile-landing"
     >
       <div className="relative h-[50vh] w-full shrink-0 overflow-hidden">
-        <div className="chris-portrait-breathe h-full w-full">
+        <div className={`h-full w-full ${videoPlaying ? '' : 'chris-portrait-breathe'}`}>
           <ExpertIntroMedia
             name={expertPortrait.name}
             imageUrl={expertPortrait.imageUrl}
@@ -51,29 +51,32 @@ export function ChrisMobileLanding({
           />
         </div>
         <div
-          className={`pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-primary-container via-primary-container/20 to-transparent transition-opacity duration-300 ease-out ${
-            videoPlaying ? 'opacity-0' : 'opacity-100'
+          className={`chris-hero-scrim pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-primary-container via-primary-container/25 to-transparent ${
+            videoPlaying ? 'chris-hero-scrim--hidden' : ''
           }`}
           aria-hidden="true"
         />
         <div
-          className={`pointer-events-none absolute bottom-0 left-0 z-20 flex w-full flex-col gap-3 p-6 transition-opacity duration-300 ease-out ${
-            videoPlaying ? 'opacity-0' : 'opacity-100'
+          className={`chris-hero-copy pointer-events-none absolute bottom-0 left-0 z-20 flex w-full flex-col gap-3 p-6 ${
+            videoPlaying ? 'chris-hero-copy--playing' : ''
           }`}
           aria-hidden={videoPlaying}
+          data-testid="chris-mobile-hero-copy"
         >
           {showSlotScarcity ? (
-            <ChrisSlotIndicator
-              slotCap={slotCap}
-              slotsRemaining={slotsRemaining}
-              variant="hero"
-            />
+            <div className="chris-hero-copy-line chris-hero-copy-line--0">
+              <ChrisSlotIndicator
+                slotCap={slotCap}
+                slotsRemaining={slotsRemaining}
+                variant="hero"
+              />
+            </div>
           ) : null}
           {/* Mobile: short hero only — long value copy steals vertical space from Chris media. */}
-          <h1 className="chris-text-gradient text-[1.65rem] font-semibold leading-[1.15] tracking-tight sm:text-[2rem] sm:leading-[1.2]">
+          <h1 className="chris-hero-copy-line chris-hero-copy-line--1 chris-text-gradient text-[1.65rem] font-semibold leading-[1.15] tracking-tight sm:text-[2rem] sm:leading-[1.2]">
             Private 45-Minute Session with Astronaut Chris Sembroski
           </h1>
-          <p className="text-sm font-medium leading-snug text-white/90">
+          <p className="chris-hero-copy-line chris-hero-copy-line--2 text-sm font-medium leading-snug text-white/90">
             Guaranteed 1:1 access. No stage. No audience. Just direct answers to your goals.
           </p>
         </div>
