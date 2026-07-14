@@ -86,7 +86,7 @@ export async function chrisWizardRegisterAction(
   }
 
   // public.users.id is uuid — never use non-uuid demo ids (insert fails).
-  let userId = randomUUID();
+  let userId: string = randomUUID();
   const preset = resolvePresetLogin(email);
   if (preset) {
     userId = preset.userId;
