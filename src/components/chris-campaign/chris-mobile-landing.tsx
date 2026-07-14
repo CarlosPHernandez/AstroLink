@@ -35,7 +35,7 @@ export function ChrisMobileLanding({
 
   return (
     <main
-      className="chris-mobile-max relative mx-auto flex w-full flex-grow flex-col overflow-x-hidden pb-12"
+      className="chris-mobile-max relative mx-auto flex w-full flex-grow flex-col overflow-x-hidden pb-6"
       data-testid="chris-mobile-landing"
     >
       <div className="relative h-[50vh] w-full shrink-0 overflow-hidden">
@@ -82,7 +82,7 @@ export function ChrisMobileLanding({
         </div>
       </div>
 
-      <div className="relative z-20 -mt-4 flex flex-col gap-4">
+      <div className="relative z-20 -mt-4 flex flex-col gap-4 pb-4">
         <ChrisMobileBookingCard
           bookingEnabled={bookingEnabled}
           isSignedIn={isSignedIn}

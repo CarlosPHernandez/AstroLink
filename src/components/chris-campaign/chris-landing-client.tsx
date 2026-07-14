@@ -54,13 +54,13 @@ export function ChrisLandingClient({
         />
       </div>
 
-      <div className="hidden min-h-screen flex-col md:flex">
+      <div className="hidden flex-1 flex-col md:flex">
         <nav
           className="mx-auto flex w-full max-w-[80rem] items-center justify-between px-6 py-6 md:px-10 md:py-8 lg:px-12"
           aria-label="Campaign"
         />
 
-        <main className="relative flex flex-grow items-center justify-center overflow-hidden px-6 py-10 md:px-10 md:py-16 lg:px-12 lg:py-20">
+        <main className="relative flex flex-1 flex-grow items-center justify-center overflow-hidden px-6 py-10 md:px-10 md:py-16 lg:px-12 lg:py-20">
           <div
             className="flex w-full max-w-[80rem] flex-col items-center justify-center gap-10 md:items-start md:gap-12 lg:flex-row lg:items-center lg:gap-24"
             data-testid="chris-landing-row"
@@ -97,9 +97,10 @@ export function ChrisLandingClient({
             <ChrisExpertPortrait {...expertPortrait} />
           </div>
         </main>
-
-        <ChrisLandingFooter copyrightYear={copyrightYear} />
       </div>
+
+      {/* Shared footer — was desktop-only, so mobile ended abruptly after the queue. */}
+      <ChrisLandingFooter copyrightYear={copyrightYear} />
     </div>
   );
 }
