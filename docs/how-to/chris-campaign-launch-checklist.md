@@ -2,11 +2,25 @@
 
 Use this before enabling Chris Sembroski limited booking in **production** (`APP_MODE=waitlist` + `CHRIS_BOOKING_ENABLED=true`).
 
+**Go-live product facts (code source of truth):**
+
+| Fact | Value |
+|------|--------|
+| Early-access price | **$180** when `marketing_referrer` / `ref=early-signups` |
+| Public / social price | **$200** for all other refs (including `chris-social`, `chris-sembroski`, missing ref) |
+| Slot scarcity UI | Shown only for early-access (`early-signups`); hidden on social/public |
+| Earliest bookable date | **2026-07-20** (America/New_York calendar day; also never before today Eastern) |
+| Session length | 45 minutes fixed |
+| Default slot cap | 15 (`CHRIS_SLOT_CAP`) |
+| Pricing helpers | `src/lib/chris-campaign/chris-pricing.ts` + `chris-campaign-constants.ts` |
+
+Do not configure a Stripe coupon or promotion code for this PaymentIntent path — dual pricing is resolved server-side from `marketing_referrer`.
+
 ## 1. Database
 
 - [ ] Apply `20260627120000_booking_campaigns.sql` on hosted Supabase (if not already)
 - [ ] Apply `20260701120000_booking_marketing_referrer.sql` for booking attribution
-- [ ] Confirm `booking_campaigns` row exists for `chris-sembroski` with correct `slot_cap`
+- [ ] Confirm `booking_campaigns` row exists for `chris-sembroski` with `slot_cap` **15** (or env override)
 
 ## 2. Vercel Production env
 
@@ -18,8 +32,6 @@ CHRIS_MENTOR_SLUG=chris-sembroski
 CHRIS_CAMPAIGN_ID=chris-sembroski
 ENABLE_DEMO_AUTH=false
 ```
-
-Chris campaign checkout charges the discounted launch amount ($180) directly on the PaymentIntent. Do not configure a Stripe coupon or promotion code for this PaymentIntent path.
 
 Stripe keys must be **Live** mode in Production only. See [stripe-production-cutover.md](./stripe-production-cutover.md).
 
@@ -55,15 +67,26 @@ Referrer ids are documented in [marketing-referrer-taxonomy.md](./marketing-refe
 
 ## 4. Smoke tests (production or preview with prod-like env)
 
-- [ ] `/talk-with-chris` loads with slot count
+- [ ] `/talk-with-chris` loads (mobile short hero + video; desktop HUD)
+- [ ] **Dual price UI**: `?ref=early-signups` shows **$180** + spots remaining; `?ref=chris-social` shows **$200** and **no** limited-slot chrome
+- [ ] Date strip: no days before **July 20, 2026** (and none before today Eastern)
 - [ ] `/experts` redirects to `/talk-with-chris`
-- [ ] `/` redirects to `/early-access`
+- [ ] `/` redirects to `/early-access` when `APP_MODE=waitlist`
 - [ ] CTA → `/booking?campaign=chris&…` wizard (Account step when signed out)
-- [ ] `?ref=chris-sembroski` survives landing → booking URL
+- [ ] `ref` survives landing → booking URL → PaymentIntent metadata (`marketing_referrer`)
 - [ ] **Sign in** with existing Supabase user OR register with a real inbox (not `@test.com`)
 - [ ] Supabase Auth → **Confirm email** is **Off** for launch (or confirm inbox before continuing wizard)
-- [ ] One test booking + refund in Stripe sandbox before live cutover
-- [ ] **Live webhook + Chris payment smoke (after live keys)**: Register webhook to direct `https://astro-link.space/api/webhooks/stripe`. Send test `payment_intent.succeeded` from Stripe Live dashboard → receives clean 200 (no 308). Then complete a real $1 Chris test charge via the wizard. Verify: webhook delivery 200 + `{"received":true}`, booking becomes `confirmed`, transaction recorded, Chris "You're booked with Chris" email sent (check notification_deliveries), no stuck `pending_payment`. Capture logs. Restore launch price after.
+- [ ] Preview-only demo auth: seed mentees use real UUIDs (not `usr-…`) so `public.users` insert succeeds
+- [ ] One test booking + refund in Stripe **sandbox** before live cutover (verify $180 early vs $200 social amounts)
+- [ ] **Live webhook + Chris payment smoke (after live keys)**: Register webhook to direct `https://astro-link.space/api/webhooks/stripe`. Send test `payment_intent.succeeded` from Stripe Live dashboard → clean 200 (no 308). Complete one real charge per tier (or one live charge + refund). Verify: webhook `{"received":true}`, booking `confirmed`, transaction recorded, Chris "You're booked with Chris" ticket email (`notification_deliveries`), no stuck `pending_payment`. Capture logs.
+
+## 4b. Waitlist email blast (ops, not app deploy)
+
+- [ ] Paste HTML from `src/lib/email/chris-early-waitlist-sequence-templates.ts` into Resend Broadcasts (or ESP journey)
+- [ ] All CTAs use `https://astro-link.space/talk-with-chris?ref=early-signups`
+- [ ] Greeting is **Hey,** only (no first-name merge fields)
+- [ ] Exit anyone who books so they only get transactional confirm/brief emails
+- [ ] Full sequence runbook: [chris-early-waitlist-email-automation.md](./chris-early-waitlist-email-automation.md)
 
 ## 5. Admin ops
 

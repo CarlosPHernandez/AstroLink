@@ -2,6 +2,24 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.8.0] - 2026-07-14
+
+### Added
+- Chris campaign dual pricing: waitlist traffic (`ref=early-signups`) pays **$180** with limited-slot scarcity UI; public and social traffic (`chris-social`, `chris-sembroski`, or no ref) pay full **$200** without limited-slot chrome. Server resolves the PaymentIntent amount from `marketing_referrer` (`chris-pricing.ts`).
+- Pre-booking Chris early-waitlist marketing email sequence templates (four HTML emails) plus send-test script and Resend Broadcasts runbook — paste into Resend; does not replace post-payment confirmation or AI brief emails.
+- Launch go-live docs: dual-price marketing links, July 20 earliest bookable day, dual-ref smoke tests, and waitlist blast checklist in the Chris campaign launch how-to.
+
+### Changed
+- Earliest Chris session date is **2026-07-20** (America/New_York), never before today Eastern.
+- Mobile `/talk-with-chris` hero copy is shorter so media stays visible; hero text fades when the intro video plays; date strip is seamless.
+- Chris landing headlines emphasize a private 45-minute session for both waitlist and social audiences.
+- Production default campaign slot cap documented as **15**.
+
+### Fixed
+- Demo mentee registration in the Chris wizard uses real UUIDs (not `usr-…` ids) so `public.users` inserts succeed, with a friendly error if profile creation still fails.
+- Demo `userId` typing satisfies production TypeScript builds on Vercel.
+- Waitlist marketing email HTML is centered for Gmail clients.
+
 ## [0.6.7.0] - 2026-07-12
 
 ### Added

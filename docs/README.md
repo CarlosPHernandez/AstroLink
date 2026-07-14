@@ -36,6 +36,18 @@ Structured using [Diataxis](https://diataxis.fr/): tutorials teach, how-tos guid
 
 Agent skill: `skills/transcript-translation/SKILL.md` · Cursor rule: `.cursor/rules/transcript-translation.mdc`
 
+## Chris Sembroski campaign (go-live)
+
+| Doc | Quadrant | Description |
+|-----|----------|-------------|
+| [how-to/chris-campaign-launch-checklist.md](./how-to/chris-campaign-launch-checklist.md) | How-to | Production env, dual pricing ($180 early / $200 public), July 20 earliest date, smoke tests |
+| [how-to/chris-early-waitlist-email-automation.md](./how-to/chris-early-waitlist-email-automation.md) | How-to | Pre-booking Resend waitlist sequence templates and exit rules |
+| [how-to/marketing-referrer-taxonomy.md](./how-to/marketing-referrer-taxonomy.md) | How-to | `ref` values including `early-signups`, `chris-social`, `chris-sembroski` |
+| [how-to/stripe-production-cutover.md](./how-to/stripe-production-cutover.md) | How-to | Live Stripe keys, webhook, first real charge |
+| [plans/chris-sembroski-launch.md](./plans/chris-sembroski-launch.md) | Explanation | Original PR1–PR4 launch stack (pre-ship spec; prefer how-tos for ops) |
+
+**Pricing SOOT:** `src/lib/chris-campaign/chris-pricing.ts` — server charges from `marketing_referrer`, never client amount.
+
 ## Team ops (3-person)
 
 | Doc | Quadrant | Description |

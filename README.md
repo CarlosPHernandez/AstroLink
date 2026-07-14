@@ -80,7 +80,7 @@ Structured decision logs for judges: [T8 in D1 plan](docs/d1-implementation-plan
 |------|---------|
 | `src/app/` | Routes and API (`/early-access`, `/join`, `/experts`, `/booking`, `/talk-with-chris`, …) |
 | `src/components/` | Feature UI (`early-access`, `experts`, `booking`, `session`, `chris-campaign`) |
-| `src/lib/chris-campaign/` | Chris booking campaign config, slots, dates, route allowlists |
+| `src/lib/chris-campaign/` | Chris booking campaign: dual pricing, slots, dates, referrers, route allowlists |
 | `src/lib/waitlist/` | Waitlist signup, routing, metrics, analytics |
 | `src/lib/transcript-translation/` | Live captions and post-call translation |
 | `docs/` | Tutorials, how-tos, reference ([index](docs/README.md)) |
@@ -91,6 +91,8 @@ Index: [docs/README.md](docs/README.md)
 
 | Topic | Start here |
 |-------|------------|
+| Chris campaign go-live | [docs/how-to/chris-campaign-launch-checklist.md](docs/how-to/chris-campaign-launch-checklist.md) |
+| Chris waitlist email sequence | [docs/how-to/chris-early-waitlist-email-automation.md](docs/how-to/chris-early-waitlist-email-automation.md) |
 | First local video call | [docs/tutorial/first-video-session.md](docs/tutorial/first-video-session.md) |
 | Bidirectional live captions | [docs/tutorial/bidirectional-live-captions.md](docs/tutorial/bidirectional-live-captions.md) |
 | Investor demo runbook | [docs/how-to/video-session-demo.md](docs/how-to/video-session-demo.md) |
@@ -105,7 +107,7 @@ npm test          # Vitest unit/contract tests
 npm run test:e2e  # Playwright D1 golden path (requires .env.local + Supabase seed)
 ```
 
-Vitest covers D1 contract logic: booking pricing, `/api/book` request schema, Daily webhook parsing, LLM rate limits (including caption scope), dev payment skip helpers, session waitlist guard (`getSession`), Stripe booking test-mode production guard, booking-agent mentor pool validation, D3 translate-segment / segment-cache / translation-queue / caption-direction paths, transcript APIs, public expert helpers (`expert-book-href`, `expert-bio`), and Chris campaign helpers (`chris-campaign-dates`, slots, booking validation).
+Vitest covers D1 contract logic: booking pricing, `/api/book` request schema, Daily webhook parsing, LLM rate limits (including caption scope), dev payment skip helpers, session waitlist guard (`getSession`), Stripe booking test-mode production guard, booking-agent mentor pool validation, D3 translate-segment / segment-cache / translation-queue / caption-direction paths, transcript APIs, public expert helpers (`expert-book-href`, `expert-bio`), and Chris campaign helpers (`chris-pricing`, `chris-campaign-dates`, slots, booking validation).
 
 ### E2E (Playwright)
 

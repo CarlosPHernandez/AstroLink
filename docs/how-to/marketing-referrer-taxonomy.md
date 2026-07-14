@@ -51,6 +51,17 @@ Add new rows to this table before publishing links. Carlos refreshes canvases fr
 1. Use `conference-*` or `partner-*` for events and intros.
 2. Ask Carlos for a “signups from `ref`” screenshot before follow-up calls.
 
+## Chris campaign pricing (same `ref` ids)
+
+On `/talk-with-chris` and the Chris booking wizard, `ref` becomes `bookings.marketing_referrer` and drives charge amount:
+
+| `ref` | Charge | Slot scarcity UI |
+|-------|--------|------------------|
+| `early-signups` | $180 | Yes |
+| `chris-social`, `chris-sembroski`, missing/other | $200 | No |
+
+Server SOOT: [`chris-pricing.ts`](../../src/lib/chris-campaign/chris-pricing.ts). Launch cutover: [chris-campaign-launch-checklist.md](./chris-campaign-launch-checklist.md).
+
 ## Technical note
 
-The client reads `ref` via [`parseEarlyAccessReferrer`](../../src/lib/waitlist/early-access-referrer.ts) and POSTs it to [`/api/early-access`](../../src/app/api/early-access/route.ts).
+The early-access client reads `ref` via [`parseEarlyAccessReferrer`](../../src/lib/waitlist/early-access-referrer.ts) and POSTs it to [`/api/early-access`](../../src/app/api/early-access/route.ts). Chris landing uses the same `ref` query key and stores it on the booking.
