@@ -59,7 +59,8 @@ export function ChrisMobileLanding({
               variant="hero"
             />
           ) : null}
-          <h1 className="chris-text-gradient text-[2rem] font-semibold leading-[1.2] tracking-tight">
+          {/* Mobile: short hero only — long value copy steals vertical space from Chris media. */}
+          <h1 className="chris-text-gradient text-[1.65rem] font-semibold leading-[1.15] tracking-tight sm:text-[2rem] sm:leading-[1.2]">
             Private 45-Minute Session with Astronaut Chris Sembroski
           </h1>
           <p className="text-sm font-medium leading-snug text-white/90">
@@ -69,12 +70,6 @@ export function ChrisMobileLanding({
       </div>
 
       <div className="relative z-20 -mt-4 flex flex-col gap-4">
-        <p className="px-6 text-base font-light leading-relaxed text-secondary-fixed-dim">
-          Most people spend $1,500+ traveling to events hoping for a few minutes with someone
-          who&apos;s actually been to space. You get a full guaranteed 45 minutes — with Chris
-          prepared on your specific goals before the call.
-        </p>
-
         <ChrisMobileBookingCard
           bookingEnabled={bookingEnabled}
           isSignedIn={isSignedIn}
