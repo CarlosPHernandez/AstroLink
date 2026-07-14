@@ -13,7 +13,7 @@ Use this before enabling Chris Sembroski limited booking in **production** (`APP
 ```bash
 APP_MODE=waitlist
 CHRIS_BOOKING_ENABLED=true
-CHRIS_SLOT_CAP=10
+CHRIS_SLOT_CAP=15
 CHRIS_MENTOR_SLUG=chris-sembroski
 CHRIS_CAMPAIGN_ID=chris-sembroski
 ENABLE_DEMO_AUTH=false
@@ -46,8 +46,9 @@ Configure in [Supabase Dashboard → Authentication](https://supabase.com/dashbo
 
 | Audience | URL |
 |----------|-----|
-| Chris public promotion | `https://astro-link.space/talk-with-chris?ref=chris-sembroski` (use the canonical non-www; www redirects are acceptable for users) |
-| Waitlist email split | `https://astro-link.space/early-access?ref=early-signups` |
+| Chris public / social (full $200) | `https://astro-link.space/talk-with-chris?ref=chris-social` (or `ref=chris-sembroski`) |
+| Waitlist email early-access ($180) | `https://astro-link.space/talk-with-chris?ref=early-signups` |
+| Waitlist generic signup | `https://astro-link.space/early-access?ref=early-signups` |
 | Sold-out fallback (auto) | `/early-access?ref=early-signups` from Chris landing |
 
 Referrer ids are documented in [marketing-referrer-taxonomy.md](./marketing-referrer-taxonomy.md).

@@ -241,7 +241,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     ).rejects.toBeInstanceOf(ChrisCampaignSoldOutError);
   });
 
-  it('creates Chris campaign PaymentIntent for the $1 test launch amount (TEMP for live testing)', async () => {
+  it('creates Chris campaign PaymentIntent at full $200 for social/public ref', async () => {
     mockIsStripePaymentsSkipped.mockReturnValue(false);
 
     const agent = new BookingAgent();
@@ -253,7 +253,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
       menteeGoals: 'Learn about propulsion',
       menteeBackground: 'Early-career engineer',
       campaignId: 'chris-sembroski',
-      marketingReferrer: 'chris-sembroski',
+      marketingReferrer: 'chris-social',
     });
 
     expect(result).toEqual(
@@ -261,7 +261,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
         bookingId: 'booking-1',
         stripeClientSecret: 'pi_test_secret_123',
         skipPayment: false,
-        amountCents: 100, // TEMP $1 live test price
+        amountCents: 20000,
       }),
     );
     expect(mockGetOrCreateStripeCustomerForMentee).toHaveBeenCalledWith('mentee-1');
@@ -270,7 +270,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     const [paymentIntentParams, requestOptions] = mockStripePaymentIntentsCreate.mock.calls[0];
     expect(paymentIntentParams).toEqual(
       expect.objectContaining({
-        amount: 100, // TEMP $1 test
+        amount: 20000,
         currency: 'usd',
         customer: 'cus_test_123',
         metadata: expect.objectContaining({
@@ -279,19 +279,52 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
           mentee_id: 'mentee-1',
           service_type: 'session_1on1',
           campaign_id: 'chris-sembroski',
-          marketing_referrer: 'chris-sembroski',
-          pricing_mode: 'chris_live_test_1_usd', // TEMP for $1 live test
+          marketing_referrer: 'chris-social',
+          pricing_mode: 'chris_full_200',
+          pricing_tier: 'full',
           original_amount_cents: '20000',
-          charged_amount_cents: '100',
+          charged_amount_cents: '20000',
+        }),
+      }),
+    );
+    expect(paymentIntentParams.metadata).not.toHaveProperty('discount_label');
+    expect(paymentIntentParams).not.toHaveProperty('discounts');
+    expect(requestOptions).toEqual({
+      idempotencyKey: 'astrolink_book_mentee-1_mentor-1_2030-01-01T18:00:00.000Z',
+    });
+  });
+
+  it('creates Chris campaign PaymentIntent at $180 early-access for early-signups ref', async () => {
+    mockIsStripePaymentsSkipped.mockReturnValue(false);
+
+    const agent = new BookingAgent();
+    const result = await agent.bookSession({
+      menteeId: 'mentee-1',
+      mentorId: 'mentor-1',
+      serviceType: 'session_1on1',
+      scheduledAt: '2030-01-01T19:00:00.000Z',
+      menteeGoals: 'Learn about propulsion',
+      menteeBackground: 'Early-career engineer',
+      campaignId: 'chris-sembroski',
+      marketingReferrer: 'early-signups',
+    });
+
+    expect(result.amountCents).toBe(18000);
+    const [paymentIntentParams] = mockStripePaymentIntentsCreate.mock.calls[0];
+    expect(paymentIntentParams).toEqual(
+      expect.objectContaining({
+        amount: 18000,
+        metadata: expect.objectContaining({
+          marketing_referrer: 'early-signups',
+          pricing_mode: 'chris_early_access_180',
+          pricing_tier: 'early_access',
+          charged_amount_cents: '18000',
+          original_amount_cents: '20000',
           discount_label: 'Inspired24',
           discount_percent: '10',
         }),
       }),
     );
-    expect(paymentIntentParams).not.toHaveProperty('discounts');
-    expect(requestOptions).toEqual({
-      idempotencyKey: 'astrolink_book_mentee-1_mentor-1_2030-01-01T18:00:00.000Z',
-    });
   });
 
   it('keeps non-campaign PaymentIntent amount server-calculated without Chris pricing metadata', async () => {

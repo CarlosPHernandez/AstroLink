@@ -1,5 +1,6 @@
 'use server';
 
+import { randomUUID } from 'crypto';
 import {
   getDefaultPathAfterAuth,
   getSafeRedirectPath,
@@ -157,7 +158,8 @@ export async function loginAction(
   const preset = resolvePresetLogin(email);
   let role: 'mentor' | 'mentee' | 'admin' = 'mentee';
   let fullName = '';
-  let userId = `usr-${Math.random().toString(36).substring(2, 9)}`;
+  // public.users.id is uuid — non-uuid ids fail ensureMenteeUserRow inserts.
+  let userId = randomUUID();
   let isPreset = false;
 
   if (preset) {
@@ -263,14 +265,19 @@ export async function registerAction(
     };
   }
 
-  let userId = `usr-${Math.random().toString(36).substring(2, 9)}`;
+  let userId = randomUUID();
   const preset = resolvePresetLogin(email);
   if (preset) {
     userId = preset.userId;
   }
 
+  let sessionUserId = userId;
+  if (!preset || preset.role === 'mentee') {
+    sessionUserId = await ensureMenteeUserRow({ userId, email, fullName });
+  }
+
   await createSession({
-    userId,
+    userId: sessionUserId,
     email,
     role: 'mentee',
     fullName,

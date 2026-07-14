@@ -6,6 +6,8 @@ import {
   getChrisCampaignDatesForMonth,
   getChrisCampaignInitialMonth,
   getChrisCampaignMonthLabel,
+  getChrisMinBookableIsoDate,
+  isChrisScheduledDateBookable,
   shiftChrisCampaignMonth,
 } from '@/lib/chris-campaign/chris-campaign-dates';
 
@@ -29,15 +31,38 @@ describe('chris-campaign-dates', () => {
     });
   });
 
-  it('lists July 2026 dates from the 7th onward', () => {
-    const tiles = getChrisCampaignDatesForMonth(2026, 6);
+  it('lists July 2026 dates from campaign start when “today” is before launch', () => {
+    const tiles = getChrisCampaignDatesForMonth(2026, 6, new Date('2026-07-01T12:00:00Z'));
     expect(tiles[0]).toMatchObject({ isoDate: '2026-07-07', day: '7', weekday: 'TUE' });
     expect(tiles.at(-1)?.isoDate).toBe('2026-07-31');
     expect(tiles).toHaveLength(25);
   });
 
+  it('excludes past days when today is mid-July 2026', () => {
+    // 2026-07-14 16:00 UTC ≈ afternoon Eastern
+    const tiles = getChrisCampaignDatesForMonth(2026, 6, new Date('2026-07-14T16:00:00Z'));
+    expect(tiles[0]?.isoDate).toBe('2026-07-14');
+    expect(tiles.some((t) => t.isoDate === '2026-07-13')).toBe(false);
+    expect(tiles.at(-1)?.isoDate).toBe('2026-07-31');
+  });
+
   it('blocks months before July 2026', () => {
-    expect(getChrisCampaignDatesForMonth(2026, 5)).toHaveLength(0);
+    expect(getChrisCampaignDatesForMonth(2026, 5, new Date('2026-07-14T16:00:00Z'))).toHaveLength(
+      0,
+    );
+  });
+
+  it('computes min bookable as max(campaign start, today Eastern)', () => {
+    expect(getChrisMinBookableIsoDate(new Date('2026-07-01T12:00:00Z'))).toBe('2026-07-07');
+    expect(getChrisMinBookableIsoDate(new Date('2026-07-14T16:00:00Z'))).toBe('2026-07-14');
+  });
+
+  it('validates scheduled dates against min bookable day', () => {
+    const now = new Date('2026-07-14T16:00:00Z');
+    expect(isChrisScheduledDateBookable('2026-07-13T12:00', now)).toBe(false);
+    expect(isChrisScheduledDateBookable('2026-07-14T12:00', now)).toBe(true);
+    expect(isChrisScheduledDateBookable('2026-07-20T18:00:00.000Z', now)).toBe(true);
+    expect(isChrisScheduledDateBookable('not-a-date', now)).toBe(false);
   });
 
   it('navigates months within the allowed horizon', () => {

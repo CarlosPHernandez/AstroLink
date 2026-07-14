@@ -29,8 +29,8 @@ export function getChrisMentorSlug(): string {
 
 export function getChrisSlotCapFromEnv(): number {
   const raw = process.env.CHRIS_SLOT_CAP?.trim();
-  const parsed = raw ? Number.parseInt(raw, 10) : 10;
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
+  const parsed = raw ? Number.parseInt(raw, 10) : 15;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 15;
 }
 
 export function isChrisCampaignBookingQuery(campaign: string | null | undefined): boolean {

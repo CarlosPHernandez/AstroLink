@@ -1,5 +1,6 @@
 'use server';
 
+import { randomUUID } from 'crypto';
 import { isDemoAuthEnabled, isSupabaseAuthEnabled } from '@/lib/app-mode';
 import { resolvePresetLogin } from '@/lib/auth-presets';
 import { createSession } from '@/lib/session';
@@ -84,20 +85,29 @@ export async function chrisWizardRegisterAction(
     return { success: true };
   }
 
-  let userId = `usr-${Math.random().toString(36).substring(2, 9)}`;
+  // public.users.id is uuid — never use non-uuid demo ids (insert fails).
+  let userId = randomUUID();
   const preset = resolvePresetLogin(email);
   if (preset) {
     userId = preset.userId;
   }
 
-  const sessionUserId = await ensureMenteeUserRow({ userId, email, fullName });
-  await createSession({
-    userId: sessionUserId,
-    email,
-    role: 'mentee',
-    fullName,
-    onboarded: true,
-  });
+  try {
+    const sessionUserId = await ensureMenteeUserRow({ userId, email, fullName });
+    await createSession({
+      userId: sessionUserId,
+      email,
+      role: 'mentee',
+      fullName,
+      onboarded: true,
+    });
+  } catch (err) {
+    console.error('chrisWizardRegisterAction profile:', err);
+    return {
+      message: 'Could not create your account profile. Try signing in or use a different email.',
+      success: false,
+    };
+  }
 
   return { success: true };
 }
@@ -137,22 +147,30 @@ export async function chrisWizardLoginAction(
     return { message: 'Invalid email or password.', success: false };
   }
 
-  const sessionUserId =
-    preset.role === 'mentee'
-      ? await ensureMenteeUserRow({
-          userId: preset.userId,
-          email,
-          fullName: preset.fullName,
-        })
-      : preset.userId;
+  try {
+    const sessionUserId =
+      preset.role === 'mentee'
+        ? await ensureMenteeUserRow({
+            userId: preset.userId,
+            email,
+            fullName: preset.fullName,
+          })
+        : preset.userId;
 
-  await createSession({
-    userId: sessionUserId,
-    email,
-    role: preset.role,
-    fullName: preset.fullName,
-    onboarded: preset.role !== 'mentor',
-  });
+    await createSession({
+      userId: sessionUserId,
+      email,
+      role: preset.role,
+      fullName: preset.fullName,
+      onboarded: preset.role !== 'mentor',
+    });
+  } catch (err) {
+    console.error('chrisWizardLoginAction profile:', err);
+    return {
+      message: 'Could not load your account profile. Try again or use another account.',
+      success: false,
+    };
+  }
 
   return { success: true };
 }

@@ -11,6 +11,7 @@ import { ChrisLandingFooter } from '@/components/chris-campaign/chris-landing-fo
 import { ChrisQuestionQueue } from '@/components/chris-campaign/chris-question-queue';
 import { ChrisRequestSessionForm } from '@/components/chris-campaign/chris-request-session-form';
 import { ChrisSlotIndicator } from '@/components/chris-campaign/chris-slot-indicator';
+import { showChrisSlotScarcity } from '@/lib/chris-campaign/chris-pricing';
 
 type ChrisLandingClientProps = {
   bookingEnabled: boolean;
@@ -33,6 +34,8 @@ export function ChrisLandingClient({
   slotCap,
   slotsRemaining,
 }: ChrisLandingClientProps) {
+  const showSlots = showChrisSlotScarcity(marketingReferrer);
+  // Server still enforces cap for all refs; UI sold-out only when scarcity is shown.
   const soldOut = bookingEnabled && slotsRemaining <= 0;
 
   return (
@@ -47,6 +50,7 @@ export function ChrisLandingClient({
           mentorSlug={mentorSlug}
           slotCap={slotCap}
           slotsRemaining={slotsRemaining}
+          showSlotScarcity={showSlots}
         />
       </div>
 
@@ -63,13 +67,19 @@ export function ChrisLandingClient({
           >
             <div className="z-10 flex w-full max-w-[42rem] flex-col items-center space-y-8 text-center md:items-start md:space-y-10 md:text-left lg:w-[50%]">
               <div className="flex w-full flex-col items-center space-y-6 md:items-start">
-                <ChrisSlotIndicator slotCap={slotCap} slotsRemaining={slotsRemaining} />
+                {showSlots ? (
+                  <ChrisSlotIndicator slotCap={slotCap} slotsRemaining={slotsRemaining} />
+                ) : null}
                 <h1 className="chris-fade-in-up chris-delay-200 chris-copy-max w-full text-3xl font-semibold leading-[1.1] tracking-tight text-white sm:text-4xl md:text-[2.5rem] lg:text-6xl">
-                  Office hours with verified space operators — not A.I.
+                  Private 45-Minute Session with Astronaut Chris Sembroski
                 </h1>
+                <p className="chris-fade-in-up chris-delay-250 chris-copy-max w-full text-base font-medium leading-snug text-white/90 sm:text-lg">
+                  Guaranteed 1:1 access. No stage. No audience. Just direct answers to your goals.
+                </p>
                 <p className="chris-fade-in-up chris-delay-300 chris-copy-max w-full text-lg font-light leading-relaxed text-secondary-fixed-dim">
-                  Connect directly with the architects of modern space exploration. Gain unfiltered
-                  insights from those who have crossed the Kármán line.
+                  Most people spend $1,500+ traveling to events hoping for a few minutes with someone
+                  who&apos;s actually been to space. You get a full guaranteed 45 minutes — with Chris
+                  prepared on your specific goals before the call.
                 </p>
               </div>
 

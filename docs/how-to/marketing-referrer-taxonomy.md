@@ -31,8 +31,9 @@ Use the same host as your production canonical (`getAppBaseUrl()` → `https://a
 | `partner-<org-slug>` | Oliver | Co-marketing with a named org (add a concrete row per partner when live) |
 | `partner-inspired24` | Inspired24 | Member email — early access closing notice (locked; do not rename mid-campaign) |
 | `outbound-<prospect-slug>` | Oliver | One-off link in a sales email (optional) |
-| `chris-sembroski` | Chris campaign | Public Chris promotion — `/talk-with-chris?ref=chris-sembroski` |
-| `early-signups` | Waitlist email | Chris waitlist email split — `/early-access?ref=early-signups` |
+| `chris-sembroski` | Chris campaign | Public Chris promotion — `/talk-with-chris?ref=chris-sembroski` (full $200; no limited-slot scarcity UI) |
+| `chris-social` | Chris social | Chris Instagram/X/etc. — `/talk-with-chris?ref=chris-social` (full **$200**; hide spots remaining) |
+| `early-signups` | Waitlist email | Chris waitlist email — early-access **$180** + show limited slots; CTA may use `/talk-with-chris?ref=early-signups` |
 | `expert-david-guajardo` | David / Carlos | David’s partner landing `/join/david-guajardo` (auto-set; do not hand-edit links) |
 | `expert-<mentor-slug>` | Expert roster | Other `/join/<slug>` partner pages (e.g. `expert-chris-sembroski`) |
 | `direct` | — | Reserved; omit `ref` for organic (stored as `(direct)` in reports) |

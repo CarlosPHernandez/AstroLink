@@ -3,10 +3,14 @@ import type { Json } from '@/lib/database.types';
 import {
   CHRIS_DISCOUNT_PERCENT,
   CHRIS_DISCOUNT_NAME,
-  CHRIS_LAUNCH_PRICE_CENTS,
   CHRIS_ORIGINAL_PRICE_CENTS,
   CHRIS_SESSION_DURATION_MINUTES,
 } from '@/lib/chris-campaign/chris-campaign-constants';
+import {
+  chrisPricingMode,
+  resolveChrisChargeCents,
+  resolveChrisPricingTier,
+} from '@/lib/chris-campaign/chris-pricing';
 import {
   ChrisCampaignSoldOutError,
   releaseChrisCampaignSlot,
@@ -143,15 +147,15 @@ export class BookingAgent {
       durationMinutes,
     });
 
-    // For this specific Chris case: force original gross price to $200 for the 45-min session.
-    // (Overrides the prorated mentor hourly rate so the "original" before discount is exactly $200.)
+    // Chris: list price $200; charge early-access $180 or full $200 from marketing_referrer.
     if (isChrisCampaign) {
       servicePriceCents = CHRIS_ORIGINAL_PRICE_CENTS;
     }
 
-    const stripeAmountCents = isChrisCampaign
-      ? CHRIS_LAUNCH_PRICE_CENTS
-      : servicePriceCents;
+    const chrisChargeCents = isChrisCampaign
+      ? resolveChrisChargeCents(params.marketingReferrer)
+      : null;
+    const stripeAmountCents = chrisChargeCents ?? servicePriceCents;
     const displayAmountCents = stripeAmountCents;
 
     const skipPayments = isStripePaymentsSkipped();
@@ -175,14 +179,18 @@ export class BookingAgent {
           mentee_id: params.menteeId,
           service_type: params.serviceType,
           ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
-          ...(isChrisCampaign
+          ...(isChrisCampaign && chrisChargeCents != null
             ? {
-                // TEMP: using test pricing_mode for $1 live test to match previous runs
-                pricing_mode: 'chris_live_test_1_usd',
+                pricing_mode: chrisPricingMode(params.marketingReferrer),
+                pricing_tier: resolveChrisPricingTier(params.marketingReferrer),
                 original_amount_cents: String(CHRIS_ORIGINAL_PRICE_CENTS),
-                charged_amount_cents: String(CHRIS_LAUNCH_PRICE_CENTS),
-                discount_label: CHRIS_DISCOUNT_NAME,
-                discount_percent: String(CHRIS_DISCOUNT_PERCENT),
+                charged_amount_cents: String(chrisChargeCents),
+                ...(resolveChrisPricingTier(params.marketingReferrer) === 'early_access'
+                  ? {
+                      discount_label: CHRIS_DISCOUNT_NAME,
+                      discount_percent: String(CHRIS_DISCOUNT_PERCENT),
+                    }
+                  : {}),
               }
             : {}),
           ...(params.marketingReferrer

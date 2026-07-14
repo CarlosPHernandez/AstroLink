@@ -57,20 +57,20 @@ describe('BookBodySchema', () => {
     expect(BookBodySchema.parse(withoutMentor).mentorId).toBeUndefined();
   });
 
+  const chrisFuture = {
+    ...validBody,
+    campaign: 'chris' as const,
+    scheduledAt: '2030-08-15T12:00:00.000Z',
+    durationMinutes: 45,
+  };
+
   it('accepts optional campaign=chris with 45-minute live session', () => {
-    expect(
-      BookBodySchema.parse({
-        ...validBody,
-        campaign: 'chris',
-        durationMinutes: 45,
-      }).campaign,
-    ).toBe('chris');
+    expect(BookBodySchema.parse(chrisFuture).campaign).toBe('chris');
   });
 
   it('rejects campaign=chris with non-45-minute duration', () => {
     const result = BookBodySchema.safeParse({
-      ...validBody,
-      campaign: 'chris',
+      ...chrisFuture,
       durationMinutes: 30,
     });
     expect(result.success).toBe(false);
@@ -81,10 +81,8 @@ describe('BookBodySchema', () => {
 
   it('rejects campaign=chris with pre-call brief only', () => {
     const result = BookBodySchema.safeParse({
-      ...validBody,
-      campaign: 'chris',
+      ...chrisFuture,
       serviceType: 'pre_call_brief',
-      durationMinutes: 45,
     });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -92,18 +90,27 @@ describe('BookBodySchema', () => {
     }
   });
 
+  it('rejects campaign=chris with a past session date', () => {
+    const result = BookBodySchema.safeParse({
+      ...chrisFuture,
+      scheduledAt: '2026-07-01T12:00:00.000Z',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.scheduledAt?.[0]).toMatch(/on or after today/i);
+    }
+  });
+
   it('sanitizes marketingReferrer on Chris bookings', () => {
     expect(
       BookBodySchema.parse({
-        ...validBody,
-        campaign: 'chris',
+        ...chrisFuture,
         marketingReferrer: 'chris-sembroski',
       }).marketingReferrer,
     ).toBe('chris-sembroski');
     expect(
       BookBodySchema.parse({
-        ...validBody,
-        campaign: 'chris',
+        ...chrisFuture,
         marketingReferrer: '<bad>',
       }).marketingReferrer,
     ).toBeUndefined();
