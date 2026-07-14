@@ -39,7 +39,7 @@ Code templates for the four emails live in:
 | Slots | 15 total (waitlist window) |
 | CTA URL | `https://www.astro-link.space/talk-with-chris` |
 | Recommended tracked CTA | `https://www.astro-link.space/talk-with-chris?ref=early-signups` (attribution; redirects still hit landing) |
-| Variables in every email | `{{name}}`, `{{email}}` (in code: `name`, `email` params) |
+| Variables | Email only. Greeting is always **Hey,** — waitlist never collected first name. Do not use `{{name}}` / `{{{FIRST_NAME}}}` in Resend. |
 
 **Bonuses (all emails that list them):**
 
@@ -236,6 +236,23 @@ CTA href:
 Until click tracking exists, **do not invent clicks**: either send only the value-nurture branch, or use ESP native click conditions.
 
 ---
+
+## Test one email to yourself
+
+With `RESEND_API_KEY` and `RESEND_FROM` in `.env.local` (and the from domain verified in Resend):
+
+```bash
+# Email 1 only (initial offer) — greeting is always "Hey,"
+npm run email:chris-waitlist-test -- --to you@example.com
+
+# All four sequence emails (spaced only by how fast Resend accepts them — not day delays)
+npm run email:chris-waitlist-test -- --to you@example.com --template all
+
+# Subject check without sending
+npm run email:chris-waitlist-test -- --to you@example.com --dry-run
+```
+
+Then check your inbox (and spam) and the Resend dashboard → Emails.
 
 ## Launch day runbook (36 contacts)
 

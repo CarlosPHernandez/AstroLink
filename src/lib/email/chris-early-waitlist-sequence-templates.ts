@@ -20,13 +20,19 @@ export const CHRIS_EARLY_OFFER = {
 } as const;
 
 export type ChrisEarlyWaitlistContact = {
-  /** Contact {{name}} */
-  name: string;
-  /** Contact {{email}} */
+  /**
+   * Optional — early-access waitlist only collected email.
+   * Templates never personalize with first name (Resend audience has email only).
+   */
+  name?: string;
+  /** Contact email (for footer / send target). */
   email: string;
   /** Override CTA (e.g. tracked redirect). Defaults to ref=early-signups URL. */
   ctaUrl?: string;
 };
+
+/** Generic greeting — no first name (waitlist CSV is email-only). */
+export const CHRIS_SEQUENCE_GREETING = 'Hey,';
 
 export type ChrisSequenceEmail = {
   templateId:
@@ -47,13 +53,22 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
-function displayName(name: string): string {
-  const trimmed = name.trim();
-  return trimmed || 'there';
-}
-
 function ctaHref(contact: ChrisEarlyWaitlistContact): string {
   return contact.ctaUrl?.trim() || CHRIS_EARLY_WAITLIST_CTA_URL;
+}
+
+function greetingHtml(): string {
+  return `<p style="margin:0 0 16px;">${escapeHtml(CHRIS_SEQUENCE_GREETING)}</p>`;
+}
+
+/** Primary action button (use mid-email + footer so early clickers and full readers both have a path). */
+function ctaButtonHtml(label: string, href: string, opts?: { margin?: string }): string {
+  const margin = opts?.margin ?? '20px 0 24px';
+  const safeHref = escapeHtml(href);
+  return `
+<p style="margin:${margin};">
+  <a href="${safeHref}" style="display:inline-block;background:#ffffff;color:#1c1c1c;text-decoration:none;border-radius:8px;padding:14px 20px;font-size:14px;font-weight:700;letter-spacing:0.02em;">${escapeHtml(label)}</a>
+</p>`.trim();
 }
 
 function emailShell(params: {
@@ -63,38 +78,41 @@ function emailShell(params: {
   ctaLabel: string;
   ctaUrl: string;
   footerNote?: string;
+  /** When false, body already includes both CTAs (avoids a third button). Default true. */
+  appendFooterCta?: boolean;
 }): string {
   const cta = escapeHtml(params.ctaUrl);
+  const appendFooterCta = params.appendFooterCta !== false;
+  // Keep HTML short + avoid dashed "signature" rules — Gmail often hides the lower half behind ··· otherwise.
   return `
 <div style="margin:0;padding:0;background:#1c1c1c;color:#ffffff;font-family:Geist,Inter,Arial,Helvetica,sans-serif;">
-  <span style="display:none!important;visibility:hidden;opacity:0;height:0;width:0;overflow:hidden;">${escapeHtml(params.preheader)}</span>
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${escapeHtml(params.preheader)}</div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#1c1c1c;">
     <tr>
-      <td align="center" style="padding:32px 16px;">
+      <td align="center" style="padding:24px 16px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;border-collapse:collapse;background:#1c1c1c;border:1px solid #333333;">
           <tr>
-            <td style="padding:18px 24px;border-bottom:1px solid #333333;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;">
+            <td style="padding:16px 20px;border-bottom:1px solid #333333;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;">
               AstroLink
             </td>
           </tr>
           <tr>
-            <td style="padding:28px 24px 8px;">
-              <div style="font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#b4c5ff;">Early access · 15 slots</div>
-              <h1 style="margin:12px 0 0;color:#ffffff;font-size:24px;line-height:1.2;font-weight:600;">${escapeHtml(params.title)}</h1>
+            <td style="padding:20px 20px 6px;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#b4c5ff;">Early access · 15 slots</div>
+              <h1 style="margin:10px 0 0;color:#ffffff;font-size:22px;line-height:1.25;font-weight:600;">${escapeHtml(params.title)}</h1>
             </td>
           </tr>
           <tr>
-            <td style="padding:8px 24px 24px;color:#e5e2e1;font-size:15px;line-height:1.6;font-weight:300;">
+            <td style="padding:6px 20px 20px;color:#e5e2e1;font-size:15px;line-height:1.55;font-weight:300;">
               ${params.bodyHtml}
-              <p style="margin:28px 0 8px;">
-                <a href="${cta}" style="display:inline-block;background:#ffffff;color:#1c1c1c;text-decoration:none;border-radius:8px;padding:14px 20px;font-size:14px;font-weight:700;letter-spacing:0;">${escapeHtml(params.ctaLabel)}</a>
-              </p>
-              <p style="margin:12px 0 0;font-size:12px;color:#c9c6c5;word-break:break-all;">
-                <a href="${cta}" style="color:#b4c5ff;text-decoration:underline;">${cta}</a>
-              </p>
+              ${
+                appendFooterCta
+                  ? ctaButtonHtml(params.ctaLabel, params.ctaUrl, { margin: '20px 0 0' })
+                  : ''
+              }
               ${
                 params.footerNote
-                  ? `<p style="margin:24px 0 0;padding-top:18px;border-top:1px dashed #333333;font-size:12px;color:#c9c6c5;">${params.footerNote}</p>`
+                  ? `<p style="margin:16px 0 0;font-size:12px;line-height:1.45;color:#c9c6c5;">${params.footerNote}</p>`
                   : ''
               }
             </td>
@@ -128,83 +146,123 @@ function bonusesHtml(): string {
 </ul>`.trim();
 }
 
-function guaranteeHtml(): string {
+function guaranteeHtml(variant: 'default' | 'initial' = 'default'): string {
+  const body =
+    variant === 'initial'
+      ? `Chris reviews everything you submit before the call. If it doesn’t address what you put in the form, you get a follow-up resource package or priority reschedule at no extra cost.`
+      : `Chris reviews your goals before the call. If the session doesn’t address what you submitted, you get a follow-up package or priority reschedule at no extra cost.`;
+
   return `
-<div style="margin:20px 0;padding:16px;border:1px solid #334b84;border-radius:10px;background:#00174c;">
-  <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#b4c5ff;margin-bottom:8px;">Chris Preparation Guarantee</div>
-  <p style="margin:0;color:#e5e2e1;font-size:14px;line-height:1.55;">
-    We make sure Chris reviews your goals, questions, and background before the call.
-    If the session does not directly address what you submitted, we provide a follow-up
-    resource package or priority reschedule at no extra cost.
+<div style="margin:14px 0;padding:12px 14px;border:1px solid #334b84;border-radius:8px;background:#00174c;">
+  <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#b4c5ff;margin-bottom:6px;">Chris Preparation Guarantee</div>
+  <p style="margin:0;color:#e5e2e1;font-size:13px;line-height:1.5;">
+    ${body}
   </p>
 </div>`.trim();
+}
+
+function initialOfferValueStackHtml(): string {
+  return `
+<ul style="margin:8px 0 0;padding-left:18px;color:#e5e2e1;">
+  <li style="margin-bottom:6px;">Full <strong style="color:#fff;font-weight:600;">45-minute</strong> private video call with Chris</li>
+  <li style="margin-bottom:6px;">Chris prepped on your goals, questions, and background</li>
+  <li style="margin-bottom:6px;">Pre-call brief with tailored questions</li>
+  <li style="margin-bottom:6px;">Post-call actionable brief with next steps</li>
+</ul>`.trim();
+}
+
+function initialOfferBonusesHtml(): string {
+  return `
+<ul style="margin:8px 0 0;padding-left:18px;color:#e5e2e1;">
+  <li style="margin-bottom:6px;">Personalized follow-up note within 48 hours</li>
+  <li style="margin-bottom:6px;">Call recording (subject to approval)</li>
+  <li style="margin-bottom:6px;">3 resources Chris recommends for your goals</li>
+</ul>`.trim();
 }
 
 /** Step 1 — immediate on chris_early_waitlist_launch */
 export function buildChrisInitialOfferEmail(
   contact: ChrisEarlyWaitlistContact,
 ): ChrisSequenceEmail {
-  const name = displayName(contact.name);
-  const email = contact.email.trim();
+  void contact.email;
   const href = ctaHref(contact);
   const subject =
     'Your early access slot with Astronaut Chris Sembroski is now open (only 15 spots)';
+  const ctaLabel = 'SELECT YOUR DAY AND REQUEST YOUR SESSION';
 
+  // Keep this short so Gmail/iOS don’t hide the lower half behind “···” expand.
+  // Two CTAs: after hook (scanners) + after offer (full readers) — both above long tail.
   const bodyHtml = `
-<p style="margin:0 0 16px;">Hi ${escapeHtml(name)},</p>
-<p style="margin:0 0 16px;">
-  You signed up early for a reason. The private 45-minute 1:1 video sessions with Chris Sembroski
-  are now live for the waitlist before anyone else. Only 15 spots total.
+${greetingHtml()}
+<p style="margin:0 0 12px;">You signed up early for a reason.</p>
+<p style="margin:0 0 12px;">
+  Private 45-minute 1:1 sessions with Astronaut Chris Sembroski are live for the original waitlist
+  — before the public. <strong style="color:#fff;font-weight:600;">Only 15 spots.</strong>
 </p>
-<p style="margin:0 0 16px;">
-  Chris went from data engineer to orbiting Earth on Inspiration4. In 45 minutes he gives direct
-  answers to your goals and questions while knowing exactly who you are and what you are working on.
-  This is the personal clarity engineers, students, and space enthusiasts have been asking for.
+${ctaButtonHtml(ctaLabel, href, { margin: '4px 0 16px' })}
+<p style="margin:0 0 12px;">
+  Chris went from engineer to orbit on Inspiration4. In one private call he answers <em>your</em>
+  goals and questions — not a generic Q&amp;A. Most people spend $1,500+ on events hoping for a few
+  minutes with someone like Chris. You get a full guaranteed 45 minutes for
+  <strong style="color:#fff;font-weight:600;">$180</strong> (normally $200).
 </p>
-<p style="margin:0 0 8px;color:#fff;font-weight:600;">For the early-access price of $180 you receive:</p>
-${valueStackHtml()}
-<p style="margin:20px 0 8px;color:#fff;font-weight:600;">Bonuses included:</p>
-${bonusesHtml()}
-${guaranteeHtml()}
-<p style="margin:0 0 16px;">
-  15 slots only for early waitlist members. Chris reviews day selections daily. Slots are filling now.
+<p style="margin:0 0 6px;color:#fff;font-weight:600;">You receive:</p>
+${initialOfferValueStackHtml()}
+<p style="margin:12px 0 6px;color:#fff;font-weight:600;">Plus:</p>
+${initialOfferBonusesHtml()}
+${guaranteeHtml('initial')}
+<p style="margin:0 0 8px;">
+  15 slots. Early waitlist only. Slots are filling in real time.
 </p>
-<p style="margin:0;font-size:13px;color:#c9c6c5;">
-  P.S. This early-access window is limited and will not be offered to the public yet.
-  Book your slot while it is still available.
+${ctaButtonHtml(ctaLabel, href, { margin: '8px 0 12px' })}
+<p style="margin:0;font-size:13px;color:#c9c6c5;line-height:1.45;">
+  P.S. This round is not public. First access to the $180 rate — when these 15 are gone, the rate
+  returns to the original price.
 </p>
-<p style="margin:16px 0 0;font-size:12px;color:#8a8786;">Sent to ${escapeHtml(email)}</p>
   `.trim();
 
   const text = [
-    `Hi ${name},`,
+    CHRIS_SEQUENCE_GREETING,
     '',
-    'You signed up early for a reason. The private 45-minute 1:1 video sessions with Chris Sembroski are now live for the waitlist before anyone else. Only 15 spots total.',
+    'You signed up early for a reason.',
     '',
-    'Chris went from data engineer to orbiting Earth on Inspiration4. In 45 minutes he gives direct answers to your goals and questions while knowing who you are and what you are working on.',
+    'Private 45-minute 1:1 sessions with Astronaut Chris Sembroski are live for the original waitlist — before the public. Only 15 spots.',
     '',
-    'For $180: 45-minute private video call, Chris knows your goals beforehand, AI pre-call brief, post-call actionable brief.',
-    'Bonuses: personalized follow-up within 48 hours, call recording (subject to approval), 3 curated resources for your goals.',
+    `${ctaLabel}: ${href}`,
     '',
-    'Chris Preparation Guarantee: Chris reviews your goals before the call; if not addressed, follow-up resources or priority reschedule at no extra cost.',
+    'Chris went from engineer to orbit on Inspiration4. In one private call he answers your goals and questions — not a generic Q&A. Most people spend $1,500+ on events hoping for a few minutes with someone like Chris. You get a full guaranteed 45 minutes for $180 (normally $200).',
     '',
-    '15 slots. Chris reviews day selections daily.',
+    'You receive:',
+    '• Full 45-minute private video call with Chris',
+    '• Chris prepped on your goals, questions, and background',
+    '• Pre-call brief with tailored questions',
+    '• Post-call actionable brief with next steps',
     '',
-    `Select Your Day and Request Your Session: ${href}`,
+    'Plus:',
+    '• Personalized follow-up note within 48 hours',
+    '• Call recording (subject to approval)',
+    '• 3 resources Chris recommends for your goals',
     '',
-    'P.S. Early access is limited and not public yet.',
-    `Sent to ${email}`,
+    'CHRIS PREPARATION GUARANTEE: Chris reviews everything you submit before the call. If it doesn’t address what you put in the form, you get a follow-up resource package or priority reschedule at no extra cost.',
+    '',
+    '15 slots. Early waitlist only. Filling in real time.',
+    '',
+    `${ctaLabel}: ${href}`,
+    '',
+    'P.S. This round is not public. First access to the $180 rate — when these 15 are gone, the rate returns to the original price.',
   ].join('\n');
 
   return {
     templateId: 'chris-initial-offer',
     subject,
     html: emailShell({
-      preheader: 'Only 15 early-access slots · $180 · 45 min with Chris Sembroski',
+      preheader: 'Only 15 early-access slots · $180 (normally $200) · 45 min with Chris',
       title: 'Your early access slot is open',
       bodyHtml,
-      ctaLabel: 'Select Your Day and Request Your Session',
+      ctaLabel,
       ctaUrl: href,
+      // Both CTAs live in the body so the full message stays compact and above any client “···” trim.
+      appendFooterCta: false,
     }),
     text,
   };
@@ -214,38 +272,36 @@ ${guaranteeHtml()}
 export function buildChrisClickedReminderEmail(
   contact: ChrisEarlyWaitlistContact,
 ): ChrisSequenceEmail {
-  const name = displayName(contact.name);
-  const email = contact.email.trim();
+  void contact.email;
   const href = ctaHref(contact);
   const subject =
     'You started the process with Chris Sembroski - finish before the remaining slots close';
 
+  const ctaLabel = 'SELECT YOUR DAY AND REQUEST YOUR SESSION';
   const bodyHtml = `
-<p style="margin:0 0 16px;">Hi ${escapeHtml(name)},</p>
-<p style="margin:0 0 16px;">
-  You opened the path to a 45-minute 1:1 with Chris. In that call he answers your goals and questions
-  directly — with your background already reviewed.
+${greetingHtml()}
+<p style="margin:0 0 12px;">
+  You opened the path to a 45-minute 1:1 with Chris. He answers your goals and questions directly —
+  with your background already reviewed.
 </p>
-<p style="margin:0 0 16px;">
-  The AI pre-call brief and post-call brief remove the prep and capture work. You show up ready;
-  you leave with next steps.
+${ctaButtonHtml(ctaLabel, href, { margin: '4px 0 16px' })}
+<p style="margin:0 0 12px;">
+  Pre- and post-call briefs remove the prep work. Early access is $180.
+  <strong style="color:#fff;font-weight:600;">Only 15 slots</strong> — finish your day selection
+  before the remaining seats close.
 </p>
-<p style="margin:0 0 16px;">
-  Only 15 slots for the waitlist, and they are filling.
-  Finish your day selection before the remaining seats close.
-</p>
-<p style="margin:16px 0 0;font-size:12px;color:#8a8786;">Sent to ${escapeHtml(email)}</p>
   `.trim();
 
   const text = [
-    `Hi ${name},`,
+    CHRIS_SEQUENCE_GREETING,
     '',
     'You opened the path to a 45-minute 1:1 with Chris. He answers your goals and questions directly, with your background reviewed.',
-    'AI pre- and post-call briefs remove prep and capture work.',
-    'Early access: $180 · 15 slots · filling now.',
     '',
-    `Finish booking: ${href}`,
-    `Sent to ${email}`,
+    `${ctaLabel}: ${href}`,
+    '',
+    'Pre- and post-call briefs remove the prep work. Early access is $180. Only 15 slots — finish your day selection before the remaining seats close.',
+    '',
+    `${ctaLabel}: ${href}`,
   ].join('\n');
 
   return {
@@ -255,7 +311,7 @@ export function buildChrisClickedReminderEmail(
       preheader: 'Finish booking · 15 early-access slots · $180',
       title: 'Finish before the remaining slots close',
       bodyHtml,
-      ctaLabel: 'Select Your Day and Request Your Session',
+      ctaLabel,
       ctaUrl: href,
     }),
     text,
@@ -266,45 +322,41 @@ export function buildChrisClickedReminderEmail(
 export function buildChrisValueNurtureEmail(
   contact: ChrisEarlyWaitlistContact,
 ): ChrisSequenceEmail {
-  const name = displayName(contact.name);
-  const email = contact.email.trim();
+  void contact.email;
   const href = ctaHref(contact);
   const subject =
     'What changes when you get direct answers from someone who has been to space';
 
+  const ctaLabel = 'SELECT YOUR DAY AND REQUEST YOUR SESSION';
   const bodyHtml = `
-<p style="margin:0 0 16px;">Hi ${escapeHtml(name)},</p>
-<p style="margin:0 0 16px;">
-  Most career and project advice about space is generic. What changes in a session with Chris is
-  specificity: he has been the engineer, the crew member, and the public face of a mission.
-  Engineers and students walk away knowing which path matches their goals — and which noise to ignore.
+${greetingHtml()}
+<p style="margin:0 0 12px;">
+  Most space career advice is generic. With Chris, you get specificity: engineer, crew member, and
+  the public face of a mission. You leave knowing which path matches your goals.
 </p>
-<p style="margin:0 0 8px;color:#fff;font-weight:600;">For $180 (early access) you get:</p>
+${ctaButtonHtml(ctaLabel, href, { margin: '4px 0 16px' })}
+<p style="margin:0 0 6px;color:#fff;font-weight:600;">For $180 (early access):</p>
 ${valueStackHtml()}
-<p style="margin:20px 0 8px;color:#fff;font-weight:600;">Plus:</p>
+<p style="margin:12px 0 6px;color:#fff;font-weight:600;">Plus:</p>
 ${bonusesHtml()}
-<p style="margin:16px 0;">
-  AI briefs make it effortless: you submit goals and background; Chris reviews them; you get tailored
-  questions and a post-call action plan.
+<p style="margin:12px 0 0;">
+  Only 15 early-waitlist slots — before any public offer.
 </p>
-<p style="margin:0 0 16px;">
-  Only 15 slots for early waitlist members — before any public offer. Requests are coming in daily.
-</p>
-<p style="margin:16px 0 0;font-size:12px;color:#8a8786;">Sent to ${escapeHtml(email)}</p>
   `.trim();
 
   const text = [
-    `Hi ${name},`,
+    CHRIS_SEQUENCE_GREETING,
     '',
-    'Generic space advice is noise. 45 minutes with Chris is specific: he has been the engineer and the crew member. You leave knowing which path fits your goals.',
+    'Most space career advice is generic. With Chris, you get specificity: engineer, crew member, and the public face of a mission. You leave knowing which path matches your goals.',
+    '',
+    `${ctaLabel}: ${href}`,
     '',
     'For $180: 45-min private call, Chris knows your goals, AI pre-brief, post-call brief.',
     'Bonuses: follow-up within 48h, recording (with approval), 3 curated resources.',
     '',
-    '15 early-waitlist slots only. Requests coming in daily.',
+    'Only 15 early-waitlist slots — before any public offer.',
     '',
-    `Book: ${href}`,
-    `Sent to ${email}`,
+    `${ctaLabel}: ${href}`,
   ].join('\n');
 
   return {
@@ -314,7 +366,7 @@ ${bonusesHtml()}
       preheader: '45 minutes of direct answers · $180 early access · 15 slots',
       title: 'Direct answers from someone who has been to space',
       bodyHtml,
-      ctaLabel: 'Select Your Day and Request Your Session',
+      ctaLabel,
       ctaUrl: href,
     }),
     text,
@@ -325,41 +377,38 @@ ${bonusesHtml()}
 export function buildChrisFinalUrgencyEmail(
   contact: ChrisEarlyWaitlistContact,
 ): ChrisSequenceEmail {
-  const name = displayName(contact.name);
-  const email = contact.email.trim();
+  void contact.email;
   const href = ctaHref(contact);
   const subject =
     'Last early access chance: 45 minutes with Chris Sembroski - slots closing';
 
+  const ctaLabel = 'SELECT YOUR DAY AND REQUEST YOUR SESSION';
   const bodyHtml = `
-<p style="margin:0 0 16px;">Hi ${escapeHtml(name)},</p>
-<p style="margin:0 0 16px;">
-  This is the last early-access note. Waitlist slots for a private 45-minute 1:1 with Chris Sembroski
-  are closing. Once this window ends, this $180 offer is not open to the public yet — and these 15
-  seats will not wait.
+${greetingHtml()}
+<p style="margin:0 0 12px;">
+  Last early-access note. Waitlist slots for a private 45-minute 1:1 with Chris are closing.
+  This $180 offer is not public yet — and these 15 seats will not wait.
 </p>
-<p style="margin:0 0 8px;color:#fff;font-weight:600;">Exactly what you get for $180:</p>
+${ctaButtonHtml(ctaLabel, href, { margin: '4px 0 16px' })}
+<p style="margin:0 0 6px;color:#fff;font-weight:600;">For $180 you get:</p>
 ${valueStackHtml()}
-<p style="margin:20px 0 8px;color:#fff;font-weight:600;">Full bonus stack:</p>
+<p style="margin:12px 0 6px;color:#fff;font-weight:600;">Plus:</p>
 ${bonusesHtml()}
-<p style="margin:16px 0;">
-  Waiting costs the personal connection and direct answers to <em>your</em> goals — not a generic Q&amp;A.
-</p>
 ${guaranteeHtml()}
-<p style="margin:16px 0 0;font-size:12px;color:#8a8786;">Sent to ${escapeHtml(email)}</p>
   `.trim();
 
   const text = [
-    `Hi ${name},`,
+    CHRIS_SEQUENCE_GREETING,
     '',
     'Last early-access note. 15 waitlist slots for a 45-minute 1:1 with Chris are closing. $180 is not a public offer yet.',
+    '',
+    `${ctaLabel}: ${href}`,
     '',
     'You get: private video call, Chris reviews your goals, AI pre-brief, post-call brief.',
     'Bonuses: 48h follow-up note, recording (approval), 3 curated resources.',
     'Chris Preparation Guarantee applies.',
     '',
-    `Select Your Day and Request Your Session: ${href}`,
-    `Sent to ${email}`,
+    `${ctaLabel}: ${href}`,
   ].join('\n');
 
   return {
@@ -369,7 +418,7 @@ ${guaranteeHtml()}
       preheader: 'Slots closing · $180 · 45 min with Chris · last early-access note',
       title: 'Last early access chance — slots closing',
       bodyHtml,
-      ctaLabel: 'Select Your Day and Request Your Session',
+      ctaLabel,
       ctaUrl: href,
       footerNote: 'Early access for waitlist only. Not a public booking window.',
     }),
