@@ -61,14 +61,21 @@ function greetingHtml(): string {
   return `<p style="margin:0 0 16px;">${escapeHtml(CHRIS_SEQUENCE_GREETING)}</p>`;
 }
 
-/** Primary action button (use mid-email + footer so early clickers and full readers both have a path). */
+/**
+ * Primary action button (mid-email + footer).
+ * Nested table + align=center is more reliable than text-align alone in Gmail/Outlook.
+ */
 function ctaButtonHtml(label: string, href: string, opts?: { margin?: string }): string {
   const margin = opts?.margin ?? '20px 0 24px';
   const safeHref = escapeHtml(href);
   return `
-<p style="margin:${margin};">
-  <a href="${safeHref}" style="display:inline-block;background:#ffffff;color:#1c1c1c;text-decoration:none;border-radius:8px;padding:14px 20px;font-size:14px;font-weight:700;letter-spacing:0.02em;">${escapeHtml(label)}</a>
-</p>`.trim();
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:${margin};margin-left:auto;margin-right:auto;">
+  <tr>
+    <td align="center" bgcolor="#ffffff" style="border-radius:8px;background-color:#ffffff;">
+      <a href="${safeHref}" target="_blank" style="display:inline-block;background-color:#ffffff;color:#1c1c1c;text-decoration:none;border-radius:8px;padding:14px 20px;font-size:14px;font-weight:700;letter-spacing:0.02em;font-family:Geist,Inter,Arial,Helvetica,sans-serif;">${escapeHtml(label)}</a>
+    </td>
+  </tr>
+</table>`.trim();
 }
 
 function emailShell(params: {
@@ -81,47 +88,67 @@ function emailShell(params: {
   /** When false, body already includes both CTAs (avoids a third button). Default true. */
   appendFooterCta?: boolean;
 }): string {
-  const cta = escapeHtml(params.ctaUrl);
   const appendFooterCta = params.appendFooterCta !== false;
-  // Keep HTML short + avoid dashed "signature" rules — Gmail often hides the lower half behind ··· otherwise.
+  // Outer 100% + align=center + fixed-width inner table centers the card in Gmail/Apple/Outlook.
+  // Body copy stays left-aligned inside the card (easier to read).
   return `
-<div style="margin:0;padding:0;background:#1c1c1c;color:#ffffff;font-family:Geist,Inter,Arial,Helvetica,sans-serif;">
-  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${escapeHtml(params.preheader)}</div>
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#1c1c1c;">
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <title>${escapeHtml(params.title)}</title>
+  <!--[if mso]>
+  <style type="text/css">table,td{font-family:Arial,Helvetica,sans-serif!important;}</style>
+  <![endif]-->
+</head>
+<body style="margin:0;padding:0;width:100%;background-color:#1c1c1c;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#1c1c1c;opacity:0;">
+    ${escapeHtml(params.preheader)}
+  </div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse;background-color:#1c1c1c;margin:0;padding:0;">
     <tr>
-      <td align="center" style="padding:24px 16px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;border-collapse:collapse;background:#1c1c1c;border:1px solid #333333;">
+      <td align="center" valign="top" style="padding:24px 12px;text-align:center;background-color:#1c1c1c;">
+        <!--[if mso]>
+        <table role="presentation" width="560" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td>
+        <![endif]-->
+        <table role="presentation" width="560" cellspacing="0" cellpadding="0" border="0" align="center" style="width:100%;max-width:560px;border-collapse:collapse;background-color:#1c1c1c;border:1px solid #333333;margin:0 auto;text-align:left;">
           <tr>
-            <td style="padding:16px 20px;border-bottom:1px solid #333333;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;">
+            <td align="center" style="padding:16px 20px;border-bottom:1px solid #333333;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;font-family:Geist,Inter,Arial,Helvetica,sans-serif;text-align:center;">
               AstroLink
             </td>
           </tr>
           <tr>
-            <td style="padding:20px 20px 6px;">
-              <div style="font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#b4c5ff;">Early access · 15 slots</div>
-              <h1 style="margin:10px 0 0;color:#ffffff;font-size:22px;line-height:1.25;font-weight:600;">${escapeHtml(params.title)}</h1>
+            <td align="left" style="padding:20px 20px 6px;font-family:Geist,Inter,Arial,Helvetica,sans-serif;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#b4c5ff;text-align:center;">Early access · 15 slots</div>
+              <h1 style="margin:10px 0 0;color:#ffffff;font-size:22px;line-height:1.25;font-weight:600;text-align:center;">${escapeHtml(params.title)}</h1>
             </td>
           </tr>
           <tr>
-            <td style="padding:6px 20px 20px;color:#e5e2e1;font-size:15px;line-height:1.55;font-weight:300;">
+            <td align="left" style="padding:6px 20px 20px;color:#e5e2e1;font-size:15px;line-height:1.55;font-weight:300;font-family:Geist,Inter,Arial,Helvetica,sans-serif;text-align:left;">
               ${params.bodyHtml}
               ${
                 appendFooterCta
-                  ? ctaButtonHtml(params.ctaLabel, params.ctaUrl, { margin: '20px 0 0' })
+                  ? ctaButtonHtml(params.ctaLabel, params.ctaUrl, { margin: '20px auto 0' })
                   : ''
               }
               ${
                 params.footerNote
-                  ? `<p style="margin:16px 0 0;font-size:12px;line-height:1.45;color:#c9c6c5;">${params.footerNote}</p>`
+                  ? `<p style="margin:16px 0 0;font-size:12px;line-height:1.45;color:#c9c6c5;text-align:center;">${params.footerNote}</p>`
                   : ''
               }
             </td>
           </tr>
         </table>
+        <!--[if mso]>
+        </td></tr></table>
+        <![endif]-->
       </td>
     </tr>
   </table>
-</div>
+</body>
+</html>
   `.trim();
 }
 
