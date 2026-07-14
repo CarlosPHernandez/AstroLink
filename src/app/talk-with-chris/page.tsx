@@ -13,9 +13,9 @@ import { DEFAULT_MENTOR_IMAGE } from '@/lib/public-images';
 import { getSession } from '@/lib/session';
 
 export const metadata: Metadata = {
-  title: 'Talk with Chris Sembroski',
+  title: 'Private 45-Minute Session with Astronaut Chris Sembroski',
   description:
-    'Book a limited live session with Inspiration4 astronaut and space engineer Chris Sembroski.',
+    'Guaranteed 1:1 access with Inspiration4 astronaut Chris Sembroski. No stage, no audience — direct answers to your goals in a full 45-minute private session.',
   robots: { index: false, follow: false },
 };
 

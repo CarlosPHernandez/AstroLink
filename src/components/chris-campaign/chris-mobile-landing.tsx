@@ -60,15 +60,19 @@ export function ChrisMobileLanding({
             />
           ) : null}
           <h1 className="chris-text-gradient text-[2rem] font-semibold leading-[1.2] tracking-tight">
-            Office hours with verified space operators — not A.I.
+            Private 45-Minute Session with Astronaut Chris Sembroski
           </h1>
+          <p className="text-sm font-medium leading-snug text-white/90">
+            Guaranteed 1:1 access. No stage. No audience. Just direct answers to your goals.
+          </p>
         </div>
       </div>
 
       <div className="relative z-20 -mt-4 flex flex-col gap-4">
         <p className="px-6 text-base font-light leading-relaxed text-secondary-fixed-dim">
-          Connect directly with the architects of modern space exploration. Gain unfiltered
-          insights from those who have crossed the Kármán line.
+          Most people spend $1,500+ traveling to events hoping for a few minutes with someone
+          who&apos;s actually been to space. You get a full guaranteed 45 minutes — with Chris
+          prepared on your specific goals before the call.
         </p>
 
         <ChrisMobileBookingCard

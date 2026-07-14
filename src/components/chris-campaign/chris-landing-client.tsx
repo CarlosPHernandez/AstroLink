@@ -71,11 +71,15 @@ export function ChrisLandingClient({
                   <ChrisSlotIndicator slotCap={slotCap} slotsRemaining={slotsRemaining} />
                 ) : null}
                 <h1 className="chris-fade-in-up chris-delay-200 chris-copy-max w-full text-3xl font-semibold leading-[1.1] tracking-tight text-white sm:text-4xl md:text-[2.5rem] lg:text-6xl">
-                  Office hours with verified space operators — not A.I.
+                  Private 45-Minute Session with Astronaut Chris Sembroski
                 </h1>
+                <p className="chris-fade-in-up chris-delay-250 chris-copy-max w-full text-base font-medium leading-snug text-white/90 sm:text-lg">
+                  Guaranteed 1:1 access. No stage. No audience. Just direct answers to your goals.
+                </p>
                 <p className="chris-fade-in-up chris-delay-300 chris-copy-max w-full text-lg font-light leading-relaxed text-secondary-fixed-dim">
-                  Connect directly with the architects of modern space exploration. Gain unfiltered
-                  insights from those who have crossed the Kármán line.
+                  Most people spend $1,500+ traveling to events hoping for a few minutes with someone
+                  who&apos;s actually been to space. You get a full guaranteed 45 minutes — with Chris
+                  prepared on your specific goals before the call.
                 </p>
               </div>
 
