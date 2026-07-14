@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
 import { ChrisMobileBookingCard } from '@/components/chris-campaign/chris-mobile-booking-card';
 import { ChrisQuestionQueue } from '@/components/chris-campaign/chris-question-queue';
@@ -30,6 +31,7 @@ export function ChrisMobileLanding({
 }: ChrisMobileLandingProps) {
   // Cap is shared; always block booking when sold out even if scarcity UI is hidden.
   const soldOut = bookingEnabled && slotsRemaining <= 0;
+  const [videoPlaying, setVideoPlaying] = useState(false);
 
   return (
     <main
@@ -44,14 +46,22 @@ export function ChrisMobileLanding({
             introVideoUrl={expertPortrait.introVideoUrl}
             priority
             overlayVariant="minimal"
+            onPlayingChange={setVideoPlaying}
             className="chris-mobile-hero-media h-full min-h-full w-full rounded-none border-0 bg-primary-container shadow-none [&_img]:object-top [&_video]:object-top"
           />
         </div>
         <div
-          className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-primary-container via-primary-container/20 to-transparent"
+          className={`pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-primary-container via-primary-container/20 to-transparent transition-opacity duration-300 ease-out ${
+            videoPlaying ? 'opacity-0' : 'opacity-100'
+          }`}
           aria-hidden="true"
         />
-        <div className="absolute bottom-0 left-0 z-20 flex w-full flex-col gap-3 p-6">
+        <div
+          className={`pointer-events-none absolute bottom-0 left-0 z-20 flex w-full flex-col gap-3 p-6 transition-opacity duration-300 ease-out ${
+            videoPlaying ? 'opacity-0' : 'opacity-100'
+          }`}
+          aria-hidden={videoPlaying}
+        >
           {showSlotScarcity ? (
             <ChrisSlotIndicator
               slotCap={slotCap}

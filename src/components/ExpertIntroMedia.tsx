@@ -17,6 +17,8 @@ type ExpertIntroMediaProps = {
   overlayVariant?: 'default' | 'minimal';
   /** Fired when the user explicitly starts playback (not muted directory autoplay). */
   onUserPlay?: () => void;
+  /** Fired whenever playback state changes (play / pause / end). */
+  onPlayingChange?: (playing: boolean) => void;
 };
 
 /**
@@ -33,6 +35,7 @@ export function ExpertIntroMedia({
   autoPlayMuted = false,
   overlayVariant = 'default',
   onUserPlay,
+  onPlayingChange,
 }: ExpertIntroMediaProps) {
   const [videoFailed, setVideoFailed] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -40,6 +43,10 @@ export function ExpertIntroMedia({
   const videoRef = useRef<HTMLVideoElement>(null);
   const showVideo = Boolean(introVideoUrl) && !videoFailed;
   const optimizedImageUrl = useMemo(() => toOptimizedImageUrl(imageUrl), [imageUrl]);
+
+  useEffect(() => {
+    onPlayingChange?.(playing);
+  }, [playing, onPlayingChange]);
 
   useEffect(() => {
     if (!autoPlayMuted || !showVideo || !videoRef.current) return;
