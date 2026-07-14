@@ -100,7 +100,9 @@ export function ChrisCampaignDateStrip({
               className={
                 selected
                   ? 'flex h-16 min-w-[3.5rem] shrink-0 -skew-x-[20deg] flex-col items-center justify-center rounded-sm bg-white transition-all'
-                  : 'flex h-16 min-w-[3.5rem] shrink-0 -skew-x-[20deg] flex-col items-center justify-center rounded-sm border border-white/30 bg-white/5 backdrop-blur-sm transition-all hover:border-white/60'
+                  : compact
+                    ? 'flex h-16 min-w-[3.5rem] shrink-0 -skew-x-[20deg] flex-col items-center justify-center rounded-sm border-0 bg-white/5 transition-all hover:bg-white/10'
+                    : 'flex h-16 min-w-[3.5rem] shrink-0 -skew-x-[20deg] flex-col items-center justify-center rounded-sm border border-white/30 bg-white/5 backdrop-blur-sm transition-all hover:border-white/60'
               }
             >
               <div className="flex skew-x-[20deg] flex-col items-center">

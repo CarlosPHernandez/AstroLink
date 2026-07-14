@@ -31,19 +31,25 @@ describe('chris-campaign-dates', () => {
     });
   });
 
-  it('lists July 2026 dates from campaign start when “today” is before launch', () => {
+  it('lists July 2026 dates from the 20th onward when today is before campaign start', () => {
     const tiles = getChrisCampaignDatesForMonth(2026, 6, new Date('2026-07-01T12:00:00Z'));
-    expect(tiles[0]).toMatchObject({ isoDate: '2026-07-07', day: '7', weekday: 'TUE' });
+    expect(tiles[0]).toMatchObject({ isoDate: '2026-07-20', day: '20', weekday: 'MON' });
     expect(tiles.at(-1)?.isoDate).toBe('2026-07-31');
-    expect(tiles).toHaveLength(25);
+    expect(tiles).toHaveLength(12);
   });
 
-  it('excludes past days when today is mid-July 2026', () => {
-    // 2026-07-14 16:00 UTC ≈ afternoon Eastern
+  it('excludes days before July 20 when today is mid-July 2026', () => {
+    // Before July 20 campaign start, min is still 2026-07-20
     const tiles = getChrisCampaignDatesForMonth(2026, 6, new Date('2026-07-14T16:00:00Z'));
-    expect(tiles[0]?.isoDate).toBe('2026-07-14');
-    expect(tiles.some((t) => t.isoDate === '2026-07-13')).toBe(false);
+    expect(tiles[0]?.isoDate).toBe('2026-07-20');
+    expect(tiles.some((t) => t.isoDate === '2026-07-19')).toBe(false);
     expect(tiles.at(-1)?.isoDate).toBe('2026-07-31');
+  });
+
+  it('uses today when after campaign start', () => {
+    const tiles = getChrisCampaignDatesForMonth(2026, 6, new Date('2026-07-22T16:00:00Z'));
+    expect(tiles[0]?.isoDate).toBe('2026-07-22');
+    expect(tiles.some((t) => t.isoDate === '2026-07-21')).toBe(false);
   });
 
   it('blocks months before July 2026', () => {
@@ -52,16 +58,18 @@ describe('chris-campaign-dates', () => {
     );
   });
 
-  it('computes min bookable as max(campaign start, today Eastern)', () => {
-    expect(getChrisMinBookableIsoDate(new Date('2026-07-01T12:00:00Z'))).toBe('2026-07-07');
-    expect(getChrisMinBookableIsoDate(new Date('2026-07-14T16:00:00Z'))).toBe('2026-07-14');
+  it('computes min bookable as max(campaign start July 20, today Eastern)', () => {
+    expect(getChrisMinBookableIsoDate(new Date('2026-07-01T12:00:00Z'))).toBe('2026-07-20');
+    expect(getChrisMinBookableIsoDate(new Date('2026-07-14T16:00:00Z'))).toBe('2026-07-20');
+    expect(getChrisMinBookableIsoDate(new Date('2026-07-22T16:00:00Z'))).toBe('2026-07-22');
   });
 
   it('validates scheduled dates against min bookable day', () => {
     const now = new Date('2026-07-14T16:00:00Z');
-    expect(isChrisScheduledDateBookable('2026-07-13T12:00', now)).toBe(false);
-    expect(isChrisScheduledDateBookable('2026-07-14T12:00', now)).toBe(true);
-    expect(isChrisScheduledDateBookable('2026-07-20T18:00:00.000Z', now)).toBe(true);
+    expect(isChrisScheduledDateBookable('2026-07-14T12:00', now)).toBe(false);
+    expect(isChrisScheduledDateBookable('2026-07-19T12:00', now)).toBe(false);
+    expect(isChrisScheduledDateBookable('2026-07-20T12:00', now)).toBe(true);
+    expect(isChrisScheduledDateBookable('2026-07-25T18:00:00.000Z', now)).toBe(true);
     expect(isChrisScheduledDateBookable('not-a-date', now)).toBe(false);
   });
 
