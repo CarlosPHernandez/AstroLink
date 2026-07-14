@@ -2,6 +2,7 @@
 
 import './chris-landing.css';
 
+import { useEffect, useRef } from 'react';
 import {
   ChrisExpertPortrait,
   type ChrisExpertPortraitProps,
@@ -11,6 +12,7 @@ import { ChrisLandingFooter } from '@/components/chris-campaign/chris-landing-fo
 import { ChrisQuestionQueue } from '@/components/chris-campaign/chris-question-queue';
 import { ChrisRequestSessionForm } from '@/components/chris-campaign/chris-request-session-form';
 import { ChrisSlotIndicator } from '@/components/chris-campaign/chris-slot-indicator';
+import { trackChrisLandingView } from '@/lib/chris-campaign/chris-campaign-analytics';
 import { showChrisSlotScarcity } from '@/lib/chris-campaign/chris-pricing';
 
 type ChrisLandingClientProps = {
@@ -37,6 +39,13 @@ export function ChrisLandingClient({
   const showSlots = showChrisSlotScarcity(marketingReferrer);
   // Server still enforces cap for all refs; UI sold-out only when scarcity is shown.
   const soldOut = bookingEnabled && slotsRemaining <= 0;
+  const landingViewTracked = useRef(false);
+
+  useEffect(() => {
+    if (landingViewTracked.current) return;
+    landingViewTracked.current = true;
+    trackChrisLandingView(marketingReferrer);
+  }, [marketingReferrer]);
 
   return (
     <div className="chris-landing flex min-h-screen flex-col font-sans text-white selection:bg-tertiary-container selection:text-white">

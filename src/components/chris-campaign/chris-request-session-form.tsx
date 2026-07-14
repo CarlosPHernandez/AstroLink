@@ -8,6 +8,7 @@ import {
   useChrisCampaignDateSelection,
 } from '@/components/chris-campaign/chris-campaign-date-strip';
 import { getChrisBookingEntryHref } from '@/lib/chris-campaign/chris-booking-href';
+import { trackChrisRequestSession } from '@/lib/chris-campaign/chris-campaign-analytics';
 import {
   CHRIS_PUBLIC_REFERRER,
   CHRIS_WAITLIST_EMAIL_REFERRER,
@@ -69,6 +70,7 @@ export function ChrisRequestSessionForm({
   }
 
   function handleBook() {
+    trackChrisRequestSession(marketingReferrer);
     router.push(
       getChrisBookingEntryHref(mentorSlug, isSignedIn, {
         date: dateSelection.activeDate ?? undefined,
