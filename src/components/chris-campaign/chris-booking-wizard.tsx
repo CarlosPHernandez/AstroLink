@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import {
   chrisWizardLoginAction,
   chrisWizardRegisterAction,
@@ -21,10 +21,20 @@ import {
 } from '@/lib/chris-campaign/chris-campaign-constants';
 import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-booking-mode';
 import {
+  trackChrisAuthSuccess,
+  trackChrisBookingPageView,
+  trackChrisCheckoutStart,
+  trackChrisCheckoutSuccess,
+  trackChrisPaymentError,
+  trackChrisSessionContinue,
+  type ChrisAuthMode,
+} from '@/lib/chris-campaign/chris-campaign-analytics';
+import {
   chrisEarlyAccessDiscountCents,
   resolveChrisChargeCents,
   resolveChrisPricingTier,
 } from '@/lib/chris-campaign/chris-pricing';
+import { useChrisWizardAnalytics } from '@/lib/chris-campaign/use-chris-wizard-analytics';
 
 import { ChrisBookingFulfillmentOverlay } from '@/components/chris-campaign/chris-booking-fulfillment-overlay';
 import { ChrisBookingNextSteps } from '@/components/chris-campaign/chris-booking-next-steps';
@@ -153,8 +163,10 @@ const chrisLabelClass =
   'text-xs font-medium uppercase tracking-widest text-white/70';
 
 function ChrisWizardAccountStep({
+  onAuthSuccess,
   onSuccess,
 }: {
+  onAuthSuccess: (mode: ChrisAuthMode) => void;
   onSuccess: () => void;
 }) {
   const router = useRouter();
@@ -173,10 +185,11 @@ function ChrisWizardAccountStep({
 
   useEffect(() => {
     if (authState?.success && !authState.needsEmailConfirmation) {
+      onAuthSuccess(mode);
       router.refresh();
       onSuccess();
     }
-  }, [authState, onSuccess, router]);
+  }, [authState, mode, onAuthSuccess, onSuccess, router]);
 
   return (
     <section className="w-full chris-form-max mx-auto">
@@ -318,12 +331,37 @@ export function ChrisBookingWizard({
   const [stepTransitioning, setStepTransitioning] = useState(false);
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const fulfillment = useChrisBookingFulfillment();
+  const wizardAnalytics = useChrisWizardAnalytics({ marketingReferrer });
+  const checkoutSuccessTracked = useRef(false);
+  const bookingPageViewTracked = useRef(false);
 
   const displayDate = prefillDate ?? scheduledAt.slice(0, 10);
   const chrisPricingTier = resolveChrisPricingTier(marketingReferrer);
   const chrisChargeCents = resolveChrisChargeCents(marketingReferrer);
   const chrisLaunchDiscountCents = chrisEarlyAccessDiscountCents(marketingReferrer);
   const isEarlyAccessPricing = chrisPricingTier === 'early_access';
+
+  useEffect(() => {
+    if (bookingPageViewTracked.current) return;
+    bookingPageViewTracked.current = true;
+    trackChrisBookingPageView(marketingReferrer, session !== null);
+    wizardAnalytics.reportLastStep(initialStep);
+  }, [initialStep, marketingReferrer, session, wizardAnalytics]);
+
+  useEffect(() => {
+    if (checkout?.clientSecret) {
+      wizardAnalytics.reportLastStep('stripe');
+      return;
+    }
+    wizardAnalytics.reportLastStep(step);
+  }, [checkout, step, wizardAnalytics]);
+
+  useEffect(() => {
+    if (fulfillment.view !== 'next_steps' || checkoutSuccessTracked.current) return;
+    checkoutSuccessTracked.current = true;
+    trackChrisCheckoutSuccess(marketingReferrer, chrisChargeCents);
+    wizardAnalytics.reportPaid();
+  }, [chrisChargeCents, fulfillment.view, marketingReferrer, wizardAnalytics]);
 
   const submitBooking = async () => {
     if (!session) {
@@ -348,6 +386,7 @@ export function ChrisBookingWizard({
     if (!parsed.success) {
       setFieldErrors(toFieldErrors(parsed.error));
       setError(formLevelSummary());
+      trackChrisPaymentError(marketingReferrer, 'validation');
       return;
     }
 
@@ -375,6 +414,7 @@ export function ChrisBookingWizard({
         if (json.fieldErrors) {
           setFieldErrors(json.fieldErrors);
           setError(json.error ?? formLevelSummary());
+          trackChrisPaymentError(marketingReferrer, 'validation');
           return;
         }
         throw new Error(json.error ?? "We couldn't complete your booking. Try again.");
@@ -383,6 +423,11 @@ export function ChrisBookingWizard({
       if (!json.data) {
         throw new Error("We couldn't complete your booking. Try again.");
       }
+
+      trackChrisCheckoutStart(marketingReferrer, json.data.amountCents, {
+        skipPayment: !!json.data.skipPayment,
+      });
+      wizardAnalytics.reportCheckoutStart();
 
       if (json.data.skipPayment) {
         router.refresh();
@@ -395,6 +440,7 @@ export function ChrisBookingWizard({
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: unknown) {
       fulfillment.reset();
+      trackChrisPaymentError(marketingReferrer, 'book_api');
       setError(err instanceof Error ? err.message : "We couldn't complete your booking. Try again.");
     } finally {
       setLoading(false);
@@ -418,12 +464,15 @@ export function ChrisBookingWizard({
     if (!parsed.success) {
       setFieldErrors(toFieldErrors(parsed.error));
       setError(formLevelSummary());
+      trackChrisPaymentError(marketingReferrer, 'validation');
       return;
     }
 
     setFieldErrors({});
     setError(null);
     setStepTransitioning(true);
+    trackChrisSessionContinue(marketingReferrer);
+    wizardAnalytics.reportSessionContinue();
 
     const advanceToPayment = () => {
       setStep('payment');
@@ -448,6 +497,12 @@ export function ChrisBookingWizard({
 
   const handleChrisPaymentFailed = () => {
     fulfillment.reset();
+    trackChrisPaymentError(marketingReferrer, 'stripe_confirm');
+  };
+
+  const handleAuthSuccess = (mode: ChrisAuthMode) => {
+    trackChrisAuthSuccess(marketingReferrer, mode);
+    wizardAnalytics.reportAuthSuccess(mode);
   };
 
   const nextStepsDateLabel = fulfillment.scheduledAt
@@ -525,7 +580,10 @@ export function ChrisBookingWizard({
         ) : (
           <>
             {step === 'account' ? (
-              <ChrisWizardAccountStep onSuccess={() => setStep('session')} />
+              <ChrisWizardAccountStep
+                onAuthSuccess={handleAuthSuccess}
+                onSuccess={() => setStep('session')}
+              />
             ) : null}
 
             {step === 'session' ? (
