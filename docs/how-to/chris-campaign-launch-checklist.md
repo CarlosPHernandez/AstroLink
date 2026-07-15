@@ -100,3 +100,19 @@ Use the weekly Slack template in [weekly-ops-slack-template.md](./weekly-ops-sla
 ## 6. Rollback
 
 Set `CHRIS_BOOKING_ENABLED=false` in Vercel Production and redeploy. Existing paid bookings are unaffected; `/talk-with-chris` shows waitlist CTA instead of booking.
+
+## Production milestones (XPRIZE evidence)
+
+### 2026-07-15 — First paid Chris campaign booking
+
+- **Product:** Live booking on `www.astro-link.space` via `/talk-with-chris` early-access flow (`ref=early-signups`).
+- **Commerce:** Payment completed through production Stripe PaymentIntent flow (early-access tier: **$180** server-resolved charge).
+- **Attribution:** `marketing_referrer=early-signups` on booking record; admin Chris campaign metrics show referrer breakdown (Dashboard → Ops).
+- **AI agent chain:** Post-payment pre-call brief generated via audited `LLM_DECISION` logs (export via admin audit API / T8 tooling).
+- **Funnel observation:** At least one Supabase Auth account was created through the Chris wizard without a completed checkout (account step reached; no paid booking row).
+- **Infrastructure:** Sampled Vercel production request logs (2026-07-15) showed HTTP 200/304 only — no 4xx/5xx in the window; drop-off prior to v0.6.9.0 instrumentation was a funnel measurement gap, not a visible server error.
+- **Analytics (v0.6.9.0+):** Vercel custom events: `chris_landing_view`, `chris_request_session`, `chris_booking_page_view`, `chris_auth_success`, `chris_session_continue`, `chris_checkout_start`, `chris_checkout_success`, `chris_payment_error`, `chris_wizard_exit`. Implementation: `src/lib/chris-campaign/chris-campaign-analytics.ts`.
+
+**Do not paste into public docs:** customer email, name, Stripe customer/charge IDs, PaymentIntent IDs, or booking UUIDs.
+
+**Internal evidence pointers:** Supabase `bookings` + `transactions` for campaign `chris-sembroski`; Stripe Dashboard Live mode screenshots; `.gstack/qa-reports/` from 2026-07-14 canary.

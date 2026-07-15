@@ -2,6 +2,15 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.9.0] - 2026-07-15
+
+### Added
+- Chris campaign booking funnel analytics (Vercel custom events): `chris_booking_page_view`, `chris_auth_success`, `chris_session_continue`, `chris_checkout_start`, `chris_checkout_success`, `chris_payment_error`, and `chris_wizard_exit` — complements existing `chris_landing_view` and `chris_request_session`. No PII in event payloads (`chris-campaign-analytics.ts`, `use-chris-wizard-analytics.ts`).
+- Production milestones (XPRIZE evidence) section in the Chris campaign launch checklist documenting the first paid early-access booking (2026-07-15).
+
+### Changed
+- Privacy policy discloses anonymous Chris booking funnel events via Vercel Web Analytics.
+
 ## [0.6.8.0] - 2026-07-14
 
 ### Added

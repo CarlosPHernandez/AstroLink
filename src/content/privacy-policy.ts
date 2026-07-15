@@ -50,6 +50,13 @@ export const PRIVACY_POLICY = {
       ],
     },
     {
+      id: 'chris-booking',
+      title: 'Chris campaign booking',
+      paragraphs: [
+        'We collect anonymous interaction events on the Chris booking funnel (for example, whether a booking step was started or completed) through Vercel Web Analytics. These events do not include your email address or payment details.',
+      ],
+    },
+    {
       id: 'sharing',
       title: 'When we share information',
       paragraphs: [
