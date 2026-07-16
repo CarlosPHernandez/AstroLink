@@ -7,7 +7,7 @@ import { buildPageMetadata } from '@/lib/seo/build-page-metadata';
 export const metadata: Metadata = buildPageMetadata({ pageType: 'press' });
 
 export default function PressPage() {
-  const backHref = isWaitlistMode() ? '/early-access' : '/';
+  const backHref = isWaitlistMode() ? '/talk-with-chris' : '/';
 
   return (
     <div className="min-h-screen bg-background text-on-surface font-sans">

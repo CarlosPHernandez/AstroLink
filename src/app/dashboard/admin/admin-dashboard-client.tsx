@@ -228,7 +228,7 @@ export default function AdminDashboardClient({ session }: { session: SessionData
                   </div>
                 ) : (
                   <p className="text-on-surface-variant text-xs italic">
-                    No referrers yet — use ?ref= on /early-access links.
+                    No referrers yet — use ?ref= on /talk-with-chris links.
                   </p>
                 )}
               </div>

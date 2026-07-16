@@ -22,6 +22,20 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
+  async redirects() {
+    return [
+      {
+        source: '/early-access',
+        destination: '/talk-with-chris',
+        permanent: true,
+      },
+      {
+        source: '/early-access/player',
+        destination: '/talk-with-chris',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     const sharedHeaders = [
       { key: "X-Content-Type-Options", value: "nosniff" },

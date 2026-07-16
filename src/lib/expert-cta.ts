@@ -1,5 +1,6 @@
 import { getExpertBookHref } from '@/lib/expert-book-href';
 import type { ListedExpert } from '@/lib/mentor-directory';
+import { WAITLIST_PUBLIC_LANDING_PATH } from '@/lib/waitlist/waitlist-landing';
 
 export type ExpertCtaVariant = 'waitlist' | 'booking';
 
@@ -9,7 +10,7 @@ export type ExpertCta = {
 };
 
 export function getExpertWaitlistCtaHref(slug: string): string {
-  return `/early-access?ref=${encodeURIComponent(`expert-${slug}`)}`;
+  return `${WAITLIST_PUBLIC_LANDING_PATH}?ref=${encodeURIComponent(`expert-${slug}`)}`;
 }
 
 /** Primary expert CTA — waitlist early-access link or booking/auth path. */

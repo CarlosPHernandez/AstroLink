@@ -22,7 +22,7 @@ export const PRESS_PAGE = {
       headline: 'Early access waitlist opens',
       summary:
         'AstroLink opened its early access waitlist for live video sessions with verified astronauts, flight controllers, and operators.',
-      link: { label: 'Join the waitlist', href: '/early-access' },
+      link: { label: 'Book with Chris', href: '/talk-with-chris' },
     },
   ] satisfies PressUpdate[],
 };

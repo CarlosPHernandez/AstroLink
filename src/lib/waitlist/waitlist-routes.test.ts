@@ -2,19 +2,31 @@ import { describe, expect, it } from 'vitest';
 import { resolveWaitlistRoute } from '@/lib/waitlist/waitlist-routes';
 
 describe('resolveWaitlistRoute', () => {
-  it('redirects home to early access', () => {
+  it('redirects home and retired early-access paths to talk-with-chris', () => {
     expect(resolveWaitlistRoute('/', null)).toEqual({
       action: 'redirect',
-      destination: '/early-access',
+      destination: '/talk-with-chris',
+    });
+    expect(resolveWaitlistRoute('/early-access', null)).toEqual({
+      action: 'redirect',
+      destination: '/talk-with-chris',
+    });
+    expect(resolveWaitlistRoute('/early-access/player', null)).toEqual({
+      action: 'redirect',
+      destination: '/talk-with-chris',
     });
   });
 
-  it('allows public waitlist pages', () => {
-    expect(resolveWaitlistRoute('/early-access', null)).toEqual({ action: 'allow' });
-    expect(resolveWaitlistRoute('/early-access/player', null)).toEqual({ action: 'allow' });
+  it('redirects partner join landings to talk-with-chris', () => {
+    expect(resolveWaitlistRoute('/join/david-guajardo', null)).toEqual({
+      action: 'redirect',
+      destination: '/talk-with-chris',
+    });
+  });
+
+  it('allows remaining public waitlist pages', () => {
     expect(resolveWaitlistRoute('/press', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/privacy', null)).toEqual({ action: 'allow' });
-    expect(resolveWaitlistRoute('/join/david-guajardo', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/experts', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/experts/chris-sembroski', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/sitemap.xml', null)).toEqual({ action: 'allow' });
@@ -25,7 +37,7 @@ describe('resolveWaitlistRoute', () => {
     for (const path of ['/booking', '/auth', '/dashboard/mentee']) {
       expect(resolveWaitlistRoute(path, null)).toEqual({
         action: 'redirect',
-        destination: '/early-access',
+        destination: '/talk-with-chris',
       });
     }
   });
@@ -33,11 +45,11 @@ describe('resolveWaitlistRoute', () => {
   it('allows admin dashboard only for admin sessions', () => {
     expect(resolveWaitlistRoute('/dashboard/admin', null)).toEqual({
       action: 'redirect',
-      destination: '/early-access',
+      destination: '/talk-with-chris',
     });
     expect(resolveWaitlistRoute('/dashboard/admin', { role: 'mentee' })).toEqual({
       action: 'redirect',
-      destination: '/early-access',
+      destination: '/talk-with-chris',
     });
     expect(resolveWaitlistRoute('/dashboard/admin', { role: 'admin' })).toEqual({
       action: 'allow',
@@ -68,7 +80,7 @@ describe('resolveWaitlistRoute', () => {
       });
     });
 
-    it('redirects experts and join paths to talk-with-chris', () => {
+    it('redirects experts paths to talk-with-chris', () => {
       expect(resolveWaitlistRoute('/experts', null, chrisOn)).toEqual({
         action: 'redirect',
         destination: '/talk-with-chris',

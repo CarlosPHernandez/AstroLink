@@ -11,6 +11,7 @@ import { isChrisCampaignBookingEntry } from './lib/chris-campaign/chris-campaign
 import { resolveAppSessionFromAuthUser } from './lib/resolve-app-session';
 import { decryptSessionString, type SessionData } from './lib/session';
 import { createProxyClient, withSupabaseCookies } from './lib/supabase/proxy-client';
+import { WAITLIST_PUBLIC_LANDING_PATH } from './lib/waitlist/waitlist-landing';
 import { resolveWaitlistRoute } from './lib/waitlist/waitlist-routes';
 
 function redirectToAuth(request: NextRequest, returnPath: string) {
@@ -19,13 +20,13 @@ function redirectToAuth(request: NextRequest, returnPath: string) {
   return NextResponse.redirect(authUrl);
 }
 
-function redirectToEarlyAccess(request: NextRequest) {
-  return NextResponse.redirect(new URL('/early-access', request.url));
+function redirectToPublicLanding(request: NextRequest) {
+  return NextResponse.redirect(new URL(WAITLIST_PUBLIC_LANDING_PATH, request.url));
 }
 
 function redirectToWaitlistDestination(
   request: NextRequest,
-  destination: '/early-access' | '/talk-with-chris',
+  destination: typeof WAITLIST_PUBLIC_LANDING_PATH,
 ) {
   return NextResponse.redirect(new URL(destination, request.url));
 }
@@ -137,7 +138,7 @@ export async function proxy(request: NextRequest) {
     if (waitlistDecision.action === 'redirect') {
       return finish(redirectToWaitlistDestination(request, waitlistDecision.destination));
     }
-    return finish(redirectToEarlyAccess(request));
+    return finish(redirectToPublicLanding(request));
   }
 
   if (isAuthEntry && session) {
