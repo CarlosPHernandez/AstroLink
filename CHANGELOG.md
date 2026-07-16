@@ -2,6 +2,11 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.10.3] - 2026-07-16
+
+### Changed
+- Site-wide social previews on astro-link.space now use the Chris campaign 1200×630 OG card (`/og/talk-with-chris.png`) from the root layout and `/early-access` Open Graph metadata. Twitter Player on early-access is unchanged when Chris intro video is available; its preview image uses the OG card.
+
 ## [0.6.10.2] - 2026-07-16
 
 ### Added
