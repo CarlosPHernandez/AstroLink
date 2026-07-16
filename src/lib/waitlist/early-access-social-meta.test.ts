@@ -67,8 +67,17 @@ describe('buildEarlyAccessMetadata', () => {
     expect(metadata.description).toContain('Build with Gemini XPRIZE');
     expect(metadata.alternates?.canonical).toBe('https://astro-link.space/early-access');
     expect(metadata.openGraph?.url).toBe('https://astro-link.space/early-access');
+    expect(metadata.openGraph?.images).toEqual([
+      {
+        url: 'https://astro-link.space/og/talk-with-chris.png',
+        width: 1200,
+        height: 630,
+        alt: 'Early access to live sessions with Chris Sembroski on AstroLink',
+      },
+    ]);
     expect(metadata.twitter).toMatchObject({
       card: 'player',
+      images: ['https://astro-link.space/og/talk-with-chris.png'],
       players: {
         playerUrl: 'https://astro-link.space/early-access/player',
         streamUrl:
@@ -87,8 +96,17 @@ describe('buildEarlyAccessMetadata', () => {
 
     const metadata = await buildEarlyAccessMetadata();
 
+    expect(metadata.openGraph?.images).toEqual([
+      {
+        url: 'https://astro-link.space/og/talk-with-chris.png',
+        width: 1200,
+        height: 630,
+        alt: 'AstroLink early access',
+      },
+    ]);
     expect(metadata.twitter).toMatchObject({
       card: 'summary_large_image',
+      images: ['https://astro-link.space/og/talk-with-chris.png'],
     });
   });
 });

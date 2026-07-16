@@ -2,7 +2,14 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter, JetBrains_Mono, Montserrat } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { getProductionAppUrl } from "@/lib/app-url";
+import {
+  defaultSiteOgImage,
+  defaultSiteTwitterImage,
+} from "@/lib/seo/og-images";
 import "./globals.css";
+
+const SITE_DESCRIPTION =
+  "Book verified aerospace experts for live 1:1 video sessions — astronauts, flight controllers, and operators.";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,8 +49,19 @@ export const metadata: Metadata = {
     default: "AstroLink",
     template: "%s · AstroLink",
   },
-  description:
-    "Book verified aerospace experts for live 1:1 video sessions — astronauts, flight controllers, and operators.",
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    title: "AstroLink",
+    description: SITE_DESCRIPTION,
+    siteName: "AstroLink",
+    type: "website",
+    images: [defaultSiteOgImage()],
+  },
+  twitter: {
+    ...defaultSiteTwitterImage(),
+    title: "AstroLink",
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export const viewport: Viewport = {
