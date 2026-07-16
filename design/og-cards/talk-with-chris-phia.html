@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AstroLink — Chris OG card (Chris landing style)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #1c1c1c;
+        --text: #ffffff;
+        --text-muted: rgba(255, 255, 255, 0.72);
+        --text-dim: #c9c6c5;
+        --wordmark: #8b95a8;
+        --accent-blue: #b4c5ff;
+        --border-subtle: rgba(255, 255, 255, 0.3);
+        --font-brand: Inter, system-ui, sans-serif;
+        --font-wordmark: Montserrat, Inter, system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #111;
+        font-family: var(--font-brand);
+        padding: 32px;
+      }
+
+      .note {
+        max-width: 1200px;
+        margin-bottom: 16px;
+        color: #9ca3af;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .og-card {
+        position: relative;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: var(--bg);
+        border: 1px solid #333333;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.45);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 56px 80px 64px;
+        gap: 28px;
+      }
+
+      .brand {
+        font-family: var(--font-wordmark);
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--wordmark);
+      }
+
+      /* Mini slot indicator — matches ChrisSlotIndicator hero variant */
+      .slot-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .slot-bar {
+        height: 16px;
+        width: 8px;
+        transform: skewX(-20deg);
+        border-radius: 2px;
+      }
+
+      .slot-bar.filled {
+        background: #ffffff;
+      }
+
+      .slot-bar.open {
+        border: 1px solid var(--border-subtle);
+      }
+
+      .slot-label {
+        margin-left: 10px;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text);
+      }
+
+      /* Segmented expert portrait row — skewed panels like availability segments */
+      .expert-segments {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        max-width: 720px;
+      }
+
+      .expert-segment {
+        position: relative;
+        flex: 1;
+        max-width: 200px;
+        height: 220px;
+        transform: skewX(-14deg);
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid var(--border-subtle);
+        background: #262626;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+      }
+
+      .expert-segment.featured {
+        flex: 1.15;
+        max-width: 230px;
+        height: 240px;
+        border: 2px solid #ffffff;
+        box-shadow:
+          0 0 0 1px rgba(180, 197, 255, 0.25),
+          0 18px 40px rgba(0, 0, 0, 0.45);
+      }
+
+      .expert-segment img {
+        position: absolute;
+        inset: -8%;
+        width: 124%;
+        height: 124%;
+        object-fit: cover;
+        transform: skewX(14deg) scale(1.05);
+        opacity: 0.95;
+      }
+
+      .expert-segment .seg-label {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 2;
+        padding: 28px 12px 10px;
+        background: linear-gradient(to top, rgba(28, 28, 28, 0.95), transparent);
+        transform: skewX(14deg);
+        font-size: 9px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        text-align: center;
+      }
+
+      .copy {
+        text-align: center;
+        max-width: 780px;
+      }
+
+      .eyebrow {
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        margin-bottom: 10px;
+      }
+
+      .headline {
+        font-size: 36px;
+        line-height: 1.12;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        color: var(--text);
+        margin-bottom: 12px;
+      }
+
+      .subhead {
+        font-size: 18px;
+        line-height: 1.4;
+        font-weight: 500;
+        color: var(--text-muted);
+      }
+
+      .footer {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-dim);
+        letter-spacing: 0.04em;
+      }
+
+
+    </style>
+  </head>
+  <body>
+    <div>
+      <p class="note">
+        Chris landing–inspired OG: <code>#1c1c1c</code> background, skewed segmented expert row
+        (Eiman · Chris · Dr. Jenni Hesterman), slot-indicator bars. Export
+        <code>.og-card</code> at 1× → <code>public/og/talk-with-chris.png</code>
+      </p>
+      <article class="og-card" aria-label="Talk with Chris — segmented expert OG card">
+        <p class="brand">AstroLink</p>
+
+        <div class="slot-row" aria-hidden="true">
+          <div class="slot-bar filled"></div>
+          <div class="slot-bar filled"></div>
+          <div class="slot-bar filled"></div>
+          <div class="slot-bar open"></div>
+          <div class="slot-bar open"></div>
+          <div class="slot-bar open"></div>
+          <div class="slot-bar open"></div>
+          <div class="slot-bar open"></div>
+          <div class="slot-bar open"></div>
+          <div class="slot-bar open"></div>
+          <span class="slot-label">Verified experts available</span>
+        </div>
+
+        <div class="expert-segments" aria-hidden="true">
+          <div class="expert-segment">
+            <img src="../../public/eiman.webp" alt="" style="object-position: center top" />
+            <span class="seg-label">Eiman Jahangir</span>
+          </div>
+          <div class="expert-segment featured">
+            <img
+              src="../../public/chris_sembroski.webp"
+              alt=""
+              style="object-position: center 12%"
+            />
+            <span class="seg-label">Chris Sembroski</span>
+          </div>
+          <div class="expert-segment">
+            <img
+              src="https://vwoizjesyyygmokfqpyy.supabase.co/storage/v1/object/public/expert-intro-videos/Jenni-hesterman/Hesterman%20headshot.jpg"
+              alt=""
+            />
+            <span class="seg-label">Dr. Jenni Hesterman</span>
+          </div>
+        </div>
+
+        <div class="copy">
+          <p class="eyebrow">Private session with</p>
+          <h1 class="headline">Chris Sembroski</h1>
+          <p class="subhead">
+            45 minutes · Inspiration4 astronaut · Guaranteed 1:1 access
+          </p>
+        </div>
+
+        <div class="footer">
+          <span>astro-link.space</span>
+        </div>
+      </article>
+    </div>
+  </body>
+</html>

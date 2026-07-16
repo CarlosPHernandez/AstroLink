@@ -1,5 +1,5 @@
-import type { Metadata } from 'next';
 import { ChrisLandingClient } from '@/components/chris-campaign/chris-landing-client';
+import { buildTalkWithChrisMetadata } from '@/lib/chris-campaign/chris-campaign-social-meta';
 import {
   getChrisCampaignId,
   getChrisMentorSlug,
@@ -12,12 +12,7 @@ import { getMentorBySlug } from '@/lib/mentor-directory';
 import { DEFAULT_MENTOR_IMAGE } from '@/lib/public-images';
 import { getSession } from '@/lib/session';
 
-export const metadata: Metadata = {
-  title: 'Private 45-Minute Session with Astronaut Chris Sembroski',
-  description:
-    'Guaranteed 1:1 access with Inspiration4 astronaut Chris Sembroski. No stage, no audience — direct answers to your goals in a full 45-minute private session.',
-  robots: { index: false, follow: false },
-};
+export const metadata = buildTalkWithChrisMetadata();
 
 export default async function TalkWithChrisPage({
   searchParams,
