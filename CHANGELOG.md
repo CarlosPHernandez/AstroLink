@@ -2,6 +2,14 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.10.4] - 2026-07-16
+
+### Changed
+- Retired the public `/early-access` waitlist page: `/early-access`, `/early-access/player`, and `/join/[slug]` now redirect to `/talk-with-chris` (marketing `ref` params preserved). Waitlist-mode home and fallbacks route to the Chris campaign landing.
+
+### Removed
+- New public waitlist signups: `POST /api/early-access` returns 410 Gone. Existing `early_access_signups` rows and admin waitlist metrics are unchanged.
+
 ## [0.6.10.3] - 2026-07-16
 
 ### Changed

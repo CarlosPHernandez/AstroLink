@@ -1,23 +1,21 @@
-import type { Metadata } from 'next';
-import { listPublicMentors } from '@/lib/mentor-directory';
-import { buildEarlyAccessMetadata } from '@/lib/waitlist/early-access-social-meta';
-import { orderWaitlistRoster } from '@/lib/waitlist/waitlist-roster-order';
-import EarlyAccessClient from './early-access-client';
+import { redirect } from 'next/navigation';
+import { buildWaitlistLandingRedirect } from '@/lib/waitlist/waitlist-landing';
 
-export const revalidate = 300;
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
-export async function generateMetadata(): Promise<Metadata> {
-  return buildEarlyAccessMetadata();
-}
-
-export default async function EarlyAccessPage() {
-  const experts = orderWaitlistRoster(await listPublicMentors());
-
-  return (
-    <EarlyAccessClient
-      copyrightYear={new Date().getFullYear()}
-      showExpertsLink
-      experts={experts}
-    />
-  );
+/** Retired — waitlist signups collected; public traffic goes to Chris campaign. */
+export default async function EarlyAccessPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === 'string') {
+      qs.set(key, value);
+    } else if (Array.isArray(value) && value[0]) {
+      qs.set(key, value[0]);
+    }
+  }
+  const search = qs.toString() ? `?${qs.toString()}` : '';
+  redirect(buildWaitlistLandingRedirect('/early-access', search));
 }

@@ -7,10 +7,14 @@ import {
   isChrisBookingPageRoute,
   isChrisJoinRedirectPath,
 } from '@/lib/chris-campaign/chris-campaign-routes';
+import {
+  isRetiredEarlyAccessPath,
+  WAITLIST_PUBLIC_LANDING_PATH,
+} from '@/lib/waitlist/waitlist-landing';
 
-export const WAITLIST_PUBLIC_PAGES = ['/early-access', '/press', '/privacy'] as const;
+export const WAITLIST_PUBLIC_PAGES = ['/press', '/privacy'] as const;
 
-export type WaitlistRedirectDestination = '/early-access' | typeof CHRIS_CAMPAIGN_LANDING_PATH;
+export type WaitlistRedirectDestination = typeof WAITLIST_PUBLIC_LANDING_PATH;
 
 export type WaitlistRouteDecision =
   | { action: 'allow' }
@@ -42,8 +46,6 @@ export function isWaitlistPublicPage(pathname: string, chrisBookingEnabled = isC
 
   return (
     (WAITLIST_PUBLIC_PAGES as readonly string[]).includes(pathname) ||
-    pathname === '/early-access/player' ||
-    isWaitlistJoinPage(pathname) ||
     isWaitlistExpertsPage(pathname) ||
     isWaitlistSeoCrawlPage(pathname)
   );
@@ -75,8 +77,16 @@ export function resolveWaitlistRoute(
     return isWaitlistAllowedApi(pathname) ? { action: 'allow' } : { action: 'api_blocked' };
   }
 
+  if (isRetiredEarlyAccessPath(pathname)) {
+    return { action: 'redirect', destination: WAITLIST_PUBLIC_LANDING_PATH };
+  }
+
+  if (isWaitlistJoinPage(pathname)) {
+    return { action: 'redirect', destination: WAITLIST_PUBLIC_LANDING_PATH };
+  }
+
   if (pathname === '/') {
-    return { action: 'redirect', destination: '/early-access' };
+    return { action: 'redirect', destination: WAITLIST_PUBLIC_LANDING_PATH };
   }
 
   if (chrisBookingEnabled && isChrisJoinRedirectPath(pathname)) {
@@ -99,5 +109,5 @@ export function resolveWaitlistRoute(
     return { action: 'allow' };
   }
 
-  return { action: 'redirect', destination: '/early-access' };
+  return { action: 'redirect', destination: WAITLIST_PUBLIC_LANDING_PATH };
 }

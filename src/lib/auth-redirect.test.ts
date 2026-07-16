@@ -14,10 +14,10 @@ describe('auth-redirect (Chris booking surface)', () => {
     expect(getSignInPath()).toBe('/auth');
   });
 
-  it('routes sign-in to /early-access when waitlist without Chris booking', async () => {
+  it('routes sign-in to talk-with-chris when waitlist without Chris booking', async () => {
     vi.stubEnv('APP_MODE', 'waitlist');
     vi.stubEnv('ENABLE_DEMO_AUTH', 'false');
     const { getSignInPath } = await import('@/lib/auth-redirect');
-    expect(getSignInPath()).toBe('/early-access');
+    expect(getSignInPath()).toBe('/talk-with-chris');
   });
 });

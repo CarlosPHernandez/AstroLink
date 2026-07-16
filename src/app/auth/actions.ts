@@ -23,6 +23,7 @@ import {
 } from '@/lib/supabase/auth-error-message';
 import { createClient } from '@/lib/supabase/server';
 import { ensureMenteeUserRow } from '@/lib/user-profile';
+import { WAITLIST_PUBLIC_LANDING_PATH } from '@/lib/waitlist/waitlist-landing';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
@@ -546,5 +547,7 @@ export async function onboardMentorAction(
 
 export async function logoutAction() {
   await deleteSession();
-  redirect(isDemoAuthEnabled() || isSupabaseAuthEnabled() ? '/auth' : '/early-access');
+  redirect(
+    isDemoAuthEnabled() || isSupabaseAuthEnabled() ? '/auth' : WAITLIST_PUBLIC_LANDING_PATH,
+  );
 }

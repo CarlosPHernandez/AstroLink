@@ -5,7 +5,7 @@ import { CHRIS_PUBLIC_REFERRER } from '@/lib/chris-campaign/chris-campaign-refer
 describe('chris-waitlist-href', () => {
   it('builds early-access link with encoded ref', () => {
     expect(getChrisWaitlistHref(CHRIS_PUBLIC_REFERRER)).toBe(
-      '/early-access?ref=chris-sembroski',
+      '/talk-with-chris?ref=chris-sembroski',
     );
   });
 });

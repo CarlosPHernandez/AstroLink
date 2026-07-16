@@ -1,6 +1,7 @@
 import 'server-only';
 import { isChrisBookingSurfaceEnabled, isProtectedAppSurfaceEnabled } from '@/lib/app-mode';
 import type { SessionData } from '@/lib/session';
+import { WAITLIST_PUBLIC_LANDING_PATH } from '@/lib/waitlist/waitlist-landing';
 
 /** Same-origin relative path only; blocks open redirects. */
 export function getSafeRedirectPath(
@@ -45,7 +46,9 @@ export function getDefaultPathAfterAuth(params: {
 }
 
 export function getSignInPath(): string {
-  return isProtectedAppSurfaceEnabled() || isChrisBookingSurfaceEnabled() ? '/auth' : '/early-access';
+  return isProtectedAppSurfaceEnabled() || isChrisBookingSurfaceEnabled()
+    ? '/auth'
+    : WAITLIST_PUBLIC_LANDING_PATH;
 }
 
 export function toAuthWithRedirect(returnPath: string): string {
@@ -57,7 +60,7 @@ export function toAuthWithRedirect(returnPath: string): string {
   if (!safe) {
     return signInPath;
   }
-  if (signInPath === '/early-access') {
+  if (signInPath === WAITLIST_PUBLIC_LANDING_PATH) {
     return signInPath;
   }
   return `/auth?redirect=${encodeURIComponent(safe)}`;
