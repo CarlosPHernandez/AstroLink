@@ -43,3 +43,16 @@ export function twitterLargeImage(path: string): TwitterLargeImageMeta {
     images: [absoluteOgImageUrl(path)],
   };
 }
+
+export const SITE_DEFAULT_OG_IMAGE_ALT =
+  'AstroLink — live 1:1 sessions with verified aerospace experts';
+
+export function defaultSiteOgImage(
+  alt: string = SITE_DEFAULT_OG_IMAGE_ALT,
+): OgImageEntry {
+  return ogImageEntry(CHRIS_CAMPAIGN_OG_IMAGE_PATH, alt);
+}
+
+export function defaultSiteTwitterImage(): TwitterLargeImageMeta {
+  return twitterLargeImage(CHRIS_CAMPAIGN_OG_IMAGE_PATH);
+}
