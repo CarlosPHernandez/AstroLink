@@ -5,6 +5,8 @@ const mockRequireApiRole = vi.hoisted(() => vi.fn());
 const mockFetchAdminBookingExportContext = vi.hoisted(() => vi.fn());
 const mockFormatBookingExportMarkdown = vi.hoisted(() => vi.fn());
 const mockBuildBookingExportFilename = vi.hoisted(() => vi.fn());
+const mockRenderBookingBriefPdf = vi.hoisted(() => vi.fn());
+const mockBuildBookingExportPdfFilename = vi.hoisted(() => vi.fn());
 const mockSupabaseInsert = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/api-auth', () => ({
@@ -18,6 +20,12 @@ vi.mock('@/lib/booking-export', () => ({
     mockFormatBookingExportMarkdown(...args),
   buildBookingExportFilename: (...args: unknown[]) =>
     mockBuildBookingExportFilename(...args),
+}));
+
+vi.mock('@/lib/booking-export-pdf', () => ({
+  renderBookingBriefPdf: (...args: unknown[]) => mockRenderBookingBriefPdf(...args),
+  buildBookingExportPdfFilename: (...args: unknown[]) =>
+    mockBuildBookingExportPdfFilename(...args),
 }));
 
 vi.mock('@/lib/supabase', () => ({
@@ -63,6 +71,10 @@ describe('GET /api/admin/bookings/[id]/export', () => {
     mockFetchAdminBookingExportContext.mockResolvedValue(exportContext);
     mockFormatBookingExportMarkdown.mockReturnValue('# AstroLink session brief — INTERNAL');
     mockBuildBookingExportFilename.mockReturnValue('astrolink-booking-brief-b0000001-2026-07-20.md');
+    mockRenderBookingBriefPdf.mockResolvedValue(new Uint8Array([0x25, 0x50, 0x44, 0x46]));
+    mockBuildBookingExportPdfFilename.mockReturnValue(
+      'astrolink-session-prep-b0000001-2026-07-20.pdf',
+    );
     mockSupabaseInsert.mockResolvedValue({ error: null });
   });
 
@@ -82,6 +94,24 @@ describe('GET /api/admin/bookings/[id]/export', () => {
         event: 'BOOKING_EXPORT',
         ref_id: bookingId,
       }),
+    );
+  });
+
+  it('returns pdf when format=pdf', async () => {
+    const { GET } = await import('./route');
+    const response = await GET(
+      new Request(
+        `http://localhost/api/admin/bookings/${bookingId}/export?format=pdf&download=1&includeEmail=false`,
+      ),
+      { params: Promise.resolve({ id: bookingId }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toBe('application/pdf');
+    expect(response.headers.get('Content-Disposition')).toContain('astrolink-session-prep');
+    expect(mockRenderBookingBriefPdf).toHaveBeenCalledWith(
+      exportContext,
+      expect.objectContaining({ includeEmail: false }),
     );
   });
 

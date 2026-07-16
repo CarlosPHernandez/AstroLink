@@ -6,6 +6,10 @@ import {
   fetchAdminBookingExportContext,
   formatBookingExportMarkdown,
 } from '@/lib/booking-export';
+import {
+  buildBookingExportPdfFilename,
+  renderBookingBriefPdf,
+} from '@/lib/booking-export-pdf';
 import { supabaseAdmin } from '@/lib/supabase';
 
 const BookingIdSchema = z.string().uuid();
@@ -20,7 +24,7 @@ function parseIncludeEmail(value: string | null): boolean {
 
 /**
  * Admin-only booking brief export for manual expert briefing.
- * GET /api/admin/bookings/[id]/export?includeEmail=true&download=1
+ * GET /api/admin/bookings/[id]/export?format=pdf&includeEmail=false&download=1
  */
 export async function GET(
   request: Request,
@@ -39,29 +43,48 @@ export async function GET(
 
   try {
     const { searchParams } = new URL(request.url);
+    const format = searchParams.get('format')?.trim().toLowerCase() ?? 'markdown';
     const includeEmail = parseIncludeEmail(searchParams.get('includeEmail'));
     const download = searchParams.get('download') === '1';
+
+    if (format !== 'markdown' && format !== 'pdf') {
+      return NextResponse.json({ success: false, error: 'Unsupported format' }, { status: 400 });
+    }
 
     const ctx = await fetchAdminBookingExportContext(parsedId.data);
     if (!ctx) {
       return NextResponse.json({ success: false, error: 'Booking not found' }, { status: 404 });
     }
 
-    const markdown = formatBookingExportMarkdown(ctx, { includeEmail });
-    const filename = buildBookingExportFilename(ctx);
-
     await supabaseAdmin.from('audit_log').insert({
       agent_id: 'APX-04',
       event: 'BOOKING_EXPORT',
       ref_id: parsedId.data,
-      payload: { includeEmail, download, admin_user_id: sessionOrResponse.userId },
+      payload: {
+        format,
+        includeEmail,
+        download,
+        admin_user_id: sessionOrResponse.userId,
+      },
     });
 
     const headers: Record<string, string> = {
-      'Content-Type': 'text/markdown; charset=utf-8',
       'Cache-Control': 'no-store',
     };
 
+    if (format === 'pdf') {
+      const pdfBytes = await renderBookingBriefPdf(ctx, { includeEmail });
+      const filename = buildBookingExportPdfFilename(ctx);
+      headers['Content-Type'] = 'application/pdf';
+      if (download) {
+        headers['Content-Disposition'] = `attachment; filename="${filename}"`;
+      }
+      return new NextResponse(Buffer.from(pdfBytes), { status: 200, headers });
+    }
+
+    const markdown = formatBookingExportMarkdown(ctx, { includeEmail });
+    const filename = buildBookingExportFilename(ctx);
+    headers['Content-Type'] = 'text/markdown; charset=utf-8';
     if (download) {
       headers['Content-Disposition'] = `attachment; filename="${filename}"`;
     }
