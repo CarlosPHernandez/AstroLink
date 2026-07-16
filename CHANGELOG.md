@@ -2,6 +2,13 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.10.0] - 2026-07-16
+
+### Added
+- Admin booking brief export: paste a booking UUID on `/dashboard/admin` to copy or download a Markdown brief with buyer intake, payment status, and expert-oriented AI prep — for manually briefing experts before sessions (`GET /api/admin/bookings/[id]/export`, `booking-export.ts`).
+- Expert and pre-call Markdown formatters in `briefing-display.ts` (parallel to existing mentee plain-text export).
+- `BOOKING_EXPORT` audit log entry on each successful admin export (no PII in payload).
+
 ## [0.6.9.0] - 2026-07-15
 
 ### Added
