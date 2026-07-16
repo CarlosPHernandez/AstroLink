@@ -363,7 +363,8 @@ export default function AdminDashboardClient({ session }: { session: SessionData
               Booking brief export
             </h2>
             <p className="text-xs text-on-surface-variant mb-4">
-              Paste a booking UUID to copy a Markdown brief for manual expert briefing.
+              Paste a booking UUID to copy an internal Markdown brief or download a
+              one-page PDF to send the expert.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
@@ -403,7 +404,25 @@ export default function AdminDashboardClient({ session }: { session: SessionData
                   }}
                   className="px-4 py-2 rounded-md border border-outline-variant text-on-surface-variant hover:text-on-surface text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center"
                 >
-                  Download .md
+                  .md
+                </a>
+                <a
+                  href={
+                    bookingExportId.trim()
+                      ? `/api/admin/bookings/${encodeURIComponent(bookingExportId.trim())}/export?format=pdf&includeEmail=false&download=1`
+                      : undefined
+                  }
+                  onClick={(event) => {
+                    if (!bookingExportId.trim()) {
+                      event.preventDefault();
+                      setBookingExportError('Enter a booking ID.');
+                      setBookingExportSuccess(null);
+                    }
+                  }}
+                  data-testid="admin-booking-export-pdf"
+                  className="px-4 py-2 rounded-md border border-outline-variant text-on-surface-variant hover:text-on-surface text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center"
+                >
+                  PDF
                 </a>
               </div>
             </div>

@@ -1,6 +1,6 @@
 {
   "name": "astrolink",
-  "version": "0.6.10.0",
+  "version": "0.6.10.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -26,6 +26,7 @@
     "@vercel/analytics": "^2.0.1",
     "next": "16.2.6",
     "openai": "^6.39.1",
+    "pdf-lib": "^1.17.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^6.16.0",
