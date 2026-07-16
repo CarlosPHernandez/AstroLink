@@ -156,3 +156,74 @@ export function formatMenteeBriefAsPlainText(briefing: BriefingPayload): string 
 
   return '';
 }
+
+function appendExpertAgendaMarkdown(
+  lines: string[],
+  agenda: MentorBriefingOutput['recommended_agenda'],
+) {
+  lines.push('', '### Recommended agenda');
+  lines.push(`- **0–5 min:** ${agenda.minutes_0_5}`);
+  lines.push(`- **5–20 min:** ${agenda.minutes_5_20}`);
+  lines.push(`- **20–28 min:** ${agenda.minutes_20_28}`);
+  lines.push(`- **28–30 min:** ${agenda.minutes_28_30}`);
+}
+
+/** Markdown expert brief for admin export and manual expert briefing. */
+export function formatExpertBriefAsMarkdown(briefing: BriefingPayload): string {
+  const expert = resolveExpertBrief(briefing);
+  if (!expert) {
+    return '';
+  }
+
+  const lines: string[] = ['### Session objectives'];
+  expert.session_objectives.forEach((objective, index) => {
+    lines.push(`${index + 1}. ${objective}`);
+  });
+  appendExpertAgendaMarkdown(lines, expert.recommended_agenda);
+  lines.push('', '### Mentee context', '', expert.mentee_context_summary);
+
+  if ('facilitation_notes' in expert && expert.facilitation_notes.length > 0) {
+    lines.push('', '### Facilitation notes');
+    expert.facilitation_notes.forEach((note) => lines.push(`- ${note}`));
+  }
+
+  if (expert.suggested_resources.length > 0) {
+    lines.push('', '### Suggested resources');
+    expert.suggested_resources.forEach((resource) => lines.push(`- ${resource}`));
+  }
+
+  return lines.join('\n');
+}
+
+/** Markdown pre-call brief for admin export (mentor UI hides this variant). */
+export function formatPreCallBriefAsMarkdown(briefing: PreCallBriefOutput): string {
+  const lines: string[] = [
+    briefing.one_line_summary,
+    '',
+    '### Context summary',
+    '',
+    briefing.buyer_context_summary,
+  ];
+
+  if (briefing.buyer_strengths.length > 0) {
+    lines.push('', '### Buyer strengths');
+    briefing.buyer_strengths.forEach((strength) => lines.push(`- ${strength}`));
+  }
+
+  if (briefing.focus_areas.length > 0) {
+    lines.push('', '### Focus areas');
+    for (const area of briefing.focus_areas) {
+      lines.push(`- **${area.topic}** (${area.severity}): ${area.why_for_expert}`);
+      lines.push(`  - Suggested angle: ${area.suggested_angle}`);
+    }
+  }
+
+  if (briefing.proposed_questions.length > 0) {
+    lines.push('', '### Questions for the expert');
+    briefing.proposed_questions.forEach((question, index) => {
+      lines.push(`${index + 1}. ${question}`);
+    });
+  }
+
+  return lines.join('\n');
+}

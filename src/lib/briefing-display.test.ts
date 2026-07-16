@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatExpertBriefAsMarkdown,
   formatMenteeBriefAsPlainText,
+  formatPreCallBriefAsMarkdown,
   isLegacySessionBriefing,
   isPreCallBrief,
   isSessionBriefing,
@@ -146,5 +148,21 @@ describe('briefing-display resolvers', () => {
     expect(text).toContain(sessionBundle.mentee.personal_intro);
     expect(text).toContain('Review your propulsion trade study');
     expect(text).toContain('What surprised you most in your last trade study?');
+  });
+
+  it('formats expert brief as markdown', () => {
+    const markdown = formatExpertBriefAsMarkdown(sessionBundle);
+    expect(markdown).toContain('### Session objectives');
+    expect(markdown).toContain('Review propulsion trade study');
+    expect(markdown).toContain('Confirm their mass budget early.');
+    expect(markdown).toContain('### Facilitation notes');
+  });
+
+  it('formats pre-call brief as markdown', () => {
+    const markdown = formatPreCallBriefAsMarkdown(preCallBrief);
+    expect(markdown).toContain(preCallBrief.one_line_summary);
+    expect(markdown).toContain('### Focus areas');
+    expect(markdown).toContain('Regulatory path');
+    expect(markdown).toContain('What surprised you most post-flight?');
   });
 });
