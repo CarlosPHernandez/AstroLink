@@ -2,6 +2,11 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.10.2] - 2026-07-16
+
+### Added
+- Chris campaign social preview card for `/talk-with-chris`: static 1200×630 OG image (`/og/talk-with-chris.png`) with `summary_large_image` Twitter metadata via `buildTalkWithChrisMetadata()` and shared `og-images` helpers.
+
 ## [0.6.10.1] - 2026-07-16
 
 ### Added
