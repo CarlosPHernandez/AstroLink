@@ -60,6 +60,10 @@ export default function AdminDashboardClient({ session }: { session: SessionData
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [waitlistError, setWaitlistError] = useState<string | null>(null);
   const [waitlistLoading, setWaitlistLoading] = useState(true);
+  const [bookingExportId, setBookingExportId] = useState('');
+  const [bookingExportLoading, setBookingExportLoading] = useState(false);
+  const [bookingExportError, setBookingExportError] = useState<string | null>(null);
+  const [bookingExportSuccess, setBookingExportSuccess] = useState<string | null>(null);
 
   const loadWaitlist = useCallback(async () => {
     setWaitlistLoading(true);
@@ -96,6 +100,43 @@ export default function AdminDashboardClient({ session }: { session: SessionData
     });
     return () => window.cancelAnimationFrame(frame);
   }, [loadWaitlist]);
+
+  const handleCopyBookingBrief = useCallback(async () => {
+    const bookingId = bookingExportId.trim();
+    if (!bookingId) {
+      setBookingExportError('Enter a booking ID.');
+      setBookingExportSuccess(null);
+      return;
+    }
+
+    setBookingExportLoading(true);
+    setBookingExportError(null);
+    setBookingExportSuccess(null);
+
+    try {
+      const response = await fetch(`/api/admin/bookings/${encodeURIComponent(bookingId)}/export`);
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? 'Failed to export booking brief');
+      }
+
+      const markdown = await response.text();
+      try {
+        await navigator.clipboard.writeText(markdown);
+        setBookingExportSuccess('Brief copied to clipboard.');
+      } catch {
+        setBookingExportError(
+          'Brief loaded but clipboard is unavailable. Use Download .md instead.',
+        );
+      }
+    } catch (error: unknown) {
+      setBookingExportError(
+        error instanceof Error ? error.message : 'Failed to export booking brief',
+      );
+    } finally {
+      setBookingExportLoading(false);
+    }
+  }, [bookingExportId]);
 
   return (
     <div className="min-h-screen bg-background text-on-surface p-6 md:p-10 font-sans selection:bg-zinc-800 selection:text-white">
@@ -314,6 +355,64 @@ export default function AdminDashboardClient({ session }: { session: SessionData
                 </table>
               </div>
             )}
+          </div>
+
+          <div className="p-6 rounded-md border border-outline-variant bg-surface-container-lowest shadow-sm">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-on-surface flex items-center gap-2 mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-tertiary" />
+              Booking brief export
+            </h2>
+            <p className="text-xs text-on-surface-variant mb-4">
+              Paste a booking UUID to copy a Markdown brief for manual expert briefing.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                value={bookingExportId}
+                onChange={(event) => {
+                  setBookingExportId(event.target.value);
+                  setBookingExportError(null);
+                  setBookingExportSuccess(null);
+                }}
+                placeholder="Booking UUID"
+                data-testid="admin-booking-export-input"
+                className="flex-1 px-3 py-2 rounded-md border border-outline-variant bg-surface text-sm text-on-surface font-mono"
+              />
+              <div className="flex gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => void handleCopyBookingBrief()}
+                  disabled={bookingExportLoading}
+                  data-testid="admin-booking-export-copy"
+                  className="px-4 py-2 rounded-md bg-primary text-white text-xs font-semibold uppercase tracking-wider disabled:opacity-40 transition-opacity"
+                >
+                  {bookingExportLoading ? 'Loading…' : 'Copy brief'}
+                </button>
+                <a
+                  href={
+                    bookingExportId.trim()
+                      ? `/api/admin/bookings/${encodeURIComponent(bookingExportId.trim())}/export?download=1`
+                      : undefined
+                  }
+                  onClick={(event) => {
+                    if (!bookingExportId.trim()) {
+                      event.preventDefault();
+                      setBookingExportError('Enter a booking ID.');
+                      setBookingExportSuccess(null);
+                    }
+                  }}
+                  className="px-4 py-2 rounded-md border border-outline-variant text-on-surface-variant hover:text-on-surface text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center"
+                >
+                  Download .md
+                </a>
+              </div>
+            </div>
+            {bookingExportError ? (
+              <p className="text-error text-xs mt-3">{bookingExportError}</p>
+            ) : null}
+            {bookingExportSuccess ? (
+              <p className="text-xs text-on-surface mt-3">{bookingExportSuccess}</p>
+            ) : null}
           </div>
 
           <MentorPayoutsPanel />
