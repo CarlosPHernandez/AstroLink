@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AstroLink OG cards — preview board</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 40px;
+        font-family: Inter, system-ui, sans-serif;
+        background: #e9e7ed;
+        color: #1a1b1f;
+      }
+
+      h1 {
+        font-size: 28px;
+        margin-bottom: 8px;
+      }
+
+      p {
+        max-width: 900px;
+        color: #414755;
+        line-height: 1.5;
+        margin-bottom: 32px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 40px;
+        max-width: 1280px;
+      }
+
+      section {
+        background: #fff;
+        border: 1px solid #c1c6d7;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 8px 24px rgba(26, 27, 31, 0.06);
+      }
+
+      section h2 {
+        font-size: 18px;
+        margin-bottom: 6px;
+      }
+
+      section .meta {
+        font-size: 13px;
+        color: #414755;
+        margin-bottom: 16px;
+      }
+
+      iframe {
+        width: 100%;
+        height: 760px;
+        border: 1px solid #c1c6d7;
+        border-radius: 12px;
+        background: #e3e2e7;
+      }
+
+      .platforms {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .platforms span {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #f4f3f8;
+        color: #414755;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>AstroLink OG card previews (v1)</h1>
+    <p>
+      Hybrid v1: static 1200×630 PNGs wired through metadata. <strong>Phia-inspired</strong> variants
+      use a dark hero layout, centered serif typography, glassmorphic floating frames, and sparkle
+      particles (reference: <code>phia-reference.png</code>). Open individual files for
+      pixel-perfect screenshots.
+    </p>
+
+    <div class="grid">
+      <section>
+        <h2>Global default — astrolink-default.png</h2>
+        <p class="meta">
+          Routes: <code>/</code>, <code>/press</code>, <code>/privacy</code>, <code>/experts</code>,
+          <code>/early-access</code> og:image (Twitter Player unchanged on early-access).
+        </p>
+        <iframe src="./astrolink-default.html" title="Default OG card"></iframe>
+        <div class="platforms">
+          <span>X / LinkedIn</span>
+          <span>iMessage</span>
+          <span>Slack</span>
+          <span>Discord</span>
+        </div>
+      </section>
+
+      <section>
+        <h2>Chris campaign — talk-with-chris.png (original light)</h2>
+        <p class="meta">Route: <code>/talk-with-chris</code> — split layout, light surface.</p>
+        <iframe src="./talk-with-chris.html" title="Chris campaign OG card"></iframe>
+      </section>
+
+      <section>
+        <h2>Chris campaign — Phia-inspired (recommended)</h2>
+        <p class="meta">
+          Chris landing style: <code>#1c1c1c</code>, skewed segmented expert row + slot bars (Eiman ·
+          Chris · Dr. Jenni Hesterman). Route: <code>/talk-with-chris</code>
+        </p>
+        <iframe src="./talk-with-chris-phia.html" title="Chris Phia-inspired OG card"></iframe>
+        <div class="platforms">
+          <span>Waitlist email CTAs</span>
+          <span>Social ads</span>
+          <span>X / LinkedIn</span>
+          <span>iMessage</span>
+        </div>
+      </section>
+
+      <section>
+        <h2>Global default — Phia-inspired</h2>
+        <p class="meta">
+          Eiman, Chris, and Dr. Jenni Hesterman around centered AstroLink wordmark (Inter).
+        </p>
+        <iframe src="./astrolink-default-phia.html" title="Default Phia-inspired OG card"></iframe>
+      </section>
+    </div>
+  </body>
+</html>

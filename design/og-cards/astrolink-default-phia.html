@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AstroLink — Default OG card (Phia-inspired)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=Montserrat:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-deep: #070b18;
+        --bg-mid: #0f1a33;
+        --glass: rgba(255, 255, 255, 0.08);
+        --glass-border: rgba(255, 255, 255, 0.16);
+        --text: #f8f9ff;
+        --text-muted: rgba(248, 249, 255, 0.72);
+        --accent-strong: #adc6ff;
+        --font-brand: Inter, system-ui, sans-serif;
+        --font-wordmark: Montserrat, Inter, system-ui, sans-serif;
+        --wordmark: #8b95a8;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #1a1b1f;
+        font-family: var(--font-brand);
+        padding: 32px;
+      }
+
+      .note {
+        max-width: 1200px;
+        margin-bottom: 16px;
+        color: #c1c6d7;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .og-card {
+        position: relative;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 50% 40%, rgba(0, 88, 188, 0.24), transparent 50%),
+          linear-gradient(165deg, #070b18 0%, #0f1a33 60%, #0a1020 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 32px 80px rgba(0, 0, 0, 0.45);
+      }
+
+      .particles {
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(circle, rgba(255, 255, 255, 0.85) 1px, transparent 1px);
+        background-size: 200px 200px;
+        opacity: 0.28;
+        pointer-events: none;
+      }
+
+      .float {
+        position: absolute;
+        border-radius: 22px;
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+      }
+
+      .float img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.88;
+      }
+
+      .float-eiman {
+        left: 64px;
+        top: 54px;
+        width: 156px;
+        height: 196px;
+        transform: rotate(-7deg);
+      }
+
+      .float-chris {
+        right: 72px;
+        top: 58px;
+        width: 178px;
+        height: 220px;
+        transform: rotate(8deg);
+      }
+
+      .float-jenni {
+        right: 108px;
+        bottom: 72px;
+        width: 148px;
+        height: 148px;
+        border-radius: 50%;
+        transform: rotate(-4deg);
+      }
+
+      .center {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 80px 280px;
+      }
+
+      .eyebrow {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+      }
+
+      .hero-brand {
+        font-family: var(--font-wordmark);
+        font-size: 72px;
+        line-height: 1;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--wordmark);
+        margin-bottom: 20px;
+      }
+
+      .subhead {
+        font-size: 26px;
+        line-height: 1.35;
+        font-weight: 500;
+        color: var(--text-muted);
+        max-width: 700px;
+      }
+
+      .footer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 54px;
+        z-index: 2;
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        color: var(--text-muted);
+        font-size: 17px;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <p class="note">
+        Phia-inspired global default — Inter typography, experts: Eiman Jahangir, Chris Sembroski,
+        Dr. Jenni Hesterman. Export → <code>public/og/astrolink-default.png</code>
+      </p>
+      <article class="og-card" aria-label="AstroLink default — Phia-inspired OG card">
+        <div class="particles" aria-hidden="true"></div>
+
+        <div class="float float-eiman" aria-hidden="true">
+          <img src="../../public/eiman.webp" alt="" />
+        </div>
+        <div class="float float-chris" aria-hidden="true">
+          <img src="../../public/chris_sembroski.webp" alt="" style="object-position: center 15%" />
+        </div>
+        <div class="float float-jenni" aria-hidden="true">
+          <img
+            src="https://vwoizjesyyygmokfqpyy.supabase.co/storage/v1/object/public/expert-intro-videos/Jenni-hesterman/Hesterman%20headshot.jpg"
+            alt=""
+          />
+        </div>
+
+        <div class="center">
+          <p class="eyebrow">Talk to verified experts</p>
+          <h1 class="hero-brand">AstroLink</h1>
+          <p class="subhead">
+            Live 1:1 video sessions with astronauts, flight controllers, and operators.
+          </p>
+        </div>
+
+        <div class="footer">
+          <span>✦ Verified experts ✦</span>
+          <span>astro-link.space</span>
+        </div>
+      </article>
+    </div>
+  </body>
+</html>
