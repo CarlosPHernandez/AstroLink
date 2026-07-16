@@ -2,6 +2,11 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.10.1] - 2026-07-16
+
+### Added
+- Expert-facing PDF export for admin booking briefs: download a one-page session prep PDF from `/dashboard/admin` (buyer name, session time, goals, background, AI prep — no internal notes; email omitted by default). `GET /api/admin/bookings/[id]/export?format=pdf&includeEmail=false&download=1` via `booking-export-pdf.ts` (`pdf-lib`).
+
 ## [0.6.10.0] - 2026-07-16
 
 ### Added
