@@ -34,6 +34,7 @@ Use the same host as your production canonical (`getAppBaseUrl()` → `https://a
 | `chris-sembroski` | Chris campaign | Public Chris promotion — `/talk-with-chris?ref=chris-sembroski` (full $200; no limited-slot scarcity UI) |
 | `chris-social` | Chris social | Chris Instagram/X/etc. — `/talk-with-chris?ref=chris-social` (full **$200**; hide spots remaining) |
 | `early-signups` | Waitlist email | Chris waitlist email — early-access **$180** + show limited slots; CTA may use `/talk-with-chris?ref=early-signups` |
+| `booking-incomplete` | Ops incomplete-booking email | Manual check-in for auth users who started Chris booking but did not pay — default CTA on `chris-incomplete-booking` template (full **$200** unless overridden with `--early`) |
 | `expert-david-guajardo` | David / Carlos | David’s partner landing `/join/david-guajardo` (auto-set; do not hand-edit links) |
 | `expert-<mentor-slug>` | Expert roster | Other `/join/<slug>` partner pages (e.g. `expert-chris-sembroski`) |
 | `direct` | — | Reserved; omit `ref` for organic (stored as `(direct)` in reports) |
@@ -58,7 +59,7 @@ On `/talk-with-chris` and the Chris booking wizard, `ref` becomes `bookings.mark
 | `ref` | Charge | Slot scarcity UI |
 |-------|--------|------------------|
 | `early-signups` | $180 | Yes |
-| `chris-social`, `chris-sembroski`, missing/other | $200 | No |
+| `chris-social`, `chris-sembroski`, `booking-incomplete`, missing/other | $200 | No |
 
 Server SOOT: [`chris-pricing.ts`](../../src/lib/chris-campaign/chris-pricing.ts). Launch cutover: [chris-campaign-launch-checklist.md](./chris-campaign-launch-checklist.md).
 
