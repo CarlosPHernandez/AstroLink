@@ -41,6 +41,10 @@ export function isChrisBookingPageRoute(pathname: string): boolean {
   if (pathname === '/dashboard/mentee' || pathname.startsWith('/dashboard/mentee/')) {
     return true;
   }
+  // Ops concierge: signed-token 45-min slot picker after preferred day changes
+  if (pathname === '/r/chris-slot' || pathname.startsWith('/r/chris-slot/')) {
+    return true;
+  }
   return false;
 }
 
@@ -55,6 +59,9 @@ export function isChrisBookingApiRoute(pathname: string): boolean {
     return true;
   }
   if (pathname === '/api/session/provision' || pathname.startsWith('/api/session/')) {
+    return true;
+  }
+  if (pathname === '/api/chris-slot-choice') {
     return true;
   }
   return false;

@@ -2,6 +2,17 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.11.0] - 2026-07-18
+
+### Added
+- Chris concierge reschedule: warm email + signed link for mentees to pick a **45-minute** start when their preferred day no longer works (ops CLI `email:chris-slot-reschedule`, picker at `/r/chris-slot`, API updates booking and notifies `support@astro-link.space`).
+- Incomplete-booking check-in email template and CLI (`email:chris-incomplete-booking`) for auth-started / unpaid Chris funnels.
+- Ops runbook: `docs/how-to/chris-slot-reschedule-ops.md`.
+
+### Changed
+- Waitlist mode allows `/r/chris-slot` and `/api/chris-slot-choice` when Chris booking is enabled.
+- Marketing referrer taxonomy documents `booking-incomplete`.
+
 ## [0.6.10.5] - 2026-07-18
 
 ### Changed

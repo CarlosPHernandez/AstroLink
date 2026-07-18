@@ -254,6 +254,26 @@ npm run email:chris-waitlist-test -- --to you@example.com --dry-run
 
 Then check your inbox (and spam) and the Resend dashboard → Emails.
 
+## Incomplete booking check-in (auth started, not paid)
+
+Separate ops template for people who put in an email / completed auth but never finished booking. Not part of the 4-step waitlist sequence.
+
+```bash
+# Default CTA: /talk-with-chris?ref=booking-incomplete ($200)
+npm run email:chris-incomplete-booking -- --to person@example.com
+
+# With first name from auth profile
+npm run email:chris-incomplete-booking -- --to person@example.com --name Alex
+
+# Waitlist pricing CTA ($180)
+npm run email:chris-incomplete-booking -- --to person@example.com --early
+
+npm run email:chris-incomplete-booking -- --to person@example.com --dry-run
+```
+
+- Template: `src/lib/email/chris-incomplete-booking-templates.ts`
+- Script sets `reply_to` to `support@astro-link.space` (override with `RESEND_REPLY_TO`) so “reply to this email” lands in support.
+
 ## Launch day runbook (36 contacts)
 
 1. Export waitlist emails + names from `early_access_signups` (and any sheet).  

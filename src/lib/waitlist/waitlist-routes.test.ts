@@ -78,6 +78,10 @@ describe('resolveWaitlistRoute', () => {
       expect(resolveWaitlistRoute('/api/bookings/abc/cancel', null, chrisOn)).toEqual({
         action: 'allow',
       });
+      expect(resolveWaitlistRoute('/r/chris-slot', null, chrisOn)).toEqual({ action: 'allow' });
+      expect(resolveWaitlistRoute('/api/chris-slot-choice', null, chrisOn)).toEqual({
+        action: 'allow',
+      });
     });
 
     it('redirects experts paths to talk-with-chris', () => {
