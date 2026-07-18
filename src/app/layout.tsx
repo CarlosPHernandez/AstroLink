@@ -67,6 +67,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: "#faf9fe",
   colorScheme: "light",
+  // Lets sticky header / footer use env(safe-area-inset-*) on notched phones.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

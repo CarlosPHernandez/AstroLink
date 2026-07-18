@@ -1,11 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ExpertCategoryFilter } from '@/components/booking/expert-category-filter';
 import { ExpertCard } from '@/components/experts/expert-card';
-import { LandingAuthNavClient } from '@/components/landing/landing-auth-nav-client';
+import { PublicSiteHeader } from '@/components/landing/public-site-header';
 import { filterExpertsByCategory } from '@/lib/expert-categories';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
@@ -68,14 +67,7 @@ export default function ExpertsDirectoryClient({
 
   return (
     <div className="min-h-screen bg-background text-on-surface font-sans">
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-outline-variant">
-        <div className="max-w-[1200px] mx-auto px-md sm:px-lg h-20 flex justify-between items-center w-full">
-          <Link href="/" className="font-bold text-lg text-on-surface tracking-tight">
-            AstroLink
-          </Link>
-          <LandingAuthNavClient />
-        </div>
-      </header>
+      <PublicSiteHeader variant="product" />
 
       <main className="max-w-[1200px] mx-auto px-md sm:px-lg py-10 sm:py-14">
         <div className="mb-10">
