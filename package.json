@@ -1,6 +1,6 @@
 {
   "name": "astrolink",
-  "version": "0.6.10.5",
+  "version": "0.6.11.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -14,7 +14,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "optimize:images": "node scripts/optimize-public-images.mjs",
-    "email:chris-waitlist-test": "node --experimental-strip-types --env-file=.env.local scripts/send-chris-waitlist-test.mjs"
+    "email:chris-waitlist-test": "node --experimental-strip-types --env-file=.env.local scripts/send-chris-waitlist-test.mjs",
+    "email:chris-incomplete-booking": "node --experimental-strip-types --env-file=.env.local scripts/send-chris-incomplete-booking.mjs",
+    "email:chris-slot-reschedule": "node --experimental-strip-types --env-file=.env.local scripts/send-chris-slot-reschedule.mjs"
   },
   "dependencies": {
     "@daily-co/daily-js": "^0.83.1",
