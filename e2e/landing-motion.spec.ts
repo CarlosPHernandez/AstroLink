@@ -38,6 +38,40 @@ test.describe('Landing motion redesign', () => {
     await expect(page.locator('.landing-hero-prompt-eyebrow')).toHaveCount(0);
   });
 
+  test('open directory shows expert names and browse path', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('view-all-experts').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('expert-card-chris-sembroski')).toBeVisible();
+    await expect(page.getByTestId('expert-card-chris-sembroski')).toContainText(/Chris|Sembroski/i);
+    await expect(page.getByTestId('view-all-experts')).toBeVisible();
+    await expect(page.getByTestId('landing-trust')).toBeVisible();
+    await page.getByTestId('view-all-experts').click();
+    await expect(page).toHaveURL('/experts');
+  });
+
+  test('path chip submits student goal into expert relay', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('landing-path-student').click();
+    await expect(page.getByTestId('landing-hero-goal-active')).toBeVisible();
+    await expect(page.getByTestId('landing-hero-user-message')).toContainText(/student/i);
+    await expect(page.getByTestId('landing-hero-relay-expert')).toBeVisible();
+  });
+
+  test('mobile menu opens on landing and experts', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('/');
+    await expect(page.getByTestId('site-mobile-menu')).toBeHidden();
+    await page.getByTestId('site-mobile-menu-button').click();
+    await expect(page.getByTestId('site-mobile-menu')).toBeVisible();
+    await expect(page.getByTestId('site-mobile-menu').getByRole('link', { name: 'Experts' })).toBeVisible();
+    await expect(page.getByTestId('site-mobile-menu').getByRole('link', { name: 'Press' })).toBeVisible();
+
+    await page.goto('/experts');
+    await page.getByTestId('site-mobile-menu-button').click();
+    await expect(page.getByTestId('site-mobile-menu')).toBeVisible();
+    await expect(page.getByTestId('product-site-header')).toBeVisible();
+  });
+
   test.describe('story section', () => {
     test('desktop scroll-scrub stage is present', async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
@@ -51,27 +85,41 @@ test.describe('Landing motion redesign', () => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto('/');
       const section = page.getByTestId('landing-story-scrub');
+      await expect(section).toBeVisible();
+
+      // Wait for the client scroll hook to attach --landing-scroll-progress.
+      await expect
+        .poll(async () =>
+          section.evaluate((el) =>
+            getComputedStyle(el).getPropertyValue('--landing-scroll-progress').trim(),
+          ),
+        )
+        .not.toBe('');
 
       await section.evaluate((el) => {
         const top = el.getBoundingClientRect().top + window.scrollY;
         window.scrollTo({ top, behavior: 'instant' });
+        window.dispatchEvent(new Event('scroll'));
       });
 
-      const start = await section.evaluate(() => {
-        const generic = document.querySelector('.landing-story-generic-card');
-        const expert = document.querySelector('.landing-story-expert-card');
-        return {
-          progress: getComputedStyle(document.querySelector('[data-testid="landing-story-scrub"]')!)
-            .getPropertyValue('--landing-scroll-progress')
-            .trim(),
-          genericOpacity: generic ? getComputedStyle(generic).opacity : null,
-          expertOpacity: expert ? getComputedStyle(expert).opacity : null,
-        };
-      });
-
-      expect(Number.parseFloat(start.progress)).toBeLessThan(0.25);
-      expect(start.genericOpacity).toBe('1');
-      expect(start.expertOpacity).toBe('0');
+      await expect
+        .poll(async () => {
+          const start = await section.evaluate((el) => {
+            const generic = document.querySelector('.landing-story-generic-card');
+            const expert = document.querySelector('.landing-story-expert-card');
+            return {
+              progress: getComputedStyle(el).getPropertyValue('--landing-scroll-progress').trim(),
+              genericOpacity: generic ? getComputedStyle(generic).opacity : null,
+              expertOpacity: expert ? getComputedStyle(expert).opacity : null,
+            };
+          });
+          return (
+            Number.parseFloat(start.progress) < 0.25 &&
+            start.genericOpacity === '1' &&
+            start.expertOpacity === '0'
+          );
+        })
+        .toBe(true);
 
       await section.evaluate((el) => {
         const runway = Math.max(1, el.offsetHeight - window.innerHeight);
@@ -79,20 +127,21 @@ test.describe('Landing motion redesign', () => {
         window.dispatchEvent(new Event('scroll'));
       });
 
-      await page.waitForTimeout(150);
-
-      const mid = await section.evaluate(() => {
-        const expert = document.querySelector('.landing-story-expert-card');
-        return {
-          progress: getComputedStyle(document.querySelector('[data-testid="landing-story-scrub"]')!)
-            .getPropertyValue('--landing-scroll-progress')
-            .trim(),
-          expertOpacity: expert ? getComputedStyle(expert).opacity : null,
-        };
-      });
-
-      expect(Number.parseFloat(mid.progress)).toBeGreaterThan(0.5);
-      expect(Number.parseFloat(mid.expertOpacity ?? '0')).toBeGreaterThan(0.8);
+      await expect
+        .poll(async () => {
+          const mid = await section.evaluate((el) => {
+            const expert = document.querySelector('.landing-story-expert-card');
+            return {
+              progress: getComputedStyle(el).getPropertyValue('--landing-scroll-progress').trim(),
+              expertOpacity: expert ? getComputedStyle(expert).opacity : null,
+            };
+          });
+          return (
+            Number.parseFloat(mid.progress) > 0.5 &&
+            Number.parseFloat(mid.expertOpacity ?? '0') > 0.8
+          );
+        })
+        .toBe(true);
     });
 
     test('mobile comparison slider is present', async ({ page }) => {

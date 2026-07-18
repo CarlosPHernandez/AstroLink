@@ -51,23 +51,23 @@ export function LandingComparisonSlider({
   };
 
   return (
-    <div className="landing-comparison-slider flex flex-col gap-8" data-testid="landing-comparison-slider">
+    <div className="landing-comparison-slider flex flex-col gap-6 sm:gap-8" data-testid="landing-comparison-slider">
       <div>{beforeHeading}</div>
 
       <div
         ref={trackRef}
-        className="landing-comparison-track relative min-h-[156px] overflow-hidden rounded-lg border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_12px_32px_-20px_rgba(14,20,32,0.14)] touch-none select-none"
+        className="landing-comparison-track relative min-h-[200px] overflow-hidden rounded-lg border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_12px_32px_-20px_rgba(14,20,32,0.14)] touch-none select-none"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <div className="absolute inset-0 p-3 sm:p-4" aria-hidden={position >= 99}>
+        <div className="absolute inset-0 flex items-center p-3.5 sm:p-4" aria-hidden={position >= 99}>
           {genericCard}
         </div>
 
         <div
-          className="absolute inset-0 p-3 sm:p-4"
+          className="absolute inset-0 flex items-center p-3.5 sm:p-4"
           style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
           aria-hidden={position <= 1}
         >
@@ -75,15 +75,20 @@ export function LandingComparisonSlider({
         </div>
 
         <div
-          className="landing-comparison-divider pointer-events-none absolute inset-y-3 z-10 w-px bg-[var(--landing-border)]"
+          className="landing-comparison-divider pointer-events-none absolute inset-y-2 z-10 w-0.5 bg-[var(--landing-border)]"
           style={{ left: `${position}%` }}
           aria-hidden
         />
         <div
-          className="landing-comparison-handle pointer-events-none absolute top-1/2 z-10 h-10 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--landing-ink)]"
+          className="landing-comparison-handle landing-comparison-handle-knob pointer-events-none absolute top-1/2 z-10 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)]"
           style={{ left: `${position}%` }}
           aria-hidden
-        />
+        >
+          <span className="flex gap-0.5" aria-hidden>
+            <span className="h-3.5 w-0.5 rounded-full bg-[var(--landing-ink)]/55" />
+            <span className="h-3.5 w-0.5 rounded-full bg-[var(--landing-ink)]/55" />
+          </span>
+        </div>
 
         <label htmlFor={labelId} className="sr-only">
           Compare generic online answers with AstroLink expert access
@@ -97,12 +102,15 @@ export function LandingComparisonSlider({
           onChange={(event) => setPosition(Number(event.target.value))}
           className="landing-comparison-range absolute inset-0 z-20 h-full w-full cursor-ew-resize opacity-0"
           data-testid="landing-comparison-range"
+          aria-valuetext={`${Math.round(position)} percent expert view`}
         />
       </div>
 
-      <p className="text-center text-xs text-[var(--landing-faint)]">Drag to compare</p>
+      <p className="text-center text-xs text-[var(--landing-faint)]">
+        Drag the handle to compare
+      </p>
 
-      <div className="mx-auto w-full max-w-[260px]">{portrait}</div>
+      <div className="mx-auto w-full max-w-[220px] sm:max-w-[260px]">{portrait}</div>
 
       <div>{afterHeading}</div>
     </div>

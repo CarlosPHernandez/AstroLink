@@ -2,6 +2,16 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.10.5] - 2026-07-18
+
+### Changed
+- Mission landing: open expert browse first (real names/faces, path to `/experts` before signup), truthful 1:1-only positioning, and a defendable trust strip (no fabricated testimonials).
+- Mobile landing polish: quieter hero motion, snap expert carousel with swipe affordance, larger comparison-slider drag handle, safer touch targets, and `viewport-fit: cover` safe areas.
+- Shared public mobile menu (`PublicSiteHeader`) on landing and `/experts` — hamburger sheet with Experts, Press, Sign In / Unlock (or Dashboard when signed in).
+
+### Fixed
+- Landing path-chip and chat typing remount glitches; story scroll-progress e2e race on desktop scrub.
+
 ## [0.6.10.4] - 2026-07-16
 
 ### Changed

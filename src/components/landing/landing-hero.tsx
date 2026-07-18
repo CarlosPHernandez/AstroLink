@@ -15,8 +15,27 @@ import {
 } from '@/lib/landing-featured-expert';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
-const UNLOCK_HREF = '/auth?mode=signup&redirect=%2Fexperts';
+const BROWSE_HREF = '/experts';
+const BOOK_SIGNUP_HREF = '/auth?mode=signup&redirect=%2Fbooking';
 const PENDING_GOAL_STORAGE_KEY = 'astrolink.pendingLearningGoal';
+
+const PATH_CHIPS = [
+  {
+    id: 'student',
+    label: 'Student',
+    goal: 'I am a student exploring a career in space. Where should I start?',
+  },
+  {
+    id: 'career',
+    label: 'Career switcher',
+    goal: 'I want to switch into aerospace. What paths actually work?',
+  },
+  {
+    id: 'team',
+    label: 'Team / org',
+    goal: 'Our team needs operator perspective on a space project. How do we get started?',
+  },
+] as const;
 
 const DEMO_CHAT = [
   { role: 'user' as const, text: 'I want to work in space. Where should I start?' },
@@ -63,9 +82,8 @@ export default function LandingHero({ experts }: LandingHeroProps) {
     typeExpertReplies: submittedGoal !== null,
   });
 
-  const handleGoalSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmedGoal = goal.trim();
+  const submitGoal = (rawGoal: string) => {
+    const trimmedGoal = rawGoal.trim();
     if (!trimmedGoal) {
       return;
     }
@@ -79,29 +97,45 @@ export default function LandingHero({ experts }: LandingHeroProps) {
       // Browsers can block storage; the unlock flow still works without persistence.
     }
 
+    setGoal(trimmedGoal);
     setRelayExpert(matchedExpert);
     setSubmittedGoal(trimmedGoal);
     phoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
+  const handleGoalSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    submitGoal(goal);
+  };
+
+  const handlePathChip = (pathGoal: string) => {
+    setGoal(pathGoal);
+    submitGoal(pathGoal);
+  };
+
+  const continueHref =
+    relayExpert && submittedGoal
+      ? `/experts/${relayExpert.slug}`
+      : BROWSE_HREF;
+
   return (
-    <section className="pt-6 sm:pt-12 pb-12 sm:pb-24">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-md lg:px-lg text-center">
+    <section className="landing-hero-section pt-5 sm:pt-12 pb-10 sm:pb-24">
+      {/* z-index keeps path chips / prompt above hero parallax (phone can translate upward on scroll). */}
+      <div className="landing-hero-copy relative z-10 max-w-[1200px] mx-auto px-4 sm:px-md lg:px-lg text-center bg-[var(--landing-canvas)]">
         <h1
           data-testid="landing-hero-title"
-          className="landing-hero-intro font-landing-display text-[1.625rem] leading-[1.14] sm:text-4xl lg:text-[2.75rem] font-semibold tracking-tight text-[var(--landing-text)] sm:leading-[1.12]"
+          className="landing-hero-intro font-landing-display text-[1.5rem] leading-[1.15] xs:text-[1.625rem] sm:text-4xl lg:text-[2.75rem] font-semibold tracking-tight text-[var(--landing-text)] sm:leading-[1.12] text-balance"
         >
           Talk to people who have
           <br className="hidden sm:block" />
           {' '}actually done the work in space.
         </h1>
-        <p className="landing-hero-subcopy mt-3 sm:mt-4 text-[0.9375rem] sm:text-base text-[var(--landing-muted)] max-w-[var(--max-width-prose)] mx-auto leading-relaxed px-1">
-          Ask a question below — we&apos;ll match you with a verified astronaut or engineer, not a
-          generic AI answer.
+        <p className="landing-hero-subcopy mt-2.5 sm:mt-4 text-[0.875rem] sm:text-base text-[var(--landing-muted)] max-w-[var(--max-width-prose)] mx-auto leading-relaxed px-0.5 text-pretty">
+          Browse verified experts. Book a live 1:1 session — not a generic AI answer.
         </p>
 
         <form
-          className="landing-hero-prompt group mx-auto mt-6 sm:mt-10 flex w-full max-w-[var(--max-width-prose)] items-center gap-2.5 sm:gap-3 rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)] px-4 sm:px-5 py-3 sm:py-3.5 text-left shadow-[0_12px_36px_-22px_rgba(14,20,32,0.2)] transition-[box-shadow,border-color] duration-300 hover:border-[color:color-mix(in_srgb,var(--landing-border)_70%,var(--landing-muted))] focus-within:border-[var(--landing-border)] focus-within:shadow-[0_16px_40px_-20px_rgba(14,20,32,0.24)]"
+          className="landing-hero-prompt group mx-auto mt-5 sm:mt-10 flex w-full max-w-[var(--max-width-prose)] items-center gap-2 sm:gap-3 rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3.5 sm:px-5 py-2.5 sm:py-3.5 text-left shadow-[0_12px_36px_-22px_rgba(14,20,32,0.2)] transition-[box-shadow,border-color] duration-300 hover:border-[color:color-mix(in_srgb,var(--landing-border)_70%,var(--landing-muted))] focus-within:border-[var(--landing-border)] focus-within:shadow-[0_16px_40px_-20px_rgba(14,20,32,0.24)]"
           onSubmit={handleGoalSubmit}
         >
           <label htmlFor="landing-goal" className="sr-only">
@@ -112,15 +146,16 @@ export default function LandingHero({ experts }: LandingHeroProps) {
             type="text"
             value={goal}
             onChange={(event) => setGoal(event.target.value)}
-            placeholder="What do you want to learn about space?"
-            className="min-w-0 flex-1 bg-transparent text-[0.875rem] sm:text-base text-[var(--landing-text)] placeholder:text-[var(--landing-faint)] focus:outline-none"
+            placeholder="What do you want to learn?"
+            className="min-w-0 flex-1 bg-transparent text-[0.9375rem] sm:text-base text-[var(--landing-text)] placeholder:text-[var(--landing-faint)] focus:outline-none"
             autoComplete="off"
+            enterKeyHint="go"
             data-testid="landing-goal-input"
           />
           <button
             type="submit"
             aria-label="Send your learning goal"
-            className="inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-[var(--landing-ink)] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--landing-surface)]"
+            className="inline-flex h-10 w-10 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-[var(--landing-ink)] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--landing-surface)] touch-manipulation"
             data-testid="landing-goal-submit"
           >
             <MaterialIcon name="arrow_forward" size={16} />
@@ -128,22 +163,51 @@ export default function LandingHero({ experts }: LandingHeroProps) {
         </form>
 
         {!submittedGoal ? (
-          <p className="landing-hero-actions mt-5 text-xs sm:text-sm text-[var(--landing-faint)]">
+          <div
+            className="landing-hero-paths mt-3.5 sm:mt-4 flex flex-wrap items-center justify-center gap-2"
+            data-testid="landing-path-chips"
+            role="group"
+            aria-label="Suggested paths"
+          >
+            {PATH_CHIPS.map((chip) => (
+              <button
+                key={chip.id}
+                type="button"
+                data-testid={`landing-path-${chip.id}`}
+                onClick={() => handlePathChip(chip.goal)}
+                className="min-h-10 sm:min-h-0 rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3.5 py-2 sm:px-3 sm:py-1.5 text-xs sm:text-xs font-medium text-[var(--landing-muted)] transition-colors hover:border-[color:color-mix(in_srgb,var(--landing-border)_50%,var(--landing-muted))] hover:text-[var(--landing-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 touch-manipulation active:scale-[0.98]"
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {!submittedGoal ? (
+          <p className="landing-hero-actions mt-4 sm:mt-5 text-xs sm:text-sm text-[var(--landing-faint)] leading-relaxed">
             Free to browse.{' '}
             <Link
-              href={UNLOCK_HREF}
-              className="text-[var(--landing-muted)] underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
+              href={BROWSE_HREF}
+              className="inline-block py-1 text-[var(--landing-muted)] underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
             >
-              Create account
-            </Link>{' '}
-            when you&apos;re ready.
+              See all experts
+            </Link>
+            <span className="mx-1.5 text-[var(--landing-border)]" aria-hidden>
+              ·
+            </span>
+            <Link
+              href={BOOK_SIGNUP_HREF}
+              className="inline-block py-1 text-[var(--landing-muted)] underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
+            >
+              Create account to book
+            </Link>
           </p>
         ) : null}
       </div>
 
       <div
         ref={visualRef}
-        className={`landing-hero-visual relative max-w-[920px] mx-auto mt-8 sm:mt-14 px-4 sm:px-md lg:px-lg${submittedGoal ? ' landing-hero-visual--goal-active' : ''}`}
+        className={`landing-hero-visual relative max-w-[920px] mx-auto mt-6 sm:mt-14 px-4 sm:px-md lg:px-lg${submittedGoal ? ' landing-hero-visual--goal-active' : ''}`}
         data-testid={submittedGoal ? 'landing-hero-goal-active' : undefined}
         style={
           {
@@ -152,7 +216,8 @@ export default function LandingHero({ experts }: LandingHeroProps) {
           } as CSSProperties
         }
       >
-        <div className="landing-hero-image-wrap landing-hero-portrait relative mx-auto w-full max-w-[min(92vw,420px)] sm:max-w-[640px] aspect-[3/4] sm:aspect-[5/6] overflow-hidden rounded-sm">
+        {/* Mobile: shorter portrait + phone overlays bottom to cut vertical length */}
+        <div className="landing-hero-image-wrap landing-hero-portrait relative mx-auto w-full max-w-[min(92vw,360px)] sm:max-w-[640px] aspect-[3/4] max-h-[min(52vh,420px)] sm:max-h-none sm:aspect-[5/6] overflow-hidden rounded-sm">
           <Image
             src={heroImage}
             alt={heroAlt}
@@ -166,11 +231,11 @@ export default function LandingHero({ experts }: LandingHeroProps) {
 
         <div
           ref={phoneRef}
-          className={`landing-hero-phone relative sm:absolute sm:right-8 lg:right-12 sm:-bottom-10 mx-auto mt-6 sm:mt-0 w-full sm:w-[300px] max-w-[var(--max-width-prose)] sm:max-w-none${submittedGoal ? ' landing-hero-phone--active' : ''}`}
+          className={`landing-hero-phone absolute left-1/2 z-[2] w-[min(88vw,260px)] -translate-x-1/2 bottom-[-3.75rem] sm:left-auto sm:right-8 lg:right-12 sm:bottom-[-2.5rem] sm:translate-x-0 sm:w-[300px]${submittedGoal ? ' landing-hero-phone--active' : ''}`}
           aria-label="Expert relay preview"
           aria-live={submittedGoal ? 'polite' : undefined}
         >
-          <div className="landing-hero-phone-shell rounded-[1.75rem] sm:rounded-[2rem] border border-[color:var(--landing-border)] bg-[var(--landing-surface)] p-2.5 sm:p-3 shadow-[0_22px_56px_-18px_rgba(14,20,32,0.22)] sm:shadow-[0_26px_64px_-16px_rgba(14,20,32,0.22)]">
+          <div className="landing-hero-phone-shell rounded-[1.6rem] sm:rounded-[2rem] border border-[color:var(--landing-border)] bg-[var(--landing-surface)] p-2 sm:p-3 shadow-[0_22px_56px_-18px_rgba(14,20,32,0.22)] sm:shadow-[0_26px_64px_-16px_rgba(14,20,32,0.22)]">
             {relayExpert && submittedGoal ? (
               <div
                 className="landing-hero-relay-header flex items-center gap-2 px-2 pb-2.5 border-b border-[var(--landing-border)]/80"
@@ -202,11 +267,13 @@ export default function LandingHero({ experts }: LandingHeroProps) {
               </div>
             )}
 
-            <div className="rounded-[1.25rem] sm:rounded-[1.4rem] bg-[var(--landing-surface-soft)] px-3 py-3.5 sm:py-4 min-h-[190px] sm:min-h-[250px] flex flex-col justify-end gap-2">
+            <div className="rounded-[1.15rem] sm:rounded-[1.4rem] bg-[var(--landing-surface-soft)] px-2.5 py-2.5 sm:px-3 sm:py-4 min-h-[150px] sm:min-h-[250px] flex flex-col justify-end gap-1.5 sm:gap-2">
               {lines.map((line, index) =>
+                // Stable keys (index only) — including displayText.length remounted every
+                // typed word and restarted landing-hero-chat-in (flash/refresh glitch).
                 line.role === 'user' ? (
                   <p
-                    key={`user-${index}-${line.displayText.length}`}
+                    key={`chat-line-${index}`}
                     data-testid={index === 0 ? 'landing-hero-user-message' : undefined}
                     className="landing-hero-chat-line ml-auto max-w-[94%] sm:max-w-[92%] rounded-2xl rounded-br-sm bg-[var(--landing-ink)] px-3 py-2 text-[11px] sm:text-xs leading-snug text-white"
                   >
@@ -214,7 +281,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
                   </p>
                 ) : (
                   <div
-                    key={`expert-${index}-${line.displayText.length}`}
+                    key={`chat-line-${index}`}
                     className="landing-hero-chat-line mr-auto max-w-[94%] sm:max-w-[92%]"
                   >
                     {relayExpert && submittedGoal ? (
@@ -233,11 +300,11 @@ export default function LandingHero({ experts }: LandingHeroProps) {
 
               {submittedGoal && isComplete ? (
                 <Link
-                  href={UNLOCK_HREF}
-                  className="landing-hero-relay-cta mt-1 inline-flex items-center justify-center gap-1 rounded-full px-3 py-2 text-[11px] sm:text-xs font-semibold text-[var(--landing-accent)] transition-colors hover:text-[var(--landing-accent-hover)]"
+                  href={continueHref}
+                  className="landing-hero-relay-cta mt-1 inline-flex min-h-10 touch-manipulation items-center justify-center gap-1 rounded-full bg-[var(--landing-surface)] px-3 py-2.5 text-[11px] sm:min-h-0 sm:bg-transparent sm:py-2 sm:text-xs font-semibold text-[var(--landing-accent)] transition-colors hover:text-[var(--landing-accent-hover)] active:scale-[0.98]"
                   data-testid="landing-hero-journey-cta"
                 >
-                  Continue your journey
+                  View {relayExpert?.firstName ?? 'expert'} profile
                   <MaterialIcon name="arrow_forward" size={14} />
                 </Link>
               ) : null}
@@ -246,13 +313,13 @@ export default function LandingHero({ experts }: LandingHeroProps) {
         </div>
       </div>
 
-      <ul className="landing-hero-trust mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-0 text-center text-xs sm:text-sm text-[var(--landing-faint)] px-4">
+      <ul className="landing-hero-trust mt-[4.75rem] sm:mt-10 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[11px] sm:text-sm text-[var(--landing-faint)] px-4">
         <li>Verified experts</li>
-        <li aria-hidden className="hidden sm:inline px-2">
+        <li aria-hidden className="text-[var(--landing-border)]">
           ·
         </li>
-        <li>Free account to browse</li>
-        <li aria-hidden className="hidden sm:inline px-2">
+        <li>Browse free</li>
+        <li aria-hidden className="text-[var(--landing-border)]">
           ·
         </li>
         <li>Live 1:1 video</li>

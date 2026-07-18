@@ -190,7 +190,7 @@ export function LandingStory({ experts }: LandingStoryProps) {
   return (
     <section
       ref={sectionRef}
-      className={`landing-scroll-section landing-story-scrub border-t border-[var(--landing-border)] py-14 sm:py-0 overflow-hidden${
+      className={`landing-scroll-section landing-story-scrub border-t border-[var(--landing-border)] py-11 sm:py-0 overflow-hidden${
         reducedMotion ? ' landing-story-scrub--static sm:py-20' : ''
       }`}
       data-testid="landing-story-scrub"

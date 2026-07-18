@@ -77,16 +77,16 @@ export function LandingAuthNavClient({
   }
 
   return (
-    <div className="flex items-center gap-sm sm:gap-lg">
+    <div className="flex items-center gap-1.5 sm:gap-lg">
       <Link
         href="/auth"
-        className={`font-label-md text-xs sm:text-label-md transition-colors ${muted}`}
+        className={`inline-flex min-h-10 touch-manipulation items-center px-1.5 font-label-md text-xs sm:min-h-0 sm:text-label-md transition-colors ${muted}`}
       >
         Sign In
       </Link>
       <Link
         href={isPill ? unlockHref : '/auth'}
-        className={`px-3.5 py-2 sm:px-5 sm:py-2.5 font-label-md text-xs sm:text-sm active:scale-95 transition-all ${isPill ? '' : 'shadow-sm'} ${cta}`}
+        className={`inline-flex min-h-10 touch-manipulation items-center px-3.5 py-2 sm:min-h-0 sm:px-5 sm:py-2.5 font-label-md text-xs sm:text-sm active:scale-95 transition-all ${isPill ? '' : 'shadow-sm'} ${cta}`}
       >
         {isPill ? 'Unlock access' : 'Launch Mission'}
       </Link>
