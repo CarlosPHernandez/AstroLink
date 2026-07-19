@@ -2,6 +2,20 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.7.0.0] - 2026-07-19
+
+### Added
+- Landing “ask a question” flow can return a unique illustrative expert-style preview via OpenAI (with canned fallback when keys or budget are unavailable).
+- Public `POST /api/landing/relay-preview` with honeypot, isolated rate limits, short reply cache, and goal capture into Supabase (`landing_goal_submissions` with Eastern Time `est_time`).
+- Shared Eastern Time formatter used by landing goals and early-access ops labels.
+
+### Changed
+- Landing hero submits goals asynchronously (loading state + “illustrative preview” disclaimer); path chips use the same API path.
+- Landing featured-expert and chat-display helpers live under `src/lib/landing/` (compat re-exports kept).
+
+### Fixed
+- Client bundle no longer pulls server-only LLM code for hero fallbacks (split `hero-relay` / `hero-relay-llm`).
+
 ## [0.6.12.0] - 2026-07-19
 
 ### Added
