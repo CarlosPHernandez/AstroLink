@@ -2,6 +2,19 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.6.12.0] - 2026-07-19
+
+### Added
+- Experts directory Phia layout (quiet hero, underline filters, soft portrait cards) and dark cinematic expert profiles with Chris-style duration segments (− / minutes / +), prorated pricing, and duration handoff into booking (`?duration=`).
+- Session duration helpers (`session-duration`) and reusable duration stepper for profile book flow.
+
+### Changed
+- Eiman Jahangir landing featured expert now resolves from Supabase roster (`slug: eiman-jahangir`, storage headshot) instead of a hardcoded local-only slug/portrait; migration backfills null slug.
+- Landing hero headline rotation extracted for clearer motion ownership.
+
+### Fixed
+- Eiman profile and relay links no longer depend on a null mentor slug (UUID fallback).
+
 ## [0.6.11.0] - 2026-07-18
 
 ### Added

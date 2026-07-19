@@ -66,36 +66,31 @@ export default function ExpertsDirectoryClient({
   };
 
   return (
-    <div className="min-h-screen bg-background text-on-surface font-sans">
-      <PublicSiteHeader variant="product" />
+    <div className="experts-directory min-h-screen">
+      <PublicSiteHeader variant="landing" />
 
-      <main className="max-w-[1200px] mx-auto px-md sm:px-lg py-10 sm:py-14">
-        <div className="mb-10">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2">
-            Verified directory
+      <main>
+        <section className="experts-dir-hero">
+          <p className="experts-dir-hero__eyebrow">Verified directory</p>
+          <h1>Aerospace experts</h1>
+          <p>
+            Watch intro videos, read bios, and book live 1:1 sessions with people who have done the
+            work.
           </p>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-on-surface">
-            Browse aerospace experts
-          </h1>
-          <p className="mt-2 text-sm text-on-surface-variant font-light max-w-2xl">
-            Watch intro videos, read bios, and book live 1:1 sessions with astronauts, flight
-            controllers, and operators.
-          </p>
-        </div>
+        </section>
 
-        <div className="mb-8">
+        <div className="experts-dir-filters">
           <ExpertCategoryFilter
             selectedCategory={selectedCategory}
             onCategoryChange={handleCategoryChange}
+            variant="underline"
           />
         </div>
 
         {filteredExperts.length === 0 ? (
-          <p className="text-sm text-on-surface-variant font-light py-12">
-            No listed experts in this category right now.
-          </p>
+          <p className="experts-dir-empty">No listed experts in this category right now.</p>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="experts-dir-grid">
             {filteredExperts.map((expert, index) => (
               <ExpertCard
                 key={expert.id}

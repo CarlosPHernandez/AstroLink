@@ -21,4 +21,13 @@ describe('getExpertBookHref', () => {
       '/booking?mentor=name%20with%20spaces',
     );
   });
+
+  it('includes clamped duration when provided', () => {
+    expect(getExpertBookHref('chris-sembroski', true, 45)).toBe(
+      '/booking?mentor=chris-sembroski&duration=45',
+    );
+    expect(getExpertBookHref('chris-sembroski', true, 7)).toBe(
+      '/booking?mentor=chris-sembroski&duration=15',
+    );
+  });
 });
