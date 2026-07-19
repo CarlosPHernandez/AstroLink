@@ -28,12 +28,15 @@ describe('hero-relay', () => {
     expect(fallback).toHaveLength(3);
     expect(fallback[0]).toEqual({ role: 'user', text: 'I want to work in space' });
     expect(fallback[1].role).toBe('expert');
+    expect(fallback[1].text.length).toBeLessThan(160);
+    expect(fallback[2].text).toMatch(/Continue this conversation|real expert advice/i);
 
     const custom = buildRelayMessagesFromTeaser(
       'goal',
       'Unique teaser about your goal.',
-      'View profile next.',
+      'Continue with Chris for real expert advice.',
     );
     expect(custom[1].text).toBe('Unique teaser about your goal.');
+    expect(custom[2].text).toMatch(/Continue with Chris/i);
   });
 });

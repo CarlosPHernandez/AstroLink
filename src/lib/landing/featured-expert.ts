@@ -174,7 +174,7 @@ export function pickLandingRelayExpert(goal: string, experts: ListedExpert[]): L
 
 export function landingRelayReplyIntro(expert: LandingRelayExpert): string {
   if (expert.slug === LANDING_HERO_EXPERT_SLUG || expert.name.toLowerCase().includes('chris')) {
-    return "I've walked this path — worth talking through what actually moved the needle, not generic advice from the internet.";
+    return "Worth talking through what actually moved the needle — not another generic career list.";
   }
 
   if (
@@ -182,12 +182,13 @@ export function landingRelayReplyIntro(expert: LandingRelayExpert): string {
     expert.slug.includes('eiman') ||
     expert.name.toLowerCase().includes('eiman')
   ) {
-    return "Questions like this benefit from someone who's built and operated real hardware — not a compiled summary.";
+    return "This is the kind of question that benefits from someone who's built and operated real hardware.";
   }
 
-  return `A verified expert like ${expert.firstName} can help you with that — live, 1:1.`;
+  return `A verified expert like ${expert.firstName} can help with that — live, 1:1.`;
 }
 
+/** Second bubble after the teaser — pushes live session, not more free AI. */
 export function landingRelayReplyCta(expert: LandingRelayExpert): string {
-  return `Create a free account to explore ${expert.firstName} and other verified experts who fit your goal.`;
+  return `Continue this conversation with real expert advice from ${expert.firstName} — live, 1:1.`;
 }

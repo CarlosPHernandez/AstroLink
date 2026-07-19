@@ -865,6 +865,30 @@ body {
   animation: landing-hero-chat-in 0.5s var(--landing-ease-out) both;
 }
 
+/* Soft bottom fade on the first teaser bubble — hint that the full answer is live, not free chat */
+.landing-hero-teaser-fade::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42%;
+  border-radius: inherit;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--landing-surface) 55%, transparent) 45%,
+    var(--landing-surface) 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero-teaser-fade::after {
+    height: 28%;
+  }
+}
+
 @media (max-width: 639px) {
   .landing-story-scrub {
     min-height: auto;

@@ -14,6 +14,10 @@ export function isLandingRelayLlmEnabled(): boolean {
   return true;
 }
 
+/** Hard cap so phone UI stays a hook, not a free mini-session. */
+const TEASER_MAX_CHARS = 220;
+const CTA_MAX_CHARS = 140;
+
 function parseTeaserJson(raw: string): { teaser: string; cta: string } | null {
   try {
     const cleaned = raw
@@ -24,12 +28,12 @@ function parseTeaserJson(raw: string): { teaser: string; cta: string } | null {
     const parsed = JSON.parse(cleaned) as { teaser?: unknown; cta?: unknown };
     const teaser = typeof parsed.teaser === 'string' ? parsed.teaser.trim() : '';
     const cta = typeof parsed.cta === 'string' ? parsed.cta.trim() : '';
-    if (!teaser || teaser.length < 20) {
+    if (!teaser || teaser.length < 16) {
       return null;
     }
     return {
-      teaser: teaser.slice(0, 420),
-      cta: (cta || '').slice(0, 200) || '',
+      teaser: teaser.slice(0, TEASER_MAX_CHARS),
+      cta: (cta || '').slice(0, CTA_MAX_CHARS) || '',
     };
   } catch {
     return null;
@@ -37,9 +41,9 @@ function parseTeaserJson(raw: string): { teaser: string; cta: string } | null {
 }
 
 function stubTeaser(goal: string, expert: LandingRelayExpert): { teaser: string; cta: string } {
-  const snippet = goal.length > 80 ? `${goal.slice(0, 77)}…` : goal;
+  const snippet = goal.length > 56 ? `${goal.slice(0, 53)}…` : goal;
   return {
-    teaser: `For “${snippet}” — a verified expert like ${expert.firstName} can walk through what actually works, not a generic search summary. This is an illustrative preview, not a live session.`,
+    teaser: `For “${snippet}” — the useful next step is usually specific, not another generic search summary.`,
     cta: landingRelayReplyCta(expert),
   };
 }
@@ -65,17 +69,18 @@ export async function generateLandingRelayTeaser(params: {
   const systemInstruction = [
     'You write short illustrative previews for AstroLink, a marketplace for live 1:1 video with verified aerospace experts.',
     'You are NOT the named expert and must not claim this is a real booking or personal advice from them.',
-    'Tone: warm, specific, practical. React to a concrete detail in the user goal.',
+    'Goal: hook the visitor — do NOT give a complete plan, checklist, or multi-step answer.',
+    'Tone: warm, specific, practical. React to one concrete detail in the user goal, then stop.',
     'Return ONLY valid JSON: {"teaser":"...","cta":"..."}',
-    'teaser: 40-90 words, 1-2 short paragraphs max.',
-    'cta: one sentence inviting them to view the expert profile or create an account.',
+    'teaser: 20-40 words, 1-2 short sentences max. Leave the rest for a live session.',
+    `cta: one sentence, invite them to continue with real expert advice from ${expert.firstName} (live 1:1).`,
     'No medical, legal, or investment advice. No markdown fences.',
   ].join(' ');
 
   const prompt = [
     `Matched expert (for tone only): ${expert.name} — ${expert.role}`,
     `User learning goal: ${goal}`,
-    'Write teaser + cta JSON now.',
+    'Write short teaser + cta JSON now.',
   ].join('\n');
 
   try {
@@ -90,8 +95,8 @@ export async function generateLandingRelayTeaser(params: {
     const parsed = parseTeaserJson(raw);
     if (!parsed) {
       // Sometimes models return plain text — use as teaser
-      const plain = raw.trim().slice(0, 420);
-      if (plain.length >= 20) {
+      const plain = raw.trim().slice(0, TEASER_MAX_CHARS);
+      if (plain.length >= 16) {
         return { teaser: plain, cta: landingRelayReplyCta(expert) };
       }
       return null;

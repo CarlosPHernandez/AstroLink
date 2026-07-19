@@ -44,11 +44,11 @@ const DEMO_CHAT: LandingRelayChatMessage[] = [
   { role: 'user', text: 'I want to work in space. Where should I start?' },
   {
     role: 'expert',
-    text: 'Worth mapping classes, internships, and first projects with someone who has actually done the work.',
+    text: 'Worth mapping classes and first projects with someone who has actually done the work.',
   },
   {
     role: 'expert',
-    text: 'Ask your own question above to see who in the network fits your goal.',
+    text: 'Ask your own question above — then continue with a real expert, live 1:1.',
   },
 ];
 
@@ -305,8 +305,18 @@ export default function LandingHero({ experts }: LandingHeroProps) {
             )}
 
             <div className="rounded-[1.15rem] sm:rounded-[1.4rem] bg-[var(--landing-surface-soft)] px-2.5 py-2.5 sm:px-3 sm:py-4 min-h-[150px] sm:min-h-[250px] flex flex-col justify-end gap-1.5 sm:gap-2">
-              {lines.map((line, index) =>
-                line.role === 'user' ? (
+              {lines.map((line, index) => {
+                const firstExpertIndex = lines.findIndex((l) => l.role === 'expert');
+                // Soft fade on the teaser bubble only — CTA bubble stays fully readable.
+                const fadeTeaser =
+                  Boolean(submittedGoal) &&
+                  isComplete &&
+                  !isLoadingReply &&
+                  line.role === 'expert' &&
+                  index === firstExpertIndex &&
+                  !line.isTyping;
+
+                return line.role === 'user' ? (
                   <p
                     key={`chat-line-${index}`}
                     data-testid={index === 0 ? 'landing-hero-user-message' : undefined}
@@ -319,19 +329,21 @@ export default function LandingHero({ experts }: LandingHeroProps) {
                     key={`chat-line-${index}`}
                     className="landing-hero-chat-line mr-auto max-w-[94%] sm:max-w-[92%]"
                   >
-                    {relayExpert && submittedGoal ? (
+                    {relayExpert && submittedGoal && index === firstExpertIndex ? (
                       <p className="mb-1 px-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--landing-faint)]">
                         {relayExpert.firstName} · preview
                       </p>
                     ) : null}
-                    <p className="rounded-2xl rounded-bl-sm border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3 py-2 text-[11px] sm:text-xs leading-snug text-[var(--landing-muted)]">
+                    <p
+                      className={`relative overflow-hidden rounded-2xl rounded-bl-sm border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3 py-2 text-[11px] sm:text-xs leading-snug text-[var(--landing-muted)]${fadeTeaser ? ' landing-hero-teaser-fade' : ''}`}
+                    >
                       <span className={line.isTyping ? 'landing-hero-typing-cursor' : undefined}>
                         {line.displayText}
                       </span>
                     </p>
                   </div>
-                ),
-              )}
+                );
+              })}
 
               {isLoadingReply ? (
                 <p
@@ -346,14 +358,14 @@ export default function LandingHero({ experts }: LandingHeroProps) {
                 <>
                   <Link
                     href={continueHref}
-                    className="landing-hero-relay-cta mt-1 inline-flex min-h-10 touch-manipulation items-center justify-center gap-1 rounded-full bg-[var(--landing-surface)] px-3 py-2.5 text-[11px] sm:min-h-0 sm:bg-transparent sm:py-2 sm:text-xs font-semibold text-[var(--landing-accent)] transition-colors hover:text-[var(--landing-accent-hover)] active:scale-[0.98]"
+                    className="landing-hero-relay-cta mt-1 inline-flex min-h-10 touch-manipulation items-center justify-center gap-1 rounded-full bg-[var(--landing-ink)] px-3 py-2.5 text-[11px] sm:min-h-0 sm:py-2 sm:text-xs font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--landing-surface-soft)] active:scale-[0.98]"
                     data-testid="landing-hero-journey-cta"
                   >
-                    View {relayExpert?.firstName ?? 'expert'} profile
+                    Continue with {relayExpert?.firstName ?? 'expert'}
                     <MaterialIcon name="arrow_forward" size={14} />
                   </Link>
                   <p className="px-1 text-[9px] leading-snug text-[var(--landing-faint)]">
-                    Illustrative preview — not a live expert reply. Book a real 1:1 to talk with them.
+                    Preview only — book a live session for real expert advice.
                   </p>
                 </>
               ) : null}

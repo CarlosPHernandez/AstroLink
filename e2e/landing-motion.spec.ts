@@ -23,7 +23,7 @@ test.describe('Landing motion redesign', () => {
     await expect(hero.getByRole('heading', { name: /unlock/i })).toHaveCount(0);
 
     await expect(page.getByTestId('landing-hero-journey-cta')).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(/Illustrative preview/i)).toBeVisible();
+    await expect(page.getByText(/Preview only|real expert advice/i)).toBeVisible();
   });
 
   test('propulsion goal routes to Eiman Jahangir', async ({ page }) => {
