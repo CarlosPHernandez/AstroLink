@@ -9,7 +9,7 @@ import {
   LANDING_CHAT_USER_REVEAL_MS,
   LANDING_CHAT_WORD_MS,
   splitChatWords,
-} from '@/lib/landing-chat-display';
+} from '@/lib/landing/chat-display';
 
 export type LandingHeroChatMessage = { role: 'user' | 'expert'; text: string };
 

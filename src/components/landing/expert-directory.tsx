@@ -6,7 +6,7 @@ import Image from 'next/image';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import { LandingScrollReveal } from '@/components/landing/landing-scroll-reveal';
-import { landingFeaturedPortrait, orderLandingExperts } from '@/lib/landing-featured-expert';
+import { landingFeaturedPortrait, orderLandingExperts } from '@/lib/landing/featured-expert';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 
 const TEASER_COUNT = 6;
