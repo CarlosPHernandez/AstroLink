@@ -35,9 +35,7 @@ test.describe('Public expert SEO surfaces', () => {
 
   test('experts directory is reachable and lists experts', async ({ page }) => {
     await page.goto('/experts');
-    await expect(
-      page.getByRole('heading', { name: /Browse aerospace experts/i }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Aerospace experts/i })).toBeVisible();
   });
 
   test('robots.txt is served', async ({ request }) => {

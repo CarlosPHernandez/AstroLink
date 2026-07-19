@@ -9,7 +9,7 @@ test.describe('Experts directory', () => {
     await page.goto('/');
     await page.getByTestId('view-all-experts').click();
     await expect(page).toHaveURL('/experts');
-    await expect(page.getByRole('heading', { name: /Browse aerospace experts/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Aerospace experts/i })).toBeVisible();
   });
 
   test('click card opens detail and CTA routes to auth when signed out', async ({ page }) => {

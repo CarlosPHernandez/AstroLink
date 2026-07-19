@@ -324,6 +324,7 @@ export default function BookingClient({
   skipPayments = false,
   chrisCampaign = false,
   prefillScheduledAt = null,
+  prefillDurationMinutes = 30,
 }: {
   session: SessionData;
   experts: ListedExpert[];
@@ -332,6 +333,7 @@ export default function BookingClient({
   skipPayments?: boolean;
   chrisCampaign?: boolean;
   prefillScheduledAt?: string | null;
+  prefillDurationMinutes?: number;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -346,7 +348,7 @@ export default function BookingClient({
     goals: '',
     background: '',
     scheduledAt: prefillScheduledAt ?? '',
-    durationMinutes: chrisCampaign ? chrisDurationMinutes : 30,
+    durationMinutes: chrisCampaign ? chrisDurationMinutes : prefillDurationMinutes,
   });
 
   useEffect(() => {

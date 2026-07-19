@@ -38,6 +38,15 @@ test.describe('Landing motion redesign', () => {
     await expect(page.locator('.landing-hero-prompt-eyebrow')).toHaveCount(0);
   });
 
+  test('hero title uses rotating headline counter', async ({ page }) => {
+    await page.goto('/');
+    const title = page.getByTestId('landing-hero-title');
+    await expect(title).toBeVisible();
+    await expect(title).toContainText(/Talk to/i);
+    await expect(page.getByTestId('landing-hero-headline-rotator')).toBeVisible();
+    await expect(page.getByTestId('landing-hero-headline-active')).toBeVisible();
+  });
+
   test('open directory shows expert names and browse path', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('view-all-experts').scrollIntoViewIfNeeded();

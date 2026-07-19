@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import {
+  LANDING_FEATURED_EXPERT_SLUG,
   findLandingFeaturedExpert,
   landingFeaturedPortrait,
   landingHeroPortrait,
@@ -8,7 +9,14 @@ import {
   pickLandingRelayExpert,
 } from '@/lib/landing-featured-expert';
 
-function expert(slug: string, name: string): ListedExpert {
+const EIMAN_SUPABASE_IMAGE =
+  'https://vwoizjesyyygmokfqpyy.supabase.co/storage/v1/object/public/expert-intro-videos/Eiman-Jahangir/Eiman%20Jahangir%20Headshot.jpg';
+
+function expert(
+  slug: string,
+  name: string,
+  imageUrl = '/other.webp',
+): ListedExpert {
   return {
     id: slug,
     slug,
@@ -19,7 +27,7 @@ function expert(slug: string, name: string): ListedExpert {
     category: 'systems',
     expertise: ['systems'],
     bio: 'Bio',
-    imageUrl: '/other.webp',
+    imageUrl,
     introVideoUrl: null,
     availability: 'Book Session',
     liveSessionPriceCents: 25000,
@@ -28,28 +36,35 @@ function expert(slug: string, name: string): ListedExpert {
 }
 
 describe('landing-featured-expert', () => {
-  it('prioritizes Eiman in roster order', () => {
+  it('prioritizes Eiman in roster order by Supabase slug', () => {
     const ordered = orderLandingExperts([
       expert('chris-sembroski', 'Chris Sembroski'),
-      expert('eiman', 'Eiman Jahangir'),
+      expert(LANDING_FEATURED_EXPERT_SLUG, 'Eiman Jahangir', EIMAN_SUPABASE_IMAGE),
     ]);
-    expect(ordered[0]?.slug).toBe('eiman');
+    expect(ordered[0]?.slug).toBe(LANDING_FEATURED_EXPERT_SLUG);
   });
 
-  it('uses local Eiman portrait asset', () => {
-    const portrait = landingFeaturedPortrait(expert('eiman', 'Eiman Jahangir'));
-    expect(portrait.src).toBe('/eiman.webp');
+  it('uses roster image_url for Eiman (Supabase storage)', () => {
+    const portrait = landingFeaturedPortrait(
+      expert(LANDING_FEATURED_EXPERT_SLUG, 'Eiman Jahangir', EIMAN_SUPABASE_IMAGE),
+    );
+    expect(portrait.src).toBe(EIMAN_SUPABASE_IMAGE);
     expect(portrait.alt).toBe('Eiman Jahangir');
   });
 
-  it('finds Eiman by slug', () => {
+  it('finds Eiman by slug from roster', () => {
     const found = findLandingFeaturedExpert([expert('chris-sembroski', 'Chris')]);
     expect(found).toBeNull();
+
+    const eiman = findLandingFeaturedExpert([
+      expert(LANDING_FEATURED_EXPERT_SLUG, 'Eiman Jahangir', EIMAN_SUPABASE_IMAGE),
+    ]);
+    expect(eiman?.slug).toBe(LANDING_FEATURED_EXPERT_SLUG);
   });
 
   it('uses Chris for the hero portrait', () => {
     const portrait = landingHeroPortrait([
-      expert('eiman', 'Eiman Jahangir'),
+      expert(LANDING_FEATURED_EXPERT_SLUG, 'Eiman Jahangir', EIMAN_SUPABASE_IMAGE),
       expert('chris-sembroski', 'Chris Sembroski'),
     ]);
     expect(portrait.src).toBe('/chris_sembroski.webp');
@@ -57,21 +72,22 @@ describe('landing-featured-expert', () => {
     expect(portrait.href).toBe('/experts/chris-sembroski');
   });
 
-  it('routes propulsion goals to Eiman', () => {
+  it('routes propulsion goals to Eiman from roster media', () => {
     const roster = [
       expert('chris-sembroski', 'Chris Sembroski'),
-      expert('eiman', 'Eiman Jahangir'),
+      expert(LANDING_FEATURED_EXPERT_SLUG, 'Eiman Jahangir', EIMAN_SUPABASE_IMAGE),
     ];
     const matched = pickLandingRelayExpert('How do ion propulsion engines scale?', roster);
-    expect(matched.slug).toBe('eiman');
-    expect(matched.portraitSrc).toBe('/eiman.webp');
+    expect(matched.slug).toBe(LANDING_FEATURED_EXPERT_SLUG);
+    expect(matched.portraitSrc).toBe(EIMAN_SUPABASE_IMAGE);
+    expect(matched.profileHref).toBe(`/experts/${LANDING_FEATURED_EXPERT_SLUG}`);
   });
 
   it('uses Eiman Jahangir fallback for propulsion when roster lacks her', () => {
     const matched = pickLandingRelayExpert('How do rocket engines work?', [
       expert('chris-sembroski', 'Chris Sembroski'),
     ]);
-    expect(matched.slug).toBe('eiman');
+    expect(matched.slug).toBe(LANDING_FEATURED_EXPERT_SLUG);
     expect(matched.name).toBe('Eiman Jahangir');
     expect(matched.portraitSrc).toBe('/eiman.webp');
   });
@@ -79,7 +95,7 @@ describe('landing-featured-expert', () => {
   it('routes career goals to Chris', () => {
     const roster = [
       expert('chris-sembroski', 'Chris Sembroski'),
-      expert('eiman', 'Eiman Jahangir'),
+      expert(LANDING_FEATURED_EXPERT_SLUG, 'Eiman Jahangir', EIMAN_SUPABASE_IMAGE),
     ];
     const matched = pickLandingRelayExpert('How do I become an astronaut?', roster);
     expect(matched.slug).toBe('chris-sembroski');

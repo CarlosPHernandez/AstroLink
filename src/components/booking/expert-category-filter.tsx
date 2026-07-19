@@ -5,12 +5,37 @@ import { EXPERT_CATEGORIES } from '@/lib/expert-categories';
 type ExpertCategoryFilterProps = {
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
+  /** Directory C: underline chips; booking picker keeps pill chips. */
+  variant?: 'default' | 'underline';
 };
 
 export function ExpertCategoryFilter({
   selectedCategory,
   onCategoryChange,
+  variant = 'default',
 }: ExpertCategoryFilterProps) {
+  if (variant === 'underline') {
+    return (
+      <div
+        className="experts-dir-filter-group"
+        role="group"
+        aria-label="Filter experts by category"
+      >
+        {EXPERT_CATEGORIES.map((cat) => (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => onCategoryChange(cat)}
+            aria-pressed={selectedCategory === cat}
+            className={`experts-dir-chip${selectedCategory === cat ? ' is-active' : ''}`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div
       className="flex flex-wrap gap-2"

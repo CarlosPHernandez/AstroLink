@@ -7,6 +7,7 @@ import { getChrisMentorSlug } from '@/lib/chris-campaign/chris-campaign-config';
 import { parseChrisCampaignReferrer } from '@/lib/chris-campaign/chris-campaign-referrer';
 import { ChrisBookingWizard } from '@/components/chris-campaign/chris-booking-wizard';
 import { getMentorBySlug, listPublicMentors } from '@/lib/mentor-directory';
+import { clampSessionDurationMinutes, SESSION_DURATION_DEFAULT } from '@/lib/session-duration';
 import { getSession } from '@/lib/session';
 import { requireSession } from '@/lib/require-session';
 import { redirect } from 'next/navigation';
@@ -15,9 +16,21 @@ import BookingClient from './booking-client';
 export default async function BookingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mentor?: string; campaign?: string; date?: string; ref?: string }>;
+  searchParams: Promise<{
+    mentor?: string;
+    campaign?: string;
+    date?: string;
+    ref?: string;
+    duration?: string;
+  }>;
 }) {
-  const { mentor: mentorSlugParam, campaign, date, ref: refParam } = await searchParams;
+  const {
+    mentor: mentorSlugParam,
+    campaign,
+    date,
+    ref: refParam,
+    duration: durationParam,
+  } = await searchParams;
   const chrisCampaign = isChrisCampaignBookingQuery(campaign);
 
   const session = chrisCampaign ? await getSession() : await requireSession();
@@ -54,6 +67,11 @@ export default async function BookingPage({
 
   const invalidMentorSlug = mentorSlug && !mentor ? mentorSlug : null;
 
+  const parsedDuration = durationParam ? Number.parseInt(durationParam, 10) : NaN;
+  const prefillDurationMinutes = Number.isFinite(parsedDuration)
+    ? clampSessionDurationMinutes(parsedDuration)
+    : SESSION_DURATION_DEFAULT;
+
   return (
     <BookingClient
       session={session}
@@ -63,6 +81,7 @@ export default async function BookingPage({
       skipPayments={isStripePaymentsSkipped()}
       chrisCampaign={false}
       prefillScheduledAt={null}
+      prefillDurationMinutes={prefillDurationMinutes}
     />
   );
 }

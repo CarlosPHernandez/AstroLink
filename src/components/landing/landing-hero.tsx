@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'r
 import Image from 'next/image';
 import Link from 'next/link';
 import { MaterialIcon } from '@/components/ui/material-icon';
+import { LandingHeroHeadline } from '@/components/landing/landing-hero-headline';
 import { useLandingHeroParallax } from '@/components/landing/landing-scroll-reveal';
 import { useLandingHeroChat } from '@/components/landing/use-landing-hero-chat';
 import {
@@ -122,16 +123,9 @@ export default function LandingHero({ experts }: LandingHeroProps) {
     <section className="landing-hero-section pt-5 sm:pt-12 pb-10 sm:pb-24">
       {/* z-index keeps path chips / prompt above hero parallax (phone can translate upward on scroll). */}
       <div className="landing-hero-copy relative z-10 max-w-[1200px] mx-auto px-4 sm:px-md lg:px-lg text-center bg-[var(--landing-canvas)]">
-        <h1
-          data-testid="landing-hero-title"
-          className="landing-hero-intro font-landing-display text-[1.5rem] leading-[1.15] xs:text-[1.625rem] sm:text-4xl lg:text-[2.75rem] font-semibold tracking-tight text-[var(--landing-text)] sm:leading-[1.12] text-balance"
-        >
-          Talk to people who have
-          <br className="hidden sm:block" />
-          {' '}actually done the work in space.
-        </h1>
+        <LandingHeroHeadline />
         <p className="landing-hero-subcopy mt-2.5 sm:mt-4 text-[0.875rem] sm:text-base text-[var(--landing-muted)] max-w-[var(--max-width-prose)] mx-auto leading-relaxed px-0.5 text-pretty">
-          Browse verified experts. Book a live 1:1 session — not a generic AI answer.
+          Browse verified experts. Book a live 1:1 — not a generic AI answer.
         </p>
 
         <form
@@ -164,7 +158,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
 
         {!submittedGoal ? (
           <div
-            className="landing-hero-paths mt-3.5 sm:mt-4 flex flex-wrap items-center justify-center gap-2"
+            className="landing-hero-paths mt-3.5 sm:mt-4 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 px-1"
             data-testid="landing-path-chips"
             role="group"
             aria-label="Suggested paths"
@@ -175,7 +169,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
                 type="button"
                 data-testid={`landing-path-${chip.id}`}
                 onClick={() => handlePathChip(chip.goal)}
-                className="min-h-10 sm:min-h-0 rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3.5 py-2 sm:px-3 sm:py-1.5 text-xs sm:text-xs font-medium text-[var(--landing-muted)] transition-colors hover:border-[color:color-mix(in_srgb,var(--landing-border)_50%,var(--landing-muted))] hover:text-[var(--landing-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 touch-manipulation active:scale-[0.98]"
+                className="min-h-10 sm:min-h-0 rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3 py-2 sm:px-3 sm:py-1.5 text-[11px] sm:text-xs font-medium text-[var(--landing-muted)] transition-colors hover:border-[color:color-mix(in_srgb,var(--landing-border)_50%,var(--landing-muted))] hover:text-[var(--landing-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 touch-manipulation active:scale-[0.98]"
               >
                 {chip.label}
               </button>
@@ -207,7 +201,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
 
       <div
         ref={visualRef}
-        className={`landing-hero-visual relative max-w-[920px] mx-auto mt-6 sm:mt-14 px-4 sm:px-md lg:px-lg${submittedGoal ? ' landing-hero-visual--goal-active' : ''}`}
+        className={`landing-hero-visual relative max-w-[920px] mx-auto mt-6 sm:mt-14 px-0 sm:px-md lg:px-lg${submittedGoal ? ' landing-hero-visual--goal-active' : ''}`}
         data-testid={submittedGoal ? 'landing-hero-goal-active' : undefined}
         style={
           {
@@ -216,22 +210,22 @@ export default function LandingHero({ experts }: LandingHeroProps) {
           } as CSSProperties
         }
       >
-        {/* Mobile: shorter portrait + phone overlays bottom to cut vertical length */}
-        <div className="landing-hero-image-wrap landing-hero-portrait relative mx-auto w-full max-w-[min(92vw,360px)] sm:max-w-[640px] aspect-[3/4] max-h-[min(52vh,420px)] sm:max-h-none sm:aspect-[5/6] overflow-hidden rounded-sm">
+        {/* Mobile: shorter portrait + phone centered over portrait (no side drift) */}
+        <div className="landing-hero-image-wrap landing-hero-portrait relative mx-auto w-full max-w-[min(100%,360px)] sm:max-w-[640px] aspect-[3/4] max-h-[min(52vh,420px)] sm:max-h-none sm:aspect-[5/6] overflow-hidden rounded-sm sm:rounded-sm">
           <Image
             src={heroImage}
             alt={heroAlt}
             fill
             priority
             className="object-cover object-top"
-            sizes="(max-width: 640px) 92vw, 640px"
+            sizes="(max-width: 640px) 100vw, 640px"
           />
           <div className="landing-hero-image-fade pointer-events-none absolute inset-0" aria-hidden />
         </div>
 
         <div
           ref={phoneRef}
-          className={`landing-hero-phone absolute left-1/2 z-[2] w-[min(88vw,260px)] -translate-x-1/2 bottom-[-3.75rem] sm:left-auto sm:right-8 lg:right-12 sm:bottom-[-2.5rem] sm:translate-x-0 sm:w-[300px]${submittedGoal ? ' landing-hero-phone--active' : ''}`}
+          className={`landing-hero-phone absolute z-[2] w-[min(86vw,272px)] left-0 right-0 mx-auto bottom-[-3.5rem] sm:left-auto sm:right-8 lg:right-12 sm:bottom-[-2.5rem] sm:mx-0 sm:w-[300px]${submittedGoal ? ' landing-hero-phone--active' : ''}`}
           aria-label="Expert relay preview"
           aria-live={submittedGoal ? 'polite' : undefined}
         >
