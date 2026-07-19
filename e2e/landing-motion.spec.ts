@@ -16,12 +16,14 @@ test.describe('Landing motion redesign', () => {
     await expect(page.getByTestId('landing-hero-user-message')).toContainText(goal);
     await expect(page.getByTestId('landing-hero-relay-expert')).toBeVisible();
     await expect(page.getByTestId('landing-hero-relay-expert')).toContainText(/Chris|Sembroski/i);
+    await expect(page.getByTestId('landing-hero-reply-loading')).toBeHidden({ timeout: 15_000 });
 
     const hero = page.locator('section').filter({ has: page.getByTestId('landing-hero-title') });
     await expect(hero.getByRole('button', { name: /unlock access/i })).toHaveCount(0);
     await expect(hero.getByRole('heading', { name: /unlock/i })).toHaveCount(0);
 
     await expect(page.getByTestId('landing-hero-journey-cta')).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/Illustrative preview/i)).toBeVisible();
   });
 
   test('propulsion goal routes to Eiman Jahangir', async ({ page }) => {
@@ -29,6 +31,7 @@ test.describe('Landing motion redesign', () => {
     await page.getByTestId('landing-goal-input').fill('I want to learn about rocket propulsion systems');
     await page.getByTestId('landing-goal-submit').click();
     await expect(page.getByTestId('landing-hero-relay-expert')).toContainText(/Eiman|Jahangir/i);
+    await expect(page.getByTestId('landing-hero-reply-loading')).toBeHidden({ timeout: 15_000 });
   });
 
   test('goal prompt input and submit are visible', async ({ page }) => {
