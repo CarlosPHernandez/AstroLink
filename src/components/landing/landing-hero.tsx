@@ -16,39 +16,18 @@ import {
   pickLandingRelayExpert,
   type LandingRelayExpert,
 } from '@/lib/landing/featured-expert';
+import { LANDING_PATH_CHIPS } from '@/lib/landing/path-chips';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 const BROWSE_HREF = '/experts';
 const BOOK_SIGNUP_HREF = '/auth?mode=signup&redirect=%2Fbooking';
 const PENDING_GOAL_STORAGE_KEY = 'astrolink.pendingLearningGoal';
 
-const PATH_CHIPS = [
-  {
-    id: 'student',
-    label: 'Student',
-    goal: 'I am a student exploring a career in space. Where should I start?',
-  },
-  {
-    id: 'career',
-    label: 'Career switcher',
-    goal: 'I want to switch into aerospace. What paths actually work?',
-  },
-  {
-    id: 'team',
-    label: 'Team / org',
-    goal: 'Our team needs operator perspective on a space project. How do we get started?',
-  },
-] as const;
-
 const DEMO_CHAT: LandingRelayChatMessage[] = [
   { role: 'user', text: 'I want to work in space. Where should I start?' },
   {
     role: 'expert',
     text: 'Worth mapping classes and first projects with someone who has actually done the work.',
-  },
-  {
-    role: 'expert',
-    text: 'Ask your own question above — then continue with a real expert, live 1:1.',
   },
 ];
 
@@ -79,11 +58,17 @@ export default function LandingHero({ experts }: LandingHeroProps) {
     typeExpertReplies: submittedGoal !== null,
   });
 
-  const submitGoal = async (rawGoal: string, website = '') => {
+  const submitGoal = async (
+    rawGoal: string,
+    options: { website?: string; suggested?: boolean } = {},
+  ) => {
     const trimmedGoal = rawGoal.trim();
     if (!trimmedGoal || isLoadingReply) {
       return;
     }
+
+    const website = options.website ?? '';
+    const suggested = options.suggested === true;
 
     const optimisticExpert = pickLandingRelayExpert(trimmedGoal, experts);
 
@@ -105,7 +90,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
       const res = await fetch('/api/landing/relay-preview', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ goal: trimmedGoal, website }),
+        body: JSON.stringify({ goal: trimmedGoal, website, suggested }),
       });
 
       if (!res.ok) {
@@ -137,12 +122,13 @@ export default function LandingHero({ experts }: LandingHeroProps) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const website = String(formData.get('website') ?? '');
-    void submitGoal(goal, website);
+    void submitGoal(goal, { website, suggested: false });
   };
 
   const handlePathChip = (pathGoal: string) => {
     setGoal(pathGoal);
-    void submitGoal(pathGoal);
+    // Canned path prompts — show preview, do not save as real goals.
+    void submitGoal(pathGoal, { suggested: true });
   };
 
   const continueHref =
@@ -206,7 +192,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
             role="group"
             aria-label="Suggested paths"
           >
-            {PATH_CHIPS.map((chip) => (
+            {LANDING_PATH_CHIPS.map((chip) => (
               <button
                 key={chip.id}
                 type="button"

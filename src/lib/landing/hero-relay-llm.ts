@@ -16,9 +16,8 @@ export function isLandingRelayLlmEnabled(): boolean {
 
 /** Hard cap so phone UI stays a hook, not a free mini-session. */
 const TEASER_MAX_CHARS = 220;
-const CTA_MAX_CHARS = 140;
 
-function parseTeaserJson(raw: string): { teaser: string; cta: string } | null {
+function parseTeaserJson(raw: string): string | null {
   try {
     const cleaned = raw
       .trim()
@@ -26,15 +25,12 @@ function parseTeaserJson(raw: string): { teaser: string; cta: string } | null {
       .replace(/^```\s*/i, '')
       .replace(/\s*```$/i, '');
     const parsed = JSON.parse(cleaned) as { teaser?: unknown; cta?: unknown };
+    // Accept legacy { teaser, cta } or plain { teaser }
     const teaser = typeof parsed.teaser === 'string' ? parsed.teaser.trim() : '';
-    const cta = typeof parsed.cta === 'string' ? parsed.cta.trim() : '';
     if (!teaser || teaser.length < 16) {
       return null;
     }
-    return {
-      teaser: teaser.slice(0, TEASER_MAX_CHARS),
-      cta: (cta || '').slice(0, CTA_MAX_CHARS) || '',
-    };
+    return teaser.slice(0, TEASER_MAX_CHARS);
   } catch {
     return null;
   }
@@ -51,12 +47,14 @@ function stubTeaser(goal: string, expert: LandingRelayExpert): { teaser: string;
 /**
  * Generate a short illustrative teaser. Landing has its own submit/LLM budgets;
  * generatePlainText still applies product-wide LLM rate limits as a backstop.
+ * CTA copy is fixed (not LLM) so the chat never doubles a book pitch.
  */
 export async function generateLandingRelayTeaser(params: {
   goal: string;
   expert: LandingRelayExpert;
 }): Promise<{ teaser: string; cta: string } | null> {
   const { goal, expert } = params;
+  const cta = landingRelayReplyCta(expert);
 
   if (isE2eStubLlmEnabled()) {
     return stubTeaser(goal, expert);
@@ -70,17 +68,17 @@ export async function generateLandingRelayTeaser(params: {
     'You write short illustrative previews for AstroLink, a marketplace for live 1:1 video with verified aerospace experts.',
     'You are NOT the named expert and must not claim this is a real booking or personal advice from them.',
     'Goal: hook the visitor — do NOT give a complete plan, checklist, or multi-step answer.',
+    'Do NOT invite them to book, create an account, or continue — the product UI handles that.',
     'Tone: warm, specific, practical. React to one concrete detail in the user goal, then stop.',
-    'Return ONLY valid JSON: {"teaser":"...","cta":"..."}',
+    'Return ONLY valid JSON: {"teaser":"..."}',
     'teaser: 20-40 words, 1-2 short sentences max. Leave the rest for a live session.',
-    `cta: one sentence, invite them to continue with real expert advice from ${expert.firstName} (live 1:1).`,
     'No medical, legal, or investment advice. No markdown fences.',
   ].join(' ');
 
   const prompt = [
     `Matched expert (for tone only): ${expert.name} — ${expert.role}`,
     `User learning goal: ${goal}`,
-    'Write short teaser + cta JSON now.',
+    'Write short teaser JSON now.',
   ].join('\n');
 
   try {
@@ -88,23 +86,19 @@ export async function generateLandingRelayTeaser(params: {
       model: llmFlashModel,
       systemInstruction,
       prompt,
-      // Dedicated key so per-user product limits do not collide with authenticated LLM users
       rateLimitKey: `landing-relay:${expert.slug}`,
     });
 
-    const parsed = parseTeaserJson(raw);
-    if (!parsed) {
-      // Sometimes models return plain text — use as teaser
-      const plain = raw.trim().slice(0, TEASER_MAX_CHARS);
-      if (plain.length >= 16) {
-        return { teaser: plain, cta: landingRelayReplyCta(expert) };
-      }
-      return null;
+    const teaser = parseTeaserJson(raw);
+    if (teaser) {
+      return { teaser, cta };
     }
-    if (!parsed.cta) {
-      parsed.cta = landingRelayReplyCta(expert);
+
+    const plain = raw.trim().slice(0, TEASER_MAX_CHARS);
+    if (plain.length >= 16) {
+      return { teaser: plain, cta };
     }
-    return parsed;
+    return null;
   } catch (error) {
     console.warn('[landing-relay] LLM teaser failed', error);
     return null;

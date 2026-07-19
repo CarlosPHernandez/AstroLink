@@ -16,6 +16,7 @@ import {
   isLandingRelayLlmEnabled,
 } from '@/lib/landing/hero-relay-llm';
 import { hashClientIp } from '@/lib/landing/hash-ip';
+import { isLandingSuggestedPathGoal } from '@/lib/landing/path-chips';
 import { getLandingRelayCache, setLandingRelayCache } from '@/lib/landing/relay-cache';
 import {
   assertLandingRelaySubmitRateLimit,
@@ -34,6 +35,11 @@ const BodySchema = z.object({
   expertSlug: z.string().max(120).optional(),
   /** Honeypot — real UI never fills this. */
   website: z.string().max(200).optional(),
+  /**
+   * Path-chip / canned prompts. Client may set this; server also detects known
+   * chip goals so they are never written to landing_goal_submissions.
+   */
+  suggested: z.boolean().optional(),
 });
 
 function jsonResponse(body: {
@@ -62,6 +68,9 @@ export async function POST(request: Request) {
   if (!goal) {
     return NextResponse.json({ error: 'Goal is required' }, { status: 400 });
   }
+
+  const shouldPersist =
+    !parsed.data.suggested && !isLandingSuggestedPathGoal(goal);
 
   // Honeypot: bots fill hidden fields — soft 200 with no side effects
   if (parsed.data.website?.trim()) {
@@ -119,27 +128,30 @@ export async function POST(request: Request) {
     }
   }
 
-  const messages =
-    teaser && cta
-      ? buildRelayMessagesFromTeaser(goal, teaser, cta)
-      : buildFallbackRelayMessages(goal, expert);
+  // Single expert bubble in chat; continue/book is the hero button only.
+  const messages = teaser
+    ? buildRelayMessagesFromTeaser(goal, teaser)
+    : buildFallbackRelayMessages(goal, expert);
 
-  if (!teaser || !cta) {
+  if (!teaser) {
     source = 'fallback';
   }
 
-  const session = await getSession();
-  const userAgent = request.headers.get('user-agent')?.slice(0, 400) ?? null;
+  let submissionId: string | null = null;
+  if (shouldPersist) {
+    const session = await getSession();
+    const userAgent = request.headers.get('user-agent')?.slice(0, 400) ?? null;
 
-  const submissionId = await insertLandingGoalSubmission({
-    goalText: goal,
-    expertSlug: expert.slug,
-    expertName: expert.name,
-    replySource: source,
-    ipHash: hashClientIp(ip),
-    userAgent,
-    userId: session?.userId ?? null,
-  });
+    submissionId = await insertLandingGoalSubmission({
+      goalText: goal,
+      expertSlug: expert.slug,
+      expertName: expert.name,
+      replySource: source,
+      ipHash: hashClientIp(ip),
+      userAgent,
+      userId: session?.userId ?? null,
+    });
+  }
 
   return jsonResponse({
     expert,

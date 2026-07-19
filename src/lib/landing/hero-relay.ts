@@ -1,5 +1,4 @@
 import {
-  landingRelayReplyCta,
   landingRelayReplyIntro,
   type LandingRelayExpert,
 } from '@/lib/landing/featured-expert';
@@ -21,6 +20,7 @@ export function normalizeLandingGoal(raw: string): string {
     .slice(0, LANDING_GOAL_MAX_CHARS);
 }
 
+/** User bubble + one short expert teaser. Book CTA lives on the hero button only. */
 export function buildFallbackRelayMessages(
   goal: string,
   expert: LandingRelayExpert,
@@ -28,18 +28,15 @@ export function buildFallbackRelayMessages(
   return [
     { role: 'user', text: goal },
     { role: 'expert', text: landingRelayReplyIntro(expert) },
-    { role: 'expert', text: landingRelayReplyCta(expert) },
   ];
 }
 
 export function buildRelayMessagesFromTeaser(
   goal: string,
   teaser: string,
-  cta: string,
 ): LandingRelayChatMessage[] {
   return [
     { role: 'user', text: goal },
     { role: 'expert', text: teaser },
-    { role: 'expert', text: cta },
   ];
 }

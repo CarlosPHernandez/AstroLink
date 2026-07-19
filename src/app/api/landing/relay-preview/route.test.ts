@@ -90,13 +90,38 @@ describe('POST /api/landing/relay-preview', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.source).toBe('llm');
+    expect(body.messages).toHaveLength(2);
     expect(body.messages[1].text).toMatch(/ion propulsion/i);
+    expect(body.messages.filter((m: { role: string }) => m.role === 'expert')).toHaveLength(1);
     expect(insertLandingGoalSubmission).toHaveBeenCalledWith(
       expect.objectContaining({
         goalText: expect.stringContaining('ion propulsion'),
         replySource: 'llm',
       }),
     );
+  });
+
+  it('does not persist suggested path-chip goals', async () => {
+    const res = await POST(
+      makeRequest({
+        goal: 'I am a student exploring a career in space. Where should I start?',
+        suggested: true,
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(insertLandingGoalSubmission).not.toHaveBeenCalled();
+    const body = await res.json();
+    expect(body.submissionId).toBeNull();
+  });
+
+  it('does not persist known path-chip text even without suggested flag', async () => {
+    const res = await POST(
+      makeRequest({
+        goal: 'I want to switch into aerospace. What paths actually work?',
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(insertLandingGoalSubmission).not.toHaveBeenCalled();
   });
 
   it('skips persist and LLM for honeypot', async () => {
