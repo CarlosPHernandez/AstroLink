@@ -8,55 +8,29 @@ import { LandingHeroHeadline } from '@/components/landing/landing-hero-headline'
 import { useLandingHeroParallax } from '@/components/landing/landing-scroll-reveal';
 import { useLandingHeroChat } from '@/components/landing/use-landing-hero-chat';
 import {
+  buildFallbackRelayMessages,
+  type LandingRelayChatMessage,
+} from '@/lib/landing/hero-relay';
+import {
   landingHeroPortrait,
-  landingRelayReplyCta,
-  landingRelayReplyIntro,
   pickLandingRelayExpert,
   type LandingRelayExpert,
-} from '@/lib/landing-featured-expert';
+} from '@/lib/landing/featured-expert';
+import { LANDING_PATH_CHIPS } from '@/lib/landing/path-chips';
+import { takeLandingRelayChatMessages } from '@/lib/landing/sanitize-teaser';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 const BROWSE_HREF = '/experts';
 const BOOK_SIGNUP_HREF = '/auth?mode=signup&redirect=%2Fbooking';
 const PENDING_GOAL_STORAGE_KEY = 'astrolink.pendingLearningGoal';
 
-const PATH_CHIPS = [
+const DEMO_CHAT: LandingRelayChatMessage[] = [
+  { role: 'user', text: 'I want to work in space. Where should I start?' },
   {
-    id: 'student',
-    label: 'Student',
-    goal: 'I am a student exploring a career in space. Where should I start?',
-  },
-  {
-    id: 'career',
-    label: 'Career switcher',
-    goal: 'I want to switch into aerospace. What paths actually work?',
-  },
-  {
-    id: 'team',
-    label: 'Team / org',
-    goal: 'Our team needs operator perspective on a space project. How do we get started?',
-  },
-] as const;
-
-const DEMO_CHAT = [
-  { role: 'user' as const, text: 'I want to work in space. Where should I start?' },
-  {
-    role: 'expert' as const,
-    text: 'Worth mapping classes, internships, and first projects with someone who has actually done the work.',
-  },
-  {
-    role: 'expert' as const,
-    text: 'Ask your own question above to see who in the network fits your goal.',
+    role: 'expert',
+    text: 'Worth mapping classes and first projects with someone who has actually done the work.',
   },
 ];
-
-function buildSubmittedChat(goal: string, expert: LandingRelayExpert) {
-  return [
-    { role: 'user' as const, text: goal },
-    { role: 'expert' as const, text: landingRelayReplyIntro(expert) },
-    { role: 'expert' as const, text: landingRelayReplyCta(expert) },
-  ];
-}
 
 type LandingHeroProps = {
   experts: ListedExpert[];
@@ -66,52 +40,97 @@ export default function LandingHero({ experts }: LandingHeroProps) {
   const [goal, setGoal] = useState('');
   const [submittedGoal, setSubmittedGoal] = useState<string | null>(null);
   const [relayExpert, setRelayExpert] = useState<LandingRelayExpert | null>(null);
+  const [chatMessages, setChatMessages] = useState<LandingRelayChatMessage[] | null>(null);
+  const [isLoadingReply, setIsLoadingReply] = useState(false);
   const visualRef = useLandingHeroParallax<HTMLDivElement>();
   const phoneRef = useRef<HTMLDivElement>(null);
   const { src: heroImage, alt: heroAlt } = landingHeroPortrait(experts);
 
-  const chatMessages = useMemo(() => {
-    if (submittedGoal && relayExpert) {
-      return buildSubmittedChat(submittedGoal, relayExpert);
+  const messages = useMemo(() => {
+    if (chatMessages) {
+      return chatMessages;
     }
     return DEMO_CHAT;
-  }, [submittedGoal, relayExpert]);
+  }, [chatMessages]);
 
   const { lines, isComplete } = useLandingHeroChat({
-    messages: chatMessages,
-    loop: submittedGoal === null,
+    messages,
+    loop: submittedGoal === null && !isLoadingReply,
     typeExpertReplies: submittedGoal !== null,
   });
 
-  const submitGoal = (rawGoal: string) => {
+  const submitGoal = async (
+    rawGoal: string,
+    options: { website?: string; suggested?: boolean } = {},
+  ) => {
     const trimmedGoal = rawGoal.trim();
-    if (!trimmedGoal) {
+    if (!trimmedGoal || isLoadingReply) {
       return;
     }
 
-    const matchedExpert = pickLandingRelayExpert(trimmedGoal, experts);
+    const website = options.website ?? '';
+    const suggested = options.suggested === true;
+
+    const optimisticExpert = pickLandingRelayExpert(trimmedGoal, experts);
 
     try {
       window.sessionStorage.setItem(PENDING_GOAL_STORAGE_KEY, trimmedGoal);
-      window.sessionStorage.setItem('astrolink.pendingRelayExpertSlug', matchedExpert.slug);
+      window.sessionStorage.setItem('astrolink.pendingRelayExpertSlug', optimisticExpert.slug);
     } catch {
       // Browsers can block storage; the unlock flow still works without persistence.
     }
 
     setGoal(trimmedGoal);
-    setRelayExpert(matchedExpert);
+    setRelayExpert(optimisticExpert);
     setSubmittedGoal(trimmedGoal);
+    setChatMessages([{ role: 'user', text: trimmedGoal }]);
+    setIsLoadingReply(true);
     phoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    try {
+      const res = await fetch('/api/landing/relay-preview', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ goal: trimmedGoal, website, suggested }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`relay-preview ${res.status}`);
+      }
+
+      const data = (await res.json()) as {
+        expert: LandingRelayExpert;
+        messages: LandingRelayChatMessage[];
+        source: string;
+      };
+
+      setRelayExpert(data.expert);
+      // Never render stacked expert bubbles (old API / LLM double-pitch).
+      setChatMessages(takeLandingRelayChatMessages(data.messages));
+      try {
+        window.sessionStorage.setItem('astrolink.pendingRelayExpertSlug', data.expert.slug);
+      } catch {
+        // ignore
+      }
+    } catch {
+      setRelayExpert(optimisticExpert);
+      setChatMessages(buildFallbackRelayMessages(trimmedGoal, optimisticExpert));
+    } finally {
+      setIsLoadingReply(false);
+    }
   };
 
   const handleGoalSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    submitGoal(goal);
+    const formData = new FormData(event.currentTarget);
+    const website = String(formData.get('website') ?? '');
+    void submitGoal(goal, { website, suggested: false });
   };
 
   const handlePathChip = (pathGoal: string) => {
     setGoal(pathGoal);
-    submitGoal(pathGoal);
+    // Canned path prompts — show preview, do not save as real goals.
+    void submitGoal(pathGoal, { suggested: true });
   };
 
   const continueHref =
@@ -121,7 +140,6 @@ export default function LandingHero({ experts }: LandingHeroProps) {
 
   return (
     <section className="landing-hero-section pt-5 sm:pt-12 pb-10 sm:pb-24">
-      {/* z-index keeps path chips / prompt above hero parallax (phone can translate upward on scroll). */}
       <div className="landing-hero-copy relative z-10 max-w-[1200px] mx-auto px-4 sm:px-md lg:px-lg text-center bg-[var(--landing-canvas)]">
         <LandingHeroHeadline />
         <p className="landing-hero-subcopy mt-2.5 sm:mt-4 text-[0.875rem] sm:text-base text-[var(--landing-muted)] max-w-[var(--max-width-prose)] mx-auto leading-relaxed px-0.5 text-pretty">
@@ -135,13 +153,25 @@ export default function LandingHero({ experts }: LandingHeroProps) {
           <label htmlFor="landing-goal" className="sr-only">
             What do you want to learn about space?
           </label>
+          {/* Honeypot — leave empty; bots often fill it */}
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden
+            className="absolute opacity-0 pointer-events-none h-0 w-0"
+            defaultValue=""
+          />
           <input
             id="landing-goal"
             type="text"
             value={goal}
             onChange={(event) => setGoal(event.target.value)}
             placeholder="What do you want to learn?"
-            className="min-w-0 flex-1 bg-transparent text-[0.9375rem] sm:text-base text-[var(--landing-text)] placeholder:text-[var(--landing-faint)] focus:outline-none"
+            maxLength={280}
+            disabled={isLoadingReply}
+            className="min-w-0 flex-1 bg-transparent text-[0.9375rem] sm:text-base text-[var(--landing-text)] placeholder:text-[var(--landing-faint)] focus:outline-none disabled:opacity-60"
             autoComplete="off"
             enterKeyHint="go"
             data-testid="landing-goal-input"
@@ -149,7 +179,8 @@ export default function LandingHero({ experts }: LandingHeroProps) {
           <button
             type="submit"
             aria-label="Send your learning goal"
-            className="inline-flex h-10 w-10 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-[var(--landing-ink)] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--landing-surface)] touch-manipulation"
+            disabled={isLoadingReply}
+            className="inline-flex h-10 w-10 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-[var(--landing-ink)] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--landing-surface)] touch-manipulation disabled:opacity-50"
             data-testid="landing-goal-submit"
           >
             <MaterialIcon name="arrow_forward" size={16} />
@@ -163,13 +194,14 @@ export default function LandingHero({ experts }: LandingHeroProps) {
             role="group"
             aria-label="Suggested paths"
           >
-            {PATH_CHIPS.map((chip) => (
+            {LANDING_PATH_CHIPS.map((chip) => (
               <button
                 key={chip.id}
                 type="button"
                 data-testid={`landing-path-${chip.id}`}
                 onClick={() => handlePathChip(chip.goal)}
-                className="min-h-10 sm:min-h-0 rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3 py-2 sm:px-3 sm:py-1.5 text-[11px] sm:text-xs font-medium text-[var(--landing-muted)] transition-colors hover:border-[color:color-mix(in_srgb,var(--landing-border)_50%,var(--landing-muted))] hover:text-[var(--landing-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 touch-manipulation active:scale-[0.98]"
+                disabled={isLoadingReply}
+                className="min-h-10 sm:min-h-0 rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3 py-2 sm:px-3 sm:py-1.5 text-[11px] sm:text-xs font-medium text-[var(--landing-muted)] transition-colors hover:border-[color:color-mix(in_srgb,var(--landing-border)_50%,var(--landing-muted))] hover:text-[var(--landing-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 touch-manipulation active:scale-[0.98] disabled:opacity-50"
               >
                 {chip.label}
               </button>
@@ -210,7 +242,6 @@ export default function LandingHero({ experts }: LandingHeroProps) {
           } as CSSProperties
         }
       >
-        {/* Mobile: shorter portrait + phone centered over portrait (no side drift) */}
         <div className="landing-hero-image-wrap landing-hero-portrait relative mx-auto w-full max-w-[min(100%,360px)] sm:max-w-[640px] aspect-[3/4] max-h-[min(52vh,420px)] sm:max-h-none sm:aspect-[5/6] overflow-hidden rounded-sm sm:rounded-sm">
           <Image
             src={heroImage}
@@ -262,10 +293,18 @@ export default function LandingHero({ experts }: LandingHeroProps) {
             )}
 
             <div className="rounded-[1.15rem] sm:rounded-[1.4rem] bg-[var(--landing-surface-soft)] px-2.5 py-2.5 sm:px-3 sm:py-4 min-h-[150px] sm:min-h-[250px] flex flex-col justify-end gap-1.5 sm:gap-2">
-              {lines.map((line, index) =>
-                // Stable keys (index only) — including displayText.length remounted every
-                // typed word and restarted landing-hero-chat-in (flash/refresh glitch).
-                line.role === 'user' ? (
+              {lines.map((line, index) => {
+                const firstExpertIndex = lines.findIndex((l) => l.role === 'expert');
+                // Soft fade on the teaser bubble only — CTA bubble stays fully readable.
+                const fadeTeaser =
+                  Boolean(submittedGoal) &&
+                  isComplete &&
+                  !isLoadingReply &&
+                  line.role === 'expert' &&
+                  index === firstExpertIndex &&
+                  !line.isTyping;
+
+                return line.role === 'user' ? (
                   <p
                     key={`chat-line-${index}`}
                     data-testid={index === 0 ? 'landing-hero-user-message' : undefined}
@@ -278,29 +317,45 @@ export default function LandingHero({ experts }: LandingHeroProps) {
                     key={`chat-line-${index}`}
                     className="landing-hero-chat-line mr-auto max-w-[94%] sm:max-w-[92%]"
                   >
-                    {relayExpert && submittedGoal ? (
+                    {relayExpert && submittedGoal && index === firstExpertIndex ? (
                       <p className="mb-1 px-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--landing-faint)]">
-                        {relayExpert.firstName} · verified expert
+                        {relayExpert.firstName} · preview
                       </p>
                     ) : null}
-                    <p className="rounded-2xl rounded-bl-sm border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3 py-2 text-[11px] sm:text-xs leading-snug text-[var(--landing-muted)]">
+                    <p
+                      className={`relative overflow-hidden rounded-2xl rounded-bl-sm border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3 py-2 text-[11px] sm:text-xs leading-snug text-[var(--landing-muted)]${fadeTeaser ? ' landing-hero-teaser-fade' : ''}`}
+                    >
                       <span className={line.isTyping ? 'landing-hero-typing-cursor' : undefined}>
                         {line.displayText}
                       </span>
                     </p>
                   </div>
-                ),
-              )}
+                );
+              })}
 
-              {submittedGoal && isComplete ? (
-                <Link
-                  href={continueHref}
-                  className="landing-hero-relay-cta mt-1 inline-flex min-h-10 touch-manipulation items-center justify-center gap-1 rounded-full bg-[var(--landing-surface)] px-3 py-2.5 text-[11px] sm:min-h-0 sm:bg-transparent sm:py-2 sm:text-xs font-semibold text-[var(--landing-accent)] transition-colors hover:text-[var(--landing-accent-hover)] active:scale-[0.98]"
-                  data-testid="landing-hero-journey-cta"
+              {isLoadingReply ? (
+                <p
+                  className="mr-auto text-[10px] text-[var(--landing-faint)] px-1"
+                  data-testid="landing-hero-reply-loading"
                 >
-                  View {relayExpert?.firstName ?? 'expert'} profile
-                  <MaterialIcon name="arrow_forward" size={14} />
-                </Link>
+                  Matching an expert…
+                </p>
+              ) : null}
+
+              {submittedGoal && isComplete && !isLoadingReply ? (
+                <>
+                  <Link
+                    href={continueHref}
+                    className="landing-hero-relay-cta mt-1 inline-flex min-h-10 touch-manipulation items-center justify-center gap-1 rounded-full bg-[var(--landing-ink)] px-3 py-2.5 text-[11px] sm:min-h-0 sm:py-2 sm:text-xs font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--landing-surface-soft)] active:scale-[0.98]"
+                    data-testid="landing-hero-journey-cta"
+                  >
+                    Continue with {relayExpert?.firstName ?? 'expert'}
+                    <MaterialIcon name="arrow_forward" size={14} />
+                  </Link>
+                  <p className="px-1 text-[9px] leading-snug text-[var(--landing-faint)]">
+                    Preview only — book a live session for real expert advice.
+                  </p>
+                </>
               ) : null}
             </div>
           </div>

@@ -10,7 +10,7 @@ import {
 import {
   findLandingFeaturedExpert,
   landingFeaturedPortrait,
-} from '@/lib/landing-featured-expert';
+} from '@/lib/landing/featured-expert';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 const GENERIC_CARD = {

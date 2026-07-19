@@ -162,6 +162,53 @@ export type Database = {
         }
         Relationships: []
       }
+      landing_goal_submissions: {
+        Row: {
+          created_at: string
+          est_time: string
+          expert_name: string | null
+          expert_slug: string | null
+          goal_text: string
+          id: string
+          ip_hash: string | null
+          reply_source: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          est_time: string
+          expert_name?: string | null
+          expert_slug?: string | null
+          goal_text: string
+          id?: string
+          ip_hash?: string | null
+          reply_source?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          est_time?: string
+          expert_name?: string | null
+          expert_slug?: string | null
+          goal_text?: string
+          id?: string
+          ip_hash?: string | null
+          reply_source?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "landing_goal_submissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_reviews: {
         Row: {
           bio_analysis_reasoning: string | null

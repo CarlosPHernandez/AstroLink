@@ -9,7 +9,7 @@ import {
   LANDING_CHAT_USER_REVEAL_MS,
   LANDING_CHAT_WORD_MS,
   splitChatWords,
-} from '@/lib/landing-chat-display';
+} from '@/lib/landing/chat-display';
 
 export type LandingHeroChatMessage = { role: 'user' | 'expert'; text: string };
 
@@ -33,6 +33,8 @@ export function useLandingHeroChat({
   const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (messages.length === 0) {
       setLines([]);
       setIsComplete(false);
@@ -51,24 +53,40 @@ export function useLandingHeroChat({
       return;
     }
 
-    let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
     let messageIndex = 0;
 
-    const setPartialLine = (message: LandingHeroChatMessage, displayText: string, isTyping: boolean) => {
-      setLines((current) => {
-        const next = current.slice(0, messageIndex);
-        next.push({ ...message, displayText, isTyping });
-        return next;
-      });
+    const setPartialLine = (
+      message: LandingHeroChatMessage,
+      displayText: string,
+      isTyping: boolean,
+    ) => {
+      if (cancelled) return;
+      // Rebuild from the message list prefix so partial lines never stack as extras.
+      setLines(
+        messages
+          .slice(0, messageIndex)
+          .map((prior) => ({
+            ...prior,
+            displayText: prior.text,
+            isTyping: false,
+          }))
+          .concat([{ ...message, displayText, isTyping }]),
+      );
     };
 
     const revealFullLine = (message: LandingHeroChatMessage) => {
-      setLines((current) => {
-        const next = current.slice(0, messageIndex);
-        next.push({ ...message, displayText: message.text, isTyping: false });
-        return next;
-      });
+      if (cancelled) return;
+      setLines(
+        messages
+          .slice(0, messageIndex)
+          .map((prior) => ({
+            ...prior,
+            displayText: prior.text,
+            isTyping: false,
+          }))
+          .concat([{ ...message, displayText: message.text, isTyping: false }]),
+      );
     };
 
     const runMessage = () => {
