@@ -17,6 +17,7 @@ import {
   type LandingRelayExpert,
 } from '@/lib/landing/featured-expert';
 import { LANDING_PATH_CHIPS } from '@/lib/landing/path-chips';
+import { takeLandingRelayChatMessages } from '@/lib/landing/sanitize-teaser';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 const BROWSE_HREF = '/experts';
@@ -104,7 +105,8 @@ export default function LandingHero({ experts }: LandingHeroProps) {
       };
 
       setRelayExpert(data.expert);
-      setChatMessages(data.messages);
+      // Never render stacked expert bubbles (old API / LLM double-pitch).
+      setChatMessages(takeLandingRelayChatMessages(data.messages));
       try {
         window.sessionStorage.setItem('astrolink.pendingRelayExpertSlug', data.expert.slug);
       } catch {

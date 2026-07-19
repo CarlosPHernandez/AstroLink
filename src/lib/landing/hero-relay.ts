@@ -2,6 +2,7 @@ import {
   landingRelayReplyIntro,
   type LandingRelayExpert,
 } from '@/lib/landing/featured-expert';
+import { sanitizeLandingTeaser } from '@/lib/landing/sanitize-teaser';
 
 export const LANDING_GOAL_MAX_CHARS = 280;
 
@@ -27,7 +28,7 @@ export function buildFallbackRelayMessages(
 ): LandingRelayChatMessage[] {
   return [
     { role: 'user', text: goal },
-    { role: 'expert', text: landingRelayReplyIntro(expert) },
+    { role: 'expert', text: sanitizeLandingTeaser(landingRelayReplyIntro(expert)) },
   ];
 }
 
@@ -37,6 +38,6 @@ export function buildRelayMessagesFromTeaser(
 ): LandingRelayChatMessage[] {
   return [
     { role: 'user', text: goal },
-    { role: 'expert', text: teaser },
+    { role: 'expert', text: sanitizeLandingTeaser(teaser) },
   ];
 }

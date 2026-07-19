@@ -4,6 +4,7 @@ import {
   landingRelayReplyCta,
   type LandingRelayExpert,
 } from '@/lib/landing/featured-expert';
+import { sanitizeLandingTeaser } from '@/lib/landing/sanitize-teaser';
 import { isE2eStubLlmEnabled, llmFlashModel, generatePlainText } from '@/lib/llm';
 
 export function isLandingRelayLlmEnabled(): boolean {
@@ -14,9 +15,6 @@ export function isLandingRelayLlmEnabled(): boolean {
   return true;
 }
 
-/** Hard cap so phone UI stays a hook, not a free mini-session. */
-const TEASER_MAX_CHARS = 220;
-
 function parseTeaserJson(raw: string): string | null {
   try {
     const cleaned = raw
@@ -24,13 +22,12 @@ function parseTeaserJson(raw: string): string | null {
       .replace(/^```json\s*/i, '')
       .replace(/^```\s*/i, '')
       .replace(/\s*```$/i, '');
-    const parsed = JSON.parse(cleaned) as { teaser?: unknown; cta?: unknown };
-    // Accept legacy { teaser, cta } or plain { teaser }
+    const parsed = JSON.parse(cleaned) as { teaser?: unknown };
     const teaser = typeof parsed.teaser === 'string' ? parsed.teaser.trim() : '';
     if (!teaser || teaser.length < 16) {
       return null;
     }
-    return teaser.slice(0, TEASER_MAX_CHARS);
+    return sanitizeLandingTeaser(teaser);
   } catch {
     return null;
   }
@@ -39,7 +36,9 @@ function parseTeaserJson(raw: string): string | null {
 function stubTeaser(goal: string, expert: LandingRelayExpert): { teaser: string; cta: string } {
   const snippet = goal.length > 56 ? `${goal.slice(0, 53)}…` : goal;
   return {
-    teaser: `For “${snippet}” — the useful next step is usually specific, not another generic search summary.`,
+    teaser: sanitizeLandingTeaser(
+      `For “${snippet}” — the useful next step is usually specific, not another generic search summary.`,
+    ),
     cta: landingRelayReplyCta(expert),
   };
 }
@@ -69,16 +68,17 @@ export async function generateLandingRelayTeaser(params: {
     'You are NOT the named expert and must not claim this is a real booking or personal advice from them.',
     'Goal: hook the visitor — do NOT give a complete plan, checklist, or multi-step answer.',
     'Do NOT invite them to book, create an account, or continue — the product UI handles that.',
+    'Write the teaser ONCE. Do not repeat the same sentence or paragraph.',
     'Tone: warm, specific, practical. React to one concrete detail in the user goal, then stop.',
     'Return ONLY valid JSON: {"teaser":"..."}',
-    'teaser: 20-40 words, 1-2 short sentences max. Leave the rest for a live session.',
+    'teaser: 20-35 words, 1-2 short sentences max. Leave the rest for a live session.',
     'No medical, legal, or investment advice. No markdown fences.',
   ].join(' ');
 
   const prompt = [
     `Matched expert (for tone only): ${expert.name} — ${expert.role}`,
     `User learning goal: ${goal}`,
-    'Write short teaser JSON now.',
+    'Write short teaser JSON now (one teaser only, no repetition).',
   ].join('\n');
 
   try {
@@ -89,14 +89,19 @@ export async function generateLandingRelayTeaser(params: {
       rateLimitKey: `landing-relay:${expert.slug}`,
     });
 
-    const teaser = parseTeaserJson(raw);
-    if (teaser) {
-      return { teaser, cta };
+    const fromJson = parseTeaserJson(raw);
+    if (fromJson) {
+      return { teaser: fromJson, cta };
     }
 
-    const plain = raw.trim().slice(0, TEASER_MAX_CHARS);
-    if (plain.length >= 16) {
-      return { teaser: plain, cta };
+    // Plain-text fallback only when the model ignored JSON — never use raw JSON blobs.
+    const plain = raw.trim();
+    if (plain.startsWith('{') || plain.startsWith('```')) {
+      return null;
+    }
+    const sanitized = sanitizeLandingTeaser(plain);
+    if (sanitized.length >= 16) {
+      return { teaser: sanitized, cta };
     }
     return null;
   } catch (error) {
