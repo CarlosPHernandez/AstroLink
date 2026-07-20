@@ -321,10 +321,10 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
           charged_amount_cents: '17000',
           original_amount_cents: '19000',
           discount_label: 'Inspired24',
-          discount_percent: '10',
         }),
       }),
     );
+    expect(paymentIntentParams.metadata).not.toHaveProperty('discount_percent');
   });
 
   it('keeps non-campaign PaymentIntent amount server-calculated without Chris pricing metadata', async () => {

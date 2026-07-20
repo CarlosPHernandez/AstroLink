@@ -23,8 +23,9 @@ export const CHRIS_FULL_PRICE_BY_DURATION_CENTS = {
 } as const;
 
 /**
- * Early-access waitlist menu (whole dollars, ~10% under list).
+ * Early-access waitlist menu (whole dollars under full list).
  * 15→$60 · 30→$115 · 45→$170 · 60→$225
+ * Not a fixed percent off — show as a named discount only.
  */
 export const CHRIS_EARLY_PRICE_BY_DURATION_CENTS = {
   15: 6000,
@@ -39,10 +40,11 @@ export type ChrisPricedDurationMinutes = keyof typeof CHRIS_FULL_PRICE_BY_DURATI
 export const CHRIS_ORIGINAL_PRICE_CENTS =
   CHRIS_FULL_PRICE_BY_DURATION_CENTS[CHRIS_SESSION_DURATION_MINUTES];
 
-/** Marketing discount name for early-access waitlist tier only. */
+/**
+ * Marketing label for early-access waitlist tier only (Inspired24).
+ * UI/metadata: “discount” — do not claim a fixed % (early menu is not exact %).
+ */
 export const CHRIS_DISCOUNT_NAME = 'Inspired24';
-/** Approximate marketing discount; actual early menu is the SOOT table above. */
-export const CHRIS_DISCOUNT_PERCENT = 10;
 
 /** Early-access waitlist charge at default 45-min length ($170). */
 export const CHRIS_LAUNCH_PRICE_CENTS =

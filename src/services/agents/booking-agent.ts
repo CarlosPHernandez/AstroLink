@@ -1,7 +1,6 @@
 import type Stripe from 'stripe';
 import type { Json } from '@/lib/database.types';
 import {
-  CHRIS_DISCOUNT_PERCENT,
   CHRIS_DISCOUNT_NAME,
   CHRIS_SESSION_DURATION_MINUTES,
 } from '@/lib/chris-campaign/chris-campaign-constants';
@@ -192,7 +191,6 @@ export class BookingAgent {
                 ...(resolveChrisPricingTier(params.marketingReferrer) === 'early_access'
                   ? {
                       discount_label: CHRIS_DISCOUNT_NAME,
-                      discount_percent: String(CHRIS_DISCOUNT_PERCENT),
                     }
                   : {}),
               }

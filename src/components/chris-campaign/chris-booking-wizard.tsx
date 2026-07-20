@@ -16,7 +16,6 @@ import { FieldError } from '@/components/forms/field-error';
 import {
   CHRIS_BOOKING_CAMPAIGN_QUERY,
   CHRIS_DISCOUNT_NAME,
-  CHRIS_DISCOUNT_PERCENT,
   CHRIS_GOALS_MIN_CHARS,
 } from '@/lib/chris-campaign/chris-campaign-constants';
 import {
@@ -889,7 +888,7 @@ export function ChrisBookingWizard({
                       </div>
                       <div className="flex justify-between text-white/60">
                         <dt>
-                          {CHRIS_DISCOUNT_NAME} launch discount ({CHRIS_DISCOUNT_PERCENT}% off)
+                          {CHRIS_DISCOUNT_NAME} discount
                         </dt>
                         <dd className="text-[#4ade80]">
                           -{formatMoney(chrisLaunchDiscountCents)}

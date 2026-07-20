@@ -1,5 +1,4 @@
 import {
-  CHRIS_DISCOUNT_PERCENT,
   CHRIS_EARLY_PRICE_BY_DURATION_CENTS,
   CHRIS_FULL_PRICE_BY_DURATION_CENTS,
   CHRIS_HOURLY_PRICE_CENTS,
@@ -99,9 +98,4 @@ export function chrisEarlyAccessDiscountCents(
 /** Hourly anchor for docs/UI copy ($250). */
 export function chrisHourlyAnchorCents(): number {
   return CHRIS_HOURLY_PRICE_CENTS;
-}
-
-/** Marketing discount percent label (Inspired24); not used to compute charge. */
-export function chrisMarketingDiscountPercent(): number {
-  return CHRIS_DISCOUNT_PERCENT;
 }
