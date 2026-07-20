@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createDevSkippedPaymentIntentId,
+  createFreeSessionPaymentIntentId,
   isDevSkippedPaymentIntent,
   isStripePaymentsSkipped,
 } from '@/lib/booking-payments';
@@ -40,5 +41,12 @@ describe('booking-payments dev helpers', () => {
     it('does not treat real Stripe ids as dev skip', () => {
       expect(isDevSkippedPaymentIntent('pi_3abc123')).toBe(false);
     });
+
+    it('treats free_session ids as skipped payment intents', () => {
+      const id = createFreeSessionPaymentIntentId();
+      expect(id.startsWith('free_session_')).toBe(true);
+      expect(isDevSkippedPaymentIntent(id)).toBe(true);
+    });
   });
 });
+

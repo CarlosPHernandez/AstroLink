@@ -19,6 +19,7 @@ import {
 import { computeBookingTotalCents } from '@/lib/booking-pricing';
 import {
   createDevSkippedPaymentIntentId,
+  createFreeSessionPaymentIntentId,
   isStripePaymentsSkipped,
 } from '@/lib/booking-payments';
 import { callLlmWithBackoff, generateStructuredJson, llmFlashModel } from '@/lib/llm';
@@ -159,12 +160,16 @@ export class BookingAgent {
     const displayAmountCents = stripeAmountCents;
 
     const skipPayments = isStripePaymentsSkipped();
+    const isFreeSession = !skipPayments && stripeAmountCents === 0;
 
     let paymentIntentId: string;
     let stripeClientSecret: string | null = null;
 
     if (skipPayments) {
       paymentIntentId = createDevSkippedPaymentIntentId();
+    } else if (isFreeSession) {
+      // Stripe rejects amount: 0; free listings confirm without a PaymentIntent.
+      paymentIntentId = createFreeSessionPaymentIntentId();
     } else {
       const stripeCustomerId = await getOrCreateStripeCustomerForMentee(params.menteeId);
 
@@ -249,10 +254,11 @@ export class BookingAgent {
       );
     }
 
-    if (skipPayments) {
+    if (skipPayments || isFreeSession) {
       await this.logAudit('BOOKING_CREATED', booking.id, {
         booking_id: booking.id,
-        skip_payments: true,
+        skip_payments: skipPayments,
+        free_session: isFreeSession,
       });
 
       await confirmBookingWithoutPayment(booking.id);
