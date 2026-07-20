@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BookBodySchema } from '@/lib/book-request-schema';
+import { CHRIS_GOALS_MIN_CHARS } from '@/lib/chris-campaign/chris-campaign-constants';
 
 describe('BookBodySchema', () => {
   const validBody = {
@@ -7,6 +8,7 @@ describe('BookBodySchema', () => {
     serviceType: 'session_1on1' as const,
     includePreCallBrief: true,
     scheduledAt: '2026-06-15T18:00:00.000Z',
+    // ≥ CHRIS_GOALS_MIN_CHARS so chrisFuture reuses this goals string after hybrid floor.
     goals: 'Understand commercial crew certification path for our vehicle.',
     background: 'Series A space startup building reusable orbital tug with 12 engineers.',
     durationMinutes: 45, // from slider; prorated price used for the PI
@@ -68,14 +70,22 @@ describe('BookBodySchema', () => {
     expect(BookBodySchema.parse(chrisFuture).campaign).toBe('chris');
   });
 
-  it('rejects campaign=chris with non-45-minute duration', () => {
+  it('accepts campaign=chris with 15–60 minute stepped durations', () => {
+    for (const durationMinutes of [15, 30, 45, 60]) {
+      expect(
+        BookBodySchema.parse({ ...chrisFuture, durationMinutes }).durationMinutes,
+      ).toBe(durationMinutes);
+    }
+  });
+
+  it('rejects campaign=chris with non-stepped duration', () => {
     const result = BookBodySchema.safeParse({
       ...chrisFuture,
-      durationMinutes: 30,
+      durationMinutes: 20,
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.flatten().fieldErrors.durationMinutes?.[0]).toContain('45');
+      expect(result.error.flatten().fieldErrors.durationMinutes?.[0]).toMatch(/15–60|steps/i);
     }
   });
 
@@ -114,5 +124,36 @@ describe('BookBodySchema', () => {
         marketingReferrer: '<bad>',
       }).marketingReferrer,
     ).toBeUndefined();
+  });
+
+  it('accepts campaign=chris with empty background and goals at floor', () => {
+    const goals = 'G'.repeat(CHRIS_GOALS_MIN_CHARS);
+    const parsed = BookBodySchema.parse({
+      ...chrisFuture,
+      goals,
+      background: '',
+    });
+    expect(parsed.background).toBe('');
+    expect(parsed.goals.length).toBe(CHRIS_GOALS_MIN_CHARS);
+  });
+
+  it('rejects campaign=chris when goals shorter than CHRIS_GOALS_MIN_CHARS', () => {
+    const result = BookBodySchema.safeParse({
+      ...chrisFuture,
+      goals: 'G'.repeat(CHRIS_GOALS_MIN_CHARS - 1),
+      background: '',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.goals?.[0]).toMatch(/prepare|characters|bit more/i);
+    }
+  });
+
+  it('still requires non-Chris background min 10', () => {
+    const result = BookBodySchema.safeParse({
+      ...validBody,
+      background: 'short',
+    });
+    expect(result.success).toBe(false);
   });
 });
