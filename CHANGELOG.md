@@ -2,6 +2,11 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.3.0] - 2026-07-20
+
+### Fixed
+- Ops logins (e.g. `support@astro-link.space`) with `user_app_state.role = admin` now resolve as **admin** even when Auth UUID ≠ `public.users.id` (lookup by email / `auth_id`).
+
 ## [0.8.2.0] - 2026-07-20
 
 ### Added
