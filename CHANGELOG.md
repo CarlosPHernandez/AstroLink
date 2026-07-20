@@ -2,6 +2,16 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.2.0] - 2026-07-20
+
+### Added
+- **Ops: create/update experts** from the admin dashboard (email, slug, rate, listed) with a buyer deep-link.
+- **Booking schedule picker** with Eastern presets (e.g. Tonight 7:00 PM ET) plus local + Eastern previews.
+- **Free ($0) sessions** — mentors with $0/hr confirm without Stripe (production-safe; no PaymentIntent).
+
+### Changed
+- Booking schedule step uses the new picker for non-Chris experts (presets + datetime).
+
 ## [0.8.1.0] - 2026-07-20
 
 ### Changed
