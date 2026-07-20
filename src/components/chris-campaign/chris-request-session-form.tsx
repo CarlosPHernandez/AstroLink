@@ -2,17 +2,26 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { DurationStepper } from '@/components/experts/duration-stepper';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import {
   ChrisCampaignDateStrip,
   useChrisCampaignDateSelection,
 } from '@/components/chris-campaign/chris-campaign-date-strip';
+import { saveDraft } from '@/lib/chris-campaign/chris-booking-draft';
+import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-booking-mode';
 import { getChrisBookingEntryHref } from '@/lib/chris-campaign/chris-booking-href';
 import { trackChrisRequestSession } from '@/lib/chris-campaign/chris-campaign-analytics';
 import {
   CHRIS_PUBLIC_REFERRER,
   CHRIS_WAITLIST_EMAIL_REFERRER,
 } from '@/lib/chris-campaign/chris-campaign-referrer';
+import {
+  resolveChrisChargeCents,
+  resolveChrisOriginalPriceCents,
+  resolveChrisPricingTier,
+} from '@/lib/chris-campaign/chris-pricing';
 import { getChrisWaitlistHref } from '@/lib/chris-campaign/chris-waitlist-href';
 
 type ChrisRequestSessionFormProps = {
@@ -24,6 +33,43 @@ type ChrisRequestSessionFormProps = {
   variant?: 'desktop' | 'mobile';
 };
 
+function formatMoney(cents: number) {
+  return `$${(cents / 100).toFixed(0)}`;
+}
+
+function ChrisLandingPrice({
+  marketingReferrer,
+  durationMinutes,
+}: {
+  marketingReferrer: string | null;
+  durationMinutes: number;
+}) {
+  const chargeCents = resolveChrisChargeCents(marketingReferrer, durationMinutes);
+  const originalCents = resolveChrisOriginalPriceCents(durationMinutes);
+  const isEarly = resolveChrisPricingTier(marketingReferrer) === 'early_access';
+
+  return (
+    <p
+      data-testid="chris-landing-price"
+      className="text-sm font-medium text-white/90"
+      aria-live="polite"
+    >
+      {isEarly && originalCents > chargeCents ? (
+        <>
+          <span className="mr-2 text-white/50 line-through">{formatMoney(originalCents)}</span>
+          <span>
+            {formatMoney(chargeCents)} early access · {durationMinutes} min
+          </span>
+        </>
+      ) : (
+        <span>
+          {formatMoney(chargeCents)} · {durationMinutes} min
+        </span>
+      )}
+    </p>
+  );
+}
+
 export function ChrisRequestSessionForm({
   bookingEnabled,
   isSignedIn,
@@ -34,6 +80,7 @@ export function ChrisRequestSessionForm({
 }: ChrisRequestSessionFormProps) {
   const router = useRouter();
   const dateSelection = useChrisCampaignDateSelection();
+  const [durationMinutes, setDurationMinutes] = useState(getChrisCampaignDurationMinutes);
 
   if (!bookingEnabled) {
     return (
@@ -71,10 +118,19 @@ export function ChrisRequestSessionForm({
 
   function handleBook() {
     trackChrisRequestSession(marketingReferrer);
+    const date = dateSelection.activeDate ?? null;
+    const scheduledAt = date ? `${date}T12:00` : '';
+    saveDraft({
+      durationMinutes,
+      date,
+      scheduledAt,
+      marketingReferrer,
+    });
     router.push(
       getChrisBookingEntryHref(mentorSlug, isSignedIn, {
         date: dateSelection.activeDate ?? undefined,
         ref: marketingReferrer,
+        durationMinutes,
       }),
     );
   }
@@ -87,6 +143,11 @@ export function ChrisRequestSessionForm({
             Choose your 1:1 call
           </p>
           <ChrisCampaignDateStrip {...dateSelection} />
+          <DurationStepper value={durationMinutes} onChange={setDurationMinutes} />
+          <ChrisLandingPrice
+            marketingReferrer={marketingReferrer}
+            durationMinutes={durationMinutes}
+          />
           <button
             type="button"
             onClick={handleBook}
@@ -113,6 +174,11 @@ export function ChrisRequestSessionForm({
           </p>
           <ChrisCampaignDateStrip {...dateSelection} compact />
         </div>
+        <DurationStepper value={durationMinutes} onChange={setDurationMinutes} />
+        <ChrisLandingPrice
+          marketingReferrer={marketingReferrer}
+          durationMinutes={durationMinutes}
+        />
         <button
           type="button"
           onClick={handleBook}
@@ -126,7 +192,7 @@ export function ChrisRequestSessionForm({
           />
         </button>
         <p className="mt-3 text-center text-xs font-light text-secondary-fixed-dim/70">
-          Confidential 45-minute 1-on-1 sessions.
+          Confidential 1-on-1 sessions · 15–60 minutes.
         </p>
       </div>
     </div>

@@ -322,3 +322,42 @@
 .chris-landing .chris-mobile-hero-media .absolute.bottom-4 {
   display: none;
 }
+
+/* DurationStepper contrast on Chris dark surfaces */
+.chris-landing .experts-duration__label,
+.chris-booking-wizard .experts-duration__label,
+[data-testid='booking-chris-campaign'] .experts-duration__label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.chris-landing .experts-duration__mins,
+.chris-booking-wizard .experts-duration__mins,
+[data-testid='booking-chris-campaign'] .experts-duration__mins {
+  color: #fff;
+}
+
+.chris-landing .experts-duration__unit,
+.chris-booking-wizard .experts-duration__unit,
+[data-testid='booking-chris-campaign'] .experts-duration__unit {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.chris-landing .experts-duration__step-btn,
+.chris-booking-wizard .experts-duration__step-btn,
+[data-testid='booking-chris-campaign'] .experts-duration__step-btn {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.chris-landing .experts-duration__hint,
+.chris-booking-wizard .experts-duration__hint,
+[data-testid='booking-chris-campaign'] .experts-duration__hint {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.chris-landing .experts-duration__segs span.is-empty,
+.chris-booking-wizard .experts-duration__segs span.is-empty,
+[data-testid='booking-chris-campaign'] .experts-duration__segs span.is-empty {
+  background: rgba(255, 255, 255, 0.12);
+}

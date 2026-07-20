@@ -2,17 +2,26 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { DurationStepper } from '@/components/experts/duration-stepper';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import {
   ChrisCampaignDateStrip,
   useChrisCampaignDateSelection,
 } from '@/components/chris-campaign/chris-campaign-date-strip';
+import { saveDraft } from '@/lib/chris-campaign/chris-booking-draft';
+import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-booking-mode';
 import { getChrisBookingEntryHref } from '@/lib/chris-campaign/chris-booking-href';
 import { trackChrisRequestSession } from '@/lib/chris-campaign/chris-campaign-analytics';
 import {
   CHRIS_PUBLIC_REFERRER,
   CHRIS_WAITLIST_EMAIL_REFERRER,
 } from '@/lib/chris-campaign/chris-campaign-referrer';
+import {
+  resolveChrisChargeCents,
+  resolveChrisOriginalPriceCents,
+  resolveChrisPricingTier,
+} from '@/lib/chris-campaign/chris-pricing';
 import { getChrisWaitlistHref } from '@/lib/chris-campaign/chris-waitlist-href';
 
 type ChrisMobileBookingCardProps = {
@@ -23,6 +32,10 @@ type ChrisMobileBookingCardProps = {
   soldOut: boolean;
 };
 
+function formatMoney(cents: number) {
+  return `$${(cents / 100).toFixed(0)}`;
+}
+
 export function ChrisMobileBookingCard({
   bookingEnabled,
   isSignedIn,
@@ -32,6 +45,11 @@ export function ChrisMobileBookingCard({
 }: ChrisMobileBookingCardProps) {
   const router = useRouter();
   const dateSelection = useChrisCampaignDateSelection();
+  const [durationMinutes, setDurationMinutes] = useState(getChrisCampaignDurationMinutes);
+
+  const chargeCents = resolveChrisChargeCents(marketingReferrer, durationMinutes);
+  const originalCents = resolveChrisOriginalPriceCents(durationMinutes);
+  const isEarly = resolveChrisPricingTier(marketingReferrer) === 'early_access';
 
   if (!bookingEnabled) {
     return (
@@ -72,10 +90,19 @@ export function ChrisMobileBookingCard({
 
   function handleBook() {
     trackChrisRequestSession(marketingReferrer);
+    const date = dateSelection.activeDate ?? null;
+    const scheduledAt = date ? `${date}T12:00` : '';
+    saveDraft({
+      durationMinutes,
+      date,
+      scheduledAt,
+      marketingReferrer,
+    });
     router.push(
       getChrisBookingEntryHref(mentorSlug, isSignedIn, {
         date: dateSelection.activeDate ?? undefined,
         ref: marketingReferrer,
+        durationMinutes,
       }),
     );
   }
@@ -90,6 +117,25 @@ export function ChrisMobileBookingCard({
           Choose your 1:1 call
         </p>
         <ChrisCampaignDateStrip {...dateSelection} compact />
+        <DurationStepper value={durationMinutes} onChange={setDurationMinutes} />
+        <p
+          data-testid="chris-landing-price-mobile"
+          className="text-sm font-medium text-white/90"
+          aria-live="polite"
+        >
+          {isEarly && originalCents > chargeCents ? (
+            <>
+              <span className="mr-2 text-white/50 line-through">{formatMoney(originalCents)}</span>
+              <span>
+                {formatMoney(chargeCents)} early access · {durationMinutes} min
+              </span>
+            </>
+          ) : (
+            <span>
+              {formatMoney(chargeCents)} · {durationMinutes} min
+            </span>
+          )}
+        </p>
       </div>
 
       <button
