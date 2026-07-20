@@ -2,6 +2,16 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.1.0] - 2026-07-20
+
+### Changed
+- Live video calls now **end at the length you booked** (15 / 30 / 45 / 60 min). Daily hard-eject uses `bookings.duration_minutes` instead of a fixed env cap for every room.
+- Join room opens at the **scheduled start time** by default (no 15-minute early window). Early entry still available via env if needed.
+- Dashboard Join tooltips and session “not open yet” copy match the start-time gate.
+
+### Fixed
+- Meeting tokens always apply call-length eject even when the session is unscheduled (no join `nbf`).
+
 ## [0.8.0.0] - 2026-07-20
 
 ### Added
