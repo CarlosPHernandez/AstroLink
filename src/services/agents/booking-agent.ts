@@ -3,14 +3,15 @@ import type { Json } from '@/lib/database.types';
 import {
   CHRIS_DISCOUNT_PERCENT,
   CHRIS_DISCOUNT_NAME,
-  CHRIS_ORIGINAL_PRICE_CENTS,
   CHRIS_SESSION_DURATION_MINUTES,
 } from '@/lib/chris-campaign/chris-campaign-constants';
 import {
   chrisPricingMode,
   resolveChrisChargeCents,
+  resolveChrisOriginalPriceCents,
   resolveChrisPricingTier,
 } from '@/lib/chris-campaign/chris-pricing';
+import { clampSessionDurationMinutes } from '@/lib/session-duration';
 import {
   ChrisCampaignSoldOutError,
   releaseChrisCampaignSlot,
@@ -128,13 +129,13 @@ export class BookingAgent {
 
     // To update the base price for Stripe:
     // - For normal experts: edit `live_session_price_cents` in the mentors table (Supabase).
-    // - For this Chris 45-min case ($200 original): we override to CHRIS_ORIGINAL_PRICE_CENTS here.
-    //   (You can also adjust the mentor price in DB, but the override ensures exactly $200 gross.)
-    // - For Chris launch bookings, Stripe is charged the discounted launch amount directly.
+    // - For Chris: whole-dollar duration menu in chris-campaign-constants ($250/hr anchor).
 
     const isChrisCampaign = Boolean(params.campaignId);
     const durationMinutes = isChrisCampaign
-      ? CHRIS_SESSION_DURATION_MINUTES
+      ? clampSessionDurationMinutes(
+          params.durationMinutes ?? CHRIS_SESSION_DURATION_MINUTES,
+        )
       : params.durationMinutes;
 
     // Briefing (APX-02) is always included for live sessions as part of the standard offering.
@@ -147,13 +148,13 @@ export class BookingAgent {
       durationMinutes,
     });
 
-    // Chris: list price $200; charge early-access $180 or full $200 from marketing_referrer.
+    // Chris: list/charge from whole-dollar menu by duration; tier from marketing_referrer.
     if (isChrisCampaign) {
-      servicePriceCents = CHRIS_ORIGINAL_PRICE_CENTS;
+      servicePriceCents = resolveChrisOriginalPriceCents(durationMinutes);
     }
 
     const chrisChargeCents = isChrisCampaign
-      ? resolveChrisChargeCents(params.marketingReferrer)
+      ? resolveChrisChargeCents(params.marketingReferrer, durationMinutes)
       : null;
     const stripeAmountCents = chrisChargeCents ?? servicePriceCents;
     const displayAmountCents = stripeAmountCents;
@@ -183,8 +184,11 @@ export class BookingAgent {
             ? {
                 pricing_mode: chrisPricingMode(params.marketingReferrer),
                 pricing_tier: resolveChrisPricingTier(params.marketingReferrer),
-                original_amount_cents: String(CHRIS_ORIGINAL_PRICE_CENTS),
+                original_amount_cents: String(
+                  resolveChrisOriginalPriceCents(durationMinutes),
+                ),
                 charged_amount_cents: String(chrisChargeCents),
+                duration_minutes: String(durationMinutes),
                 ...(resolveChrisPricingTier(params.marketingReferrer) === 'early_access'
                   ? {
                       discount_label: CHRIS_DISCOUNT_NAME,
