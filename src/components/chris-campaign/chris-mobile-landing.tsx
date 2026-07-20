@@ -38,7 +38,7 @@ export function ChrisMobileLanding({
       className="chris-mobile-max relative mx-auto flex w-full flex-grow flex-col overflow-x-hidden pb-6"
       data-testid="chris-mobile-landing"
     >
-      <div className="relative h-[50vh] w-full shrink-0 overflow-hidden">
+      <div className="relative h-[min(62vh,36rem)] w-full shrink-0 overflow-hidden sm:h-[min(64vh,40rem)]">
         <div className={`h-full w-full ${videoPlaying ? '' : 'chris-portrait-breathe'}`}>
           <ExpertIntroMedia
             name={expertPortrait.name}
@@ -82,7 +82,7 @@ export function ChrisMobileLanding({
         </div>
       </div>
 
-      <div className="relative z-20 -mt-4 flex flex-col gap-4 pb-4">
+      <div className="relative z-20 -mt-6 flex flex-col gap-3 pb-4">
         <ChrisMobileBookingCard
           bookingEnabled={bookingEnabled}
           isSignedIn={isSignedIn}

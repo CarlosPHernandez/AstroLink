@@ -17,7 +17,7 @@ export function ChrisExpertPortrait({
 }: ChrisExpertPortraitProps) {
   return (
     <div
-      className="chris-fade-in-up chris-delay-300 relative z-10 w-full shrink-0 md:max-w-[22rem] md:mx-auto lg:mx-0 lg:w-[41.666667%] lg:max-w-[28rem]"
+      className="chris-fade-in-up chris-delay-300 relative z-10 w-full shrink-0 md:max-w-[24rem] md:mx-auto lg:mx-0 lg:w-[44%] lg:max-w-[32rem]"
       data-testid="chris-portrait"
     >
       <div className="chris-portrait-frame relative shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
@@ -28,7 +28,7 @@ export function ChrisExpertPortrait({
             introVideoUrl={introVideoUrl}
             priority
             overlayVariant="minimal"
-            className="aspect-[4/5] w-full rounded-none border-0 bg-primary-container shadow-none"
+            className="aspect-[3/4] w-full rounded-none border-0 bg-primary-container shadow-none"
           />
         </div>
         <div
