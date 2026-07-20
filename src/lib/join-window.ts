@@ -6,12 +6,18 @@
  *   Early navigation or direct access is blocked by the gate regardless of this UI state.
  * - This module powers the *UI affordance*: the button is visible ("shows up") for confirmed
  *   bookings that have a room, but appears disabled until inside the window.
- * - Defaults to 15 minutes before (matching the default DAILY_ROOM_JOIN_WINDOW_BEFORE_MINUTES
- *   and common heads-up patterns like Google Meet calendars).
+ * - Defaults to 0 minutes before (opens at the scheduled start). Override via
+ *   DAILY_ROOM_JOIN_WINDOW_BEFORE_MINUTES if early entry is needed.
  * - getJoinBeforeMinutes() reads the real env on the server (when process.env available).
- *   Client usage falls back to the 15 min default so the module remains importable in 'use client' components.
+ *   Client usage falls back to the default so the module remains importable in 'use client' components.
  * - Live activation on an open dashboard is handled by a small interval in the consuming client.
  */
+
+function parseNonNegativeInt(value: string | undefined, fallback: number): number {
+  if (!value?.trim()) return fallback;
+  const n = Number.parseInt(value, 10);
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+}
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value?.trim()) return fallback;
@@ -19,19 +25,28 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-export const DEFAULT_JOIN_BEFORE_MINUTES = 15;
+/** 0 = Join enabled at scheduled start (not early). */
+export const DEFAULT_JOIN_BEFORE_MINUTES = 0;
 export const DEFAULT_JOIN_AFTER_MINUTES = 60;
 
 export function getJoinBeforeMinutes(): number {
   // On the server this can read the real env (used by Daily room/token logic too).
   // On the client, non-NEXT_PUBLIC envs are not present, so we fall back to default.
   if (typeof process !== 'undefined' && process.env) {
-    return parsePositiveInt(
+    return parseNonNegativeInt(
       process.env.DAILY_ROOM_JOIN_WINDOW_BEFORE_MINUTES,
-      DEFAULT_JOIN_BEFORE_MINUTES
+      DEFAULT_JOIN_BEFORE_MINUTES,
     );
   }
   return DEFAULT_JOIN_BEFORE_MINUTES;
+}
+
+/** Tooltip / helper copy for dashboard Join buttons. */
+export function joinRoomAvailabilityTitle(beforeMinutes: number = DEFAULT_JOIN_BEFORE_MINUTES): string {
+  if (beforeMinutes <= 0) {
+    return 'Join room becomes available at the session start time';
+  }
+  return `Join room becomes available ${beforeMinutes} minutes before the session`;
 }
 
 export type JoinPhase = 'too_early' | 'ready' | 'expired' | 'unscheduled';

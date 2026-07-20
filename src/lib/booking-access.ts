@@ -43,6 +43,8 @@ export interface BookingSessionView {
   /** Dev/E2E: skip Daily WebRTC; inject transcription via window.__ASTROLINK_E2E_CAPTIONS__ */
   e2eCaptionsStub: boolean;
   scheduledAt: string;
+  /** Booked call length; drives Daily eject_after_elapsed on join tokens. */
+  durationMinutes: number | null;
   briefing: BriefingPayload | null;
 }
 
@@ -109,7 +111,7 @@ export async function getBookingForSession(
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .select(
-      'id, status, daily_room_url, mentee_id, mentor_id, scheduled_at, briefing_json, mentors(full_name), users!bookings_mentee_id_fkey(full_name, preferred_locale)',
+      'id, status, daily_room_url, mentee_id, mentor_id, scheduled_at, duration_minutes, briefing_json, mentors(full_name), users!bookings_mentee_id_fkey(full_name, preferred_locale)',
     )
     .eq('id', bookingId)
     .single();
@@ -167,6 +169,10 @@ export async function getBookingForSession(
       showCaptionsForBuyer,
       e2eCaptionsStub,
       scheduledAt: data.scheduled_at,
+      durationMinutes:
+        typeof data.duration_minutes === 'number' && Number.isFinite(data.duration_minutes)
+          ? data.duration_minutes
+          : null,
       briefing: (data.briefing_json as BriefingPayload | null) ?? null,
     },
     forbidden: false,

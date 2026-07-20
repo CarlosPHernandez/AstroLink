@@ -300,9 +300,9 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             <SessionGatePanel testId="session-too-early">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Not open yet</h3>
               <p className="text-body-md text-on-surface-variant mb-6 text-pretty">
-                The video room opens shortly before your scheduled session (
+                The video room opens at your scheduled start time (
                 <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span>
-                ). Check back a few minutes before start time.
+                ). Join once the session begins.
               </p>
               <Link
                 href={exitHref}

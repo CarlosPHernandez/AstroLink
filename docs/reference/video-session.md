@@ -9,6 +9,9 @@ Live 1:1 sessions use [Daily.co](https://www.daily.co/) for WebRTC video. AstroL
 | `DAILY_API_KEY` | Yes (live sessions) | Daily REST API key. Creates rooms and meeting tokens. |
 | `DAILY_WEBHOOK_HMAC` | Yes (production capture) | Base64 HMAC secret from Daily dashboard. Verifies `POST /api/webhooks/daily`. |
 | `DAILY_TRANSCRIPTION_ENABLED` | Phase 3 captions | When `true`, mentor join auto-starts Daily transcription (`multi` + `nova-3`); required for live captions in dev. E2E pins `false` and stubs translation via `E2E_STUB_LLM`. |
+| `DAILY_ROOM_JOIN_WINDOW_BEFORE_MINUTES` | Join gate | Default **0** (opens at scheduled start). Set &gt;0 for early entry. |
+| `DAILY_ROOM_JOIN_WINDOW_AFTER_MINUTES` | Join gate | Default **60** after start. |
+| `DAILY_MAX_CALL_MINUTES` | Fallback only | Used for `eject_after_elapsed` only when `bookings.duration_minutes` is missing. Live rooms use the **booked** duration. |
 | `LLM_MAX_CAPTION_REQUESTS_PER_MINUTE` | Optional | Caption-scoped LLM rate limit (default 60). Separate from general `LLM_MAX_*` buckets. |
 | `LLM_MAX_CAPTION_REQUESTS_PER_HOUR` | Optional | Default 300. |
 | `LLM_MAX_CAPTION_REQUESTS_PER_DAY` | Optional | Default 1000. |
@@ -156,7 +159,9 @@ Development operator for demo rehearsal. Returns `404` in production.
 | Function | Returns | Notes |
 |----------|---------|-------|
 | `dailyRoomNameForBooking(bookingId)` | `string` | Pattern: `astrolink-{first 20 hex chars of uuid}` |
-| `roomExpiryUnix(scheduledAt?)` | `number` | Unix seconds. Default 48h; if scheduled, end of window + 4h buffer |
+| `roomExpiryUnix(scheduledAt?, { durationMinutes? })` | `number` | Unix seconds. Default 48h; if scheduled, join-window end |
+| `meetingTokenWindowUnix(scheduledAt, { durationMinutes? })` | window | `nbf`/`exp` from join window; `ejectAfterElapsed` from **booked duration** |
+| `resolveCallDurationMinutes(duration?)` | `number` | Booked length (clamped) or env fallback |
 | `meetingTokenExpiryUnix(roomExp?)` | `number` | Min(4h from now, room `exp`) |
 | `extractDailyRoomNameFromUrl(url)` | `string \| null` | Parses Daily room name from URL path |
 
