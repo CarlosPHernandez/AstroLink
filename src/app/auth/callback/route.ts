@@ -1,5 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getDefaultPathAfterAuth, getSafeRedirectPath } from '@/lib/auth-redirect';
+import {
+  getDefaultPathAfterAuth,
+  getSafeRedirectPath,
+  isPasswordRecoveryNextPath,
+} from '@/lib/auth-redirect';
 import {
   needsProfileCompletion,
   resolveAppSessionFromAuthUser,
@@ -29,6 +33,11 @@ export async function GET(request: NextRequest) {
 
   if (!user) {
     return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+  }
+
+  // Password recovery: set password first; do not divert to profile completion.
+  if (isPasswordRecoveryNextPath(safeNext) || isPasswordRecoveryNextPath(nextParam ?? '')) {
+    return NextResponse.redirect(`${origin}/auth/update-password`);
   }
 
   if (needsProfileCompletion(user)) {
