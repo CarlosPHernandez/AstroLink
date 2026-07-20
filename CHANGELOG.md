@@ -2,6 +2,16 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.4.0] - 2026-07-20
+
+### Fixed
+- Password reset recovery now lands on **set new password** instead of being redirected away: `getSafeRedirectPath` allows `/auth/update-password`, email links use `/auth/callback?next=…`, and profile completion is skipped during recovery.
+
+### Changed
+- Forgot-password and update-password pages match the main auth branding; update flow requires password confirmation.
+- Sign-in shows a success banner after a completed password reset.
+- Alias route `/auth/reset-password` → `/auth/forgot-password`.
+
 ## [0.8.3.0] - 2026-07-20
 
 ### Fixed

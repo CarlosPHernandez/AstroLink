@@ -444,16 +444,27 @@ export async function forgotPasswordAction(
   }
 
   const supabase = await createClient();
+  // PKCE recovery links land on /auth/callback with ?code=…&next=/auth/update-password
   await supabase.auth.resetPasswordForEmail(email.data, {
-    redirectTo: appAuthPath('/auth/confirm?next=/auth/update-password'),
+    redirectTo: appAuthPath('/auth/callback?next=/auth/update-password'),
   });
 
   return {
     success: true,
     message:
-      'If an account exists for that email, we sent a link to reset your password.',
+      'If an account exists for that email, we sent a link to reset your password. Check your inbox (and spam).',
   };
 }
+
+const UpdatePasswordSchema = z
+  .object({
+    password: z.string().min(8, { message: 'Use at least 8 characters.' }),
+    confirmPassword: z.string().min(8, { message: 'Confirm your new password.' }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match.',
+    path: ['confirmPassword'],
+  });
 
 export async function updatePasswordAction(
   prevState: ActionState | undefined,
@@ -463,21 +474,32 @@ export async function updatePasswordAction(
     return demoAuthDisabledState();
   }
 
-  const password = z
-    .string()
-    .min(8, { message: 'Use at least 8 characters.' })
-    .safeParse(formData.get('password'));
+  const result = UpdatePasswordSchema.safeParse({
+    password: formData.get('password'),
+    confirmPassword: formData.get('confirmPassword'),
+  });
 
-  if (!password.success) {
+  if (!result.success) {
     return {
-      errors: { password: password.error.flatten().formErrors },
+      errors: result.error.flatten().fieldErrors,
       success: false,
     };
   }
 
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      message: 'This reset link is invalid or expired. Request a new one and try again.',
+      success: false,
+    };
+  }
+
   const { error } = await supabase.auth.updateUser({
-    password: password.data,
+    password: result.data.password,
   });
 
   if (error) {

@@ -21,3 +21,38 @@ describe('auth-redirect (Chris booking surface)', () => {
     expect(getSignInPath()).toBe('/talk-with-chris');
   });
 });
+
+describe('getSafeRedirectPath', () => {
+  afterEach(() => {
+    vi.resetModules();
+  });
+
+  it('allows password recovery next path', async () => {
+    const { getSafeRedirectPath, isPasswordRecoveryNextPath } = await import(
+      '@/lib/auth-redirect'
+    );
+    expect(getSafeRedirectPath('/auth/update-password', '/dashboard/mentee')).toBe(
+      '/auth/update-password',
+    );
+    expect(isPasswordRecoveryNextPath('/auth/update-password')).toBe(true);
+  });
+
+  it('blocks generic /auth loops but allows complete-profile', async () => {
+    const { getSafeRedirectPath } = await import('@/lib/auth-redirect');
+    expect(getSafeRedirectPath('/auth', '/dashboard/mentee')).toBe('/dashboard/mentee');
+    expect(getSafeRedirectPath('/auth/forgot-password', '/dashboard/mentee')).toBe(
+      '/dashboard/mentee',
+    );
+    expect(getSafeRedirectPath('/auth/complete-profile', '/dashboard/mentee')).toBe(
+      '/auth/complete-profile',
+    );
+  });
+
+  it('blocks open redirects', async () => {
+    const { getSafeRedirectPath } = await import('@/lib/auth-redirect');
+    expect(getSafeRedirectPath('https://evil.example', '/dashboard/mentee')).toBe(
+      '/dashboard/mentee',
+    );
+    expect(getSafeRedirectPath('//evil.example', '/dashboard/mentee')).toBe('/dashboard/mentee');
+  });
+});

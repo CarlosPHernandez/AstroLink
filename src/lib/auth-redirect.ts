@@ -3,6 +3,20 @@ import { isChrisBookingSurfaceEnabled, isProtectedAppSurfaceEnabled } from '@/li
 import type { SessionData } from '@/lib/session';
 import { WAITLIST_PUBLIC_LANDING_PATH } from '@/lib/waitlist/waitlist-landing';
 
+/**
+ * Auth subpaths that may appear in `?next=` after email links (password recovery, etc.).
+ * Other `/auth/*` targets stay blocked to prevent open-redirect loops through auth.
+ */
+export const ALLOWED_AUTH_NEXT_PATHS = [
+  '/auth/update-password',
+  '/auth/complete-profile',
+] as const;
+
+export function isPasswordRecoveryNextPath(path: string): boolean {
+  const pathOnly = path.split('?')[0]?.toLowerCase() ?? '';
+  return pathOnly === '/auth/update-password';
+}
+
 /** Same-origin relative path only; blocks open redirects. */
 export function getSafeRedirectPath(
   raw: string | null | undefined,
@@ -17,13 +31,16 @@ export function getSafeRedirectPath(
     return fallback;
   }
 
-  const lower = trimmed.toLowerCase();
-  if (lower.startsWith('/auth')) {
+  if (trimmed.includes('://') || trimmed.toLowerCase().startsWith('http:') || trimmed.toLowerCase().startsWith('https:')) {
     return fallback;
   }
 
-  if (trimmed.includes('://') || lower.startsWith('http:') || lower.startsWith('https:')) {
-    return fallback;
+  const pathOnly = trimmed.split('?')[0] ?? trimmed;
+  const lowerPath = pathOnly.toLowerCase();
+
+  if (lowerPath.startsWith('/auth')) {
+    const allowed = (ALLOWED_AUTH_NEXT_PATHS as readonly string[]).includes(lowerPath);
+    return allowed ? pathOnly : fallback;
   }
 
   return trimmed;
