@@ -25,3 +25,6 @@ export const CHRIS_WAITLIST_EMAIL_REFERRER = 'early-signups';
 
 /** Chris social / public promotion — full $200, no limited-slot scarcity UI. */
 export const CHRIS_SOCIAL_REFERRER = 'chris-social';
+
+/** Minimum goals length for Chris campaign session continue / book (conversion floor). */
+export const CHRIS_GOALS_MIN_CHARS = 50;
