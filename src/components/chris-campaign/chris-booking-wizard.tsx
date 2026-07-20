@@ -851,15 +851,6 @@ export function ChrisBookingWizard({
                       'Continue to create account'
                     )}
                   </button>
-                  {!session ? (
-                    <button
-                      type="button"
-                      onClick={() => setStep('account')}
-                      className="text-xs uppercase tracking-widest text-white/70 hover:text-white"
-                    >
-                      Back
-                    </button>
-                  ) : null}
                 </div>
               </section>
             ) : null}
