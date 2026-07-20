@@ -16,7 +16,7 @@ import type { BriefingPayload } from '@/lib/briefing-display';
 import { SERVICE_TYPE_LABELS } from '@/lib/types';
 import { DashboardSessionTranscript } from '@/components/session/dashboard-session-transcript';
 import { formatSessionWhen } from '@/lib/format';
-import { isJoinRoomEnabled, DEFAULT_JOIN_BEFORE_MINUTES } from '@/lib/join-window';
+import { isJoinRoomEnabled, joinRoomAvailabilityTitle } from '@/lib/join-window';
 
 interface SessionData {
   userId: string;
@@ -240,7 +240,7 @@ export default function MenteeDashboardClient({
                   disabled
                   data-testid={`booking-join-${booking.id}`}
                   className="px-3 py-2 rounded-md bg-primary/50 text-white/70 font-semibold text-[10px] uppercase tracking-wider cursor-not-allowed"
-                  title={`Join room becomes available ${DEFAULT_JOIN_BEFORE_MINUTES} minutes before the session`}
+                  title={joinRoomAvailabilityTitle()}
                 >
                   Join room
                 </button>
@@ -396,7 +396,7 @@ export default function MenteeDashboardClient({
                           type="button"
                           disabled
                           className="px-4 py-2 rounded-md bg-primary/50 text-white/70 text-xs font-semibold uppercase tracking-wider cursor-not-allowed"
-                          title={`Join video room becomes available ${DEFAULT_JOIN_BEFORE_MINUTES} minutes before the session`}
+                          title={joinRoomAvailabilityTitle()}
                         >
                           Join video room
                         </button>

@@ -9,7 +9,7 @@ import {
 import { DashboardSessionTranscript } from '@/components/session/dashboard-session-transcript';
 import { formatSessionWhen } from '@/lib/format';
 import { SERVICE_TYPE_LABELS, type BookingStatus, type ServiceType } from '@/lib/types';
-import { isJoinRoomEnabled, DEFAULT_JOIN_BEFORE_MINUTES } from '@/lib/join-window';
+import { isJoinRoomEnabled, joinRoomAvailabilityTitle } from '@/lib/join-window';
 
 function canMentorJoin(booking: MentorBookingView): boolean {
   // Legacy name kept for the "should we consider rendering a join control" check.
@@ -169,7 +169,7 @@ export function MentorConsultationCard({
                 disabled
                 data-testid={`mentor-join-${booking.id}`}
                 className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary/50 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white/70 cursor-not-allowed"
-                title={`Join room becomes available ${DEFAULT_JOIN_BEFORE_MINUTES} minutes before the session`}
+                title={joinRoomAvailabilityTitle()}
               >
                 Join video room
               </button>

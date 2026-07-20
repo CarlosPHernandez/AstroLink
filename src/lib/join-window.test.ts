@@ -4,6 +4,7 @@ import {
   isJoinRoomEnabled,
   getJoinPhase,
   DEFAULT_JOIN_BEFORE_MINUTES,
+  joinRoomAvailabilityTitle,
 } from './join-window';
 
 describe('join-window', () => {
@@ -24,13 +25,13 @@ describe('join-window', () => {
       expect(getJoinPhase(null, Date.now())).toBe('unscheduled');
     });
 
-    it('returns too_early before join window (default 15min)', () => {
+    it('returns too_early before scheduled start (default before=0)', () => {
       const scheduledAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
       expect(getJoinPhase(scheduledAt, Date.now())).toBe('too_early');
     });
 
-    it('returns ready inside join window', () => {
-      const scheduledAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+    it('returns ready at or after scheduled start', () => {
+      const scheduledAt = new Date(Date.now() - 30 * 1000).toISOString();
       expect(getJoinPhase(scheduledAt, Date.now())).toBe('ready');
     });
 
@@ -44,12 +45,12 @@ describe('join-window', () => {
     const roomUrl = 'https://astrolink.daily.co/room-123';
 
     it('returns false with no dailyRoomUrl', () => {
-      const scheduledAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+      const scheduledAt = new Date(Date.now() - 30 * 1000).toISOString();
       expect(isJoinRoomEnabled('confirmed', null, scheduledAt)).toBe(false);
     });
 
     it('returns false for pending_payment even with room', () => {
-      const scheduledAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+      const scheduledAt = new Date(Date.now() - 30 * 1000).toISOString();
       expect(isJoinRoomEnabled('pending_payment', roomUrl, scheduledAt)).toBe(false);
     });
 
@@ -61,14 +62,14 @@ describe('join-window', () => {
       expect(isJoinRoomEnabled('completed', roomUrl, past)).toBe(true);
     });
 
-    it('returns false for confirmed far in future (outside 15min window)', () => {
+    it('returns false for confirmed far in future (before start)', () => {
       const farFuture = new Date(Date.now() + 60 * 60 * 1000).toISOString();
       expect(isJoinRoomEnabled('confirmed', roomUrl, farFuture)).toBe(false);
     });
 
-    it('returns true for confirmed inside join window (within 15min)', () => {
-      const soon = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-      expect(isJoinRoomEnabled('confirmed', roomUrl, soon)).toBe(true);
+    it('returns true for confirmed at or after start', () => {
+      const started = new Date(Date.now() - 30 * 1000).toISOString();
+      expect(isJoinRoomEnabled('confirmed', roomUrl, started)).toBe(true);
     });
 
     it('returns false for confirmed after window (expired)', () => {
@@ -76,8 +77,11 @@ describe('join-window', () => {
       expect(isJoinRoomEnabled('confirmed', roomUrl, past)).toBe(false);
     });
 
-    it('respects DEFAULT_JOIN_BEFORE_MINUTES', () => {
-      expect(DEFAULT_JOIN_BEFORE_MINUTES).toBe(15);
+    it('defaults join before window to session start', () => {
+      expect(DEFAULT_JOIN_BEFORE_MINUTES).toBe(0);
+      expect(joinRoomAvailabilityTitle()).toBe(
+        'Join room becomes available at the session start time',
+      );
     });
   });
 });
