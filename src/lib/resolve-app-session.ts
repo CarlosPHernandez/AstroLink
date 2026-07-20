@@ -22,10 +22,70 @@ function fullNameFromUser(user: User): string {
   return 'AstroLink User';
 }
 
+/**
+ * Map Supabase Auth user id → public.users.id.
+ * Auth trigger may create public.users with a different primary key and auth_id link.
+ * user_app_state.user_id FKs public.users.id (not always auth.users.id).
+ */
+export async function resolvePublicUserIdForAuthUser(params: {
+  authUserId: string;
+  email: string;
+}): Promise<string | null> {
+  const email = params.email.trim().toLowerCase();
+
+  if (email) {
+    const { data: byEmail } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+    if (byEmail?.id) {
+      return byEmail.id;
+    }
+  }
+
+  const { data: byAuthId } = await supabaseAdmin
+    .from('users')
+    .select('id')
+    .eq('auth_id', params.authUserId)
+    .maybeSingle();
+  if (byAuthId?.id) {
+    return byAuthId.id;
+  }
+
+  const { data: byPk } = await supabaseAdmin
+    .from('users')
+    .select('id')
+    .eq('id', params.authUserId)
+    .maybeSingle();
+
+  return byPk?.id ?? null;
+}
+
+async function loadAppState(userIds: string[]): Promise<{
+  role: string | null;
+  onboarded: boolean | null;
+} | null> {
+  const unique = [...new Set(userIds.filter(Boolean))];
+  for (const userId of unique) {
+    const { data } = await supabaseAdmin
+      .from('user_app_state')
+      .select('role, onboarded')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (data) {
+      return data;
+    }
+  }
+  return null;
+}
+
 export async function resolveAppSessionFromAuthUser(user: User): Promise<SessionData | null> {
   const email = user.email?.trim().toLowerCase() ?? '';
   const fullName = fullNameFromUser(user);
+  const sessionExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
+  // Env allowlist is the strongest admin grant (ops emails on Vercel).
   if (email && isAdminEmailAllowed(email)) {
     const adminCheck = process.env.ADMIN_EMAILS?.trim();
     if (adminCheck) {
@@ -39,7 +99,7 @@ export async function resolveAppSessionFromAuthUser(user: User): Promise<Session
         email,
         role: 'admin',
         fullName,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        expiresAt: sessionExpiry,
         onboarded: true,
       };
     }
@@ -57,7 +117,7 @@ export async function resolveAppSessionFromAuthUser(user: User): Promise<Session
       email: mentorByUser.email,
       role: 'mentor',
       fullName: mentorByUser.full_name,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      expiresAt: sessionExpiry,
       onboarded: true,
     };
   }
@@ -75,28 +135,31 @@ export async function resolveAppSessionFromAuthUser(user: User): Promise<Session
         .update({ user_id: user.id })
         .eq('id', mentorByEmail.id);
 
-      const { data: appState } = await supabaseAdmin
-        .from('user_app_state')
-        .select('onboarded')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const publicUserId = await resolvePublicUserIdForAuthUser({
+        authUserId: user.id,
+        email,
+      });
+      const appState = await loadAppState(
+        [publicUserId ?? '', user.id].filter(Boolean),
+      );
 
       return {
         userId: mentorByEmail.id,
         email: mentorByEmail.email,
         role: 'mentor',
         fullName: mentorByEmail.full_name,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        expiresAt: sessionExpiry,
         onboarded: appState?.onboarded ?? true,
       };
     }
   }
 
-  const { data: appState } = await supabaseAdmin
-    .from('user_app_state')
-    .select('role, onboarded')
-    .eq('user_id', user.id)
-    .maybeSingle();
+  // user_app_state is keyed by public.users.id — resolve that before auth UUID.
+  const publicUserId = await resolvePublicUserIdForAuthUser({
+    authUserId: user.id,
+    email,
+  });
+  const appState = await loadAppState([publicUserId ?? '', user.id].filter(Boolean));
 
   if (appState?.role === 'admin' && email && isAdminEmailAllowed(email)) {
     const menteeId = await ensureMenteeUserRow({ userId: user.id, email, fullName });
@@ -105,7 +168,7 @@ export async function resolveAppSessionFromAuthUser(user: User): Promise<Session
       email,
       role: 'admin',
       fullName,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      expiresAt: sessionExpiry,
       onboarded: true,
     };
   }
@@ -121,7 +184,7 @@ export async function resolveAppSessionFromAuthUser(user: User): Promise<Session
     email: email || '',
     role: 'mentee',
     fullName,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    expiresAt: sessionExpiry,
     onboarded: true,
   };
 }
