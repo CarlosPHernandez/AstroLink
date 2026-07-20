@@ -74,7 +74,7 @@ export function ChrisMobileLanding({
           ) : null}
           {/* Mobile: short hero only — long value copy steals vertical space from Chris media. */}
           <h1 className="chris-hero-copy-line chris-hero-copy-line--1 chris-text-gradient text-[1.65rem] font-semibold leading-[1.15] tracking-tight sm:text-[2rem] sm:leading-[1.2]">
-            Private 45-Minute Session with Astronaut Chris Sembroski
+            Private 1:1 session with Astronaut Chris Sembroski
           </h1>
           <p className="chris-hero-copy-line chris-hero-copy-line--2 text-sm font-medium leading-snug text-white/90">
             Guaranteed 1:1 access. No stage. No audience. Just direct answers to your goals.

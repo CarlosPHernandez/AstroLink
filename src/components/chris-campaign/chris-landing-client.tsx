@@ -80,15 +80,15 @@ export function ChrisLandingClient({
                   <ChrisSlotIndicator slotCap={slotCap} slotsRemaining={slotsRemaining} />
                 ) : null}
                 <h1 className="chris-fade-in-up chris-delay-200 chris-copy-max w-full text-3xl font-semibold leading-[1.1] tracking-tight text-white sm:text-4xl md:text-[2.5rem] lg:text-6xl">
-                  Private 45-Minute Session with Astronaut Chris Sembroski
+                  Private 1:1 session with Astronaut Chris Sembroski
                 </h1>
                 <p className="chris-fade-in-up chris-delay-250 chris-copy-max w-full text-base font-medium leading-snug text-white/90 sm:text-lg">
                   Guaranteed 1:1 access. No stage. No audience. Just direct answers to your goals.
                 </p>
                 <p className="chris-fade-in-up chris-delay-300 chris-copy-max w-full text-lg font-light leading-relaxed text-secondary-fixed-dim">
                   Most people spend $1,500+ traveling to events hoping for a few minutes with someone
-                  who&apos;s actually been to space. You get a full guaranteed 45 minutes — with Chris
-                  prepared on your specific goals before the call.
+                  who&apos;s actually been to space. You get your full booked session time with Chris —
+                  not a rushed hallway chat. Chris is prepared on your specific goals before the call.
                 </p>
               </div>
 
