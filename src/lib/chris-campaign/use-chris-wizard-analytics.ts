@@ -27,7 +27,7 @@ export function useChrisWizardAnalytics({
 }: UseChrisWizardAnalyticsOptions): ChrisWizardAnalyticsReporter {
   const mountedAtRef = useRef(0);
   const sentExitRef = useRef(false);
-  const lastStepRef = useRef<ChrisWizardStep>('account');
+  const lastStepRef = useRef<ChrisWizardStep>('session');
   const progressRef = useRef<ChrisWizardProgress>({
     authSuccess: false,
     sessionContinued: false,
@@ -75,9 +75,9 @@ export function useChrisWizardAnalytics({
 
   const reportAuthSuccess = useCallback((mode: ChrisAuthMode) => {
     progressRef.current.authSuccess = true;
-    if (mode === 'register') {
-      lastStepRef.current = 'session';
-    }
+    // Goals-first: after auth, user resumes toward payment (wizard sets step).
+    lastStepRef.current = 'payment';
+    void mode;
   }, []);
 
   const reportSessionContinue = useCallback(() => {

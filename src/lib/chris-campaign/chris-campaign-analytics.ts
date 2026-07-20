@@ -11,6 +11,16 @@ import {
  * `ref` is early-signups | chris-social | chris-sembroski | direct | …
  */
 
+/**
+ * Measurement checklist (goals-first funnel):
+ * 1. Baseline: historical auth-before-session vs post-ship session-before-auth.
+ * 2. Signed-out: chris_session_continue before chris_auth_success rate.
+ * 3. Paid: chris_checkout_success / chris_booking_page_view and / chris_session_continue.
+ * 4. Exit last_step distribution: session | account | payment | stripe.
+ * 5. Draft restore: QA only (banner); no BI dashboard.
+ * 6. Segment by ref (early-access vs public) when volume allows.
+ */
+
 export type ChrisAnalyticsPage = '/talk-with-chris' | '/booking';
 
 export type ChrisAnalyticsSource = 'early_access' | 'full';
