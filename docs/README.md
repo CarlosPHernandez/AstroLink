@@ -40,7 +40,7 @@ Agent skill: `skills/transcript-translation/SKILL.md` · Cursor rule: `.cursor/r
 
 | Doc | Quadrant | Description |
 |-----|----------|-------------|
-| [how-to/chris-campaign-launch-checklist.md](./how-to/chris-campaign-launch-checklist.md) | How-to | Production env, dual pricing ($180 early / $200 public), July 20 earliest date, smoke tests |
+| [how-to/chris-campaign-launch-checklist.md](./how-to/chris-campaign-launch-checklist.md) | How-to | Production env, $250/hr whole-dollar duration menu (early vs full), July 20 earliest date, smoke tests |
 | [how-to/chris-early-waitlist-email-automation.md](./how-to/chris-early-waitlist-email-automation.md) | How-to | Pre-booking Resend waitlist sequence templates and exit rules |
 | [how-to/marketing-referrer-taxonomy.md](./how-to/marketing-referrer-taxonomy.md) | How-to | `ref` values including `early-signups`, `chris-social`, `chris-sembroski` |
 | [how-to/stripe-production-cutover.md](./how-to/stripe-production-cutover.md) | How-to | Live Stripe keys, webhook, first real charge |
