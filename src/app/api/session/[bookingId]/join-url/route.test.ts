@@ -39,6 +39,7 @@ function buildBooking(
     showCaptionsForBuyer: false,
     e2eCaptionsStub: false,
     scheduledAt,
+    durationMinutes: 30,
     briefing: null,
     ...overrides,
   };
@@ -72,6 +73,7 @@ describe('GET /api/session/[bookingId]/join-url', () => {
       userName: 'Chris Sembroski',
       isOwner: true,
       scheduledAt,
+      durationMinutes: 30,
     });
   });
 

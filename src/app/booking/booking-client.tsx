@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BookingExpertPicker } from '@/components/booking/booking-expert-picker';
+import { SessionSchedulePicker } from '@/components/booking/session-schedule-picker';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 import {
@@ -625,18 +626,14 @@ export default function BookingClient({
 
                   <section>
                     <h2 className={sectionTitleClass}>Schedule</h2>
-                    <p className={sectionHintClass}>Pick a time that works in your timezone.</p>
-                    <label htmlFor="scheduledAt" className="sr-only">
-                      Session date and time
-                    </label>
-                    <input
-                      id="scheduledAt"
-                      data-testid="booking-scheduled-at"
-                      type="datetime-local"
-                      required
-                      className={fieldClass}
+                    <p className={sectionHintClass}>
+                      Pick a start time. Presets are Eastern (ops); the field uses your device
+                      timezone.
+                    </p>
+                    <SessionSchedulePicker
                       value={form.scheduledAt}
-                      onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })}
+                      onChange={(scheduledAt) => setForm({ ...form, scheduledAt })}
+                      fieldClass={fieldClass}
                     />
                   </section>
 

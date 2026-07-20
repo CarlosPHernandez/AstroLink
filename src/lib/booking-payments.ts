@@ -9,9 +9,16 @@ export function isStripePaymentsSkipped(): boolean {
 }
 
 export function isDevSkippedPaymentIntent(paymentIntentId: string): boolean {
-  return paymentIntentId.startsWith('dev_skip_');
+  return (
+    paymentIntentId.startsWith('dev_skip_') || paymentIntentId.startsWith('free_session_')
+  );
 }
 
 export function createDevSkippedPaymentIntentId(): string {
   return `dev_skip_${crypto.randomUUID()}`;
+}
+
+/** Production-safe free bookings ($0 charge) — no Stripe PaymentIntent. */
+export function createFreeSessionPaymentIntentId(): string {
+  return `free_session_${crypto.randomUUID()}`;
 }

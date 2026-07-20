@@ -241,6 +241,39 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     ).rejects.toBeInstanceOf(ChrisCampaignSoldOutError);
   });
 
+  it('confirms free ($0) mentors without Stripe PaymentIntent', async () => {
+    mockIsStripePaymentsSkipped.mockReturnValue(false);
+    mockMentorSingle.mockResolvedValue({
+      data: {
+        ...approvedMentor,
+        live_session_price_cents: 0,
+      },
+      error: null,
+    });
+
+    const agent = new BookingAgent();
+    const result = await agent.bookSession({
+      menteeId: 'mentee-1',
+      mentorId: 'mentor-1',
+      serviceType: 'session_1on1',
+      scheduledAt: '2030-01-01T18:00:00.000Z',
+      menteeGoals: 'Dry-run dual device',
+      menteeBackground: 'Ops',
+      durationMinutes: 15,
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        bookingId: 'booking-1',
+        stripeClientSecret: null,
+        skipPayment: true,
+        amountCents: 0,
+      }),
+    );
+    expect(mockStripePaymentIntentsCreate).not.toHaveBeenCalled();
+    expect(mockGetOrCreateStripeCustomerForMentee).not.toHaveBeenCalled();
+  });
+
   it('creates Chris campaign PaymentIntent at full $190/45-min menu for social/public ref', async () => {
     mockIsStripePaymentsSkipped.mockReturnValue(false);
 
