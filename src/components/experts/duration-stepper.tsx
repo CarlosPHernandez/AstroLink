@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import {
   SESSION_DURATION_DEFAULT,
   SESSION_DURATION_MAX,
@@ -14,12 +15,18 @@ type DurationStepperProps = {
   value: number;
   onChange: (minutes: number) => void;
   className?: string;
+  /** Tighter spacing; hides the min/step hint (use when price or other chrome sits nearby). */
+  compact?: boolean;
+  /** Renders opposite the “Session length” label (e.g. live price chip). */
+  headerEnd?: ReactNode;
 };
 
 export function DurationStepper({
   value,
   onChange,
   className = '',
+  compact = false,
+  headerEnd,
 }: DurationStepperProps) {
   const minutes = clampSessionDurationMinutes(value || SESSION_DURATION_DEFAULT);
   const filled = filledSegmentCount(minutes);
@@ -31,8 +38,15 @@ export function DurationStepper({
   };
 
   return (
-    <div className={`experts-duration ${className}`.trim()}>
-      <p className="experts-duration__label">Session length</p>
+    <div
+      className={`experts-duration${compact ? ' experts-duration--compact' : ''} ${className}`.trim()}
+    >
+      <div className="experts-duration__header">
+        <p className="experts-duration__label">Session length</p>
+        {headerEnd ? (
+          <div className="experts-duration__header-end">{headerEnd}</div>
+        ) : null}
+      </div>
 
       <div
         className="experts-duration__segs"
@@ -82,10 +96,12 @@ export function DurationStepper({
         </button>
       </div>
 
-      <p className="experts-duration__hint">
-        {SESSION_DURATION_MIN} min minimum · {SESSION_DURATION_STEP} min steps · up to{' '}
-        {SESSION_DURATION_MAX} min
-      </p>
+      {!compact ? (
+        <p className="experts-duration__hint">
+          {SESSION_DURATION_MIN} min minimum · {SESSION_DURATION_STEP} min steps · up to{' '}
+          {SESSION_DURATION_MAX} min
+        </p>
+      ) : null}
     </div>
   );
 }

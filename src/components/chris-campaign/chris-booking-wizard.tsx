@@ -758,7 +758,11 @@ export function ChrisBookingWizard({
                 />
 
                 <div className="mb-md">
-                  <DurationStepper value={durationMinutes} onChange={setDurationMinutes} />
+                  <DurationStepper
+                    value={durationMinutes}
+                    onChange={setDurationMinutes}
+                    compact
+                  />
                 </div>
 
                 <div className="flex flex-col gap-md">

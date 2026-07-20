@@ -50,6 +50,7 @@ export function ChrisMobileBookingCard({
   const chargeCents = resolveChrisChargeCents(marketingReferrer, durationMinutes);
   const originalCents = resolveChrisOriginalPriceCents(durationMinutes);
   const isEarly = resolveChrisPricingTier(marketingReferrer) === 'early_access';
+  const showWas = isEarly && originalCents > chargeCents;
 
   if (!bookingEnabled) {
     return (
@@ -107,49 +108,50 @@ export function ChrisMobileBookingCard({
     );
   }
 
+  const priceChip = (
+    <p
+      data-testid="chris-landing-price-mobile"
+      className="chris-price-chip"
+      aria-live="polite"
+    >
+      {showWas ? (
+        <span className="chris-price-chip__was">{formatMoney(originalCents)}</span>
+      ) : null}
+      <span className="chris-price-chip__now">{formatMoney(chargeCents)}</span>
+      {isEarly ? <span className="chris-price-chip__tag">early</span> : null}
+    </p>
+  );
+
   return (
     <div
-      className="mb-4 flex flex-col gap-4 border-0 bg-transparent py-4 shadow-none"
+      className="mb-3 flex flex-col gap-3 border-0 bg-transparent px-4 py-3 shadow-none"
       data-testid="chris-mobile-booking-card"
     >
-      <div className="flex flex-col gap-2 px-4">
-        <p className="text-xs font-medium uppercase tracking-widest text-outline-variant/70">
-          Choose your 1:1 call
-        </p>
-        <ChrisCampaignDateStrip {...dateSelection} compact />
-        <DurationStepper value={durationMinutes} onChange={setDurationMinutes} />
-        <p
-          data-testid="chris-landing-price-mobile"
-          className="text-sm font-medium text-white/90"
-          aria-live="polite"
-        >
-          {isEarly && originalCents > chargeCents ? (
-            <>
-              <span className="mr-2 text-white/50 line-through">{formatMoney(originalCents)}</span>
-              <span>
-                {formatMoney(chargeCents)} early access · {durationMinutes} min
-              </span>
-            </>
-          ) : (
-            <span>
-              {formatMoney(chargeCents)} · {durationMinutes} min
-            </span>
-          )}
-        </p>
+      <div className="chris-session-config">
+        <p className="chris-session-config__label">Choose your 1:1 call</p>
+        <div className="chris-session-config__block">
+          <ChrisCampaignDateStrip {...dateSelection} compact />
+          <DurationStepper
+            value={durationMinutes}
+            onChange={setDurationMinutes}
+            compact
+            headerEnd={priceChip}
+          />
+        </div>
       </div>
 
       <button
         type="button"
         onClick={handleBook}
-        className="mx-4 flex items-center justify-center gap-3 rounded-lg bg-white px-4 py-4 text-xs font-semibold uppercase tracking-widest text-primary-container shadow-lg shadow-white/10 transition-all duration-150 hover:bg-white/90 active:scale-[0.98]"
+        className="flex w-full items-center justify-center gap-3 rounded-lg bg-white px-4 py-3.5 text-xs font-semibold uppercase tracking-widest text-primary-container shadow-lg shadow-white/10 transition-all duration-150 hover:bg-white/90 active:scale-[0.98]"
         data-testid="chris-request-session"
         aria-label="Submit booking request for a private session"
       >
         <span>Book Private Session</span>
         <MaterialIcon name="arrow_forward" className="text-[18px] text-primary-container" />
       </button>
-      <p className="px-4 text-center text-[10px] tracking-wide text-outline/60">
-        Sessions are scheduled based on availability. Approval required.
+      <p className="chris-session-config__footnote px-0">
+        Scheduled on availability · Approval required
       </p>
     </div>
   );
