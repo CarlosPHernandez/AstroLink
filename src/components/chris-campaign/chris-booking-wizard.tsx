@@ -16,9 +16,14 @@ import { FieldError } from '@/components/forms/field-error';
 import {
   CHRIS_BOOKING_CAMPAIGN_QUERY,
   CHRIS_DISCOUNT_NAME,
-  CHRIS_DISCOUNT_PERCENT,
-  CHRIS_ORIGINAL_PRICE_CENTS,
+  CHRIS_GOALS_MIN_CHARS,
 } from '@/lib/chris-campaign/chris-campaign-constants';
+import {
+  clearDraft,
+  isChrisDraftSessionComplete,
+  loadDraft,
+  saveDraft,
+} from '@/lib/chris-campaign/chris-booking-draft';
 import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-booking-mode';
 import {
   trackChrisAuthSuccess,
@@ -32,6 +37,7 @@ import {
 import {
   chrisEarlyAccessDiscountCents,
   resolveChrisChargeCents,
+  resolveChrisOriginalPriceCents,
   resolveChrisPricingTier,
 } from '@/lib/chris-campaign/chris-pricing';
 import { useChrisWizardAnalytics } from '@/lib/chris-campaign/use-chris-wizard-analytics';
@@ -40,11 +46,13 @@ import { ChrisBookingFulfillmentOverlay } from '@/components/chris-campaign/chri
 import { ChrisBookingNextSteps } from '@/components/chris-campaign/chris-booking-next-steps';
 import { ChrisBriefingModal } from '@/components/chris-campaign/chris-briefing-modal';
 import { useChrisBookingFulfillment } from '@/components/chris-campaign/use-chris-booking-fulfillment';
+import { DurationStepper } from '@/components/experts/duration-stepper';
 import { BookBodySchema } from '@/lib/book-request-schema';
 import { getPostBookingDashboardPath } from '@/lib/dashboard-paths';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 import type { SessionData } from '@/lib/session';
+import { clampSessionDurationMinutes } from '@/lib/session-duration';
 import {
   type FieldErrors,
   fieldErrorInputClass,
@@ -88,6 +96,7 @@ type ChrisBookingWizardProps = {
   marketingReferrer: string | null;
   prefillScheduledAt: string | null;
   prefillDate: string | null;
+  prefillDurationMinutes?: number;
 };
 
 function formatMoney(cents: number) {
@@ -105,15 +114,31 @@ function formatChrisSessionDate(isoDate: string): string {
   }).format(date);
 }
 
-function ChrisWizardProgress({ step }: { step: WizardStep }) {
-  const activeIndex = step === 'account' ? 0 : step === 'session' ? 1 : 2;
+function ChrisWizardProgress({
+  step,
+  signedIn,
+}: {
+  step: WizardStep;
+  signedIn: boolean;
+}) {
+  // Goals-first order: signed-out session → account → payment; signed-in session → payment.
+  const activeIndex = signedIn
+    ? step === 'payment'
+      ? 1
+      : 0
+    : step === 'session'
+      ? 0
+      : step === 'account'
+        ? 1
+        : 2;
+  const segments = signedIn ? [0, 1] : [0, 1, 2];
   return (
     <div className="flex flex-col items-center gap-md py-md">
       <span className="text-[10px] font-medium uppercase tracking-widest text-white/40">
         Progress
       </span>
       <div className="flex items-center gap-xs">
-        {[0, 1, 2].map((index) => (
+        {segments.map((index) => (
           <div
             key={index}
             className={
@@ -199,7 +224,7 @@ function ChrisWizardAccountStep({
         </h1>
         <p className="text-base text-white/70">
           {mode === 'register'
-            ? 'Introduce yourself to Chris!'
+            ? 'Create an account to lock the session you already described.'
             : 'Welcome back — pick up where you left off.'}
         </p>
       </div>
@@ -281,8 +306,8 @@ function ChrisWizardAccountStep({
             {pending
               ? 'Please wait…'
               : mode === 'register'
-                ? 'Continue to Goals'
-                : 'Continue'}
+                ? 'Create account to lock this session'
+                : 'Sign in to continue'}
           </button>
           <button
             type="button"
@@ -305,48 +330,116 @@ export function ChrisBookingWizard({
   marketingReferrer,
   prefillScheduledAt,
   prefillDate,
+  prefillDurationMinutes,
 }: ChrisBookingWizardProps) {
   const router = useRouter();
-  const chrisDurationMinutes = getChrisCampaignDurationMinutes();
+  const defaultDurationMinutes = getChrisCampaignDurationMinutes();
 
-  const initialStep: WizardStep = session ? 'session' : 'account';
-  const [step, setStep] = useState<WizardStep>(initialStep);
-
-  useEffect(() => {
-    if (session && step === 'account') {
-      const frame = window.requestAnimationFrame(() => setStep('session'));
-      return () => window.cancelAnimationFrame(frame);
-    }
-    return undefined;
-  }, [session, step]);
+  // Goals-first: default to session; mount hydrate may jump to account/payment from draft.
+  const [step, setStep] = useState<WizardStep>('session');
   const [goals, setGoals] = useState('');
   const [background, setBackground] = useState('');
   const [scheduledAt, setScheduledAt] = useState(
     prefillScheduledAt ?? `${new Date().toISOString().slice(0, 10)}T12:00`,
+  );
+  const [durationMinutes, setDurationMinutes] = useState(() =>
+    clampSessionDurationMinutes(prefillDurationMinutes ?? defaultDurationMinutes),
   );
   // Note: time is defaulted (day selection is the primary UI for the request phase per current scope).
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [stepTransitioning, setStepTransitioning] = useState(false);
+  const [showRestoreBanner, setShowRestoreBanner] = useState(false);
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const fulfillment = useChrisBookingFulfillment();
   const wizardAnalytics = useChrisWizardAnalytics({ marketingReferrer });
   const checkoutSuccessTracked = useRef(false);
   const bookingPageViewTracked = useRef(false);
+  const draftHydrated = useRef(false);
 
   const displayDate = prefillDate ?? scheduledAt.slice(0, 10);
   const chrisPricingTier = resolveChrisPricingTier(marketingReferrer);
-  const chrisChargeCents = resolveChrisChargeCents(marketingReferrer);
-  const chrisLaunchDiscountCents = chrisEarlyAccessDiscountCents(marketingReferrer);
+  const chrisChargeCents = resolveChrisChargeCents(marketingReferrer, durationMinutes);
+  const chrisOriginalPriceCents = resolveChrisOriginalPriceCents(durationMinutes);
+  const chrisLaunchDiscountCents = chrisEarlyAccessDiscountCents(
+    marketingReferrer,
+    durationMinutes,
+  );
   const isEarlyAccessPricing = chrisPricingTier === 'early_access';
+
+  // Hydrate draft once on client mount (localStorage is client-only).
+  useEffect(() => {
+    if (draftHydrated.current) return;
+    draftHydrated.current = true;
+
+    const draft = loadDraft();
+    const nextGoals = draft?.goals ?? '';
+    const nextBackground = draft?.background ?? '';
+
+    if (nextGoals.trim() || nextBackground.trim()) {
+      setGoals(nextGoals);
+      setBackground(nextBackground);
+      setShowRestoreBanner(true);
+    }
+
+    let nextDurationMinutes = clampSessionDurationMinutes(
+      prefillDurationMinutes ?? defaultDurationMinutes,
+    );
+    if (prefillDurationMinutes == null && draft?.durationMinutes != null) {
+      nextDurationMinutes = clampSessionDurationMinutes(draft.durationMinutes);
+      setDurationMinutes(nextDurationMinutes);
+    }
+
+    let nextScheduledAt =
+      prefillScheduledAt ?? `${new Date().toISOString().slice(0, 10)}T12:00`;
+    if (!prefillScheduledAt && draft?.scheduledAt) {
+      nextScheduledAt = draft.scheduledAt;
+      setScheduledAt(draft.scheduledAt);
+    }
+
+    const complete = isChrisDraftSessionComplete({
+      goals: nextGoals,
+      durationMinutes: nextDurationMinutes,
+      scheduledAt: nextScheduledAt,
+    });
+
+    if (session && complete) {
+      setStep('payment');
+    } else if (!session && complete) {
+      setStep('account');
+    } else {
+      setStep('session');
+    }
+  }, [defaultDurationMinutes, prefillDurationMinutes, prefillScheduledAt, session]);
+
+  // Post-auth resume: complete draft/live form → payment; else session. Do not always force session.
+  useEffect(() => {
+    if (!session) return;
+    if (step !== 'account') return;
+    const draft = loadDraft();
+    const complete = isChrisDraftSessionComplete({
+      goals: draft?.goals ?? goals,
+      durationMinutes: draft?.durationMinutes ?? durationMinutes,
+      scheduledAt: draft?.scheduledAt ?? scheduledAt,
+    });
+    const liveComplete = isChrisDraftSessionComplete({
+      goals,
+      durationMinutes,
+      scheduledAt,
+    });
+    const frame = window.requestAnimationFrame(() => {
+      setStep(liveComplete || complete ? 'payment' : 'session');
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [session, step, goals, durationMinutes, scheduledAt]);
 
   useEffect(() => {
     if (bookingPageViewTracked.current) return;
     bookingPageViewTracked.current = true;
     trackChrisBookingPageView(marketingReferrer, session !== null);
-    wizardAnalytics.reportLastStep(initialStep);
-  }, [initialStep, marketingReferrer, session, wizardAnalytics]);
+    wizardAnalytics.reportLastStep('session');
+  }, [marketingReferrer, session, wizardAnalytics]);
 
   useEffect(() => {
     if (checkout?.clientSecret) {
@@ -361,6 +454,7 @@ export function ChrisBookingWizard({
     checkoutSuccessTracked.current = true;
     trackChrisCheckoutSuccess(marketingReferrer, chrisChargeCents);
     wizardAnalytics.reportPaid();
+    clearDraft();
   }, [chrisChargeCents, fulfillment.view, marketingReferrer, wizardAnalytics]);
 
   const submitBooking = async () => {
@@ -377,7 +471,7 @@ export function ChrisBookingWizard({
       scheduledAt: new Date(scheduledAt).toISOString(),
       goals,
       background,
-      durationMinutes: chrisDurationMinutes,
+      durationMinutes,
       campaign: CHRIS_BOOKING_CAMPAIGN_QUERY,
       ...(marketingReferrer ? { marketingReferrer } : {}),
     };
@@ -456,7 +550,7 @@ export function ChrisBookingWizard({
       scheduledAt: new Date(scheduledAt).toISOString(),
       goals,
       background,
-      durationMinutes: chrisDurationMinutes,
+      durationMinutes,
       campaign: CHRIS_BOOKING_CAMPAIGN_QUERY,
     };
 
@@ -468,11 +562,27 @@ export function ChrisBookingWizard({
       return;
     }
 
-    setFieldErrors({});
-    setError(null);
-    setStepTransitioning(true);
+    saveDraft({
+      goals,
+      background,
+      durationMinutes,
+      scheduledAt,
+      date: displayDate,
+      marketingReferrer,
+    });
     trackChrisSessionContinue(marketingReferrer);
     wizardAnalytics.reportSessionContinue();
+
+    setFieldErrors({});
+    setError(null);
+
+    if (!session) {
+      setStep('account');
+      setStepTransitioning(false);
+      return;
+    }
+
+    setStepTransitioning(true);
 
     const advanceToPayment = () => {
       setStep('payment');
@@ -535,6 +645,7 @@ export function ChrisBookingWizard({
       <ChrisWizardHeader mentor={mentor} />
       <ChrisWizardProgress
         step={checkout || stepTransitioning || fulfillment.isOverlayActive ? 'payment' : step}
+        signedIn={session !== null}
       />
 
       {fulfillment.overlayPhase ? (
@@ -582,7 +693,10 @@ export function ChrisBookingWizard({
             {step === 'account' ? (
               <ChrisWizardAccountStep
                 onAuthSuccess={handleAuthSuccess}
-                onSuccess={() => setStep('session')}
+                onSuccess={() => {
+                  // Step advance is handled by the post-auth resume effect once
+                  // session is available (payment if draft/live complete, else session).
+                }}
               />
             ) : null}
 
@@ -597,10 +711,38 @@ export function ChrisBookingWizard({
                     What do you want to cover?
                   </h1>
                   <p className="text-base text-white/70">
-                    Chris uses this to prepare for your {chrisDurationMinutes}-minute session.
+                    Chris uses this to prepare for your {durationMinutes}-minute session.
                   </p>
-                  <p className="text-sm text-[#5b7fe6]">{chrisDurationMinutes}-minute live 1:1</p>
+                  <p className="text-sm text-[#5b7fe6]">{durationMinutes}-minute live 1:1</p>
                 </div>
+
+                {showRestoreBanner ? (
+                  <div
+                    data-testid="chris-draft-restore-banner"
+                    className="mb-md rounded-lg border border-white/15 bg-white/5 px-md py-sm text-sm text-white/90"
+                    role="status"
+                  >
+                    <p>Continue where you left off</p>
+                    <div className="mt-xs flex gap-sm">
+                      <button type="button" onClick={() => setShowRestoreBanner(false)}>
+                        Dismiss
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="chris-draft-start-over"
+                        onClick={() => {
+                          clearDraft();
+                          setGoals('');
+                          setBackground('');
+                          setShowRestoreBanner(false);
+                          setStep('session');
+                        }}
+                      >
+                        Start over
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
 
                 <label htmlFor="booking-scheduled-at" className="sr-only">
                   Session date and time
@@ -614,6 +756,14 @@ export function ChrisBookingWizard({
                   onChange={(e) => setScheduledAt(e.target.value)}
                   tabIndex={-1}
                 />
+
+                <div className="mb-md">
+                  <DurationStepper
+                    value={durationMinutes}
+                    onChange={setDurationMinutes}
+                    compact
+                  />
+                </div>
 
                 <div className="flex flex-col gap-md">
                   <div className="flex flex-col gap-xs">
@@ -647,12 +797,11 @@ export function ChrisBookingWizard({
 
                   <div className="flex flex-col gap-xs">
                     <label className={chrisLabelClass} htmlFor="booking-background">
-                      Your background
+                      Your background (Optional)
                     </label>
                     <textarea
                       id="booking-background"
                       data-testid="booking-background"
-                      required
                       rows={4}
                       value={background}
                       onChange={(e) => {
@@ -676,7 +825,8 @@ export function ChrisBookingWizard({
 
                   <p className="flex items-start gap-xs text-[13px] text-white/50">
                     <span className="material-symbols-outlined text-[16px]">info</span>
-                    At least 10 characters each — feeds your pre-call briefing.
+                    Goals need at least {CHRIS_GOALS_MIN_CHARS} characters so Chris can prepare.
+                    Background is optional.
                   </p>
                 </div>
 
@@ -698,19 +848,12 @@ export function ChrisBookingWizard({
                         />
                         Preparing checkout…
                       </>
+                    ) : session ? (
+                      'Continue to payment'
                     ) : (
-                      'Continue to Payment'
+                      'Continue to create account'
                     )}
                   </button>
-                  {!session ? (
-                    <button
-                      type="button"
-                      onClick={() => setStep('account')}
-                      className="text-xs uppercase tracking-widest text-white/70 hover:text-white"
-                    >
-                      Back
-                    </button>
-                  ) : null}
                 </div>
               </section>
             ) : null}
@@ -725,7 +868,7 @@ export function ChrisBookingWizard({
                     <div className="flex justify-between text-white/60">
                       <dt>Duration</dt>
                       <dd className="text-white">
-                        {chrisDurationMinutes} minutes · Live video call
+                        {durationMinutes} minutes · Live video call
                       </dd>
                     </div>
                     <div className="flex justify-between text-white/60">
@@ -738,18 +881,18 @@ export function ChrisBookingWizard({
                     </div>
                   </dl>
 
-                  {/* Early-access: show list + discount. Public/social: flat $200. */}
+                  {/* Early-access: show list + discount. Public/social: full price (duration-scaled). */}
                   {isEarlyAccessPricing ? (
                     <div className="mt-3 space-y-1.5 text-sm">
                       <div className="flex justify-between text-white/60">
                         <dt>Original price</dt>
                         <dd className="text-white line-through">
-                          {formatMoney(CHRIS_ORIGINAL_PRICE_CENTS)}
+                          {formatMoney(chrisOriginalPriceCents)}
                         </dd>
                       </div>
                       <div className="flex justify-between text-white/60">
                         <dt>
-                          {CHRIS_DISCOUNT_NAME} launch discount ({CHRIS_DISCOUNT_PERCENT}% off)
+                          {CHRIS_DISCOUNT_NAME} discount
                         </dt>
                         <dd className="text-[#4ade80]">
                           -{formatMoney(chrisLaunchDiscountCents)}
@@ -786,6 +929,15 @@ export function ChrisBookingWizard({
                   className="mb-6 w-full rounded-xl bg-white py-4 text-base font-semibold text-[#1c1c1c] shadow-lg transition-transform hover:bg-gray-200 active:scale-[0.98] disabled:opacity-50"
                 >
                   {loading ? 'Preparing checkout…' : 'Pay & confirm session'}
+                </button>
+
+                <button
+                  type="button"
+                  data-testid="chris-edit-session"
+                  onClick={() => setStep('session')}
+                  className="mb-3 w-full text-sm text-white/80 transition-colors hover:text-white"
+                >
+                  Edit goals or length
                 </button>
 
                 <button

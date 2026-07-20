@@ -4,6 +4,37 @@ export const CHRIS_CAMPAIGN_BOOKING_START = new Date(Date.UTC(2026, 6, 20));
 /** Calendar day for date-hold tiles / validation (Eastern Time). */
 export const CHRIS_BOOKING_DATE_TIMEZONE = 'America/New_York';
 
+/**
+ * Bookable weekdays for Chris date strip / validation.
+ * Monday and Tuesday are intentionally closed (sessions start Wednesday).
+ * Uses UTC calendar weekday for YYYY-MM-DD campaign dates.
+ */
+export function isChrisBookableWeekday(isoDate: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) {
+    return false;
+  }
+  const weekday = new Date(`${isoDate}T12:00:00Z`).getUTCDay(); // 0=Sun … 6=Sat
+  return weekday !== 1 && weekday !== 2;
+}
+
+function addUtcCalendarDays(isoDate: string, days: number): string {
+  const date = new Date(`${isoDate}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+/** Advance YYYY-MM-DD until it lands on a bookable weekday (Wed–Sun). */
+export function nextChrisBookableIsoDate(isoDate: string): string {
+  let cursor = isoDate;
+  for (let i = 0; i < 7; i += 1) {
+    if (isChrisBookableWeekday(cursor)) {
+      return cursor;
+    }
+    cursor = addUtcCalendarDays(cursor, 1);
+  }
+  return isoDate;
+}
+
 export type ChrisCampaignDateTile = {
   isoDate: string;
   month: string;
@@ -53,22 +84,27 @@ export function calendarDateInEastern(now: Date = new Date()): string {
 }
 
 /**
- * Earliest bookable calendar day: max(campaign start, today Eastern).
+ * Earliest bookable calendar day: max(campaign start, today Eastern),
+ * advanced past Monday/Tuesday when needed.
  * Returns YYYY-MM-DD.
  */
 export function getChrisMinBookableIsoDate(now: Date = new Date()): string {
   const campaignStartIso = CHRIS_CAMPAIGN_BOOKING_START.toISOString().slice(0, 10);
   const todayEastern = calendarDateInEastern(now);
-  return todayEastern > campaignStartIso ? todayEastern : campaignStartIso;
+  const raw = todayEastern > campaignStartIso ? todayEastern : campaignStartIso;
+  return nextChrisBookableIsoDate(raw);
 }
 
-/** True when scheduledAt (ISO or datetime-local) is on/after min bookable day. */
+/** True when scheduledAt is on/after min bookable day and not Mon/Tue. */
 export function isChrisScheduledDateBookable(
   scheduledAt: string,
   now: Date = new Date(),
 ): boolean {
   const day = scheduledAt.trim().slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+    return false;
+  }
+  if (!isChrisBookableWeekday(day)) {
     return false;
   }
   return day >= getChrisMinBookableIsoDate(now);
@@ -108,7 +144,7 @@ export function getChrisCampaignMonthLabel(year: number, monthIndex: number): st
 
 /**
  * Bookable day tiles for a calendar month.
- * Only days on/after campaign start and on/after today (Eastern).
+ * Only days on/after campaign start, on/after today (Eastern), and Wed–Sun.
  */
 export function getChrisCampaignDatesForMonth(
   year: number,
@@ -130,6 +166,9 @@ export function getChrisCampaignDatesForMonth(
     }
     const tile = toDateTile(new Date(cursor));
     if (tile.isoDate < minIso) {
+      continue;
+    }
+    if (!isChrisBookableWeekday(tile.isoDate)) {
       continue;
     }
     tiles.push(tile);

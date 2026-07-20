@@ -241,7 +241,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     ).rejects.toBeInstanceOf(ChrisCampaignSoldOutError);
   });
 
-  it('creates Chris campaign PaymentIntent at full $200 for social/public ref', async () => {
+  it('creates Chris campaign PaymentIntent at full $190/45-min menu for social/public ref', async () => {
     mockIsStripePaymentsSkipped.mockReturnValue(false);
 
     const agent = new BookingAgent();
@@ -261,7 +261,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
         bookingId: 'booking-1',
         stripeClientSecret: 'pi_test_secret_123',
         skipPayment: false,
-        amountCents: 20000,
+        amountCents: 19000,
       }),
     );
     expect(mockGetOrCreateStripeCustomerForMentee).toHaveBeenCalledWith('mentee-1');
@@ -270,7 +270,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     const [paymentIntentParams, requestOptions] = mockStripePaymentIntentsCreate.mock.calls[0];
     expect(paymentIntentParams).toEqual(
       expect.objectContaining({
-        amount: 20000,
+        amount: 19000,
         currency: 'usd',
         customer: 'cus_test_123',
         metadata: expect.objectContaining({
@@ -280,10 +280,10 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
           service_type: 'session_1on1',
           campaign_id: 'chris-sembroski',
           marketing_referrer: 'chris-social',
-          pricing_mode: 'chris_full_200',
+          pricing_mode: 'chris_full_250',
           pricing_tier: 'full',
-          original_amount_cents: '20000',
-          charged_amount_cents: '20000',
+          original_amount_cents: '19000',
+          charged_amount_cents: '19000',
         }),
       }),
     );
@@ -294,7 +294,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     });
   });
 
-  it('creates Chris campaign PaymentIntent at $180 early-access for early-signups ref', async () => {
+  it('creates Chris campaign PaymentIntent at $170 early-access/45-min for early-signups ref', async () => {
     mockIsStripePaymentsSkipped.mockReturnValue(false);
 
     const agent = new BookingAgent();
@@ -309,22 +309,22 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
       marketingReferrer: 'early-signups',
     });
 
-    expect(result.amountCents).toBe(18000);
+    expect(result.amountCents).toBe(17000);
     const [paymentIntentParams] = mockStripePaymentIntentsCreate.mock.calls[0];
     expect(paymentIntentParams).toEqual(
       expect.objectContaining({
-        amount: 18000,
+        amount: 17000,
         metadata: expect.objectContaining({
           marketing_referrer: 'early-signups',
-          pricing_mode: 'chris_early_access_180',
+          pricing_mode: 'chris_early_access_menu',
           pricing_tier: 'early_access',
-          charged_amount_cents: '18000',
-          original_amount_cents: '20000',
+          charged_amount_cents: '17000',
+          original_amount_cents: '19000',
           discount_label: 'Inspired24',
-          discount_percent: '10',
         }),
       }),
     );
+    expect(paymentIntentParams.metadata).not.toHaveProperty('discount_percent');
   });
 
   it('keeps non-campaign PaymentIntent amount server-calculated without Chris pricing metadata', async () => {

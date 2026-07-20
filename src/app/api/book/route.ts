@@ -9,6 +9,7 @@ import {
 import { screenBookingIntake } from '@/lib/intake-moderation';
 import { isLlmRateLimitError } from '@/lib/llm';
 import { CHRIS_SESSION_DURATION_MINUTES } from '@/lib/chris-campaign/chris-campaign-constants';
+import { clampSessionDurationMinutes } from '@/lib/session-duration';
 import { ChrisCampaignSoldOutError } from '@/lib/chris-campaign/chris-campaign-slots';
 import { resolveChrisCampaignForBooking } from '@/lib/chris-campaign/validate-chris-booking';
 import { getSession } from '@/lib/session';
@@ -75,7 +76,9 @@ export async function POST(request: Request) {
     }
 
     const durationMinutes = chrisCampaign
-      ? CHRIS_SESSION_DURATION_MINUTES
+      ? clampSessionDurationMinutes(
+          body.durationMinutes ?? CHRIS_SESSION_DURATION_MINUTES,
+        )
       : body.durationMinutes;
 
     const agent = new BookingAgent();

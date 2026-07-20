@@ -6,11 +6,13 @@ Use this before enabling Chris Sembroski limited booking in **production** (`APP
 
 | Fact | Value |
 |------|--------|
-| Early-access price | **$180** when `marketing_referrer` / `ref=early-signups` |
-| Public / social price | **$200** for all other refs (including `chris-social`, `chris-sembroski`, missing ref) |
+| Hourly anchor | **$250/hr** whole-dollar menu (not linear pro-rata) |
+| Full menu | **$65 / $125 / $190 / $250** for 15 / 30 / 45 / 60 min |
+| Early-access menu | **$60 / $115 / $170 / $225** when `ref=early-signups` |
+| Default length (UI) | **45 min** → **$190** full / **$170** early |
 | Slot scarcity UI | Shown only for early-access (`early-signups`); hidden on social/public |
 | Earliest bookable date | **2026-07-20** (America/New_York calendar day; also never before today Eastern) |
-| Session length | 45 minutes fixed |
+| Session length | **15–60 min** in 15-min steps (stepper) |
 | Default slot cap | 15 (`CHRIS_SLOT_CAP`) |
 | Pricing helpers | `src/lib/chris-campaign/chris-pricing.ts` + `chris-campaign-constants.ts` |
 
@@ -58,8 +60,8 @@ Configure in [Supabase Dashboard → Authentication](https://supabase.com/dashbo
 
 | Audience | URL |
 |----------|-----|
-| Chris public / social (full $200) | `https://astro-link.space/talk-with-chris?ref=chris-social` (or `ref=chris-sembroski`) |
-| Waitlist email early-access ($180) | `https://astro-link.space/talk-with-chris?ref=early-signups` |
+| Chris public / social (full menu, $250/hr) | `https://astro-link.space/talk-with-chris?ref=chris-social` (or `ref=chris-sembroski`) |
+| Waitlist email early-access (early menu) | `https://astro-link.space/talk-with-chris?ref=early-signups` |
 | Waitlist generic signup | `https://astro-link.space/early-access?ref=early-signups` |
 | Sold-out fallback (auto) | `/early-access?ref=early-signups` from Chris landing |
 
@@ -68,7 +70,7 @@ Referrer ids are documented in [marketing-referrer-taxonomy.md](./marketing-refe
 ## 4. Smoke tests (production or preview with prod-like env)
 
 - [ ] `/talk-with-chris` loads (mobile short hero + video; desktop HUD)
-- [ ] **Dual price UI**: `?ref=early-signups` shows **$180** + spots remaining; `?ref=chris-social` shows **$200** and **no** limited-slot chrome
+- [ ] **Dual price UI**: `?ref=early-signups` shows early menu (e.g. **$170** at 45 min) + spots remaining; `?ref=chris-social` shows full menu (e.g. **$190** at 45 min) and **no** limited-slot chrome
 - [ ] Date strip: no days before **July 20, 2026** (and none before today Eastern)
 - [ ] `/experts` redirects to `/talk-with-chris`
 - [ ] `/` redirects to `/early-access` when `APP_MODE=waitlist`
@@ -77,7 +79,7 @@ Referrer ids are documented in [marketing-referrer-taxonomy.md](./marketing-refe
 - [ ] **Sign in** with existing Supabase user OR register with a real inbox (not `@test.com`)
 - [ ] Supabase Auth → **Confirm email** is **Off** for launch (or confirm inbox before continuing wizard)
 - [ ] Preview-only demo auth: seed mentees use real UUIDs (not `usr-…`) so `public.users` insert succeeds
-- [ ] One test booking + refund in Stripe **sandbox** before live cutover (verify $180 early vs $200 social amounts)
+- [ ] One test booking + refund in Stripe **sandbox** before live cutover (verify early menu vs full menu amounts for chosen duration)
 - [ ] **Live webhook + Chris payment smoke (after live keys)**: Register webhook to direct `https://astro-link.space/api/webhooks/stripe`. Send test `payment_intent.succeeded` from Stripe Live dashboard → clean 200 (no 308). Complete one real charge per tier (or one live charge + refund). Verify: webhook `{"received":true}`, booking `confirmed`, transaction recorded, Chris "You're booked with Chris" ticket email (`notification_deliveries`), no stuck `pending_payment`. Capture logs.
 
 ## 4b. Waitlist email blast (ops, not app deploy)
@@ -106,7 +108,7 @@ Set `CHRIS_BOOKING_ENABLED=false` in Vercel Production and redeploy. Existing pa
 ### 2026-07-15 — First paid Chris campaign booking
 
 - **Product:** Live booking on `www.astro-link.space` via `/talk-with-chris` early-access flow (`ref=early-signups`).
-- **Commerce:** Payment completed through production Stripe PaymentIntent flow (early-access tier: **$180** server-resolved charge).
+- **Commerce:** Payment completed through production Stripe PaymentIntent flow (early-access tier: server-resolved early menu charge).
 - **Attribution:** `marketing_referrer=early-signups` on booking record; admin Chris campaign metrics show referrer breakdown (Dashboard → Ops).
 - **AI agent chain:** Post-payment pre-call brief generated via audited `LLM_DECISION` logs (export via admin audit API / T8 tooling).
 - **Funnel observation:** At least one Supabase Auth account was created through the Chris wizard without a completed checkout (account step reached; no paid booking row).

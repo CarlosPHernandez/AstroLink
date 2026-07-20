@@ -49,6 +49,10 @@ export default async function BookingPage({
 
     const prefillScheduledAt = date ? chrisCampaignDateToDatetimeLocal(date) : null;
     const marketingReferrer = parseChrisCampaignReferrer(refParam ? `?ref=${refParam}` : '');
+    const parsedDuration = durationParam ? Number.parseInt(durationParam, 10) : NaN;
+    const prefillDurationMinutes = Number.isFinite(parsedDuration)
+      ? clampSessionDurationMinutes(parsedDuration)
+      : undefined;
 
     return (
       <ChrisBookingWizard
@@ -57,6 +61,7 @@ export default async function BookingPage({
         marketingReferrer={marketingReferrer ?? null}
         prefillScheduledAt={prefillScheduledAt}
         prefillDate={date?.trim() || null}
+        prefillDurationMinutes={prefillDurationMinutes}
       />
     );
   }

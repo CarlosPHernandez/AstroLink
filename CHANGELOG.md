@@ -2,6 +2,25 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.0.0] - 2026-07-20
+
+### Added
+- Chris booking funnel is **goals-first**: write session intent before account creation, then pay.
+- 48-hour localStorage draft restore (“continue where you left off”) across auth refresh and return visits.
+- Whole-dollar Chris price menu on a **$250/hr** anchor: $65 / $125 / $190 / $250 (15–60 min), with early-access menu for waitlist refs.
+- Live price chip on the Chris landing duration control; duration handoff into booking URLs.
+- Hybrid session gate: goals floor (50 chars) required; background optional for Chris campaign.
+- Wed–Sun bookable day rules for Chris campaign dates.
+
+### Changed
+- Wizard progress and analytics default to session-first (signed-out: session → account → payment).
+- Landing hero copy is duration-neutral (no fixed “45-minute only”); taller mobile hero and larger desktop portrait.
+- Inspired24 early access is labeled as a **discount** (not a fixed “10% off”).
+- Compact, borderless date + session-length block on the Chris landing.
+
+### Fixed
+- Signed-out session step no longer has a Back control that skipped goals validation before account.
+
 ## [0.7.0.0] - 2026-07-19
 
 ### Added

@@ -176,7 +176,7 @@ export function ChrisSlotPicker({
               <h1 className="chris-text-gradient text-[1.65rem] font-semibold leading-[1.15] tracking-tight">
                 {phase === 'success'
                   ? 'You’re set with Chris'
-                  : 'Pick a new 45-minute time'}
+                  : 'Pick a new session time'}
               </h1>
               <p className="mt-2 text-sm font-medium leading-snug text-white/90">
                 {phase === 'success'
@@ -204,7 +204,7 @@ export function ChrisSlotPicker({
 
                 <div className="px-4">
                   <p className="mb-3 px-1 text-xs font-medium uppercase tracking-widest text-outline-variant/70">
-                    Choose your time · 45 min · Pacific
+                    Choose your time · Pacific
                   </p>
                   <TimeGrid
                     slots={daySlots}
@@ -271,7 +271,7 @@ export function ChrisSlotPicker({
             AstroLink
           </Link>
           <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-outline-variant/70">
-            Reschedule · 45 min
+            Reschedule · session
           </span>
         </nav>
 
@@ -285,7 +285,7 @@ export function ChrisSlotPicker({
                 <h1 className="chris-fade-in-up chris-delay-200 chris-copy-max w-full text-3xl font-semibold leading-[1.1] tracking-tight text-white sm:text-4xl md:text-[2.5rem] lg:text-5xl">
                   {phase === 'success'
                     ? 'You’re set with Chris'
-                    : 'Pick a new 45-minute time'}
+                    : 'Pick a new session time'}
                 </h1>
                 <p className="chris-fade-in-up chris-delay-250 chris-copy-max w-full text-base font-medium leading-snug text-white/90 sm:text-lg">
                   {phase === 'success'
@@ -330,7 +330,7 @@ export function ChrisSlotPicker({
 
                     <div className="flex flex-col gap-3">
                       <p className="text-xs font-medium uppercase tracking-widest text-on-tertiary-container/80">
-                        Choose your time · 45 min · Pacific
+                        Choose your time · Pacific
                       </p>
                       <TimeGrid
                         slots={daySlots}
@@ -369,7 +369,7 @@ export function ChrisSlotPicker({
                       </p>
                     ) : (
                       <p className="text-center text-xs font-light text-secondary-fixed-dim/70">
-                        Confidential 45-minute 1-on-1 · {allSlots.length} open starts
+                        Confidential live 1:1 · {allSlots.length} open starts
                       </p>
                     )}
                   </div>

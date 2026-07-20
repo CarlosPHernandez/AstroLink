@@ -1366,6 +1366,26 @@ body {
   margin-bottom: 1.5rem;
 }
 
+.experts-duration--compact {
+  gap: 0.55rem;
+  margin-bottom: 0;
+}
+
+.experts-duration__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 1.25rem;
+}
+
+.experts-duration__header-end {
+  flex-shrink: 0;
+  max-width: 55%;
+  text-align: right;
+}
+
 .experts-duration__label {
   margin: 0;
   font-family: var(--font-mono);
@@ -1374,7 +1394,8 @@ body {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--pro-faint);
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .experts-duration__segs {
