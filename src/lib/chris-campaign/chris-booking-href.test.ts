@@ -36,4 +36,15 @@ describe('chris-booking-href', () => {
       '/booking?mentor=chris-sembroski&campaign=chris&date=2026-07-15&ref=chris-sembroski',
     );
   });
+
+  it('includes clamped duration for landing prefill', () => {
+    expect(
+      getChrisBookingPath('chris-sembroski', { durationMinutes: 30, date: '2026-07-22' }),
+    ).toBe(
+      '/booking?mentor=chris-sembroski&campaign=chris&date=2026-07-22&duration=30',
+    );
+    expect(getChrisBookingPath('chris-sembroski', { durationMinutes: 7 })).toBe(
+      '/booking?mentor=chris-sembroski&campaign=chris&duration=15',
+    );
+  });
 });
