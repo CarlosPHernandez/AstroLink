@@ -37,8 +37,8 @@ describe('resolveSessionGate', () => {
     ).toBe('too_early');
   });
 
-  it('returns ready inside join window', () => {
-    const scheduledAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+  it('returns ready at or after scheduled start (default before=0)', () => {
+    const scheduledAt = new Date(Date.now() - 30 * 1000).toISOString();
     expect(
       resolveSessionGate({
         status: 'confirmed',
@@ -47,6 +47,18 @@ describe('resolveSessionGate', () => {
         nowMs: Date.now(),
       }),
     ).toBe('ready');
+  });
+
+  it('returns too_early shortly before start when before window is 0', () => {
+    const scheduledAt = new Date(Date.now() + 2 * 60 * 1000).toISOString();
+    expect(
+      resolveSessionGate({
+        status: 'confirmed',
+        dailyRoomUrl: roomUrl,
+        scheduledAt,
+        nowMs: Date.now(),
+      }),
+    ).toBe('too_early');
   });
 
   it('returns expired after join window', () => {

@@ -33,6 +33,7 @@ export async function GET(
       userName: booking.viewerName,
       isOwner: booking.sessionRole === 'mentor' || booking.sessionRole === 'admin',
       scheduledAt: booking.scheduledAt,
+      durationMinutes: booking.durationMinutes,
     });
 
     return NextResponse.json({ joinUrl });

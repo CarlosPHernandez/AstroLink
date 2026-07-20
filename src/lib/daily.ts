@@ -2,6 +2,11 @@ import 'server-only';
 
 import { createHmac, timingSafeEqual } from 'crypto';
 
+import {
+  clampSessionDurationMinutes,
+  SESSION_DURATION_DEFAULT,
+  SESSION_DURATION_MAX,
+} from '@/lib/session-duration';
 import { supabaseAdmin } from '@/lib/supabase';
 
 interface DailyRoomResponse {
@@ -16,6 +21,9 @@ interface DailyMeetingTokenResponse {
 const DEFAULT_ROOM_TTL_SEC = 60 * 60 * 48;
 const MEETING_TOKEN_TTL_SEC = 60 * 60 * 4;
 
+/** Safety ceiling if a booking row has a bad duration; still caps Chris 60-min max. */
+const EJECT_DURATION_HARD_CAP_MINUTES = SESSION_DURATION_MAX;
+
 export type SessionJoinPhase = 'too_early' | 'ready' | 'expired' | 'unscheduled';
 
 function parseDailyEnvInt(value: string | undefined, fallback: number): number {
@@ -26,13 +34,47 @@ function parseDailyEnvInt(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+/** Allows 0 (e.g. join window opens at scheduled start). */
+function parseDailyEnvNonNegativeInt(value: string | undefined, fallback: number): number {
+  if (!value?.trim()) {
+    return fallback;
+  }
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
 export function getDailyDemoConfig() {
   return {
     maxParticipants: parseDailyEnvInt(process.env.DAILY_MAX_PARTICIPANTS, 2),
-    joinWindowBeforeMinutes: parseDailyEnvInt(process.env.DAILY_ROOM_JOIN_WINDOW_BEFORE_MINUTES, 15),
+    // Default 0: room opens at scheduled start (not early). Override via env if needed.
+    joinWindowBeforeMinutes: parseDailyEnvNonNegativeInt(
+      process.env.DAILY_ROOM_JOIN_WINDOW_BEFORE_MINUTES,
+      0,
+    ),
     joinWindowAfterMinutes: parseDailyEnvInt(process.env.DAILY_ROOM_JOIN_WINDOW_AFTER_MINUTES, 60),
+    /** Fallback only when booking has no duration_minutes. */
     maxCallMinutes: parseDailyEnvInt(process.env.DAILY_MAX_CALL_MINUTES, 35),
   };
+}
+
+/**
+ * Call hard-end length in minutes: prefers the booked duration, else env fallback.
+ * Used for Daily `eject_after_elapsed` so a 15-min booking ends at 15, Chris 45 at 45, etc.
+ */
+export function resolveCallDurationMinutes(
+  durationMinutes?: number | null,
+  fallbackMinutes?: number,
+): number {
+  const cfgFallback = fallbackMinutes ?? getDailyDemoConfig().maxCallMinutes;
+  if (durationMinutes == null || !Number.isFinite(durationMinutes) || durationMinutes <= 0) {
+    return Math.min(Math.max(1, Math.floor(cfgFallback)), EJECT_DURATION_HARD_CAP_MINUTES);
+  }
+  const clamped = clampSessionDurationMinutes(durationMinutes);
+  return Math.min(clamped, EJECT_DURATION_HARD_CAP_MINUTES);
+}
+
+export function resolveEjectAfterElapsedSeconds(durationMinutes?: number | null): number {
+  return resolveCallDurationMinutes(durationMinutes) * 60;
 }
 
 /** Explicit opt-in — production/demo must set DAILY_PROVISION_ENABLED=true. */
@@ -64,7 +106,10 @@ export function extractDailyRoomNameFromUrl(roomUrl: string): string | null {
   }
 }
 
-export function meetingTokenWindowUnix(scheduledAt: string | null | undefined): {
+export function meetingTokenWindowUnix(
+  scheduledAt: string | null | undefined,
+  options?: { durationMinutes?: number | null },
+): {
   nbf: number;
   exp: number;
   ejectAfterElapsed: number;
@@ -84,7 +129,7 @@ export function meetingTokenWindowUnix(scheduledAt: string | null | undefined): 
   return {
     nbf,
     exp,
-    ejectAfterElapsed: cfg.maxCallMinutes * 60,
+    ejectAfterElapsed: resolveEjectAfterElapsedSeconds(options?.durationMinutes),
   };
 }
 
@@ -114,9 +159,12 @@ export function resolveSessionJoinPhase(
 }
 
 /** Room `exp` unix timestamp: join-window end when scheduled, else 48h from now. */
-export function roomExpiryUnix(scheduledAt?: string | null): number {
+export function roomExpiryUnix(
+  scheduledAt?: string | null,
+  options?: { durationMinutes?: number | null },
+): number {
   const nowSec = Math.floor(Date.now() / 1000);
-  const window = meetingTokenWindowUnix(scheduledAt);
+  const window = meetingTokenWindowUnix(scheduledAt, options);
   if (window) {
     return Math.max(nowSec + 60 * 60 * 2, window.exp);
   }
@@ -148,12 +196,15 @@ function getDailyApiKey(): string {
 
 export async function createDailyRoomForBooking(
   bookingId: string,
-  options?: { scheduledAt?: string | null },
+  options?: { scheduledAt?: string | null; durationMinutes?: number | null },
 ): Promise<{ roomUrl: string; roomName: string }> {
   const apiKey = getDailyApiKey();
   const roomName = dailyRoomNameForBooking(bookingId);
-  const exp = roomExpiryUnix(options?.scheduledAt);
+  const exp = roomExpiryUnix(options?.scheduledAt, {
+    durationMinutes: options?.durationMinutes,
+  });
   const cfg = getDailyDemoConfig();
+  const ejectAfterElapsed = resolveEjectAfterElapsedSeconds(options?.durationMinutes);
 
   const response = await fetch('https://api.daily.co/v1/rooms', {
     method: 'POST',
@@ -172,7 +223,7 @@ export async function createDailyRoomForBooking(
         max_participants: cfg.maxParticipants,
         enforce_unique_user_ids: true,
         eject_at_room_exp: true,
-        eject_after_elapsed: cfg.maxCallMinutes * 60,
+        eject_after_elapsed: ejectAfterElapsed,
       },
     }),
   });
@@ -216,12 +267,16 @@ export async function createMeetingToken(params: {
         user_name: params.userName,
         is_owner: params.isOwner,
         exp,
+        // nbf gates early join; eject_after_elapsed must apply even when unscheduled
+        // (no nbf) so booked duration still hard-ends the call.
         ...(tokenWindow
           ? {
               nbf: params.nbf,
               eject_at_token_exp: true,
-              eject_after_elapsed: params.ejectAfterElapsed,
             }
+          : {}),
+        ...(params.ejectAfterElapsed != null
+          ? { eject_after_elapsed: params.ejectAfterElapsed }
           : {}),
       },
     }),
@@ -250,7 +305,7 @@ export async function provisionDailyRoomForBooking(bookingId: string): Promise<{
 }> {
   const { data: booking, error } = await supabaseAdmin
     .from('bookings')
-    .select('id, daily_room_url, scheduled_at')
+    .select('id, daily_room_url, scheduled_at, duration_minutes')
     .eq('id', bookingId)
     .single();
 
@@ -275,6 +330,7 @@ export async function provisionDailyRoomForBooking(bookingId: string): Promise<{
 
   const daily = await createDailyRoomForBooking(bookingId, {
     scheduledAt: booking.scheduled_at,
+    durationMinutes: booking.duration_minutes ?? SESSION_DURATION_DEFAULT,
   });
 
   const { error: updateError } = await supabaseAdmin
@@ -301,14 +357,17 @@ export async function buildAuthorizedDailyJoinUrl(params: {
   userName: string;
   isOwner: boolean;
   scheduledAt?: string | null;
+  /** Booked session length; drives Daily eject_after_elapsed. */
+  durationMinutes?: number | null;
 }): Promise<string> {
   const roomName = extractDailyRoomNameFromUrl(params.roomUrl);
   if (!roomName) {
     throw new Error('Invalid Daily room URL');
   }
 
-  const window = meetingTokenWindowUnix(params.scheduledAt);
-  const roomExp = roomExpiryUnix(params.scheduledAt);
+  const durationOptions = { durationMinutes: params.durationMinutes };
+  const window = meetingTokenWindowUnix(params.scheduledAt, durationOptions);
+  const roomExp = roomExpiryUnix(params.scheduledAt, durationOptions);
 
   const token = await createMeetingToken({
     roomName,
@@ -317,7 +376,8 @@ export async function buildAuthorizedDailyJoinUrl(params: {
     isOwner: params.isOwner,
     exp: window?.exp ?? meetingTokenExpiryUnix(roomExp),
     nbf: window?.nbf,
-    ejectAfterElapsed: window?.ejectAfterElapsed,
+    ejectAfterElapsed:
+      window?.ejectAfterElapsed ?? resolveEjectAfterElapsedSeconds(params.durationMinutes),
   });
 
   return buildDailyJoinUrl(params.roomUrl, token);
