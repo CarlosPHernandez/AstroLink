@@ -21,12 +21,18 @@ type EmailTab = 'login' | 'signup';
 export default function AuthPageClient({ supabaseAuth }: { supabaseAuth: boolean }) {
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get('redirect') ?? '';
+  const authMessage = searchParams.get('message');
   const initialEmailTab: EmailTab = searchParams.get('mode') === 'signup' ? 'signup' : 'login';
   const initialEntryMode: EntryMode = initialEmailTab === 'signup' ? 'email' : supabaseAuth ? 'choose' : 'email';
 
   const [entryMode, setEntryMode] = useState<EntryMode>(initialEntryMode);
   const [emailTab, setEmailTab] = useState<EmailTab>(initialEmailTab);
   const [phone, setPhone] = useState('');
+
+  const passwordUpdatedBanner =
+    authMessage === 'password-updated'
+      ? 'Password updated. Sign in with your new password.'
+      : null;
 
   const [loginState, loginFormAction, loginPending] = useActionState(loginAction, undefined);
   const [registerState, registerFormAction, registerPending] = useActionState(
@@ -70,6 +76,12 @@ export default function AuthPageClient({ supabaseAuth }: { supabaseAuth: boolean
         </div>
 
         <div className="bg-surface-container-lowest border border-outline-variant p-5 sm:p-8 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
+          {passwordUpdatedBanner ? (
+            <div className="mb-4" data-testid="auth-password-updated">
+              <FormAlert message={passwordUpdatedBanner} />
+            </div>
+          ) : null}
+
           {supabaseAuth && entryMode === 'choose' ? (
             <div className="flex flex-col gap-sm">
               <button
