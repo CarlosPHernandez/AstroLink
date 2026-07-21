@@ -10,7 +10,7 @@ import {
 } from '@/lib/briefing-display';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { BookingStatus, BriefingPayload, ServiceType, TransactionStatus } from '@/lib/types';
-import { SERVICE_TYPE_LABELS } from '@/lib/types';
+import { formatServiceTypeLabel } from '@/lib/types';
 
 export type TransactionSnapshot = {
   status: TransactionStatus;
@@ -220,7 +220,7 @@ export function formatBookingExportMarkdown(
   lines.push(
     `- **When:** ${formatSessionWhenUtc(ctx.scheduled_at)}`,
     `- **Duration:** ${duration} min`,
-    `- **Service:** ${SERVICE_TYPE_LABELS[ctx.service_type]}`,
+    `- **Service:** ${formatServiceTypeLabel(ctx.service_type, duration)}`,
     `- **Booking status:** ${BOOKING_STATUS_LABELS[ctx.status]}`,
     `- **Booked:** ${formatSessionWhenUtc(ctx.created_at)}`,
   );

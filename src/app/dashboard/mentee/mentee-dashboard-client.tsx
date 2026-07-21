@@ -13,7 +13,7 @@ import {
   type MenteeBookingView,
 } from '@/lib/booking-partition';
 import type { BriefingPayload } from '@/lib/briefing-display';
-import { SERVICE_TYPE_LABELS } from '@/lib/types';
+import { formatServiceTypeLabel } from '@/lib/types';
 import { DashboardSessionTranscript } from '@/components/session/dashboard-session-transcript';
 import { formatSessionWhen } from '@/lib/format';
 import {
@@ -209,8 +209,7 @@ export default function MenteeDashboardClient({
           <div>
             <h3 className="text-base font-bold text-on-surface">{booking.mentorName}</h3>
             <p className="text-xs text-on-surface-variant mt-0.5">
-              {SERVICE_TYPE_LABELS[booking.serviceType]}
-              {booking.durationMinutes ? ` · ${booking.durationMinutes} min` : ''} ·{' '}
+              {formatServiceTypeLabel(booking.serviceType, booking.durationMinutes)} ·{' '}
               <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span>
             </p>
           </div>
