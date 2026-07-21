@@ -26,7 +26,7 @@ export default async function ActivatePage({
           subtitle="Open the invite email we sent you and use Activate your account."
         />
         <ActivateCard>
-          <p className="font-body-md text-body-md text-on-surface-variant text-center">
+          <p className="text-center text-sm leading-relaxed text-on-surface-variant text-pretty">
             If you need a new link, contact AstroLink support or your ops contact.
           </p>
         </ActivateCard>
@@ -70,11 +70,11 @@ export default async function ActivatePage({
           subtitle="This invite cannot be used. Request a new one from AstroLink ops."
         />
         <ActivateCard>
-          <p className="font-body-md text-body-md text-on-surface text-center font-medium mb-2">
+          <p className="mb-2 text-center text-base font-medium text-on-surface text-pretty">
             {message}
           </p>
-          <p className="font-label-sm text-label-sm text-on-surface-variant text-center">
-            Links expire after a few days and can only be used once.
+          <p className="text-center text-xs uppercase tracking-widest text-on-surface-variant">
+            Links expire and can only be used once
           </p>
         </ActivateCard>
       </ActivatePageFrame>
