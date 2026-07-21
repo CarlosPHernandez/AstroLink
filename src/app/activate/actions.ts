@@ -2,7 +2,6 @@
 
 import { redirect } from 'next/navigation';
 
-import { appAuthPath } from '@/lib/app-url';
 import {
   completeMentorActivation,
   getMentorActivationRow,
@@ -28,8 +27,12 @@ export type ActivateActionState = {
 };
 
 /**
- * Validates claim token, ensures Auth user, redirects through Supabase magic link
- * so cookies are set, then lands on /activate/complete?token=…
+ * Validates claim token, establishes a Supabase session server-side (no email bounce),
+ * then continues to /activate/complete to attach the mentor row.
+ *
+ * We intentionally avoid redirecting to generateLink action_link: those OTP links are
+ * one-shot email tokens and often fail when opened as an immediate browser redirect
+ * (Site URL / PKCE / "expired or invalid" on Supabase verify).
  */
 export async function beginClaimAction(
   _prev: ActivateActionState | undefined,
@@ -44,17 +47,26 @@ export async function beginClaimAction(
     const token = await loadValidClaimToken(rawToken);
     const email = token.email.trim().toLowerCase();
 
-    const redirectTo = appAuthPath(
-      `/auth/callback?next=${encodeURIComponent(`/activate/complete?token=${encodeURIComponent(rawToken)}`)}`,
-    );
+    // Ensure Auth user exists (invite path may have created them already).
+    const { error: createAuthErr } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: { full_name: email.split('@')[0] ?? 'Expert' },
+    });
+    if (
+      createAuthErr &&
+      !/already|registered|exists/i.test(createAuthErr.message ?? '')
+    ) {
+      console.error('beginClaimAction createUser:', createAuthErr.message);
+    }
 
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
       email,
-      options: { redirectTo },
     });
 
-    if (error || !data?.properties?.action_link) {
+    const tokenHash = data?.properties?.hashed_token;
+    if (error || !tokenHash) {
       console.error('beginClaimAction generateLink:', error?.message);
       return {
         success: false,
@@ -62,7 +74,35 @@ export async function beginClaimAction(
       };
     }
 
-    redirect(data.properties.action_link);
+    // Set session cookies on this response via the SSR client (not external action_link).
+    const supabase = await createClient();
+    let verifyError = (
+      await supabase.auth.verifyOtp({
+        type: 'magiclink',
+        token_hash: tokenHash,
+      })
+    ).error;
+
+    if (verifyError) {
+      // Older/newer Supabase builds accept the hash under type "email".
+      verifyError = (
+        await supabase.auth.verifyOtp({
+          type: 'email',
+          token_hash: tokenHash,
+        })
+      ).error;
+    }
+
+    if (verifyError) {
+      console.error('beginClaimAction verifyOtp:', verifyError.message, verifyError.code);
+      return {
+        success: false,
+        message:
+          'Could not complete secure sign-in. Request a new invite and try again, or contact support.',
+      };
+    }
+
+    redirect(`/activate/complete?token=${encodeURIComponent(rawToken)}`);
   } catch (err: unknown) {
     if (err instanceof MentorClaimError) {
       return { success: false, message: err.message };
