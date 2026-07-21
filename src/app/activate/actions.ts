@@ -90,7 +90,9 @@ export async function beginClaimAction(
       });
     }
 
-    if (verifyResult.error || !verifyResult.data.user?.email) {
+    const user = verifyResult.data.user;
+    const authEmail = user?.email?.trim().toLowerCase();
+    if (verifyResult.error || !user || !authEmail) {
       console.error(
         'beginClaimAction verifyOtp:',
         verifyResult.error?.message,
@@ -103,11 +105,10 @@ export async function beginClaimAction(
       };
     }
 
-    const user = verifyResult.data.user;
     await linkMentorClaim({
       rawToken,
       authUserId: user.id,
-      authEmail: user.email,
+      authEmail,
       fullName:
         (typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name) ||
         displayName,
