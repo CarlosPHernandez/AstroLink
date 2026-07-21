@@ -1,5 +1,10 @@
 import React from 'react';
 import { ActivateClaimClient } from '@/app/activate/activate-claim-client';
+import {
+  ActivateBrandHeader,
+  ActivateCard,
+  ActivatePageFrame,
+} from '@/components/activate/activate-shell';
 import { loadValidClaimToken, MentorClaimError } from '@/lib/mentor-activation/claim';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -15,12 +20,17 @@ export default async function ActivatePage({
 
   if (!rawToken) {
     return (
-      <ActivateShell title="Activation link required">
-        <p className="text-body-md text-on-surface-variant text-center">
-          Open the invite email we sent you and use the Activate button. If you need a new
-          link, contact AstroLink support.
-        </p>
-      </ActivateShell>
+      <ActivatePageFrame>
+        <ActivateBrandHeader
+          title="Activation link required"
+          subtitle="Open the invite email we sent you and use Activate your account."
+        />
+        <ActivateCard>
+          <p className="font-body-md text-body-md text-on-surface-variant text-center">
+            If you need a new link, contact AstroLink support or your ops contact.
+          </p>
+        </ActivateCard>
+      </ActivatePageFrame>
     );
   }
 
@@ -33,14 +43,20 @@ export default async function ActivatePage({
       .maybeSingle();
 
     return (
-      <ActivateShell title="Activate your expert account">
-        <ActivateClaimClient
-          token={rawToken}
-          expertName={mentor?.full_name ?? 'Expert'}
-          email={token.email}
-          expiresAt={token.expires_at}
+      <ActivatePageFrame>
+        <ActivateBrandHeader
+          title="Activate your expert account"
+          subtitle="One secure step to claim your profile and open your dashboard."
         />
-      </ActivateShell>
+        <ActivateCard>
+          <ActivateClaimClient
+            token={rawToken}
+            expertName={mentor?.full_name ?? 'Expert'}
+            email={token.email}
+            expiresAt={token.expires_at}
+          />
+        </ActivateCard>
+      </ActivatePageFrame>
     );
   } catch (err: unknown) {
     const message =
@@ -48,33 +64,20 @@ export default async function ActivatePage({
         ? err.message
         : 'This activation link is not valid.';
     return (
-      <ActivateShell title="Link unavailable">
-        <p className="text-body-md text-on-surface-variant text-center">{message}</p>
-        <p className="text-label-sm text-on-surface-variant text-center mt-4">
-          Request a new invite from AstroLink ops if you still need access.
-        </p>
-      </ActivateShell>
+      <ActivatePageFrame>
+        <ActivateBrandHeader
+          title="Link unavailable"
+          subtitle="This invite cannot be used. Request a new one from AstroLink ops."
+        />
+        <ActivateCard>
+          <p className="font-body-md text-body-md text-on-surface text-center font-medium mb-2">
+            {message}
+          </p>
+          <p className="font-label-sm text-label-sm text-on-surface-variant text-center">
+            Links expire after a few days and can only be used once.
+          </p>
+        </ActivateCard>
+      </ActivatePageFrame>
     );
   }
-}
-
-function ActivateShell({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="min-h-screen bg-surface-container-lowest text-on-surface flex flex-col justify-center items-center p-4">
-      <main className="w-full max-w-[440px]">
-        <h1 className="font-headline-md text-headline-md font-bold text-center mb-2">
-          {title}
-        </h1>
-        <div className="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl mt-4">
-          {children}
-        </div>
-      </main>
-    </div>
-  );
 }
