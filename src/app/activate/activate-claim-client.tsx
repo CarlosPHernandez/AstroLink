@@ -53,7 +53,7 @@ export function ActivateClaimClient({
           {pending ? 'Starting secure sign-in…' : 'Continue'}
         </button>
         <p className="activate-step-caption" style={{ marginTop: 0 }}>
-          No password required for this invite
+          Secure one-tap sign-in — you&apos;ll set a password in the next steps
         </p>
       </form>
     </div>

@@ -5,9 +5,27 @@ const mockGetSession = vi.hoisted(() => vi.fn());
 const mockUpdateMentorProfile = vi.hoisted(() => vi.fn());
 const mockGetMentorProfileRow = vi.hoisted(() => vi.fn());
 const mockRecordMentorNf1860Upload = vi.hoisted(() => vi.fn());
+const mockIsSupabaseAuthEnabled = vi.hoisted(() => vi.fn());
+const mockGetUser = vi.hoisted(() => vi.fn());
+const mockSignInWithPassword = vi.hoisted(() => vi.fn());
+const mockUpdateUser = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/session', () => ({
   getSession: () => mockGetSession(),
+}));
+
+vi.mock('@/lib/app-mode', () => ({
+  isSupabaseAuthEnabled: () => mockIsSupabaseAuthEnabled(),
+}));
+
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: async () => ({
+    auth: {
+      getUser: () => mockGetUser(),
+      signInWithPassword: (...args: unknown[]) => mockSignInWithPassword(...args),
+      updateUser: (...args: unknown[]) => mockUpdateUser(...args),
+    },
+  }),
 }));
 
 vi.mock('@/lib/mentor-profile', () => ({
@@ -16,7 +34,11 @@ vi.mock('@/lib/mentor-profile', () => ({
   recordMentorNf1860Upload: (...args: unknown[]) => mockRecordMentorNf1860Upload(...args),
 }));
 
-import { updateMentorProfileAction, uploadMentorNf1860Action } from './actions';
+import {
+  changeMentorPasswordAction,
+  updateMentorProfileAction,
+  uploadMentorNf1860Action,
+} from './actions';
 
 const mentorSession = {
   userId: 'a0000002-0000-4000-8000-000000000002',
@@ -141,5 +163,81 @@ describe('uploadMentorNf1860Action', () => {
     const result = await uploadMentorNf1860Action(undefined, formData);
     expect(result.success).toBe(true);
     expect(mockRecordMentorNf1860Upload).toHaveBeenCalledOnce();
+  });
+});
+
+function passwordForm(overrides: Record<string, string> = {}): FormData {
+  const formData = new FormData();
+  formData.set('currentPassword', overrides.currentPassword ?? 'oldpassword');
+  formData.set('password', overrides.password ?? 'newpassword');
+  formData.set('confirmPassword', overrides.confirmPassword ?? 'newpassword');
+  return formData;
+}
+
+describe('changeMentorPasswordAction', () => {
+  beforeEach(() => {
+    mockGetSession.mockReset();
+    mockIsSupabaseAuthEnabled.mockReset();
+    mockGetUser.mockReset();
+    mockSignInWithPassword.mockReset();
+    mockUpdateUser.mockReset();
+    mockIsSupabaseAuthEnabled.mockReturnValue(true);
+  });
+
+  it('rejects unauthenticated users', async () => {
+    mockGetSession.mockResolvedValue(null);
+    const result = await changeMentorPasswordAction(undefined, passwordForm());
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('signed in as a mentor');
+  });
+
+  it('rejects pending activation', async () => {
+    mockGetSession.mockResolvedValue({ ...mentorSession, activationStatus: 'pending' });
+    const result = await changeMentorPasswordAction(undefined, passwordForm());
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/activation/i);
+  });
+
+  it('returns Zod errors for mismatched passwords', async () => {
+    mockGetSession.mockResolvedValue(mentorSession);
+    const result = await changeMentorPasswordAction(
+      undefined,
+      passwordForm({ confirmPassword: 'different1' }),
+    );
+    expect(result.success).toBe(false);
+    expect(result.errors?.confirmPassword?.[0]).toMatch(/do not match/i);
+  });
+
+  it('rejects incorrect current password', async () => {
+    mockGetSession.mockResolvedValue(mentorSession);
+    mockGetUser.mockResolvedValue({ data: { user: { email: mentorSession.email } } });
+    mockSignInWithPassword.mockResolvedValue({ error: { message: 'Invalid login' } });
+    const result = await changeMentorPasswordAction(undefined, passwordForm());
+    expect(result.success).toBe(false);
+    expect(result.errors?.currentPassword?.[0]).toMatch(/incorrect/i);
+    expect(mockUpdateUser).not.toHaveBeenCalled();
+  });
+
+  it('updates password when current password is valid', async () => {
+    mockGetSession.mockResolvedValue(mentorSession);
+    mockGetUser.mockResolvedValue({ data: { user: { email: mentorSession.email } } });
+    mockSignInWithPassword.mockResolvedValue({ error: null });
+    mockUpdateUser.mockResolvedValue({ error: null });
+    const result = await changeMentorPasswordAction(undefined, passwordForm());
+    expect(result.success).toBe(true);
+    expect(mockSignInWithPassword).toHaveBeenCalledWith({
+      email: mentorSession.email,
+      password: 'oldpassword',
+    });
+    expect(mockUpdateUser).toHaveBeenCalledWith({ password: 'newpassword' });
+  });
+
+  it('skips Auth update in demo mode', async () => {
+    mockGetSession.mockResolvedValue(mentorSession);
+    mockIsSupabaseAuthEnabled.mockReturnValue(false);
+    const result = await changeMentorPasswordAction(undefined, passwordForm());
+    expect(result.success).toBe(true);
+    expect(result.message).toMatch(/demo auth/i);
+    expect(mockUpdateUser).not.toHaveBeenCalled();
   });
 });

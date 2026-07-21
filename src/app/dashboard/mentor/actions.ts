@@ -1,5 +1,7 @@
 'use server';
 
+import { isSupabaseAuthEnabled } from '@/lib/app-mode';
+import { ChangeMentorPasswordSchema } from '@/lib/mentor-activation/schemas';
 import { requireActivatedMentor } from '@/lib/mentor-activation/require-activated-mentor';
 import {
   getMentorProfileRow,
@@ -7,6 +9,7 @@ import {
   updateMentorProfile,
 } from '@/lib/mentor-profile';
 import { validateNf1860PdfBuffer, validateNf1860PdfFile } from '@/lib/nf1860-upload';
+import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
 const ProfileSchema = z.object({
@@ -143,4 +146,76 @@ export async function uploadMentorNf1860Action(
     success: true,
     message: 'Document uploaded for compliance review.',
   };
+}
+
+/**
+ * Change password for an activated mentor (session required).
+ * Verifies current password, then updates via Supabase Auth.
+ */
+export async function changeMentorPasswordAction(
+  _prev: MentorProfileActionState | undefined,
+  formData: FormData,
+): Promise<MentorProfileActionState> {
+  const gate = await requireActivatedMentor();
+  if (!gate.ok) {
+    return { message: gate.message, success: false };
+  }
+
+  if (!isSupabaseAuthEnabled()) {
+    return {
+      success: true,
+      message: 'Password change is not available in demo auth mode.',
+    };
+  }
+
+  const parsed = ChangeMentorPasswordSchema.safeParse({
+    currentPassword: formData.get('currentPassword'),
+    password: formData.get('password'),
+    confirmPassword: formData.get('confirmPassword'),
+  });
+
+  if (!parsed.success) {
+    return {
+      errors: parsed.error.flatten().fieldErrors,
+      success: false,
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user?.email) {
+    return {
+      message: 'Your session expired. Sign in again and try changing your password.',
+      success: false,
+    };
+  }
+
+  const { error: verifyError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: parsed.data.currentPassword,
+  });
+
+  if (verifyError) {
+    return {
+      errors: { currentPassword: ['Current password is incorrect.'] },
+      success: false,
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+  });
+
+  if (error) {
+    console.error('changeMentorPasswordAction:', error.message);
+    return {
+      message: 'Could not update password. Try a different password or try again.',
+      success: false,
+    };
+  }
+
+  return { success: true, message: 'Password updated.' };
 }

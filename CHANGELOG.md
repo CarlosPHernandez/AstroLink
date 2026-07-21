@@ -2,6 +2,15 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.5.1] - 2026-07-21
+
+### Added
+- **Expert activation password step:** after claim sign-in, experts set a password (min 8 characters) before finishing profile setup so they can return without another magic link.
+- **Mentor dashboard password change:** Profile tab form to update password (current + new + confirm), with a link to email reset if they forgot the current one.
+
+### Changed
+- Mentor dashboard phase-1 preview: AstroLink logo header, segmented progress chrome, calmer profile/listing layout aligned with activation styling.
+
 ## [0.8.5.0] - 2026-07-21
 
 ### Added

@@ -3,7 +3,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import '@/components/activate/activate-flow.css';
 
-const STEP_LABELS = ['Welcome', 'Identity', 'Profile', 'Payouts', 'Done'] as const;
+const STEP_LABELS = [
+  'Welcome',
+  'Identity',
+  'Password',
+  'Profile',
+  'Payouts',
+  'Done',
+] as const;
 
 export function ActivateBrandHeader({
   title,
@@ -34,7 +41,7 @@ export function ActivateBrandHeader({
 /** Chris-style skewed segmented progress bar. */
 export function ActivateStepProgress({
   currentStep,
-  totalSteps = 5,
+  totalSteps = 6,
 }: {
   currentStep: number;
   totalSteps?: number;

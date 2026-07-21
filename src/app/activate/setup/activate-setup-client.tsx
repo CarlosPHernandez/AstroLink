@@ -5,6 +5,7 @@ import {
   completeActivationAction,
   saveActivationProfileAction,
   savePayoutPreferenceAction,
+  setActivationPasswordAction,
   type ActivateActionState,
 } from '@/app/activate/actions';
 import {
@@ -84,6 +85,17 @@ export function ActivateSetupClient({
       : 'unset',
   );
 
+  const [passwordState, passwordAction, passwordPending] = useActionState<
+    ActivateActionState | undefined,
+    FormData
+  >(async (prev, formData) => {
+    const result = await setActivationPasswordAction(prev, formData);
+    if (result.success) {
+      setStep(3);
+    }
+    return result;
+  }, undefined);
+
   const [profileState, profileAction, profilePending] = useActionState<
     ActivateActionState | undefined,
     FormData
@@ -99,7 +111,7 @@ export function ActivateSetupClient({
         bio: String(formData.get('bio') ?? p.bio),
         rate: Number(formData.get('rate') ?? p.rate),
       }));
-      setStep(3);
+      setStep(4);
     }
     return result;
   }, undefined);
@@ -110,7 +122,7 @@ export function ActivateSetupClient({
   >(async (prev, formData) => {
     const result = await savePayoutPreferenceAction(prev, formData);
     if (result.success) {
-      setStep(4);
+      setStep(5);
     }
     return result;
   }, undefined);
@@ -141,8 +153,8 @@ export function ActivateSetupClient({
             <div>
               <h2 className="activate-section-title">Welcome, {firstName}</h2>
               <p className="activate-section-copy">
-                Your sessions and public profile are already set up. Next you will confirm your
-                name, profile details, rate, and optional payout preference.
+                Your sessions and public profile are already set up. Next you will set a password,
+                confirm your name and profile details, rate, and optional payout preference.
               </p>
               <StepNav>
                 <button
@@ -199,6 +211,70 @@ export function ActivateSetupClient({
           )}
 
           {step === 2 && (
+            <form action={passwordAction} data-testid="activate-password-form">
+              <h2 className="activate-section-title">Create a password</h2>
+              <p className="activate-section-copy">
+                You signed in with a secure invite link. Set a password so you can return to your
+                dashboard later without another email.
+              </p>
+              {passwordState?.message && !passwordState.success ? (
+                <div className="mt-6">
+                  <FormAlert message={passwordState.message} />
+                </div>
+              ) : null}
+              <div className="activate-field-stack mt-8">
+                <div>
+                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                    className={fieldErrorInputClass(
+                      !!passwordState?.errors?.password,
+                      activateInputClass,
+                    )}
+                    data-testid="activate-password-input"
+                  />
+                  <FieldError message={passwordState?.errors?.password?.[0]} />
+                </div>
+                <div>
+                  <FieldLabel htmlFor="confirmPassword">Confirm password</FieldLabel>
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                    className={fieldErrorInputClass(
+                      !!passwordState?.errors?.confirmPassword,
+                      activateInputClass,
+                    )}
+                    data-testid="activate-password-confirm"
+                  />
+                  <FieldError message={passwordState?.errors?.confirmPassword?.[0]} />
+                </div>
+              </div>
+              <p className="activate-step-caption mt-4" style={{ textAlign: 'left' }}>
+                At least 8 characters. You can change this anytime from your dashboard.
+              </p>
+              <StepNav onBack={() => setStep(1)}>
+                <button
+                  type="submit"
+                  disabled={passwordPending}
+                  className={activatePrimaryBtnClass}
+                  data-testid="activate-password-save"
+                >
+                  {passwordPending ? 'Saving…' : 'Save & continue'}
+                </button>
+              </StepNav>
+            </form>
+          )}
+
+          {step === 3 && (
             <form action={profileAction}>
               <h2 className="activate-section-title">Profile</h2>
               <p className="activate-section-copy">
@@ -281,7 +357,7 @@ export function ActivateSetupClient({
                   <FieldError message={profileState?.errors?.rate?.[0]} />
                 </div>
               </div>
-              <StepNav onBack={() => setStep(1)}>
+              <StepNav onBack={() => setStep(2)}>
                 <button
                   type="submit"
                   disabled={profilePending}
@@ -294,7 +370,7 @@ export function ActivateSetupClient({
             </form>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <form action={payoutAction}>
               <h2 className="activate-section-title">Payout preference</h2>
               <p className="activate-section-copy">
@@ -338,7 +414,7 @@ export function ActivateSetupClient({
               ) : (
                 <input type="hidden" name="payoutHandle" value="" />
               )}
-              <StepNav onBack={() => setStep(2)}>
+              <StepNav onBack={() => setStep(3)}>
                 <button
                   type="submit"
                   disabled={payoutPending}
@@ -351,7 +427,7 @@ export function ActivateSetupClient({
             </form>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <div>
               <h2 className="activate-section-title">You&apos;re ready</h2>
               <p className="activate-section-copy">
