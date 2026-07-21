@@ -8,7 +8,7 @@ function booking(
 ): MenteeBookingView {
   return {
     mentorName: 'Expert',
-    serviceType: 'live_session',
+    serviceType: 'session_1on1',
     status: 'confirmed',
     matchReason: null,
     dailyRoomUrl: 'https://astrolink.daily.co/r',
