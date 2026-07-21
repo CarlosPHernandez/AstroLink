@@ -27,12 +27,8 @@ export type ActivateActionState = {
 };
 
 /**
- * Validates claim token, establishes a Supabase session server-side (no email bounce),
- * then continues to /activate/complete to attach the mentor row.
- *
- * We intentionally avoid redirecting to generateLink action_link: those OTP links are
- * one-shot email tokens and often fail when opened as an immediate browser redirect
- * (Site URL / PKCE / "expired or invalid" on Supabase verify).
+ * One request: validate claim token → Auth session (verifyOtp) → link mentor → wizard.
+ * Avoids multi-hop /activate/complete where session could still resolve as mentee.
  */
 export async function beginClaimAction(
   _prev: ActivateActionState | undefined,
@@ -47,11 +43,18 @@ export async function beginClaimAction(
     const token = await loadValidClaimToken(rawToken);
     const email = token.email.trim().toLowerCase();
 
+    const { data: mentorMeta } = await supabaseAdmin
+      .from('mentors')
+      .select('full_name')
+      .eq('id', token.mentor_id)
+      .maybeSingle();
+    const displayName = mentorMeta?.full_name?.trim() || email.split('@')[0] || 'Expert';
+
     // Ensure Auth user exists (invite path may have created them already).
     const { error: createAuthErr } = await supabaseAdmin.auth.admin.createUser({
       email,
       email_confirm: true,
-      user_metadata: { full_name: email.split('@')[0] ?? 'Expert' },
+      user_metadata: { full_name: displayName },
     });
     if (
       createAuthErr &&
@@ -74,27 +77,25 @@ export async function beginClaimAction(
       };
     }
 
-    // Set session cookies on this response via the SSR client (not external action_link).
     const supabase = await createClient();
-    let verifyError = (
-      await supabase.auth.verifyOtp({
-        type: 'magiclink',
-        token_hash: tokenHash,
-      })
-    ).error;
+    let verifyResult = await supabase.auth.verifyOtp({
+      type: 'magiclink',
+      token_hash: tokenHash,
+    });
 
-    if (verifyError) {
-      // Older/newer Supabase builds accept the hash under type "email".
-      verifyError = (
-        await supabase.auth.verifyOtp({
-          type: 'email',
-          token_hash: tokenHash,
-        })
-      ).error;
+    if (verifyResult.error) {
+      verifyResult = await supabase.auth.verifyOtp({
+        type: 'email',
+        token_hash: tokenHash,
+      });
     }
 
-    if (verifyError) {
-      console.error('beginClaimAction verifyOtp:', verifyError.message, verifyError.code);
+    if (verifyResult.error || !verifyResult.data.user?.email) {
+      console.error(
+        'beginClaimAction verifyOtp:',
+        verifyResult.error?.message,
+        verifyResult.error?.code,
+      );
       return {
         success: false,
         message:
@@ -102,7 +103,44 @@ export async function beginClaimAction(
       };
     }
 
-    redirect(`/activate/complete?token=${encodeURIComponent(rawToken)}`);
+    const user = verifyResult.data.user;
+    await linkMentorClaim({
+      rawToken,
+      authUserId: user.id,
+      authEmail: user.email,
+      fullName:
+        (typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name) ||
+        displayName,
+    });
+
+    // Confirm session resolves as mentor before sending to wizard.
+    const {
+      data: { user: sessionUser },
+    } = await supabase.auth.getUser();
+    if (!sessionUser) {
+      return {
+        success: false,
+        message: 'Signed in but session was lost. Open the invite link again.',
+      };
+    }
+
+    const { resolveAppSessionFromAuthUser } = await import('@/lib/resolve-app-session');
+    const appSession = await resolveAppSessionFromAuthUser(sessionUser);
+    if (!appSession || appSession.role !== 'mentor') {
+      console.error('beginClaimAction post-link role', {
+        role: appSession?.role,
+        userId: appSession?.userId,
+        authId: sessionUser.id,
+        email: sessionUser.email,
+      });
+      return {
+        success: false,
+        message:
+          'Account signed in, but the expert profile did not attach. Contact support with this email — do not register as a mentee.',
+      };
+    }
+
+    redirect('/activate/setup');
   } catch (err: unknown) {
     if (err instanceof MentorClaimError) {
       return { success: false, message: err.message };

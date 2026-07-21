@@ -94,10 +94,37 @@ export async function loadValidClaimToken(
   return mapTokenRow(data);
 }
 
+async function resolveOrCreatePublicUserId(params: {
+  authUserId: string;
+  authEmail: string;
+  fullName: string;
+}): Promise<string> {
+  let publicUserId = await resolvePublicUserIdForAuthUser({
+    authUserId: params.authUserId,
+    email: params.authEmail,
+  });
+
+  if (!publicUserId) {
+    publicUserId = await ensureMenteeUserRow({
+      userId: params.authUserId,
+      email: params.authEmail,
+      fullName: params.fullName,
+    });
+  }
+
+  // Always stamp auth_id so later session resolve can find this row.
+  await supabaseAdmin
+    .from('users')
+    .update({ auth_id: params.authUserId, email: params.authEmail })
+    .eq('id', publicUserId);
+
+  return publicUserId;
+}
+
 /**
  * Atomically consume claim token, then attach mentor row to the signed-in auth user.
  * Token is burned before mentor update so concurrent claims cannot double-apply.
- * If mentor update fails after consume, ops re-invites (token not reusable).
+ * Idempotent: if this auth user already owns the mentor from a prior claim, succeeds.
  */
 export async function linkMentorClaim(params: {
   rawToken: string;
@@ -108,6 +135,33 @@ export async function linkMentorClaim(params: {
   const tokenHash = hashClaimToken(params.rawToken);
   const authEmail = params.authEmail.trim().toLowerCase();
   const nowIso = new Date().toISOString();
+
+  const publicUserId = await resolveOrCreatePublicUserId({
+    authUserId: params.authUserId,
+    authEmail,
+    fullName: params.fullName?.trim() || authEmail.split('@')[0] || 'Expert',
+  });
+
+  // Idempotent resume: mentor already linked to this account (retry after partial UX fail).
+  const { data: alreadyLinked } = await supabaseAdmin
+    .from('mentors')
+    .select('id, user_id, email, activation_status')
+    .eq('user_id', publicUserId)
+    .maybeSingle();
+
+  if (alreadyLinked?.id) {
+    return { mentorId: alreadyLinked.id };
+  }
+
+  // Also match auth id if trigger used auth uuid as public.users.id
+  const { data: linkedByAuthPk } = await supabaseAdmin
+    .from('mentors')
+    .select('id')
+    .eq('user_id', params.authUserId)
+    .maybeSingle();
+  if (linkedByAuthPk?.id) {
+    return { mentorId: linkedByAuthPk.id };
+  }
 
   // 1) Consume token (CAS). Only one concurrent caller wins.
   const { data: consumed, error: consumeErr } = await supabaseAdmin
@@ -124,7 +178,35 @@ export async function linkMentorClaim(params: {
     throw new MentorClaimError(consumeErr.message, 'db');
   }
   if (!consumed) {
-    // Distinguish why: re-read for message
+    // Token already used — if it was for this email, try attach mentor by token row.
+    const { data: prior } = await supabaseAdmin
+      .from('mentor_claim_tokens')
+      .select('mentor_id, email, used_at, revoked_at')
+      .eq('token_hash', tokenHash)
+      .maybeSingle();
+
+    if (prior?.used_at && prior.email.trim().toLowerCase() === authEmail) {
+      const { data: mentor } = await supabaseAdmin
+        .from('mentors')
+        .select('id, user_id')
+        .eq('id', prior.mentor_id)
+        .maybeSingle();
+      if (mentor && (!mentor.user_id || mentor.user_id === publicUserId || mentor.user_id === params.authUserId)) {
+        const { error: relinkErr } = await supabaseAdmin
+          .from('mentors')
+          .update({
+            user_id: publicUserId,
+            email: authEmail,
+            pending_email: null,
+            activation_status: 'pending',
+          })
+          .eq('id', mentor.id);
+        if (!relinkErr) {
+          return { mentorId: mentor.id };
+        }
+      }
+    }
+
     await loadValidClaimToken(params.rawToken).catch((err: unknown) => {
       if (err instanceof MentorClaimError) {
         throw err;
@@ -149,25 +231,6 @@ export async function linkMentorClaim(params: {
 
   if (mentorErr || !mentor) {
     throw new MentorClaimError(mentorErr?.message ?? 'Expert not found.', 'db');
-  }
-
-  let publicUserId = await resolvePublicUserIdForAuthUser({
-    authUserId: params.authUserId,
-    email: authEmail,
-  });
-
-  if (!publicUserId) {
-    publicUserId = await ensureMenteeUserRow({
-      userId: params.authUserId,
-      email: authEmail,
-      fullName: params.fullName?.trim() || mentor.full_name,
-    });
-  } else {
-    await supabaseAdmin
-      .from('users')
-      .update({ auth_id: params.authUserId })
-      .eq('id', publicUserId)
-      .is('auth_id', null);
   }
 
   const { data: emailOwner } = await supabaseAdmin
