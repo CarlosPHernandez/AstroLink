@@ -421,7 +421,7 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
                   </button>
                 </div>
               ) : null}
-              {(isCompleted || fulfillment === 'done' || booking.gate === 'completed') && (
+              {isCompleted ? (
                 <>
                   <SessionRecapPanel bookingId={booking.id} />
                   <SessionTranscriptPanel
@@ -431,7 +431,7 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
                     viewerRole={booking.sessionRole}
                   />
                 </>
-              )}
+              ) : null}
               <Link
                 href={exitHref}
                 className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
