@@ -8,7 +8,7 @@ import {
 } from '@/lib/mentor-booking-partition';
 import { DashboardSessionTranscript } from '@/components/session/dashboard-session-transcript';
 import { formatSessionWhen } from '@/lib/format';
-import { SERVICE_TYPE_LABELS, type BookingStatus, type ServiceType } from '@/lib/types';
+import { formatServiceTypeLabel, type BookingStatus } from '@/lib/types';
 import { isJoinRoomEnabled, joinRoomAvailabilityTitle } from '@/lib/join-window';
 
 function canMentorJoin(booking: MentorBookingView): boolean {
@@ -77,8 +77,7 @@ export function MentorConsultationCard({
   const goals = booking.matchReason ?? 'No goals recorded for this session.';
   const hasJoinControl = canMentorJoin(booking);
   const joinEnabled = hasJoinControl ? isMentorJoinEnabled(booking) : false;
-  const serviceLabel =
-    SERVICE_TYPE_LABELS[booking.serviceType as ServiceType] ?? booking.serviceType;
+  const serviceLabel = formatServiceTypeLabel(booking.serviceType, booking.durationMinutes);
   const hasPrepBrief = isSessionBriefing(booking.briefing);
 
   return (

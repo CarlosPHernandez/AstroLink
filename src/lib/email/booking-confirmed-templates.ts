@@ -6,7 +6,7 @@ import { bookingDurationMinutes, buildBookingIcs } from '@/lib/calendar-ics';
 import { getChrisCampaignId } from '@/lib/chris-campaign/chris-campaign-config';
 import { CHRIS_SESSION_DURATION_MINUTES } from '@/lib/chris-campaign/chris-campaign-constants';
 import { resolveMentorBriefTeaser } from '@/lib/notification-brief-teaser';
-import { SERVICE_TYPE_LABELS, type ServiceType } from '@/lib/types';
+import { formatServiceTypeLabel, type ServiceType } from '@/lib/types';
 
 const UTC_DISCLAIMER =
   'Times shown in UTC. Add the attached calendar file to see this in your local timezone.';
@@ -90,7 +90,7 @@ export function buildMenteeConfirmationEmail(ctx: BookingEmailContext): {
   const baseUrl = getAppBaseUrl();
   const dashboardUrl = `${baseUrl}${getPostBookingDashboardPath('mentee', ctx.bookingId)}`;
   const sessionUrl = ctx.dailyRoomUrl ? `${baseUrl}/session/${ctx.bookingId}` : null;
-  const serviceLabel = SERVICE_TYPE_LABELS[ctx.serviceType] ?? ctx.serviceType;
+  const serviceLabel = formatServiceTypeLabel(ctx.serviceType, ctx.durationMinutes);
   const when = formatSessionWhenUtc(ctx.scheduledAt);
   const goals = ctx.matchReason?.trim() || 'Your session goals are saved in your dashboard.';
   const isChrisCampaign = ctx.campaignId === getChrisCampaignId();
@@ -220,7 +220,7 @@ export function buildMentorConfirmationEmail(ctx: BookingEmailContext): {
 } {
   const baseUrl = getAppBaseUrl();
   const prepUrl = `${baseUrl}${getMentorPrepDashboardPath(ctx.bookingId)}`;
-  const serviceLabel = SERVICE_TYPE_LABELS[ctx.serviceType] ?? ctx.serviceType;
+  const serviceLabel = formatServiceTypeLabel(ctx.serviceType, ctx.durationMinutes);
   const when = formatSessionWhenUtc(ctx.scheduledAt);
   const goals = ctx.matchReason?.trim() || 'No goals recorded yet.';
   const teaser = resolveMentorBriefTeaser(

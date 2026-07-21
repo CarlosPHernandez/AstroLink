@@ -15,10 +15,25 @@ export type ServiceType = 'session_1on1' | 'pre_call_brief' | 'extended_session'
 
 /** User-facing labels for booking UI (expert-network sessions, not recruiting). */
 export const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
-  session_1on1: 'Expert session (30 min)',
+  session_1on1: 'Expert session',
   pre_call_brief: 'Pre-call brief package',
-  extended_session: 'Deep-dive expert session (60 min)',
+  extended_session: 'Deep-dive expert session',
 };
+
+/** Label with booked length when known — do not hardcode 30/60 on variable sessions. */
+export function formatServiceTypeLabel(
+  serviceType: ServiceType | string,
+  durationMinutes?: number | null,
+): string {
+  const base =
+    serviceType in SERVICE_TYPE_LABELS
+      ? SERVICE_TYPE_LABELS[serviceType as ServiceType]
+      : String(serviceType);
+  if (durationMinutes != null && Number.isFinite(durationMinutes) && durationMinutes > 0) {
+    return `${base} (${Math.floor(durationMinutes)} min)`;
+  }
+  return base;
+}
 
 export type BookingStatus =
   | 'pending_payment'
