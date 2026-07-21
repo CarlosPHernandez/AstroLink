@@ -94,4 +94,83 @@ describe('resolveAppSessionFromAuthUser', () => {
 
     expect(session?.role).toBe('mentee');
   });
+
+  it('does not grant mentor by email alone without user_id link', async () => {
+    // eq('user_id') lookups return null — no silent email attach.
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'mentors') {
+        const api: Record<string, unknown> = {};
+        const self = () => api;
+        api.select = vi.fn(self);
+        api.eq = vi.fn(() => ({
+          maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+        }));
+        return api;
+      }
+      if (table === 'users') {
+        return chain({ data: null });
+      }
+      if (table === 'user_app_state') {
+        return chain({ data: null });
+      }
+      return chain({ data: null });
+    });
+
+    const session = await resolveAppSessionFromAuthUser({
+      id: 'auth-uuid',
+      email: 'chris@example.com',
+      user_metadata: { full_name: 'Chris' },
+      app_metadata: {},
+      aud: 'authenticated',
+      created_at: '',
+    } as never);
+
+    expect(session?.role).toBe('mentee');
+  });
+
+  it('grants mentor when mentors.user_id is linked', async () => {
+    const publicId = 'public-user-1';
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'users') {
+        return chain({ data: { id: publicId } });
+      }
+      if (table === 'mentors') {
+        const api: Record<string, unknown> = {};
+        const self = () => api;
+        api.select = vi.fn(self);
+        api.eq = vi.fn((col: string, val: string) => ({
+          maybeSingle: vi.fn(async () => {
+            if (col === 'user_id' && val === publicId) {
+              return {
+                data: {
+                  id: 'mentor-1',
+                  full_name: 'Chris',
+                  email: 'chris@example.com',
+                  user_id: publicId,
+                  activation_status: 'pending',
+                },
+                error: null,
+              };
+            }
+            return { data: null, error: null };
+          }),
+        }));
+        return api;
+      }
+      return chain({ data: null });
+    });
+
+    const session = await resolveAppSessionFromAuthUser({
+      id: 'auth-uuid',
+      email: 'chris@example.com',
+      user_metadata: { full_name: 'Chris' },
+      app_metadata: {},
+      aud: 'authenticated',
+      created_at: '',
+    } as never);
+
+    expect(session?.role).toBe('mentor');
+    expect(session?.userId).toBe('mentor-1');
+    expect(session?.activationStatus).toBe('pending');
+  });
 });

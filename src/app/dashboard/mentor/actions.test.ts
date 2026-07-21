@@ -24,6 +24,7 @@ const mentorSession = {
   role: 'mentor' as const,
   fullName: 'Chris Sembroski',
   onboarded: true,
+  activationStatus: 'active' as const,
 };
 
 function profileForm(overrides: Record<string, string> = {}): FormData {

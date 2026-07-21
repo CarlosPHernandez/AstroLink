@@ -17,6 +17,15 @@ export function isPasswordRecoveryNextPath(path: string): boolean {
   return pathOnly === '/auth/update-password';
 }
 
+/** Expert claim completion after magic link — do not divert to complete-profile. */
+export function isActivationClaimNextPath(path: string): boolean {
+  const pathOnly = (path.split('?')[0] ?? '').toLowerCase();
+  return (
+    pathOnly === '/activate/complete' ||
+    pathOnly.startsWith('/activate/complete/')
+  );
+}
+
 /** Same-origin relative path only; blocks open redirects. */
 export function getSafeRedirectPath(
   raw: string | null | undefined,
@@ -49,7 +58,11 @@ export function getSafeRedirectPath(
 export function getDefaultPathAfterAuth(params: {
   role: SessionData['role'];
   onboarded?: boolean;
+  activationStatus?: SessionData['activationStatus'];
 }): string {
+  if (params.role === 'mentor' && params.activationStatus === 'pending') {
+    return '/activate/setup';
+  }
   if (params.role === 'mentor' && !params.onboarded) {
     return '/onboard';
   }

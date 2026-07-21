@@ -21,7 +21,7 @@ export async function GET() {
   const { data, error } = await supabaseAdmin
     .from('mentors')
     .select(
-      'id, email, full_name, slug, live_session_price_cents, is_listed, compliance_status, created_at',
+      'id, email, full_name, slug, live_session_price_cents, is_listed, compliance_status, created_at, activation_status, pending_email',
     )
     .order('created_at', { ascending: false })
     .limit(50);
@@ -40,6 +40,8 @@ export async function GET() {
       liveSessionPriceCents: m.live_session_price_cents,
       isListed: m.is_listed,
       complianceStatus: m.compliance_status,
+      activationStatus: m.activation_status ?? 'active',
+      pendingEmail: m.pending_email ?? null,
       bookHref: m.slug ? `/booking?mentor=${encodeURIComponent(m.slug)}` : null,
     })),
   });

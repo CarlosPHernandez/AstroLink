@@ -14,6 +14,16 @@ export async function POST(request: Request) {
     return sessionOrResponse;
   }
 
+  if (sessionOrResponse.activationStatus === 'pending') {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Finish expert activation before connecting payouts.',
+      },
+      { status: 403 },
+    );
+  }
+
   if (!isStripeConnectPayoutsEnabled()) {
     return NextResponse.json(
       {
