@@ -2,6 +2,11 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.4.1] - 2026-07-20
+
+### Fixed
+- Expert session calls play **remote audio** again: Daily call objects only deliver tracks; the room UI now attaches each remote participant’s audio track to a hidden autoplay element (video and captions already worked).
+
 ## [0.8.4.0] - 2026-07-20
 
 ### Fixed

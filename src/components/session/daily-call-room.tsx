@@ -63,6 +63,40 @@ function VideoTile({
   );
 }
 
+/**
+ * Daily call objects deliver tracks; they do not auto-play remote audio.
+ * Attach each remote audio track to a hidden <audio> element (never local — echo).
+ */
+function RemoteAudio({ track, sessionId }: { track: MediaStreamTrack | null; sessionId: string }) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el) {
+      return;
+    }
+    if (!track) {
+      el.srcObject = null;
+      return;
+    }
+    el.srcObject = new MediaStream([track]);
+    void el.play().catch(() => undefined);
+    return () => {
+      el.srcObject = null;
+    };
+  }, [track]);
+
+  return (
+    <audio
+      ref={audioRef}
+      autoPlay
+      playsInline
+      data-testid={`session-remote-audio-${sessionId}`}
+      className="hidden"
+    />
+  );
+}
+
 export function DailyCallRoom({ booking, onEnded }: DailyCallRoomProps) {
   const isOwner = booking.sessionRole === 'mentor' || booking.sessionRole === 'admin';
   const viewerLocale = resolveViewerLocale(
@@ -132,6 +166,9 @@ export function DailyCallRoom({ booking, onEnded }: DailyCallRoomProps) {
         {remotes.length === 0 && daily.status === 'joined' ? (
           <VideoTile label="Waiting for participant…" track={null} />
         ) : null}
+        {remotes.map((p) => (
+          <RemoteAudio key={`audio-${p.sessionId}`} sessionId={p.sessionId} track={p.audioTrack} />
+        ))}
       </div>
 
       {booking.captionsAvailable ? (
