@@ -68,24 +68,34 @@ const PAYOUT_OPTIONS = [
 
 function StepNav({
   onBack,
-  backLabel = 'Back',
   children,
 }: {
   onBack?: () => void;
-  backLabel?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-between sm:items-center pt-2 border-t border-outline-variant/60 mt-6">
+    <div className="mt-8 flex flex-col-reverse gap-3 border-t border-outline-variant/50 pt-6 sm:flex-row sm:items-center sm:justify-between">
       {onBack ? (
-        <button type="button" className={`${activateSecondaryBtnClass} w-full sm:w-auto`} onClick={onBack}>
-          {backLabel}
+        <button
+          type="button"
+          className={`${activateSecondaryBtnClass} sm:w-auto`}
+          onClick={onBack}
+        >
+          Back
         </button>
       ) : (
         <span className="hidden sm:block" />
       )}
-      <div className="w-full sm:w-auto sm:min-w-[200px]">{children}</div>
+      <div className="w-full sm:w-auto sm:min-w-[12rem]">{children}</div>
     </div>
+  );
+}
+
+function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
+  return (
+    <label className="activate-label" htmlFor={htmlFor}>
+      {children}
+    </label>
   );
 }
 
@@ -153,27 +163,27 @@ export function ActivateSetupClient({
       <div data-testid="activate-setup">
         <ActivateBrandHeader
           title="Confirm your expert profile"
-          subtitle="Review what we preloaded. You can edit anything before you finish."
+          subtitle="Review what we preloaded. Edit anything before you finish — listing visibility stays with ops."
         />
         <ActivateStepProgress currentStep={step} />
         <ActivateCard>
           {step === 0 && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <MaterialIcon name="verified_user" size={28} />
                 </div>
-                <div className="space-y-2">
-                  <h2 className="font-headline-sm text-lg font-semibold text-on-surface">
+                <div className="min-w-0 flex-1 space-y-2 text-left">
+                  <h2 className="text-lg font-semibold tracking-tight text-on-surface">
                     Welcome, {firstName}
                   </h2>
-                  <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
-                    Your sessions and public profile are already set up. This short setup confirms
-                    your details and how you prefer to get paid.
+                  <p className="text-sm leading-relaxed text-on-surface-variant text-pretty">
+                    Your sessions and public profile are already set up. This short flow confirms
+                    identity, profile details, and how you prefer to get paid.
                   </p>
                 </div>
               </div>
-              <ul className="grid gap-3 sm:grid-cols-3">
+              <ul className="grid gap-2 sm:grid-cols-3">
                 {[
                   { icon: 'badge' as const, label: 'Identity' },
                   { icon: 'edit_note' as const, label: 'Profile & rate' },
@@ -181,9 +191,9 @@ export function ActivateSetupClient({
                 ].map((item) => (
                   <li
                     key={item.label}
-                    className="flex items-center gap-2 rounded-lg border border-outline-variant/70 bg-surface-container-low/40 px-3 py-2.5 text-sm text-on-surface"
+                    className="flex items-center gap-2 rounded-lg border border-outline-variant/70 bg-surface-container-low/50 px-3 py-2.5 text-sm font-medium text-on-surface"
                   >
-                    <MaterialIcon name={item.icon} size={20} className="text-primary shrink-0" />
+                    <MaterialIcon name={item.icon} size={20} className="shrink-0 text-primary" />
                     {item.label}
                   </li>
                 ))}
@@ -191,7 +201,7 @@ export function ActivateSetupClient({
               <StepNav>
                 <button
                   type="button"
-                  className={`${activatePrimaryBtnClass} w-full`}
+                  className={activatePrimaryBtnClass}
                   onClick={() => setStep(1)}
                   data-testid="activate-welcome-continue"
                 >
@@ -203,20 +213,15 @@ export function ActivateSetupClient({
 
           {step === 1 && (
             <div className="space-y-5">
-              <div>
-                <h2 className="font-semibold text-on-surface text-base mb-1">Identity</h2>
-                <p className="text-sm text-on-surface-variant">
-                  How you appear on AstroLink. Sign-in email is fixed for this invite.
+              <div className="text-left">
+                <h2 className="text-base font-semibold tracking-tight text-on-surface">Identity</h2>
+                <p className="mt-1 text-sm leading-relaxed text-on-surface-variant text-pretty">
+                  How you appear on AstroLink. Sign-in email is locked to this invite.
                 </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                  <label
-                    className="block font-mono text-[9px] uppercase tracking-wider text-on-surface-variant mb-1.5"
-                    htmlFor="fullName"
-                  >
-                    Full name
-                  </label>
+                  <FieldLabel htmlFor="fullName">Full name</FieldLabel>
                   <input
                     id="fullName"
                     name="fullName"
@@ -227,21 +232,19 @@ export function ActivateSetupClient({
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block font-mono text-[9px] uppercase tracking-wider text-on-surface-variant mb-1.5">
-                    Signed in as
-                  </label>
+                  <FieldLabel>Signed in as</FieldLabel>
                   <input
                     type="email"
                     readOnly
                     value={profile.email || session.email}
-                    className={`${activateInputClass} bg-surface-container-low text-on-surface-variant cursor-not-allowed`}
+                    className={`${activateInputClass} activate-input-readonly`}
                   />
                 </div>
               </div>
               <StepNav onBack={() => setStep(0)}>
                 <button
                   type="button"
-                  className={`${activatePrimaryBtnClass} w-full`}
+                  className={activatePrimaryBtnClass}
                   onClick={() => setStep(2)}
                   data-testid="activate-identity-continue"
                 >
@@ -253,9 +256,9 @@ export function ActivateSetupClient({
 
           {step === 2 && (
             <form action={profileAction} className="space-y-5">
-              <div>
-                <h2 className="font-semibold text-on-surface text-base mb-1">Profile</h2>
-                <p className="text-sm text-on-surface-variant">
+              <div className="text-left">
+                <h2 className="text-base font-semibold tracking-tight text-on-surface">Profile</h2>
+                <p className="mt-1 text-sm leading-relaxed text-on-surface-variant text-pretty">
                   Shown to buyers on your expert listing. Edit anything that looks off.
                 </p>
               </div>
@@ -263,14 +266,9 @@ export function ActivateSetupClient({
                 <FormAlert message={profileState.message} />
               ) : null}
               <input type="hidden" name="fullName" value={profile.fullName} />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label
-                    className="block font-mono text-[9px] uppercase tracking-wider text-on-surface-variant mb-1.5"
-                    htmlFor="title"
-                  >
-                    Title
-                  </label>
+                  <FieldLabel htmlFor="title">Title</FieldLabel>
                   <input
                     id="title"
                     name="title"
@@ -280,12 +278,7 @@ export function ActivateSetupClient({
                   />
                 </div>
                 <div>
-                  <label
-                    className="block font-mono text-[9px] uppercase tracking-wider text-on-surface-variant mb-1.5"
-                    htmlFor="employer"
-                  >
-                    Employer / institution
-                  </label>
+                  <FieldLabel htmlFor="employer">Employer / institution</FieldLabel>
                   <input
                     id="employer"
                     name="employer"
@@ -299,12 +292,7 @@ export function ActivateSetupClient({
                   <FieldError message={profileState?.errors?.employer?.[0]} />
                 </div>
                 <div className="sm:col-span-2">
-                  <label
-                    className="block font-mono text-[9px] uppercase tracking-wider text-on-surface-variant mb-1.5"
-                    htmlFor="expertise"
-                  >
-                    Expertise (comma-separated)
-                  </label>
+                  <FieldLabel htmlFor="expertise">Expertise (comma-separated)</FieldLabel>
                   <input
                     id="expertise"
                     name="expertise"
@@ -318,12 +306,7 @@ export function ActivateSetupClient({
                   <FieldError message={profileState?.errors?.expertise?.[0]} />
                 </div>
                 <div className="sm:col-span-2">
-                  <label
-                    className="block font-mono text-[9px] uppercase tracking-wider text-on-surface-variant mb-1.5"
-                    htmlFor="bio"
-                  >
-                    Bio
-                  </label>
+                  <FieldLabel htmlFor="bio">Bio</FieldLabel>
                   <textarea
                     id="bio"
                     name="bio"
@@ -332,20 +315,15 @@ export function ActivateSetupClient({
                     defaultValue={profile.bio}
                     className={fieldErrorInputClass(
                       !!profileState?.errors?.bio,
-                      `${activateInputClass} min-h-[120px] py-3`,
+                      `${activateInputClass} min-h-[7.5rem] py-3`,
                     )}
                   />
                   <FieldError message={profileState?.errors?.bio?.[0]} />
                 </div>
                 <div>
-                  <label
-                    className="block font-mono text-[9px] uppercase tracking-wider text-on-surface-variant mb-1.5"
-                    htmlFor="rate"
-                  >
-                    Hourly rate (USD)
-                  </label>
+                  <FieldLabel htmlFor="rate">Hourly rate (USD)</FieldLabel>
                   <div className="relative">
-                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">
+                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-on-surface-variant">
                       $
                     </span>
                     <input
@@ -368,7 +346,7 @@ export function ActivateSetupClient({
                 <button
                   type="submit"
                   disabled={profilePending}
-                  className={`${activatePrimaryBtnClass} w-full`}
+                  className={activatePrimaryBtnClass}
                   data-testid="activate-profile-save"
                 >
                   {profilePending ? 'Saving…' : 'Save & continue'}
@@ -379,9 +357,11 @@ export function ActivateSetupClient({
 
           {step === 3 && (
             <form action={payoutAction} className="space-y-5">
-              <div>
-                <h2 className="font-semibold text-on-surface text-base mb-1">Payout preference</h2>
-                <p className="text-sm text-on-surface-variant">
+              <div className="text-left">
+                <h2 className="text-base font-semibold tracking-tight text-on-surface">
+                  Payout preference
+                </h2>
+                <p className="mt-1 text-sm leading-relaxed text-on-surface-variant text-pretty">
                   Optional. We pay experts manually for now — this tells ops where to send funds.
                 </p>
               </div>
@@ -395,12 +375,11 @@ export function ActivateSetupClient({
                   return (
                     <label
                       key={opt.value}
-                      className={[
-                        'flex cursor-pointer items-start gap-3 rounded-xl border px-3.5 py-3 transition-colors',
+                      className={
                         selected
-                          ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
-                          : 'border-outline-variant hover:bg-surface-container-low/50',
-                      ].join(' ')}
+                          ? 'activate-tile activate-tile-selected'
+                          : 'activate-tile'
+                      }
                     >
                       <input
                         type="radio"
@@ -429,12 +408,7 @@ export function ActivateSetupClient({
               </fieldset>
               {payoutMethod !== 'unset' && payoutMethod !== 'bank_manual' ? (
                 <div>
-                  <label
-                    className="block font-mono text-[9px] uppercase tracking-wider text-on-surface-variant mb-1.5"
-                    htmlFor="payoutHandle"
-                  >
-                    Account email / phone / username
-                  </label>
+                  <FieldLabel htmlFor="payoutHandle">Account email / phone / username</FieldLabel>
                   <input
                     id="payoutHandle"
                     name="payoutHandle"
@@ -454,7 +428,7 @@ export function ActivateSetupClient({
                 <button
                   type="submit"
                   disabled={payoutPending}
-                  className={`${activatePrimaryBtnClass} w-full`}
+                  className={activatePrimaryBtnClass}
                   data-testid="activate-payout-save"
                 >
                   {payoutPending ? 'Saving…' : 'Continue'}
@@ -464,18 +438,18 @@ export function ActivateSetupClient({
           )}
 
           {step === 4 && (
-            <div className="space-y-6 text-center sm:text-left">
-              <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-on-primary shadow-[0_4px_20px_rgba(0,88,188,0.2)]">
+            <div className="space-y-6">
+              <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:text-left">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-on-primary shadow-[0_4px_20px_rgba(0,88,188,0.22)]">
                   <MaterialIcon name="check_circle" size={32} className="text-on-primary" />
                 </div>
-                <div className="space-y-2">
-                  <h2 className="font-headline-sm text-xl font-semibold text-on-surface">
+                <div className="min-w-0 space-y-2">
+                  <h2 className="text-xl font-semibold tracking-tight text-on-surface">
                     You&apos;re ready
                   </h2>
-                  <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
-                    Your expert account is activated. Open your dashboard to see sessions and update
-                    your profile anytime.
+                  <p className="text-sm leading-relaxed text-on-surface-variant text-pretty">
+                    Your expert account is activated. Open your dashboard for sessions and profile
+                    updates anytime.
                   </p>
                 </div>
               </div>
@@ -485,7 +459,7 @@ export function ActivateSetupClient({
                   type="button"
                   disabled={completePending}
                   onClick={() => void onComplete()}
-                  className={`${activatePrimaryBtnClass} w-full gap-2`}
+                  className={activatePrimaryBtnClass}
                   data-testid="activate-complete"
                 >
                   {completePending ? (

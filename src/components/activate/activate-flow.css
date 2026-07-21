@@ -1,0 +1,236 @@
+/**
+ * Expert activation — Chris campaign patterns on the light product theme.
+ * Do NOT use max-w-sm|md|lg|xl here: those collide with --spacing-* (8–32px).
+ */
+.activate-flow {
+  --activate-copy-max: 36rem;
+  --activate-form-max: 40rem;
+  --activate-card-radius: 1rem;
+  --activate-skew: -12deg;
+  background-color: var(--color-surface-container-lowest, #ffffff);
+  color: var(--color-on-surface, #1a1b1f);
+  min-height: 100dvh;
+  font-family: var(--font-body-md, Inter, system-ui, sans-serif);
+}
+
+.activate-flow .activate-copy-max {
+  max-width: var(--activate-copy-max);
+  width: 100%;
+}
+
+.activate-flow .activate-form-max {
+  max-width: var(--activate-form-max);
+  width: 100%;
+}
+
+.activate-flow .activate-title {
+  display: block;
+  width: 100%;
+  max-width: var(--activate-copy-max);
+  margin-left: auto;
+  margin-right: auto;
+  font-size: clamp(1.375rem, 2.5vw, 1.75rem);
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-on-surface, #1a1b1f);
+  text-wrap: balance;
+  text-align: center;
+}
+
+.activate-flow .activate-subtitle {
+  display: block;
+  width: 100%;
+  max-width: min(28rem, 100%);
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  font-weight: 400;
+  color: var(--color-on-surface-variant, #414755);
+  text-wrap: pretty;
+  text-align: center;
+}
+
+.activate-flow .activate-eyebrow {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary, #0058bc);
+}
+
+.activate-flow .activate-card {
+  width: 100%;
+  border-radius: var(--activate-card-radius);
+  border: 1px solid var(--color-outline-variant, #c1c6d7);
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(26, 27, 31, 0.04),
+    0 12px 40px -16px rgba(0, 88, 188, 0.12);
+  padding: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .activate-flow .activate-card {
+    padding: 2rem;
+  }
+}
+
+.activate-flow .activate-segment {
+  height: 0.25rem;
+  width: 2rem;
+  transform: skewX(var(--activate-skew));
+  border-radius: 9999px;
+}
+
+.activate-flow .activate-segment-filled {
+  background: var(--color-primary, #0058bc);
+}
+
+.activate-flow .activate-segment-empty {
+  border: 1px solid color-mix(in srgb, var(--color-outline-variant, #c1c6d7) 80%, transparent);
+  background: var(--color-surface-container-low, #f4f3f8);
+}
+
+.activate-flow .activate-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-on-surface-variant, #414755) 90%, transparent);
+  margin-bottom: 0.5rem;
+}
+
+.activate-flow .activate-input {
+  width: 100%;
+  min-height: 3rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-outline-variant, #c1c6d7);
+  background: #ffffff;
+  padding: 0.625rem 0.875rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-on-surface, #1a1b1f);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.activate-flow .activate-input::placeholder {
+  color: var(--color-outline, #717786);
+}
+
+.activate-flow .activate-input:focus {
+  outline: none;
+  border-color: var(--color-primary, #0058bc);
+  box-shadow: 0 0 0 1px var(--color-primary, #0058bc);
+}
+
+.activate-flow .activate-input-readonly {
+  background: var(--color-surface-container-low, #f4f3f8);
+  color: var(--color-on-surface-variant, #414755);
+  cursor: not-allowed;
+}
+
+.activate-flow .activate-btn-primary {
+  display: inline-flex;
+  min-height: 3rem;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  background: var(--color-primary, #0058bc);
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0.625rem 1.5rem;
+  transition: opacity 0.15s ease;
+}
+
+.activate-flow .activate-btn-primary:hover {
+  opacity: 0.95;
+}
+
+.activate-flow .activate-btn-primary:disabled {
+  opacity: 0.5;
+}
+
+.activate-flow .activate-btn-secondary {
+  display: inline-flex;
+  min-height: 3rem;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-outline-variant, #c1c6d7);
+  background: #ffffff;
+  color: var(--color-on-surface, #1a1b1f);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.625rem 1.5rem;
+  transition: background 0.15s ease;
+}
+
+.activate-flow .activate-btn-secondary:hover {
+  background: var(--color-surface-container-low, #f4f3f8);
+}
+
+.activate-flow .activate-tile {
+  display: flex;
+  cursor: pointer;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-outline-variant, #c1c6d7);
+  background: #ffffff;
+  padding: 0.875rem 1rem;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.activate-flow .activate-tile:hover {
+  background: var(--color-surface-container-low, #f4f3f8);
+}
+
+.activate-flow .activate-tile-selected {
+  border-color: var(--color-primary, #0058bc);
+  background: color-mix(in srgb, var(--color-primary, #0058bc) 6%, #ffffff);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary, #0058bc) 35%, transparent);
+}
+
+.activate-flow .activate-meta-chip {
+  border-radius: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--color-outline-variant, #c1c6d7) 70%, transparent);
+  background: var(--color-surface-container-low, #f4f3f8);
+  padding: 0.625rem 0.75rem;
+}
+
+.activate-flow .activate-meta-chip dt {
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant, #414755);
+  margin-bottom: 0.25rem;
+}
+
+.activate-flow .activate-meta-chip dd {
+  font-size: 0.875rem;
+  color: var(--color-on-surface, #1a1b1f);
+  word-break: break-word;
+}
+
+@media (min-width: 640px) {
+  .activate-flow .activate-btn-secondary,
+  .activate-flow .activate-btn-primary.activate-btn-auto {
+    width: auto;
+    min-width: 11rem;
+  }
+}
