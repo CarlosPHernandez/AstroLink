@@ -19,10 +19,13 @@ function VideoTile({
   label,
   track,
   mirrored,
+  logoFallback,
 }: {
   label: string;
   track: MediaStreamTrack | null;
   mirrored?: boolean;
+  /** Show AstroLink logo when camera is off (local fallback only). */
+  logoFallback?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -52,6 +55,13 @@ function VideoTile({
           playsInline
           muted
           className={`h-full w-full object-cover ${mirrored ? 'scale-x-[-1]' : ''}`}
+        />
+      ) : logoFallback ? (
+        // eslint-disable-next-line @next/next/no-img-element -- simple static brand tile
+        <img
+          src="/logo.jpg"
+          alt="AstroLink"
+          className="max-h-[55%] max-w-[70%] object-contain"
         />
       ) : (
         <span className="text-label-sm text-on-surface-variant">{label}</span>
@@ -98,6 +108,7 @@ function RemoteAudio({ track, sessionId }: { track: MediaStreamTrack | null; ses
 }
 
 export function DailyCallRoom({ booking, onEnded }: DailyCallRoomProps) {
+  const isAdminObserver = booking.sessionRole === 'admin';
   const isOwner = booking.sessionRole === 'mentor' || booking.sessionRole === 'admin';
   const viewerLocale = resolveViewerLocale(
     booking.sessionRole,
@@ -108,7 +119,8 @@ export function DailyCallRoom({ booking, onEnded }: DailyCallRoomProps) {
 
   const daily = useDailyCall({
     bookingId: booking.id,
-    isOwner,
+    isOwner: isOwner && !isAdminObserver,
+    logoAvatarMode: isAdminObserver,
     transcriptionEnabled: booking.captionsAvailable,
     e2eCaptionsStub: booking.e2eCaptionsStub,
     onFinalTranscription: (utterance) => {
@@ -159,7 +171,12 @@ export function DailyCallRoom({ booking, onEnded }: DailyCallRoomProps) {
             {daily.error ?? 'Could not join the video room.'}
           </p>
         )}
-        <VideoTile label={local?.userName ?? 'You'} track={local?.videoTrack ?? null} mirrored />
+        <VideoTile
+          label={isAdminObserver ? 'AstroLink' : (local?.userName ?? 'You')}
+          track={local?.videoTrack ?? null}
+          mirrored={!isAdminObserver}
+          logoFallback={isAdminObserver}
+        />
         {remotes.map((p) => (
           <VideoTile key={p.sessionId} label={p.userName} track={p.videoTrack} />
         ))}
