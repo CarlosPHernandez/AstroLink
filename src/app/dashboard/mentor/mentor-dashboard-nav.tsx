@@ -23,8 +23,8 @@ export function MentorDashboardNav({
   payoutNavStatus: PayoutNavStatus;
 }) {
   return (
-    <div>
-      <nav className="md-tabs" aria-label="Mentor dashboard" role="tablist">
+    <div className="md-nav-block">
+      <nav className="md-seg" aria-label="Mentor dashboard" role="tablist">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -34,7 +34,7 @@ export function MentorDashboardNav({
             onClick={() => onTabChange(tab.id)}
             data-testid={`mentor-tab-${tab.id}`}
             className={
-              activeTab === tab.id ? 'md-tab md-tab-active' : 'md-tab'
+              activeTab === tab.id ? 'md-seg-item md-seg-item-active' : 'md-seg-item'
             }
           >
             {tab.label}

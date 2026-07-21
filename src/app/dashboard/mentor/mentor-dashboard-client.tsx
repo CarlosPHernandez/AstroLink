@@ -36,8 +36,6 @@ import { partitionMentorBookings, type MentorBookingView } from '@/lib/mentor-bo
 import type { MentorEarningRow, MentorEarningsSummary } from '@/lib/mentor-earnings-types';
 import { resolvePayoutNavStatus } from '@/lib/mentor-payouts-config';
 import '@/components/dashboard/mentor-dashboard.css';
-import Image from 'next/image';
-import Link from 'next/link';
 
 interface SessionData {
   userId: string;
@@ -313,50 +311,46 @@ export default function MentorDashboardClient({
     <>
     <div className="mentor-dash">
       <div className="md-shell">
-        <header className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 space-y-4">
-            <Link href="/" aria-label="AstroLink home">
-              <Image
-                src="/logo.jpg"
-                alt="AstroLink"
-                width={180}
-                height={48}
-                className="md-logo"
-                priority
-              />
-            </Link>
-            <div>
-              <h1 className="md-title">Welcome back, {firstName}</h1>
-              <p className="md-subtitle">
-                Your sessions, earnings, and public profile — same calm setup as activation.
-              </p>
-            </div>
+        <header className="md-header">
+          <div className="md-header-copy min-w-0">
+            <h1 className="md-title">Welcome back, {firstName}</h1>
+            <p className="md-subtitle">
+              Your sessions, earnings, and public profile in one place.
+            </p>
           </div>
-          <button type="button" onClick={() => logoutAction()} className="md-sign-out self-start">
-            Sign out
-          </button>
+          <div className="md-account">
+            <span className="md-account-email">{session.email}</span>
+            <button
+              type="button"
+              onClick={() => logoutAction()}
+              className="md-btn-secondary"
+              data-testid="mentor-sign-out"
+            >
+              Sign out
+            </button>
+          </div>
         </header>
 
         {showSetupBar ? (
           <div className="md-setup" data-testid="mentor-setup-progress">
             <p className="md-setup-label">Getting set up</p>
-            <div className="md-segments" aria-hidden="true">
+            <div className="md-setup-chips" aria-label="Setup progress">
               {setupSteps.map((s) => (
-                <div
+                <span
                   key={s.key}
-                  className={s.done ? 'md-segment md-segment-on' : 'md-segment md-segment-off'}
-                />
+                  className={s.done ? 'md-setup-chip md-setup-chip-done' : 'md-setup-chip'}
+                >
+                  {s.label}
+                  {s.done ? ' ✓' : ''}
+                </span>
               ))}
             </div>
             <p className="md-setup-copy">
-              {setupSteps
-                .map((s) => `${s.label}${s.done ? ' ✓' : ''}`)
-                .join(' · ')}
               {profileNeedsOnboarding
-                ? ' — finish your profile so buyers see accurate details.'
+                ? 'Finish your profile so buyers see accurate details.'
                 : !hasUpcoming && past.length === 0
-                  ? ' — when a buyer books you, the session shows up here.'
-                  : ''}
+                  ? 'When a buyer books you, the session shows up here.'
+                  : 'Complete the remaining steps when you are ready.'}
             </p>
           </div>
         ) : null}

@@ -19,3 +19,10 @@ Key routing rules:
 - Resume context → invoke /context-restore
 - Mentor dashboard ops (implement PR1–PR5) → invoke /mentor-dashboard-ops
 - Mentor dashboard ops (plan/refine scope) → invoke /mentor-dashboard-ops-plan
+
+## Design System
+
+Always read `DESIGN.md` before making any visual or UI decisions for the expert dashboard.
+All font hierarchy, colors, spacing, nav, and button rules for `/dashboard/mentor` are defined there.
+Do not reintroduce a logo in the mentor dashboard header or thin underline-only primary tabs.
+In QA mode, flag any dashboard UI that does not match `DESIGN.md`.
