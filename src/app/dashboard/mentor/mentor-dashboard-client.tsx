@@ -36,6 +36,7 @@ import { partitionMentorBookings, type MentorBookingView } from '@/lib/mentor-bo
 import type { MentorEarningRow, MentorEarningsSummary } from '@/lib/mentor-earnings-types';
 import { resolvePayoutNavStatus } from '@/lib/mentor-payouts-config';
 import '@/components/dashboard/mentor-dashboard.css';
+import Link from 'next/link';
 
 interface SessionData {
   userId: string;
