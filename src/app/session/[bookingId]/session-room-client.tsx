@@ -172,6 +172,8 @@ function SessionGatePanel({
 
 export default function SessionRoomClient({ booking }: { booking: BookingSessionView }) {
   const [ended, setEnded] = useState(false);
+  const [fulfillment, setFulfillment] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
+  const [bookingStatus, setBookingStatus] = useState(booking.status);
   const [provisioningStartedAt] = useState(() => Date.now());
   const [elapsedMs, setElapsedMs] = useState(0);
   const [provisionLoading, setProvisionLoading] = useState(false);
@@ -183,6 +185,9 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
   );
 
   const exitHref = getDashboardPathForRole(booking.sessionRole);
+  const isCompleted =
+    booking.gate === 'completed' || bookingStatus === 'completed' || fulfillment === 'done';
+  const showPostSessionUi = isCompleted || (ended && fulfillment !== 'idle');
 
   useEffect(() => {
     if (booking.gate !== 'provisioning') {
@@ -225,6 +230,27 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
     }
   }, [booking.id]);
 
+  /** Webhook fallback: complete booking + kick APX-03 when call ends or eject fires. */
+  const completeSession = useCallback(async () => {
+    setFulfillment((prev) => (prev === 'done' ? prev : 'running'));
+    try {
+      const res = await fetch(`/api/session/${booking.id}/complete`, { method: 'POST' });
+      const data = (await res.json()) as { error?: string; success?: boolean };
+      if (!res.ok) {
+        throw new Error(data.error ?? 'Could not complete session');
+      }
+      setBookingStatus('completed');
+      setFulfillment('done');
+    } catch {
+      setFulfillment('error');
+    }
+  }, [booking.id]);
+
+  const handleCallEnded = useCallback(() => {
+    setEnded(true);
+    void completeSession();
+  }, [completeSession]);
+
   const provisioningTimedOut = booking.gate === 'provisioning' && elapsedMs >= PROVISION_TIMEOUT_MS;
 
   return (
@@ -256,7 +282,7 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             data-testid="session-status-badge"
             className="text-label-sm font-mono text-on-surface-variant uppercase"
           >
-            {booking.status}
+            {bookingStatus}
           </span>
         </div>
       </header>
@@ -313,22 +339,6 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             </SessionGatePanel>
           )}
 
-          {booking.gate === 'expired' && (
-            <SessionGatePanel testId="session-expired">
-              <h3 className="text-headline-md font-bold text-on-surface mb-2">Join window closed</h3>
-              <p className="text-body-md text-on-surface-variant mb-6 text-pretty">
-                The scheduled join window for this session has ended. If you still need help, contact
-                support or book another session from your dashboard.
-              </p>
-              <Link
-                href={exitHref}
-                className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
-              >
-                Back to dashboard
-              </Link>
-            </SessionGatePanel>
-          )}
-
           {booking.gate === 'provisioning' && (
             <SessionGatePanel testId="session-provisioning">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Room preparing</h3>
@@ -364,12 +374,13 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
 
           {booking.gate === 'ready' &&
             !ended &&
+            !showPostSessionUi &&
             (booking.dailyRoomUrl || booking.e2eCaptionsStub) && (
             <div data-testid="session-join-ready" className="w-full">
-              <DailyCallRoom booking={booking} onEnded={() => setEnded(true)} />
+              <DailyCallRoom booking={booking} onEnded={handleCallEnded} />
               <p className="mt-3 text-center text-label-sm text-on-surface-variant">
-                Leave the call with the End session control to finish billing. Post-session synthesis
-                runs when everyone leaves the Daily room (webhook).
+                Leave with End session when you are done. The call also ends automatically at the
+                booked length. Your recap generates after the call ends.
               </p>
             </div>
           )}
@@ -388,16 +399,39 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             </SessionGatePanel>
           )}
 
-          {booking.gate === 'completed' && (
+          {showPostSessionUi && (
             <SessionGatePanel testId="session-completed">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Session completed</h3>
-              <SessionRecapPanel bookingId={booking.id} />
-              <SessionTranscriptPanel
-                bookingId={booking.id}
-                mentorName={booking.mentorName}
-                menteeName={booking.menteeName}
-                viewerRole={booking.sessionRole}
-              />
+              {fulfillment === 'running' ? (
+                <p className="text-body-md text-on-surface-variant mb-6" data-testid="session-complete-pending">
+                  Finishing your session and generating the AI recap…
+                </p>
+              ) : null}
+              {fulfillment === 'error' ? (
+                <div className="mb-6 space-y-3" data-testid="session-complete-error">
+                  <p className="text-body-md text-on-surface-variant">
+                    Could not finalize the session automatically. Retry to generate the recap.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void completeSession()}
+                    className="inline-flex min-h-11 items-center justify-center rounded-md border border-outline-variant px-5 py-2.5 text-label-sm font-semibold text-on-surface"
+                  >
+                    Retry recap
+                  </button>
+                </div>
+              ) : null}
+              {(isCompleted || fulfillment === 'done' || booking.gate === 'completed') && (
+                <>
+                  <SessionRecapPanel bookingId={booking.id} />
+                  <SessionTranscriptPanel
+                    bookingId={booking.id}
+                    mentorName={booking.mentorName}
+                    menteeName={booking.menteeName}
+                    viewerRole={booking.sessionRole}
+                  />
+                </>
+              )}
               <Link
                 href={exitHref}
                 className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
@@ -411,7 +445,7 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             <SessionGatePanel testId="session-unavailable">
               <h3 className="text-headline-md font-bold text-on-surface mb-2">Session unavailable</h3>
               <p className="text-body-md text-on-surface-variant mb-6">
-                This booking cannot be joined right now ({booking.status}).
+                This booking cannot be joined right now ({bookingStatus}).
               </p>
               <Link
                 href={exitHref}
@@ -422,19 +456,32 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             </SessionGatePanel>
           )}
 
-          {booking.gate === 'ready' && ended && (
-            <SessionGatePanel testId="session-ended-local">
-              <h3 className="text-headline-md font-bold text-on-surface mb-2">Session ended</h3>
+          {booking.gate === 'expired' && !showPostSessionUi && (
+            <SessionGatePanel testId="session-expired">
+              <h3 className="text-headline-md font-bold text-on-surface mb-2">Join window closed</h3>
               <p className="text-body-md text-on-surface-variant mb-6 text-pretty">
-                Post-session synthesis and payout bookkeeping run when everyone leaves the Daily
-                call (webhook). Check your dashboard in a minute for the summary.
+                The scheduled join window for this session has ended. If the call already happened,
+                you can still load the recap below.
               </p>
-              <Link
-                href={exitHref}
-                className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
+              <button
+                type="button"
+                data-testid="session-load-recap"
+                onClick={() => {
+                  setEnded(true);
+                  void completeSession();
+                }}
+                className="mb-4 inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2.5 text-label-sm font-semibold text-on-primary hover:bg-primary-container"
               >
-                Back to dashboard
-              </Link>
+                Load session recap
+              </button>
+              <div>
+                <Link
+                  href={exitHref}
+                  className="inline-flex min-h-11 items-center justify-center rounded-md border border-outline-variant px-5 py-2.5 text-label-sm font-semibold text-on-surface"
+                >
+                  Back to dashboard
+                </Link>
+              </div>
             </SessionGatePanel>
           )}
           </div>
