@@ -17,11 +17,14 @@ import {
 import type { BriefingPayload } from '@/lib/briefing-display';
 import { logoutAction } from '@/app/auth/actions';
 import {
+  changeMentorPasswordAction,
   updateMentorProfileAction,
   uploadMentorNf1860Action,
   type MentorProfileActionState,
 } from '@/app/dashboard/mentor/actions';
+import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
+import { fieldErrorInputClass } from '@/lib/zod-field-errors';
 import { MentorConsultationCard } from '@/app/dashboard/mentor/mentor-consultation-card';
 import {
   MentorDashboardNav,
@@ -193,6 +196,12 @@ export default function MentorDashboardClient({
     FormData
   >(uploadMentorNf1860Action, undefined);
 
+  const [passwordState, passwordAction, passwordPending] = useActionState<
+    MentorProfileActionState | undefined,
+    FormData
+  >(changeMentorPasswordAction, undefined);
+  const passwordFormRef = useRef<HTMLFormElement>(null);
+
   useEffect(() => {
     if (mentorProfile) {
       const frame = window.requestAnimationFrame(() => setProfile(mentorProfile));
@@ -206,6 +215,12 @@ export default function MentorDashboardClient({
       router.refresh();
     }
   }, [profileState?.success, uploadState?.success, router]);
+
+  useEffect(() => {
+    if (passwordState?.success) {
+      passwordFormRef.current?.reset();
+    }
+  }, [passwordState?.success]);
 
   useEffect(() => {
     if (!prepId || handledPrepRef.current === prepId) {
@@ -587,6 +602,116 @@ export default function MentorDashboardClient({
                     {profilePending ? 'Saving…' : 'Save profile'}
                   </button>
                 </form>
+
+                <section
+                  className="md-field-stack border-t border-outline-variant pt-8"
+                  data-testid="mentor-password-section"
+                  aria-labelledby="mentor-password-heading"
+                >
+                  <header>
+                    <h3 id="mentor-password-heading" className="md-section-title">
+                      Password
+                    </h3>
+                    <p className="md-subtitle" style={{ marginTop: '0.5rem' }}>
+                      Change the password you use to sign in to your expert dashboard.
+                    </p>
+                  </header>
+
+                  <form
+                    ref={passwordFormRef}
+                    action={passwordAction}
+                    className="md-field-stack"
+                    data-testid="mentor-password-form"
+                  >
+                    {passwordState?.success ? (
+                      <p className="md-empty" data-testid="mentor-password-success">
+                        {passwordState.message ?? 'Password updated.'}
+                      </p>
+                    ) : null}
+                    {passwordState?.message && !passwordState.success ? (
+                      <FormAlert message={passwordState.message} />
+                    ) : null}
+
+                    <div>
+                      <label htmlFor="mentor-current-password" className="md-label">
+                        Current password
+                      </label>
+                      <input
+                        id="mentor-current-password"
+                        name="currentPassword"
+                        type="password"
+                        required
+                        autoComplete="current-password"
+                        disabled={passwordPending}
+                        data-testid="mentor-current-password"
+                        className={fieldErrorInputClass(
+                          !!passwordState?.errors?.currentPassword,
+                          'md-input',
+                        )}
+                      />
+                      <FieldError message={passwordState?.errors?.currentPassword?.[0]} />
+                    </div>
+
+                    <div className="md-field-grid md-field-grid-2">
+                      <div>
+                        <label htmlFor="mentor-new-password" className="md-label">
+                          New password
+                        </label>
+                        <input
+                          id="mentor-new-password"
+                          name="password"
+                          type="password"
+                          required
+                          minLength={8}
+                          autoComplete="new-password"
+                          disabled={passwordPending}
+                          data-testid="mentor-new-password"
+                          className={fieldErrorInputClass(
+                            !!passwordState?.errors?.password,
+                            'md-input',
+                          )}
+                        />
+                        <FieldError message={passwordState?.errors?.password?.[0]} />
+                      </div>
+                      <div>
+                        <label htmlFor="mentor-confirm-password" className="md-label">
+                          Confirm new password
+                        </label>
+                        <input
+                          id="mentor-confirm-password"
+                          name="confirmPassword"
+                          type="password"
+                          required
+                          minLength={8}
+                          autoComplete="new-password"
+                          disabled={passwordPending}
+                          data-testid="mentor-confirm-password"
+                          className={fieldErrorInputClass(
+                            !!passwordState?.errors?.confirmPassword,
+                            'md-input',
+                          )}
+                        />
+                        <FieldError message={passwordState?.errors?.confirmPassword?.[0]} />
+                      </div>
+                    </div>
+
+                    <p className="md-empty" style={{ margin: 0 }}>
+                      Forgot your current password?{' '}
+                      <Link href="/auth/forgot-password" className="text-primary font-medium">
+                        Reset via email
+                      </Link>
+                    </p>
+
+                    <button
+                      type="submit"
+                      disabled={passwordPending}
+                      className="md-btn-primary"
+                      data-testid="mentor-password-submit"
+                    >
+                      {passwordPending ? 'Updating…' : 'Update password'}
+                    </button>
+                  </form>
+                </section>
               </div>
             )}
 
