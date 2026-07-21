@@ -1,9 +1,12 @@
 /**
- * Formats a session instant for display in the viewer's local timezone,
- * with an explicit short timezone label (e.g. EDT) so UTC vs local is not ambiguous.
- * Call sites should use suppressHydrationWarning when rendered in SSR + CSR,
- * since server and browser may differ in timezone.
+ * Formats a session instant for display in US Eastern time (America/New_York),
+ * with a short zone label (EST/EDT). Does not use the browser timezone so
+ * machines set to UTC still show Eastern for ops/experts/mentees.
  */
+
+/** Canonical display zone for AstroLink session times. */
+export const SESSION_DISPLAY_TIMEZONE = 'America/New_York';
+
 function parseSessionInstant(iso: string): Date {
   let s = iso.trim();
   // Postgres often returns "2026-07-21 15:20:00+00" — normalize for Date.parse.
@@ -27,6 +30,7 @@ export function formatSessionWhen(iso: string): string {
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
+      timeZone: SESSION_DISPLAY_TIMEZONE,
       timeZoneName: 'short',
     }).format(date);
   } catch {
