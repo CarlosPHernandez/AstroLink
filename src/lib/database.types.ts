@@ -325,6 +325,8 @@ export type Database = {
       }
       mentors: {
         Row: {
+          activated_at: string | null
+          activation_status: Database["public"]["Enums"]["mentor_activation_status"]
           bio: string
           compliance_status: Database["public"]["Enums"]["compliance_status"]
           created_at: string
@@ -338,6 +340,9 @@ export type Database = {
           is_civil_servant: boolean
           is_listed: boolean
           live_session_price_cents: number
+          payout_handle: string | null
+          payout_method: Database["public"]["Enums"]["mentor_payout_method"]
+          pending_email: string | null
           slug: string | null
           stripe_connect_account_id: string | null
           stripe_onboarding_completed: boolean
@@ -345,6 +350,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          activated_at?: string | null
+          activation_status?: Database["public"]["Enums"]["mentor_activation_status"]
           bio?: string
           compliance_status?: Database["public"]["Enums"]["compliance_status"]
           created_at?: string
@@ -358,6 +365,9 @@ export type Database = {
           is_civil_servant?: boolean
           is_listed?: boolean
           live_session_price_cents?: number
+          payout_handle?: string | null
+          payout_method?: Database["public"]["Enums"]["mentor_payout_method"]
+          pending_email?: string | null
           slug?: string | null
           stripe_connect_account_id?: string | null
           stripe_onboarding_completed?: boolean
@@ -365,6 +375,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          activated_at?: string | null
+          activation_status?: Database["public"]["Enums"]["mentor_activation_status"]
           bio?: string
           compliance_status?: Database["public"]["Enums"]["compliance_status"]
           created_at?: string
@@ -378,11 +390,50 @@ export type Database = {
           is_civil_servant?: boolean
           is_listed?: boolean
           live_session_price_cents?: number
+          payout_handle?: string | null
+          payout_method?: Database["public"]["Enums"]["mentor_payout_method"]
+          pending_email?: string | null
           slug?: string | null
           stripe_connect_account_id?: string | null
           stripe_onboarding_completed?: boolean
           title?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      mentor_claim_tokens: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string
+          expires_at: string
+          id: string
+          mentor_id: string
+          revoked_at: string | null
+          token_hash: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          mentor_id: string
+          revoked_at?: string | null
+          token_hash: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          mentor_id?: string
+          revoked_at?: string | null
+          token_hash?: string
+          used_at?: string | null
         }
         Relationships: []
       }
@@ -733,6 +784,13 @@ export type Database = {
         | "approved"
         | "rejected"
       integration_provider: "google_calendar"
+      mentor_activation_status: "pending" | "active"
+      mentor_payout_method:
+        | "paypal"
+        | "zelle"
+        | "cashapp"
+        | "bank_manual"
+        | "unset"
       service_type: "session_1on1" | "pre_call_brief" | "extended_session"
       transaction_status: "pending" | "completed" | "failed" | "refunded"
     }
@@ -871,6 +929,8 @@ export const Constants = {
         "rejected",
       ],
       integration_provider: ["google_calendar"],
+      mentor_activation_status: ["pending", "active"],
+      mentor_payout_method: ["paypal", "zelle", "cashapp", "bank_manual", "unset"],
       service_type: ["session_1on1", "pre_call_brief", "extended_session"],
       transaction_status: ["pending", "completed", "failed", "refunded"],
     },

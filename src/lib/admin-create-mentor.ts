@@ -110,7 +110,11 @@ export async function createOrUpdateMentor(input: CreateMentorBody): Promise<Cre
 
   const { data, error } = await supabaseAdmin
     .from('mentors')
-    .insert(row)
+    .insert({
+      ...row,
+      // New ops-created experts need claim + wizard (invite separately).
+      activation_status: 'pending' as const,
+    })
     .select('id, email, full_name, slug, live_session_price_cents, is_listed, compliance_status')
     .single();
 

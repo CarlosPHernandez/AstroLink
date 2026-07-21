@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import {
   getDefaultPathAfterAuth,
   getSafeRedirectPath,
+  isActivationClaimNextPath,
   isPasswordRecoveryNextPath,
 } from '@/lib/auth-redirect';
 import {
@@ -38,6 +39,11 @@ export async function GET(request: NextRequest) {
   // Password recovery: set password first; do not divert to profile completion.
   if (isPasswordRecoveryNextPath(safeNext) || isPasswordRecoveryNextPath(nextParam ?? '')) {
     return NextResponse.redirect(`${origin}/auth/update-password`);
+  }
+
+  // Expert claim: finish linking before any generic profile-completion diversion.
+  if (isActivationClaimNextPath(safeNext) || isActivationClaimNextPath(nextParam ?? '')) {
+    return NextResponse.redirect(`${origin}${safeNext}`);
   }
 
   if (needsProfileCompletion(user)) {

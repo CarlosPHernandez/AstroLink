@@ -2,6 +2,17 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.5.0] - 2026-07-21
+
+### Added
+- **Expert activation claim:** admins invite pre-seeded experts by email (Resend); experts open a magic-link claim, confirm profile + optional payout preference, then land on the mentor dashboard without changing public slug or bookings.
+- Demo seed expert `demo-activation-expert` for dry-runs before inviting real experts.
+- How-to: `docs/how-to/expert-activation-invite.md`.
+
+### Fixed
+- Mentor role is no longer granted by email match alone—ownership requires a claimed `mentors.user_id` link.
+- Claim tokens are single-use (consumed before link) and revocable; pending experts are gated until activation completes.
+
 ## [0.8.4.1] - 2026-07-20
 
 ### Fixed

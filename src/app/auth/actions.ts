@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import {
   getDefaultPathAfterAuth,
   getSafeRedirectPath,
+  isActivationClaimNextPath,
 } from '@/lib/auth-redirect';
 import { appAuthPath } from '@/lib/app-url';
 import {
@@ -82,12 +83,17 @@ function demoAuthDisabledState(): ActionState {
 
 function redirectAfterAuth(
   formData: FormData,
-  session: { role: 'mentor' | 'mentee' | 'admin'; onboarded?: boolean },
+  session: {
+    role: 'mentor' | 'mentee' | 'admin';
+    onboarded?: boolean;
+    activationStatus?: 'pending' | 'active';
+  },
 ) {
   const redirectParam = formData.get('redirect');
   const fallback = getDefaultPathAfterAuth({
     role: session.role,
     onboarded: session.onboarded,
+    activationStatus: session.activationStatus,
   });
   redirect(getSafeRedirectPath(redirectParam?.toString(), fallback));
 }
@@ -104,7 +110,11 @@ async function redirectAfterSupabaseAuth(formData: FormData) {
   const redirectParam = formData.get('redirect')?.toString() ?? '';
   const safeNext = getSafeRedirectPath(redirectParam, '/dashboard/mentee');
 
-  if (needsProfileCompletion(user)) {
+  if (
+    !isActivationClaimNextPath(safeNext) &&
+    !isActivationClaimNextPath(redirectParam) &&
+    needsProfileCompletion(user)
+  ) {
     redirect(
       `/auth/complete-profile?redirect=${encodeURIComponent(safeNext)}`,
     );
@@ -196,15 +206,29 @@ export async function loginAction(
     sessionUserId = await ensureMenteeUserRow({ userId, email, fullName });
   }
 
+  // Demo cookie sessions must carry activation_status (no resolveAppSession).
+  let activationStatus: 'pending' | 'active' | undefined;
+  if (isMentor) {
+    const { supabaseAdmin } = await import('@/lib/supabase');
+    const { data: mentorRow } = await supabaseAdmin
+      .from('mentors')
+      .select('activation_status')
+      .eq('id', sessionUserId)
+      .maybeSingle();
+    activationStatus =
+      mentorRow?.activation_status === 'pending' ? 'pending' : 'active';
+  }
+
   await createSession({
     userId: sessionUserId,
     email,
     role,
     fullName,
     onboarded: hasOnboarded,
+    activationStatus,
   });
 
-  redirectAfterAuth(formData, { role, onboarded: hasOnboarded });
+  redirectAfterAuth(formData, { role, onboarded: hasOnboarded, activationStatus });
   return { success: true };
 }
 
@@ -232,6 +256,22 @@ export async function registerAction(
   const { fullName, email, password } = result.data;
 
   if (isSupabaseAuthEnabled()) {
+    // Block open registration for emails reserved by expert invites (claim-only).
+    const { supabaseAdmin } = await import('@/lib/supabase');
+    const normalized = email.trim().toLowerCase();
+    const { data: reserved } = await supabaseAdmin
+      .from('mentors')
+      .select('id')
+      .eq('pending_email', normalized)
+      .maybeSingle();
+    if (reserved?.id) {
+      return {
+        message:
+          'This email is reserved for expert activation. Use the invite link we sent you.',
+        success: false,
+      };
+    }
+
     const supabase = await createClient();
     const redirectParam = formData.get('redirect')?.toString() ?? '';
     const safeNext = getSafeRedirectPath(redirectParam, '/dashboard/mentee');

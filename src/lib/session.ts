@@ -18,6 +18,8 @@ export interface SessionData {
   fullName: string;
   expiresAt: string;
   onboarded?: boolean;
+  /** Expert claim wizard: pending until /activate/setup is completed. */
+  activationStatus?: 'pending' | 'active';
 }
 
 export async function createSession(data: Omit<SessionData, 'expiresAt'>) {

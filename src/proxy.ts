@@ -35,6 +35,7 @@ function redirectForRole(session: SessionData) {
   return getDefaultPathAfterAuth({
     role: session.role,
     onboarded: session.onboarded,
+    activationStatus: session.activationStatus,
   });
 }
 
@@ -63,7 +64,32 @@ function applyRoleGuards(
     return NextResponse.redirect(new URL(fallback, request.url));
   }
 
+  if (pathname.startsWith('/activate') && session.role !== 'mentor') {
+    const fallback = session.role === 'admin' ? '/dashboard/admin' : '/dashboard/mentee';
+    return NextResponse.redirect(new URL(fallback, request.url));
+  }
+
   return null;
+}
+
+/** UX redirect for claim wizard — not a security boundary (mutations use requireActivatedMentor). */
+function applyPendingActivationRedirect(
+  request: NextRequest,
+  pathname: string,
+  session: SessionData,
+): NextResponse | null {
+  if (session.role !== 'mentor' || session.activationStatus !== 'pending') {
+    return null;
+  }
+  if (
+    pathname.startsWith('/activate') ||
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/e2e')
+  ) {
+    return null;
+  }
+  return NextResponse.redirect(new URL('/activate/setup', request.url));
 }
 
 async function resolveSessionForProxy(request: NextRequest): Promise<{
@@ -113,7 +139,11 @@ export async function proxy(request: NextRequest) {
   const isBooking = pathname.startsWith('/booking');
   const isSession = pathname.startsWith('/session');
   const isOnboard = pathname.startsWith('/onboard');
-  const isProtectedRoute = isDashboard || isBooking || isSession || isOnboard;
+  // /activate?token= is public (claim entry). Authenticated wizard paths are protected.
+  const isActivateAuthed =
+    pathname.startsWith('/activate/setup') || pathname.startsWith('/activate/complete');
+  const isProtectedRoute =
+    isDashboard || isBooking || isSession || isOnboard || isActivateAuthed;
   const isAuthEntry = pathname === '/auth';
 
   const finish = (response: NextResponse) => {
@@ -147,6 +177,13 @@ export async function proxy(request: NextRequest) {
 
   if (pathname === '/auth/complete-profile' && !session) {
     return finish(redirectToAuth(request, returnPath));
+  }
+
+  if (session) {
+    const pendingRedirect = applyPendingActivationRedirect(request, pathname, session);
+    if (pendingRedirect) {
+      return finish(pendingRedirect);
+    }
   }
 
   if (isProtectedRoute) {

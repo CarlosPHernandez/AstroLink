@@ -10,6 +10,8 @@ type MentorSummary = {
   liveSessionPriceCents: number;
   isListed: boolean;
   complianceStatus: string;
+  activationStatus?: string;
+  pendingEmail?: string | null;
   bookHref: string | null;
 };
 
@@ -44,6 +46,9 @@ export function CreateExpertPanel() {
   const [bookHref, setBookHref] = useState<string | null>(null);
   const [mentors, setMentors] = useState<MentorSummary[]>([]);
   const [listError, setListError] = useState<string | null>(null);
+  const [inviteEmailById, setInviteEmailById] = useState<Record<string, string>>({});
+  const [inviteBusyId, setInviteBusyId] = useState<string | null>(null);
+  const [inviteMessage, setInviteMessage] = useState<string | null>(null);
 
   const loadMentors = useCallback(async () => {
     setListError(null);
@@ -303,25 +308,91 @@ export function CreateExpertPanel() {
           </button>
         </div>
         {listError ? <p className="text-xs text-error">{listError}</p> : null}
-        <ul className="space-y-2 max-h-48 overflow-y-auto">
+        {inviteMessage ? (
+          <p className="text-xs text-primary mb-2" data-testid="admin-invite-message">
+            {inviteMessage}
+          </p>
+        ) : null}
+        <ul className="space-y-2 max-h-72 overflow-y-auto">
           {mentors.map((m) => (
             <li
               key={m.id}
-              className="text-xs font-mono text-on-surface-variant flex flex-wrap gap-x-3 gap-y-1 border border-outline-variant/50 rounded-md px-2 py-1.5"
+              className="text-xs text-on-surface-variant border border-outline-variant/50 rounded-md px-2 py-2 space-y-2"
+              data-testid={`admin-mentor-row-${m.slug ?? m.id}`}
             >
-              <span className="text-on-surface font-semibold">{m.fullName}</span>
-              <span>{m.slug}</span>
-              <span>
-                {m.liveSessionPriceCents === 0
-                  ? '$0'
-                  : `$${(m.liveSessionPriceCents / 100).toFixed(0)}/hr`}
-              </span>
-              <span>{m.isListed ? 'listed' : 'hidden'}</span>
-              {m.bookHref ? (
-                <a href={m.bookHref} className="text-primary underline">
-                  book
-                </a>
-              ) : null}
+              <div className="font-mono flex flex-wrap gap-x-3 gap-y-1">
+                <span className="text-on-surface font-semibold">{m.fullName}</span>
+                <span>{m.slug}</span>
+                <span>
+                  {m.liveSessionPriceCents === 0
+                    ? '$0'
+                    : `$${(m.liveSessionPriceCents / 100).toFixed(0)}/hr`}
+                </span>
+                <span>{m.isListed ? 'listed' : 'hidden'}</span>
+                <span data-testid="admin-mentor-activation">
+                  {m.activationStatus ?? 'active'}
+                </span>
+                {m.pendingEmail ? <span>pending: {m.pendingEmail}</span> : null}
+                {m.bookHref ? (
+                  <a href={m.bookHref} className="text-primary underline">
+                    book
+                  </a>
+                ) : null}
+              </div>
+              <div className="flex flex-wrap gap-2 items-center">
+                <input
+                  type="email"
+                  placeholder="Invite email"
+                  className={`${fieldClass} max-w-[220px] py-1.5 text-xs`}
+                  value={inviteEmailById[m.id] ?? m.pendingEmail ?? m.email}
+                  onChange={(e) =>
+                    setInviteEmailById((prev) => ({ ...prev, [m.id]: e.target.value }))
+                  }
+                  data-testid={`admin-invite-email-${m.id}`}
+                />
+                <button
+                  type="button"
+                  disabled={inviteBusyId === m.id}
+                  className="px-2.5 py-1.5 rounded-md bg-secondary text-on-secondary text-[10px] font-semibold uppercase tracking-wider disabled:opacity-50"
+                  data-testid={`admin-invite-send-${m.id}`}
+                  onClick={() => {
+                    void (async () => {
+                      setInviteBusyId(m.id);
+                      setInviteMessage(null);
+                      try {
+                        const email =
+                          inviteEmailById[m.id]?.trim() || m.pendingEmail || m.email;
+                        const res = await fetch(`/api/admin/mentors/${m.id}/invite`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email, expiresInHours: 72 }),
+                        });
+                        const json = (await res.json()) as {
+                          success?: boolean;
+                          error?: string;
+                          email?: string;
+                          expiresAt?: string;
+                        };
+                        if (!res.ok || !json.success) {
+                          throw new Error(json.error ?? 'Invite failed');
+                        }
+                        setInviteMessage(
+                          `Invite sent to ${json.email} (expires ${json.expiresAt ? new Date(json.expiresAt).toLocaleString() : 'soon'}).`,
+                        );
+                        await loadMentors();
+                      } catch (err: unknown) {
+                        setInviteMessage(
+                          err instanceof Error ? err.message : 'Invite failed',
+                        );
+                      } finally {
+                        setInviteBusyId(null);
+                      }
+                    })();
+                  }}
+                >
+                  {inviteBusyId === m.id ? 'Sending…' : 'Invite to activate'}
+                </button>
+              </div>
             </li>
           ))}
         </ul>

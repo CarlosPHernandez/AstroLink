@@ -105,53 +105,53 @@ export async function resolveAppSessionFromAuthUser(user: User): Promise<Session
     }
   }
 
-  const { data: mentorByUser } = await supabaseAdmin
-    .from('mentors')
-    .select('id, full_name, email, user_id')
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  if (mentorByUser) {
-    return {
-      userId: mentorByUser.id,
-      email: mentorByUser.email,
-      role: 'mentor',
-      fullName: mentorByUser.full_name,
-      expiresAt: sessionExpiry,
-      onboarded: true,
-    };
-  }
-
-  if (email) {
-    const { data: mentorByEmail } = await supabaseAdmin
-      .from('mentors')
-      .select('id, full_name, email')
-      .eq('email', email)
-      .maybeSingle();
-
-    if (mentorByEmail) {
-      await supabaseAdmin
-        .from('mentors')
-        .update({ user_id: user.id })
-        .eq('id', mentorByEmail.id);
-
-      const publicUserId = await resolvePublicUserIdForAuthUser({
+  const earlyPublicUserId = email
+    ? await resolvePublicUserIdForAuthUser({
         authUserId: user.id,
         email,
-      });
-      const appState = await loadAppState(
-        [publicUserId ?? '', user.id].filter(Boolean),
-      );
+      })
+    : null;
 
-      return {
-        userId: mentorByEmail.id,
-        email: mentorByEmail.email,
-        role: 'mentor',
-        fullName: mentorByEmail.full_name,
-        expiresAt: sessionExpiry,
-        onboarded: appState?.onboarded ?? true,
-      };
+  const mentorSelect =
+    'id, full_name, email, user_id, activation_status' as const;
+
+  /**
+   * Mentor ownership is claim-linked only via mentors.user_id.
+   * Do NOT auto-attach by email: pending/pre-seeded experts must complete invite claim.
+   * (user_id FKs public.users.id; also try auth id when they coincide.)
+   */
+  let mentorRow: {
+    id: string;
+    full_name: string;
+    email: string;
+    user_id: string | null;
+    activation_status?: string | null;
+  } | null = null;
+
+  for (const candidateId of [earlyPublicUserId, user.id].filter(Boolean) as string[]) {
+    const { data } = await supabaseAdmin
+      .from('mentors')
+      .select(mentorSelect)
+      .eq('user_id', candidateId)
+      .maybeSingle();
+    if (data) {
+      mentorRow = data;
+      break;
     }
+  }
+
+  if (mentorRow) {
+    const activationStatus =
+      mentorRow.activation_status === 'pending' ? 'pending' : 'active';
+    return {
+      userId: mentorRow.id,
+      email: mentorRow.email,
+      role: 'mentor',
+      fullName: mentorRow.full_name,
+      expiresAt: sessionExpiry,
+      onboarded: true,
+      activationStatus,
+    };
   }
 
   // user_app_state is keyed by public.users.id — resolve that before auth UUID.

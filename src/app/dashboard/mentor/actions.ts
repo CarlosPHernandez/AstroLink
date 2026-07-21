@@ -1,12 +1,12 @@
 'use server';
 
+import { requireActivatedMentor } from '@/lib/mentor-activation/require-activated-mentor';
 import {
   getMentorProfileRow,
   recordMentorNf1860Upload,
   updateMentorProfile,
 } from '@/lib/mentor-profile';
 import { validateNf1860PdfBuffer, validateNf1860PdfFile } from '@/lib/nf1860-upload';
-import { getSession } from '@/lib/session';
 import { z } from 'zod';
 
 const ProfileSchema = z.object({
@@ -45,10 +45,11 @@ export async function updateMentorProfileAction(
   _prev: MentorProfileActionState | undefined,
   formData: FormData,
 ): Promise<MentorProfileActionState> {
-  const session = await getSession();
-  if (!session || session.role !== 'mentor') {
-    return { message: 'You must be signed in as a mentor.', success: false };
+  const gate = await requireActivatedMentor();
+  if (!gate.ok) {
+    return { message: gate.message, success: false };
   }
+  const session = gate.session;
 
   const parsed = ProfileSchema.safeParse({
     rate: formData.get('rate'),
@@ -99,10 +100,11 @@ export async function uploadMentorNf1860Action(
   _prev: MentorProfileActionState | undefined,
   formData: FormData,
 ): Promise<MentorProfileActionState> {
-  const session = await getSession();
-  if (!session || session.role !== 'mentor') {
-    return { message: 'You must be signed in as a mentor.', success: false };
+  const gate = await requireActivatedMentor();
+  if (!gate.ok) {
+    return { message: gate.message, success: false };
   }
+  const session = gate.session;
 
   const file = formData.get('file');
   if (!(file instanceof File)) {
