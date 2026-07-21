@@ -12,19 +12,16 @@ import { SERVICE_TYPE_LABELS, type BookingStatus, type ServiceType } from '@/lib
 import { isJoinRoomEnabled, joinRoomAvailabilityTitle } from '@/lib/join-window';
 
 function canMentorJoin(booking: MentorBookingView): boolean {
-  // Legacy name kept for the "should we consider rendering a join control" check.
-  return Boolean(
-    booking.dailyRoomUrl &&
-      (booking.status === 'confirmed' || booking.status === 'completed'),
-  );
+  return booking.status === 'confirmed' || booking.status === 'completed';
 }
 
-function isMentorJoinEnabled(booking: MentorBookingView): boolean {
+function isMentorJoinEnabled(booking: MentorBookingView, nowMs: number = Date.now()): boolean {
   return isJoinRoomEnabled(
     booking.status,
     booking.dailyRoomUrl,
     booking.scheduledAt,
-    Date.now()
+    nowMs,
+    booking.durationMinutes,
   );
 }
 

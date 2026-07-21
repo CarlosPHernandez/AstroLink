@@ -70,9 +70,16 @@ export function resolveSessionGate(params: {
   status: string;
   dailyRoomUrl: string | null;
   scheduledAt: string | null;
+  durationMinutes?: number | null;
   nowMs?: number;
 }): SessionGate {
-  const { status, dailyRoomUrl, scheduledAt, nowMs = Date.now() } = params;
+  const {
+    status,
+    dailyRoomUrl,
+    scheduledAt,
+    durationMinutes = null,
+    nowMs = Date.now(),
+  } = params;
 
   if (status === 'pending_payment') {
     return 'pending_payment';
@@ -88,7 +95,7 @@ export function resolveSessionGate(params: {
       return 'provisioning';
     }
 
-    const joinPhase = resolveSessionJoinPhase(scheduledAt, nowMs);
+    const joinPhase = resolveSessionJoinPhase(scheduledAt, nowMs, { durationMinutes });
     if (joinPhase === 'too_early') {
       return 'too_early';
     }
@@ -132,10 +139,16 @@ export async function getBookingForSession(
   }
 
   const mentor = data.mentors as { full_name: string } | null;
+  const durationMinutes =
+    typeof data.duration_minutes === 'number' && Number.isFinite(data.duration_minutes)
+      ? data.duration_minutes
+      : null;
+
   const gate = resolveSessionGate({
     status: data.status,
     dailyRoomUrl: data.daily_room_url,
     scheduledAt: data.scheduled_at,
+    durationMinutes,
   });
 
   const menteeUser = data.users as { full_name: string; preferred_locale: string | null } | null;
@@ -169,10 +182,7 @@ export async function getBookingForSession(
       showCaptionsForBuyer,
       e2eCaptionsStub,
       scheduledAt: data.scheduled_at,
-      durationMinutes:
-        typeof data.duration_minutes === 'number' && Number.isFinite(data.duration_minutes)
-          ? data.duration_minutes
-          : null,
+      durationMinutes,
       briefing: (data.briefing_json as BriefingPayload | null) ?? null,
     },
     forbidden: false,

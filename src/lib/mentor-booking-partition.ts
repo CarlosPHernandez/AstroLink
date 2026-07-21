@@ -12,6 +12,7 @@ export interface MentorBookingView {
   dailyRoomUrl: string | null;
   intakeBackground: string | null;
   briefing: BriefingPayload | null;
+  durationMinutes?: number;
 }
 
 export interface PartitionedMentorBookings {

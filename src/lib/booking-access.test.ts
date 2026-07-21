@@ -61,16 +61,30 @@ describe('resolveSessionGate', () => {
     ).toBe('too_early');
   });
 
-  it('returns expired after join window', () => {
-    const scheduledAt = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+  it('returns expired after booked duration ends', () => {
+    const scheduledAt = new Date(Date.now() - 20 * 60 * 1000).toISOString();
     expect(
       resolveSessionGate({
         status: 'confirmed',
         dailyRoomUrl: roomUrl,
         scheduledAt,
+        durationMinutes: 15,
         nowMs: Date.now(),
       }),
     ).toBe('expired');
+  });
+
+  it('returns ready when late but still inside duration', () => {
+    const scheduledAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    expect(
+      resolveSessionGate({
+        status: 'confirmed',
+        dailyRoomUrl: roomUrl,
+        scheduledAt,
+        durationMinutes: 45,
+        nowMs: Date.now(),
+      }),
+    ).toBe('ready');
   });
 
   it('returns ready for unscheduled confirmed bookings with a room', () => {

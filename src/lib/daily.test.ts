@@ -115,9 +115,23 @@ describe('Daily helpers', () => {
       expect(resolveSessionJoinPhase(scheduledAt, Date.now())).toBe('ready');
     });
 
-    it('returns expired after join window', () => {
+    it('returns expired after default after-window when no duration', () => {
       const scheduledAt = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
       expect(resolveSessionJoinPhase(scheduledAt, Date.now())).toBe('expired');
+    });
+
+    it('returns ready when late but within booked duration', () => {
+      const scheduledAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      expect(
+        resolveSessionJoinPhase(scheduledAt, Date.now(), { durationMinutes: 45 }),
+      ).toBe('ready');
+    });
+
+    it('returns expired after booked duration', () => {
+      const scheduledAt = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+      expect(
+        resolveSessionJoinPhase(scheduledAt, Date.now(), { durationMinutes: 15 }),
+      ).toBe('expired');
     });
   });
 

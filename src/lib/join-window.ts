@@ -1,16 +1,11 @@
 /**
  * Pure timing helpers for "Join room" button enablement.
  *
- * - The real room access control is always enforced server-side in
- *   getBookingForSession / resolveSessionGate / Daily token nbf (see booking-access.ts and daily.ts).
- *   Early navigation or direct access is blocked by the gate regardless of this UI state.
- * - This module powers the *UI affordance*: the button is visible ("shows up") for confirmed
- *   bookings that have a room, but appears disabled until inside the window.
- * - Defaults to 0 minutes before (opens at the scheduled start). Override via
- *   DAILY_ROOM_JOIN_WINDOW_BEFORE_MINUTES if early entry is needed.
- * - getJoinBeforeMinutes() reads the real env on the server (when process.env available).
- *   Client usage falls back to the default so the module remains importable in 'use client' components.
- * - Live activation on an open dashboard is handled by a small interval in the consuming client.
+ * - Server gate still enforces access (booking-access + Daily nbf/exp).
+ * - Join opens at scheduled start (default before=0).
+ * - Join stays open until the booked call ends (duration_minutes), so late
+ *   arrivals (e.g. 5+ minutes late) can still join until the session is over.
+ * - If duration is missing, falls back to DAILY_ROOM_JOIN_WINDOW_AFTER_MINUTES (60).
  */
 
 function parseNonNegativeInt(value: string | undefined, fallback: number): number {
@@ -27,11 +22,10 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
 
 /** 0 = Join enabled at scheduled start (not early). */
 export const DEFAULT_JOIN_BEFORE_MINUTES = 0;
+/** Used only when booking has no duration_minutes. */
 export const DEFAULT_JOIN_AFTER_MINUTES = 60;
 
 export function getJoinBeforeMinutes(): number {
-  // On the server this can read the real env (used by Daily room/token logic too).
-  // On the client, non-NEXT_PUBLIC envs are not present, so we fall back to default.
   if (typeof process !== 'undefined' && process.env) {
     return parseNonNegativeInt(
       process.env.DAILY_ROOM_JOIN_WINDOW_BEFORE_MINUTES,
@@ -41,19 +35,44 @@ export function getJoinBeforeMinutes(): number {
   return DEFAULT_JOIN_BEFORE_MINUTES;
 }
 
+export function getJoinAfterMinutesFallback(): number {
+  if (typeof process !== 'undefined' && process.env) {
+    return parsePositiveInt(
+      process.env.DAILY_ROOM_JOIN_WINDOW_AFTER_MINUTES,
+      DEFAULT_JOIN_AFTER_MINUTES,
+    );
+  }
+  return DEFAULT_JOIN_AFTER_MINUTES;
+}
+
+/**
+ * End of join / "still upcoming" window in ms since epoch.
+ * Prefer booked duration so late joiners can enter until the call is done.
+ */
+export function resolveJoinWindowEndMs(
+  scheduledMs: number,
+  durationMinutes?: number | null,
+): number {
+  if (durationMinutes != null && Number.isFinite(durationMinutes) && durationMinutes > 0) {
+    return scheduledMs + durationMinutes * 60_000;
+  }
+  return scheduledMs + getJoinAfterMinutesFallback() * 60_000;
+}
+
 /** Tooltip / helper copy for dashboard Join buttons. */
 export function joinRoomAvailabilityTitle(beforeMinutes: number = DEFAULT_JOIN_BEFORE_MINUTES): string {
   if (beforeMinutes <= 0) {
-    return 'Join room becomes available at the session start time';
+    return 'Join room becomes available at the session start time and stays open until the call ends';
   }
-  return `Join room becomes available ${beforeMinutes} minutes before the session`;
+  return `Join room becomes available ${beforeMinutes} minutes before the session and stays open until the call ends`;
 }
 
 export type JoinPhase = 'too_early' | 'ready' | 'expired' | 'unscheduled';
 
 export function getJoinPhase(
   scheduledAt: string | null | undefined,
-  nowMs: number = Date.now()
+  nowMs: number = Date.now(),
+  durationMinutes?: number | null,
 ): JoinPhase {
   if (!scheduledAt?.trim()) {
     return 'unscheduled';
@@ -64,15 +83,8 @@ export function getJoinPhase(
   }
 
   const beforeMin = getJoinBeforeMinutes();
-  const afterMin = parsePositiveInt(
-    typeof process !== 'undefined' && process.env
-      ? process.env.DAILY_ROOM_JOIN_WINDOW_AFTER_MINUTES
-      : undefined,
-    DEFAULT_JOIN_AFTER_MINUTES
-  );
-
   const windowStart = scheduledMs - beforeMin * 60_000;
-  const windowEnd = scheduledMs + afterMin * 60_000;
+  const windowEnd = resolveJoinWindowEndMs(scheduledMs, durationMinutes);
 
   if (nowMs < windowStart) return 'too_early';
   if (nowMs > windowEnd) return 'expired';
@@ -80,29 +92,29 @@ export function getJoinPhase(
 }
 
 /**
- * Returns true when the "Join room" / "Join video room" control should be *enabled*
- * (clickable and styled active).
+ * Whether Join should be *enabled* (clickable).
  *
- * Rules:
- * - Must have a dailyRoomUrl.
- * - 'completed' → always enabled (used for recap access).
- * - 'confirmed' → enabled only inside the join window.
- * - Other statuses → false.
+ * - completed: enabled when a room exists (recap path).
+ * - confirmed: enabled inside the join window; room may be provisioned on navigate.
+ * - other statuses: false.
  */
 export function isJoinRoomEnabled(
   status: string,
   dailyRoomUrl: string | null | undefined,
   scheduledAt: string | null | undefined,
-  nowMs: number = Date.now()
+  nowMs: number = Date.now(),
+  durationMinutes?: number | null,
 ): boolean {
-  if (!dailyRoomUrl) {
-    return false;
-  }
   if (status === 'completed') {
-    return true;
+    return Boolean(dailyRoomUrl);
   }
   if (status !== 'confirmed') {
     return false;
   }
-  return getJoinPhase(scheduledAt, nowMs) === 'ready';
+  return getJoinPhase(scheduledAt, nowMs, durationMinutes) === 'ready';
+}
+
+/** Whether to show a Join control at all (enabled or disabled until window opens). */
+export function canShowJoinControl(status: string): boolean {
+  return status === 'confirmed' || status === 'completed';
 }

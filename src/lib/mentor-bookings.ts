@@ -19,7 +19,7 @@ export async function listMentorBookings(mentorId: string): Promise<MentorBookin
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .select(
-      'id, service_type, scheduled_at, status, match_reason, daily_room_url, briefing_json, intake_background, users(full_name)',
+      'id, service_type, scheduled_at, status, match_reason, daily_room_url, briefing_json, intake_background, duration_minutes, users(full_name)',
     )
     .eq('mentor_id', mentorId)
     .order('scheduled_at', { ascending: false });
@@ -41,6 +41,7 @@ export async function listMentorBookings(mentorId: string): Promise<MentorBookin
       dailyRoomUrl: row.daily_room_url,
       intakeBackground: row.intake_background,
       briefing: (row.briefing_json as BriefingPayload | null) ?? null,
+      durationMinutes: row.duration_minutes ?? undefined,
     };
   });
 }

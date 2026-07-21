@@ -124,7 +124,14 @@ export function meetingTokenWindowUnix(
 
   const cfg = getDailyDemoConfig();
   const nbf = Math.floor((scheduledMs - cfg.joinWindowBeforeMinutes * 60_000) / 1000);
-  const exp = Math.floor((scheduledMs + cfg.joinWindowAfterMinutes * 60_000) / 1000);
+  // Token/room join window ends at call end (booked duration), not a fixed 60m after start.
+  const afterMs =
+    options?.durationMinutes != null &&
+    Number.isFinite(options.durationMinutes) &&
+    options.durationMinutes > 0
+      ? options.durationMinutes * 60_000
+      : cfg.joinWindowAfterMinutes * 60_000;
+  const exp = Math.floor((scheduledMs + afterMs) / 1000);
 
   return {
     nbf,
@@ -136,6 +143,7 @@ export function meetingTokenWindowUnix(
 export function resolveSessionJoinPhase(
   scheduledAt: string | null | undefined,
   nowMs: number = Date.now(),
+  options?: { durationMinutes?: number | null },
 ): SessionJoinPhase {
   if (!scheduledAt?.trim()) {
     return 'unscheduled';
@@ -147,7 +155,13 @@ export function resolveSessionJoinPhase(
 
   const cfg = getDailyDemoConfig();
   const windowStart = scheduledMs - cfg.joinWindowBeforeMinutes * 60_000;
-  const windowEnd = scheduledMs + cfg.joinWindowAfterMinutes * 60_000;
+  const afterMs =
+    options?.durationMinutes != null &&
+    Number.isFinite(options.durationMinutes) &&
+    options.durationMinutes > 0
+      ? options.durationMinutes * 60_000
+      : cfg.joinWindowAfterMinutes * 60_000;
+  const windowEnd = scheduledMs + afterMs;
 
   if (nowMs < windowStart) {
     return 'too_early';

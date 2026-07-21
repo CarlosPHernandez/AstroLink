@@ -1,3 +1,4 @@
+import { resolveJoinWindowEndMs } from '@/lib/join-window';
 import type {
   BookingStatus,
   BriefingPayload,
@@ -22,14 +23,23 @@ export interface PartitionedMenteeBookings {
   nextUpcoming: MenteeBookingView | null;
 }
 
-type BookingTimingFields = Pick<MenteeBookingView, 'status' | 'scheduledAt'>;
+type BookingTimingFields = Pick<MenteeBookingView, 'status' | 'scheduledAt' | 'durationMinutes'>;
 
+/**
+ * Confirmed bookings stay "upcoming" until the call end (scheduled + duration),
+ * not merely until start — so late joiners still see Join room.
+ */
 export function isBookingUpcoming(booking: BookingTimingFields, now = new Date()): boolean {
   if (booking.status === 'pending_payment') {
     return true;
   }
   if (booking.status === 'confirmed') {
-    return new Date(booking.scheduledAt) >= now;
+    const scheduledMs = new Date(booking.scheduledAt).getTime();
+    if (Number.isNaN(scheduledMs)) {
+      return false;
+    }
+    const windowEnd = resolveJoinWindowEndMs(scheduledMs, booking.durationMinutes);
+    return now.getTime() < windowEnd;
   }
   return false;
 }
@@ -52,7 +62,6 @@ export function partitionMenteeBookings(
   upcoming.sort((a, b) => {
     const ta = new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime();
     if (ta !== 0) return ta;
-    // Stable/deterministic for equal times (e.g. just-booked vs others); newer id tends to sort later but predictable.
     return a.id.localeCompare(b.id);
   });
 

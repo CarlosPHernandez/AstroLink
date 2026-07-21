@@ -16,7 +16,11 @@ import type { BriefingPayload } from '@/lib/briefing-display';
 import { SERVICE_TYPE_LABELS } from '@/lib/types';
 import { DashboardSessionTranscript } from '@/components/session/dashboard-session-transcript';
 import { formatSessionWhen } from '@/lib/format';
-import { isJoinRoomEnabled, joinRoomAvailabilityTitle } from '@/lib/join-window';
+import {
+  canShowJoinControl,
+  isJoinRoomEnabled,
+  joinRoomAvailabilityTitle,
+} from '@/lib/join-window';
 
 interface SessionData {
   userId: string;
@@ -57,18 +61,22 @@ export default function MenteeDashboardClient({
   }, []);
 
   const getJoinState = useCallback((booking: MenteeBookingView) => {
-    const hasJoinControl =
-      !!booking.dailyRoomUrl &&
-      (booking.status === 'confirmed' || booking.status === 'completed');
+    const hasJoinControl = canShowJoinControl(booking.status);
     const joinEnabled = hasJoinControl
-      ? isJoinRoomEnabled(booking.status, booking.dailyRoomUrl, booking.scheduledAt, now)
+      ? isJoinRoomEnabled(
+          booking.status,
+          booking.dailyRoomUrl,
+          booking.scheduledAt,
+          now,
+          booking.durationMinutes,
+        )
       : false;
     return { hasJoinControl, joinEnabled };
   }, [now]);
 
   const { upcoming, past, nextUpcoming } = useMemo(
-    () => partitionMenteeBookings(bookings),
-    [bookings],
+    () => partitionMenteeBookings(bookings, new Date(now)),
+    [bookings, now],
   );
 
   const resolveBriefing = useCallback(
