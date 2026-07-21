@@ -18,8 +18,8 @@ export function ActivateBrandHeader({
         <Image
           src="/logo.jpg"
           alt="AstroLink"
-          width={140}
-          height={36}
+          width={220}
+          height={60}
           className="activate-logo"
           priority
         />

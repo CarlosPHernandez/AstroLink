@@ -19,9 +19,15 @@
 
 .activate-flow .activate-logo {
   display: block;
-  height: 2rem;
+  height: 3.25rem;
   width: auto;
   object-fit: contain;
+}
+
+@media (min-width: 640px) {
+  .activate-flow .activate-logo {
+    height: 3.75rem;
+  }
 }
 
 .activate-flow .activate-wordmark {
