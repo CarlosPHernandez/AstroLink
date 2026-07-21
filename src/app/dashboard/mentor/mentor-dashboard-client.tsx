@@ -30,9 +30,11 @@ import {
 import { MentorListingCard } from '@/app/dashboard/mentor/mentor-listing-card';
 import { MentorPayoutsPanel } from '@/app/dashboard/mentor/mentor-payouts-panel';
 import { partitionMentorBookings, type MentorBookingView } from '@/lib/mentor-booking-partition';
-import { complianceStatusLabel } from '@/lib/mentor-listing-status';
 import type { MentorEarningRow, MentorEarningsSummary } from '@/lib/mentor-earnings-types';
 import { resolvePayoutNavStatus } from '@/lib/mentor-payouts-config';
+import '@/components/dashboard/mentor-dashboard.css';
+import Image from 'next/image';
+import Link from 'next/link';
 
 interface SessionData {
   userId: string;
@@ -272,66 +274,96 @@ export default function MentorDashboardClient({
     stripeOnboardingCompleted: profile.stripeOnboardingCompleted,
   });
 
+  const firstName = profile.fullName.split(' ')[0] || profile.fullName;
+  const profileComplete =
+    !profileNeedsOnboarding &&
+    profile.bio.trim().length >= 10 &&
+    profile.employer.trim().length >= 2 &&
+    profile.expertise.trim().length >= 2 &&
+    profile.rate > 0;
+  const hasUpcoming = upcoming.length > 0;
+  const payoutReady =
+    payoutNavStatus === 'connected' ||
+    payoutNavStatus === 'manual' ||
+    payoutNavStatus === 'dev_skip';
+  const setupSteps = [
+    { key: 'profile', done: profileComplete, label: 'Profile' },
+    { key: 'payout', done: payoutReady, label: 'Payouts' },
+    { key: 'session', done: hasUpcoming || past.length > 0, label: 'Sessions' },
+  ] as const;
+  const setupFilled = setupSteps.filter((s) => s.done).length;
+  const showSetupBar = setupFilled < setupSteps.length;
+
   return (
     <>
-    <div className="min-h-screen bg-background p-6 text-on-surface md:p-10">
-      <div className="mx-auto max-w-5xl">
-        <header className="mb-10 flex flex-col justify-between gap-6 border-b border-outline-variant pb-6 md:flex-row md:items-center">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
-              Mentor dashboard
-            </p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-on-surface">
-              Hello, {profile.fullName}
-            </h1>
-            <p className="mt-1 text-sm text-on-surface-variant">
-              Manage sessions, earnings, and your public expert profile.
-            </p>
+    <div className="mentor-dash">
+      <div className="md-shell">
+        <header className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-4">
+            <Link href="/" aria-label="AstroLink home">
+              <Image
+                src="/logo.jpg"
+                alt="AstroLink"
+                width={180}
+                height={48}
+                className="md-logo"
+                priority
+              />
+            </Link>
+            <div>
+              <h1 className="md-title">Welcome back, {firstName}</h1>
+              <p className="md-subtitle">
+                Your sessions, earnings, and public profile — same calm setup as activation.
+              </p>
+            </div>
           </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-md border border-outline-variant bg-surface px-3 py-1.5 text-xs text-on-surface-variant">
-              Status:{' '}
-              <span className="font-medium text-on-surface">
-                {complianceStatusLabel(profile.complianceStatus)}
-              </span>
-            </span>
-            <button
-              type="button"
-              onClick={() => logoutAction()}
-              className="cursor-pointer rounded-md border border-outline-variant bg-surface px-4 py-2 text-xs font-semibold uppercase tracking-wide text-on-surface-variant transition-colors hover:text-on-surface"
-            >
-              Sign out
-            </button>
-          </div>
+          <button type="button" onClick={() => logoutAction()} className="md-sign-out self-start">
+            Sign out
+          </button>
         </header>
 
-        {profileNeedsOnboarding ? (
-          <div className="mb-8 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            Complete your mentor profile and connect payouts to appear in the public roster and
-            accept bookings.
+        {showSetupBar ? (
+          <div className="md-setup" data-testid="mentor-setup-progress">
+            <p className="md-setup-label">Getting set up</p>
+            <div className="md-segments" aria-hidden="true">
+              {setupSteps.map((s) => (
+                <div
+                  key={s.key}
+                  className={s.done ? 'md-segment md-segment-on' : 'md-segment md-segment-off'}
+                />
+              ))}
+            </div>
+            <p className="md-setup-copy">
+              {setupSteps
+                .map((s) => `${s.label}${s.done ? ' ✓' : ''}`)
+                .join(' · ')}
+              {profileNeedsOnboarding
+                ? ' — finish your profile so buyers see accurate details.'
+                : !hasUpcoming && past.length === 0
+                  ? ' — when a buyer books you, the session shows up here.'
+                  : ''}
+            </p>
           </div>
         ) : null}
 
-        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
-          <MentorDashboardNav
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            payoutNavStatus={payoutNavStatus}
-          />
+        <MentorDashboardNav
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          payoutNavStatus={payoutNavStatus}
+        />
 
-          <main className="lg:col-span-9">
+          <main>
             {activeTab === 'sessions' && (
-              <div className="space-y-8" data-testid="mentor-consultations-tab">
-                <header className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-on-surface">Sessions</h2>
-                  <p className="text-xs text-on-surface-variant">
+              <div className="space-y-10" data-testid="mentor-consultations-tab">
+                <header className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 className="md-section-title">Sessions</h2>
+                  <p className="md-section-meta">
                     {upcoming.length} upcoming · {past.length} past
                   </p>
                 </header>
 
                 {bookings.length === 0 ? (
-                  <p className="text-sm text-on-surface-variant">
+                  <p className="md-empty">
                     No sessions yet. When a buyer books you, they appear here with goals and
                     briefing context.
                   </p>
@@ -394,10 +426,10 @@ export default function MentorDashboardClient({
             )}
 
             {activeTab === 'profile' && (
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <header>
-                  <h2 className="text-lg font-semibold text-on-surface">Profile</h2>
-                  <p className="mt-1 text-sm text-on-surface-variant">
+                  <h2 className="md-section-title">Profile</h2>
+                  <p className="md-subtitle" style={{ marginTop: '0.5rem' }}>
                     Information shown to buyers on your expert listing.
                   </p>
                 </header>
@@ -410,12 +442,12 @@ export default function MentorDashboardClient({
 
                 <form
                   onSubmit={handleSaveProfile}
-                  className="space-y-5 rounded-lg border border-outline-variant bg-surface p-6"
+                  className="md-field-stack"
                   data-testid="mentor-profile-form"
                 >
                   {profileState?.success ? (
                     <p
-                      className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2"
+                      className="md-empty"
                       data-testid="mentor-profile-success"
                     >
                       {profileState.message ?? 'Profile saved.'}
@@ -425,12 +457,9 @@ export default function MentorDashboardClient({
                     <FormAlert message={profileState.message} />
                   ) : null}
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="md-field-grid md-field-grid-2">
                     <div>
-                      <label
-                        htmlFor="mentor-profile-rate"
-                        className="mb-1.5 block text-xs font-medium text-on-surface-variant"
-                      >
+                      <label htmlFor="mentor-profile-rate" className="md-label">
                         Hourly rate (USD)
                       </label>
                       <input
@@ -440,14 +469,11 @@ export default function MentorDashboardClient({
                         min={1}
                         value={profile.rate}
                         onChange={(e) => setProfile({ ...profile, rate: Number(e.target.value) })}
-                        className="w-full rounded-md border border-outline-variant bg-surface-container-low px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none"
+                        className="md-input"
                       />
                     </div>
                     <div>
-                      <label
-                        htmlFor="mentor-profile-employer"
-                        className="mb-1.5 block text-xs font-medium text-on-surface-variant"
-                      >
+                      <label htmlFor="mentor-profile-employer" className="md-label">
                         Employer
                       </label>
                       <input
@@ -456,16 +482,13 @@ export default function MentorDashboardClient({
                         required
                         value={profile.employer}
                         onChange={(e) => setProfile({ ...profile, employer: e.target.value })}
-                        className="w-full rounded-md border border-outline-variant bg-surface-container-low px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none"
+                        className="md-input"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label
-                      htmlFor="mentor-profile-expertise"
-                      className="mb-1.5 block text-xs font-medium text-on-surface-variant"
-                    >
+                    <label htmlFor="mentor-profile-expertise" className="md-label">
                       Expertise (comma-separated)
                     </label>
                     <input
@@ -474,15 +497,12 @@ export default function MentorDashboardClient({
                       required
                       value={profile.expertise}
                       onChange={(e) => setProfile({ ...profile, expertise: e.target.value })}
-                      className="w-full rounded-md border border-outline-variant bg-surface-container-low px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none"
+                      className="md-input"
                     />
                   </div>
 
                   <div>
-                    <label
-                      htmlFor="mentor-profile-bio"
-                      className="mb-1.5 block text-xs font-medium text-on-surface-variant"
-                    >
+                    <label htmlFor="mentor-profile-bio" className="md-label">
                       Bio
                     </label>
                     <textarea
@@ -491,18 +511,21 @@ export default function MentorDashboardClient({
                       required
                       value={profile.bio}
                       onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                      className="w-full resize-none rounded-md border border-outline-variant bg-surface-container-low px-3 py-2 text-sm leading-relaxed text-on-surface focus:border-primary focus:outline-none"
+                      className="md-input"
                     />
                   </div>
 
                   <div
-                    className="space-y-3 rounded-lg border border-outline-variant bg-surface-container-low/50 p-4"
+                    className="md-field-stack"
                     data-testid="mentor-civil-servant-row"
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <p className="min-w-0 text-sm font-medium text-on-surface">
+                    <label className="flex items-center justify-between gap-3 text-sm text-on-surface cursor-pointer">
+                      <span>
                         Federal civil servant
-                      </p>
+                        <span className="mt-1 block text-sm font-normal text-on-surface-variant">
+                          Requires NASA Form NF-1860 for outside consulting.
+                        </span>
+                      </span>
                       <input
                         type="checkbox"
                         aria-label="Federal civil servant"
@@ -520,15 +543,12 @@ export default function MentorDashboardClient({
                         }}
                         className="h-5 w-5 shrink-0 cursor-pointer rounded border-outline-variant text-primary focus:ring-primary"
                       />
-                    </div>
-                    <p className="text-sm leading-relaxed text-on-surface-variant">
-                      Requires NASA Form NF-1860 approval for outside consulting.
-                    </p>
+                    </label>
                   </div>
 
                   {profile.isCivilServant ? (
-                    <div className="space-y-3 rounded-lg border border-outline-variant bg-surface-container-low p-4">
-                      <p className="text-xs font-medium text-on-surface-variant">
+                    <div className="md-field-stack">
+                      <p className="md-label" style={{ marginBottom: 0 }}>
                         NF-1860 upload
                       </p>
                       <input
@@ -537,7 +557,7 @@ export default function MentorDashboardClient({
                         onChange={handlePdfUpload}
                         disabled={uploadPending}
                         data-testid="mentor-nf1860-upload"
-                        className="w-full text-sm text-on-surface-variant file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-outline-variant file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:uppercase disabled:opacity-50"
+                        className="w-full text-sm text-on-surface-variant file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white disabled:opacity-50"
                       />
                       {uploadState?.errors?.file?.[0] ? (
                         <p
@@ -551,10 +571,10 @@ export default function MentorDashboardClient({
                         <FormAlert message={uploadState.message} />
                       ) : null}
                       {uploadPending ? (
-                        <p className="text-xs text-on-surface-variant">Uploading…</p>
+                        <p className="md-empty">Uploading…</p>
                       ) : null}
                       {pdfUploaded ? (
-                        <p className="text-xs font-medium text-emerald-700">Document received.</p>
+                        <p className="md-empty">Document received.</p>
                       ) : null}
                     </div>
                   ) : null}
@@ -562,7 +582,7 @@ export default function MentorDashboardClient({
                   <button
                     type="submit"
                     disabled={profilePending}
-                    className="w-full cursor-pointer rounded-md bg-primary py-2.5 text-xs font-semibold uppercase tracking-wide text-white hover:bg-primary-container disabled:opacity-50"
+                    className="md-btn-primary"
                   >
                     {profilePending ? 'Saving…' : 'Save profile'}
                   </button>
@@ -571,7 +591,6 @@ export default function MentorDashboardClient({
             )}
 
           </main>
-        </div>
       </div>
     </div>
 
