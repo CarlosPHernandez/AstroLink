@@ -12,7 +12,7 @@ import {
   resolveBriefExportStatus,
   shouldWarnOps,
 } from '@/lib/booking-export';
-import { SERVICE_TYPE_LABELS } from '@/lib/types';
+import { formatServiceTypeLabel } from '@/lib/types';
 
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
@@ -254,7 +254,7 @@ export function buildExpertBriefPdfSections(
       `Buyer: ${ctx.menteeName}`,
       includeEmail ? `Email: ${ctx.menteeEmail}` : null,
       `When: ${formatSessionWhenUtc(ctx.scheduled_at)} (${duration} min)`,
-      `Service: ${SERVICE_TYPE_LABELS[ctx.service_type]}`,
+      `Service: ${formatServiceTypeLabel(ctx.service_type, duration)}`,
     ]
       .filter(Boolean)
       .join('\n'),
