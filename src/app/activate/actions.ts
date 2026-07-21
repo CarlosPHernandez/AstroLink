@@ -10,11 +10,13 @@ import {
   MentorClaimError,
 } from '@/lib/mentor-activation/claim';
 import {
+  ActivationPasswordSchema,
   ActivationProfileSchema,
   parseExpertiseList,
   PayoutPreferenceSchema,
 } from '@/lib/mentor-activation/schemas';
 import { requireMentorSession } from '@/lib/mentor-activation/require-activated-mentor';
+import { isSupabaseAuthEnabled } from '@/lib/app-mode';
 import { createSession, isUsingDemoSessionCookie } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
@@ -182,6 +184,60 @@ export async function completeClaimLinkAction(rawToken: string): Promise<Activat
       message: err instanceof Error ? err.message : 'Could not link your expert profile.',
     };
   }
+}
+
+/**
+ * Set password during expert activation (session already established via claim).
+ * Does not redirect — wizard continues to the next step.
+ */
+export async function setActivationPasswordAction(
+  _prev: ActivateActionState | undefined,
+  formData: FormData,
+): Promise<ActivateActionState> {
+  const gate = await requireMentorSession();
+  if (!gate.ok) {
+    return { success: false, message: gate.message };
+  }
+
+  if (!isSupabaseAuthEnabled()) {
+    // Demo cookie auth has no Auth password — skip so local dry-runs still work.
+    return { success: true, message: 'Password step skipped in demo auth.' };
+  }
+
+  const parsed = ActivationPasswordSchema.safeParse({
+    password: formData.get('password'),
+    confirmPassword: formData.get('confirmPassword'),
+  });
+
+  if (!parsed.success) {
+    return { success: false, errors: parsed.error.flatten().fieldErrors };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      success: false,
+      message: 'Your session expired. Open the invite link again.',
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+  });
+
+  if (error) {
+    console.error('setActivationPasswordAction:', error.message);
+    return {
+      success: false,
+      message: 'Could not set password. Try a different password or try again.',
+    };
+  }
+
+  return { success: true, message: 'Password saved.' };
 }
 
 export async function saveActivationProfileAction(

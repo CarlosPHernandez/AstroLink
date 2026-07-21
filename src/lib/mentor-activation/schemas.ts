@@ -7,6 +7,32 @@ export const InviteMentorBodySchema = z.object({
   expiresInHours: z.number().int().min(1).max(168).optional().default(72),
 });
 
+export const ActivationPasswordSchema = z
+  .object({
+    password: z.string().min(8, { message: 'Use at least 8 characters.' }),
+    confirmPassword: z.string().min(8, { message: 'Confirm your password.' }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match.',
+    path: ['confirmPassword'],
+  });
+
+/** Dashboard change-password: verify current, then set new. */
+export const ChangeMentorPasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, { message: 'Enter your current password.' }),
+    password: z.string().min(8, { message: 'Use at least 8 characters.' }),
+    confirmPassword: z.string().min(8, { message: 'Confirm your new password.' }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match.',
+    path: ['confirmPassword'],
+  })
+  .refine((data) => data.password !== data.currentPassword, {
+    message: 'New password must be different from your current password.',
+    path: ['password'],
+  });
+
 export const ActivationProfileSchema = z.object({
   fullName: z.string().trim().min(2, 'Enter your full name.').max(120),
   title: z.string().trim().max(160).optional().default(''),
