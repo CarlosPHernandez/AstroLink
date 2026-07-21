@@ -26,11 +26,44 @@ export type DailyCallStatus = 'idle' | 'joining' | 'joined' | 'left' | 'error';
 export type UseDailyCallOptions = {
   bookingId: string;
   isOwner: boolean;
+  /** Join muted with AstroLink logo as the published video (ops observer). */
+  logoAvatarMode?: boolean;
   transcriptionEnabled: boolean;
   e2eCaptionsStub?: boolean;
   onFinalTranscription?: (utterance: TranscriptUtterance) => void;
   onLeftMeeting?: () => void;
 };
+
+/** Still image of /logo.jpg published as a low-fps video track so remotes see branding. */
+async function createAstrolinkLogoVideoTrack(): Promise<MediaStreamTrack> {
+  const img = new Image();
+  img.decoding = 'async';
+  img.src = '/logo.jpg';
+  await img.decode();
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 960;
+  canvas.height = 540;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Could not create logo canvas');
+  }
+  ctx.fillStyle = '#0f1115';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const maxW = canvas.width * 0.55;
+  const maxH = canvas.height * 0.5;
+  const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+  const w = img.naturalWidth * scale;
+  const h = img.naturalHeight * scale;
+  ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+
+  const stream = canvas.captureStream(5);
+  const track = stream.getVideoTracks()[0];
+  if (!track) {
+    throw new Error('Logo captureStream produced no video track');
+  }
+  return track;
+}
 
 export type ParticipantMedia = {
   sessionId: string;
@@ -164,6 +197,7 @@ export function useDailyCall(options: UseDailyCallOptions) {
   const {
     bookingId,
     isOwner,
+    logoAvatarMode = false,
     transcriptionEnabled,
     e2eCaptionsStub = false,
     onFinalTranscription,
@@ -175,12 +209,13 @@ export function useDailyCall(options: UseDailyCallOptions) {
   const seenSegmentsRef = useRef<Set<string>>(new Set());
   const onFinalRef = useRef(onFinalTranscription);
   const onLeftRef = useRef(onLeftMeeting);
+  const logoTrackRef = useRef<MediaStreamTrack | null>(null);
 
   const [status, setStatus] = useState<DailyCallStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [participants, setParticipants] = useState<ParticipantMedia[]>([]);
-  const [micEnabled, setMicEnabled] = useState(true);
-  const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [micEnabled, setMicEnabled] = useState(!logoAvatarMode);
+  const [cameraEnabled, setCameraEnabled] = useState(!logoAvatarMode);
   const [transcriptionUnavailable, setTranscriptionUnavailable] = useState(false);
   const transcriptionRetriedRef = useRef(false);
   const transcriptionStartedRef = useRef(false);
@@ -295,9 +330,48 @@ export function useDailyCall(options: UseDailyCallOptions) {
       setStatus('joined');
       refreshParticipants(callObject);
 
-      startOwnerTranscription(callObject, transcriptionEnabled, isOwner, transcriptionStartedRef, () => {
-        setTranscriptionUnavailable(true);
-      });
+      if (logoAvatarMode) {
+        void (async () => {
+          try {
+            await callObject.setLocalAudio(false);
+            setMicEnabled(false);
+            const logoTrack = await createAstrolinkLogoVideoTrack();
+            if (cancelled || callObject.isDestroyed()) {
+              logoTrack.stop();
+              return;
+            }
+            logoTrackRef.current?.stop();
+            logoTrackRef.current = logoTrack;
+            await callObject.setInputDevicesAsync({ videoSource: logoTrack });
+            await callObject.setLocalVideo(true);
+            setCameraEnabled(true);
+            refreshParticipants(callObject);
+          } catch (logoErr: unknown) {
+            console.warn('[daily] logo avatar mode failed; staying camera-off', logoErr);
+            try {
+              await callObject.setLocalVideo(false);
+              await callObject.setLocalAudio(false);
+            } catch {
+              // ignore
+            }
+            setCameraEnabled(false);
+            setMicEnabled(false);
+          }
+        })();
+      }
+
+      // Observer should not start domain transcription as owner.
+      if (!logoAvatarMode) {
+        startOwnerTranscription(
+          callObject,
+          transcriptionEnabled,
+          isOwner,
+          transcriptionStartedRef,
+          () => {
+            setTranscriptionUnavailable(true);
+          },
+        );
+      }
     };
 
     const onLeft = () => {
@@ -395,7 +469,20 @@ export function useDailyCall(options: UseDailyCallOptions) {
         activeJoinUrl = joinUrl;
         setStatus('joining');
         const { url, token } = splitDailyJoinUrl(joinUrl);
-        await callObject.join(token ? { url, token } : { url });
+        await callObject.join(
+          token
+            ? {
+                url,
+                token,
+                startVideoOff: logoAvatarMode,
+                startAudioOff: logoAvatarMode,
+              }
+            : {
+                url,
+                startVideoOff: logoAvatarMode,
+                startAudioOff: logoAvatarMode,
+              },
+        );
       } catch (err: unknown) {
         if (cancelled) {
           return;
@@ -407,6 +494,8 @@ export function useDailyCall(options: UseDailyCallOptions) {
 
     return () => {
       cancelled = true;
+      logoTrackRef.current?.stop();
+      logoTrackRef.current = null;
       const call = callObject ?? callRef.current ?? Daily.getCallInstance() ?? null;
       if (call) {
         detachListeners(call);
@@ -416,6 +505,7 @@ export function useDailyCall(options: UseDailyCallOptions) {
   }, [
     bookingId,
     isOwner,
+    logoAvatarMode,
     transcriptionEnabled,
     e2eCaptionsStub,
     handleTranscription,

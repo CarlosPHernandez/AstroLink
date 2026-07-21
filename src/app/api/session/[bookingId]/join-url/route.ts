@@ -27,11 +27,13 @@ export async function GET(
   }
 
   try {
+    const isAdminObserver = booking.sessionRole === 'admin';
     const joinUrl = await buildAuthorizedDailyJoinUrl({
       roomUrl: booking.dailyRoomUrl,
       userId: booking.viewerId,
-      userName: booking.viewerName,
-      isOwner: booking.sessionRole === 'mentor' || booking.sessionRole === 'admin',
+      userName: isAdminObserver ? 'AstroLink' : booking.viewerName,
+      // Mentors own the room for transcription; admins observe only.
+      isOwner: booking.sessionRole === 'mentor',
       scheduledAt: booking.scheduledAt,
       durationMinutes: booking.durationMinutes,
     });
