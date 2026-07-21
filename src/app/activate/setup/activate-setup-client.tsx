@@ -18,7 +18,6 @@ import {
 } from '@/components/activate/activate-shell';
 import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
-import { MaterialIcon } from '@/components/ui/material-icon';
 import { fieldErrorInputClass } from '@/lib/zod-field-errors';
 
 type Profile = {
@@ -34,37 +33,20 @@ type Profile = {
 };
 
 const PAYOUT_OPTIONS = [
-  {
-    value: 'paypal',
-    label: 'PayPal',
-    hint: 'Email or username',
-    icon: 'account_balance_wallet' as const,
-  },
-  {
-    value: 'zelle',
-    label: 'Zelle',
-    hint: 'Phone or email',
-    icon: 'payments' as const,
-  },
-  {
-    value: 'cashapp',
-    label: 'Cash App',
-    hint: '$cashtag',
-    icon: 'attach_money' as const,
-  },
-  {
-    value: 'bank_manual',
-    label: 'Bank transfer',
-    hint: 'Ops will follow up',
-    icon: 'account_balance' as const,
-  },
-  {
-    value: 'unset',
-    label: 'Skip for now',
-    hint: 'Add later with ops',
-    icon: 'schedule' as const,
-  },
+  { value: 'paypal', label: 'PayPal' },
+  { value: 'zelle', label: 'Zelle' },
+  { value: 'cashapp', label: 'Cash App' },
+  { value: 'bank_manual', label: 'Bank transfer (ops will follow up)' },
+  { value: 'unset', label: 'Skip for now' },
 ] as const;
+
+function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
+  return (
+    <label className="activate-label" htmlFor={htmlFor}>
+      {children}
+    </label>
+  );
+}
 
 function StepNav({
   onBack,
@@ -74,13 +56,9 @@ function StepNav({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mt-8 flex flex-col-reverse gap-3 border-t border-outline-variant/50 pt-6 sm:flex-row sm:items-center sm:justify-between">
+    <div className="activate-nav">
       {onBack ? (
-        <button
-          type="button"
-          className={`${activateSecondaryBtnClass} sm:w-auto`}
-          onClick={onBack}
-        >
+        <button type="button" className={activateSecondaryBtnClass} onClick={onBack}>
           Back
         </button>
       ) : (
@@ -88,14 +66,6 @@ function StepNav({
       )}
       <div className="w-full sm:w-auto sm:min-w-[12rem]">{children}</div>
     </div>
-  );
-}
-
-function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
-  return (
-    <label className="activate-label" htmlFor={htmlFor}>
-      {children}
-    </label>
   );
 }
 
@@ -163,41 +133,17 @@ export function ActivateSetupClient({
       <div data-testid="activate-setup">
         <ActivateBrandHeader
           title="Confirm your expert profile"
-          subtitle="Review what we preloaded. Edit anything before you finish — listing visibility stays with ops."
+          subtitle="Review what we preloaded. Edit anything before you finish."
         />
         <ActivateStepProgress currentStep={step} />
         <ActivateCard>
           {step === 0 && (
-            <div className="space-y-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <MaterialIcon name="verified_user" size={28} />
-                </div>
-                <div className="min-w-0 flex-1 space-y-2 text-left">
-                  <h2 className="text-lg font-semibold tracking-tight text-on-surface">
-                    Welcome, {firstName}
-                  </h2>
-                  <p className="text-sm leading-relaxed text-on-surface-variant text-pretty">
-                    Your sessions and public profile are already set up. This short flow confirms
-                    identity, profile details, and how you prefer to get paid.
-                  </p>
-                </div>
-              </div>
-              <ul className="grid gap-2 sm:grid-cols-3">
-                {[
-                  { icon: 'badge' as const, label: 'Identity' },
-                  { icon: 'edit_note' as const, label: 'Profile & rate' },
-                  { icon: 'payments' as const, label: 'Payout preference' },
-                ].map((item) => (
-                  <li
-                    key={item.label}
-                    className="flex items-center gap-2 rounded-lg border border-outline-variant/70 bg-surface-container-low/50 px-3 py-2.5 text-sm font-medium text-on-surface"
-                  >
-                    <MaterialIcon name={item.icon} size={20} className="shrink-0 text-primary" />
-                    {item.label}
-                  </li>
-                ))}
-              </ul>
+            <div>
+              <h2 className="activate-section-title">Welcome, {firstName}</h2>
+              <p className="activate-section-copy">
+                Your sessions and public profile are already set up. Next you will confirm your
+                name, profile details, rate, and optional payout preference.
+              </p>
               <StepNav>
                 <button
                   type="button"
@@ -212,15 +158,13 @@ export function ActivateSetupClient({
           )}
 
           {step === 1 && (
-            <div className="space-y-5">
-              <div className="text-left">
-                <h2 className="text-base font-semibold tracking-tight text-on-surface">Identity</h2>
-                <p className="mt-1 text-sm leading-relaxed text-on-surface-variant text-pretty">
-                  How you appear on AstroLink. Sign-in email is locked to this invite.
-                </p>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
+            <div>
+              <h2 className="activate-section-title">Identity</h2>
+              <p className="activate-section-copy">
+                How you appear on AstroLink. Sign-in email is locked to this invite.
+              </p>
+              <div className="activate-field-stack mt-8">
+                <div>
                   <FieldLabel htmlFor="fullName">Full name</FieldLabel>
                   <input
                     id="fullName"
@@ -231,7 +175,7 @@ export function ActivateSetupClient({
                     className={activateInputClass}
                   />
                 </div>
-                <div className="sm:col-span-2">
+                <div>
                   <FieldLabel>Signed in as</FieldLabel>
                   <input
                     type="email"
@@ -255,18 +199,18 @@ export function ActivateSetupClient({
           )}
 
           {step === 2 && (
-            <form action={profileAction} className="space-y-5">
-              <div className="text-left">
-                <h2 className="text-base font-semibold tracking-tight text-on-surface">Profile</h2>
-                <p className="mt-1 text-sm leading-relaxed text-on-surface-variant text-pretty">
-                  Shown to buyers on your expert listing. Edit anything that looks off.
-                </p>
-              </div>
+            <form action={profileAction}>
+              <h2 className="activate-section-title">Profile</h2>
+              <p className="activate-section-copy">
+                Shown to buyers on your expert listing. Edit anything that looks off.
+              </p>
               {profileState?.message && !profileState.success ? (
-                <FormAlert message={profileState.message} />
+                <div className="mt-6">
+                  <FormAlert message={profileState.message} />
+                </div>
               ) : null}
               <input type="hidden" name="fullName" value={profile.fullName} />
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="activate-field-stack activate-field-grid activate-field-grid-2 mt-8">
                 <div>
                   <FieldLabel htmlFor="title">Title</FieldLabel>
                   <input
@@ -291,7 +235,7 @@ export function ActivateSetupClient({
                   />
                   <FieldError message={profileState?.errors?.employer?.[0]} />
                 </div>
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2" style={{ gridColumn: '1 / -1' }}>
                   <FieldLabel htmlFor="expertise">Expertise (comma-separated)</FieldLabel>
                   <input
                     id="expertise"
@@ -305,7 +249,7 @@ export function ActivateSetupClient({
                   />
                   <FieldError message={profileState?.errors?.expertise?.[0]} />
                 </div>
-                <div className="sm:col-span-2">
+                <div style={{ gridColumn: '1 / -1' }}>
                   <FieldLabel htmlFor="bio">Bio</FieldLabel>
                   <textarea
                     id="bio"
@@ -315,30 +259,25 @@ export function ActivateSetupClient({
                     defaultValue={profile.bio}
                     className={fieldErrorInputClass(
                       !!profileState?.errors?.bio,
-                      `${activateInputClass} min-h-[7.5rem] py-3`,
+                      activateInputClass,
                     )}
                   />
                   <FieldError message={profileState?.errors?.bio?.[0]} />
                 </div>
                 <div>
                   <FieldLabel htmlFor="rate">Hourly rate (USD)</FieldLabel>
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-on-surface-variant">
-                      $
-                    </span>
-                    <input
-                      id="rate"
-                      name="rate"
-                      type="number"
-                      min={0}
-                      required
-                      defaultValue={profile.rate}
-                      className={fieldErrorInputClass(
-                        !!profileState?.errors?.rate,
-                        `${activateInputClass} pl-7`,
-                      )}
-                    />
-                  </div>
+                  <input
+                    id="rate"
+                    name="rate"
+                    type="number"
+                    min={0}
+                    required
+                    defaultValue={profile.rate}
+                    className={fieldErrorInputClass(
+                      !!profileState?.errors?.rate,
+                      activateInputClass,
+                    )}
+                  />
                   <FieldError message={profileState?.errors?.rate?.[0]} />
                 </div>
               </div>
@@ -356,58 +295,33 @@ export function ActivateSetupClient({
           )}
 
           {step === 3 && (
-            <form action={payoutAction} className="space-y-5">
-              <div className="text-left">
-                <h2 className="text-base font-semibold tracking-tight text-on-surface">
-                  Payout preference
-                </h2>
-                <p className="mt-1 text-sm leading-relaxed text-on-surface-variant text-pretty">
-                  Optional. We pay experts manually for now — this tells ops where to send funds.
-                </p>
-              </div>
+            <form action={payoutAction}>
+              <h2 className="activate-section-title">Payout preference</h2>
+              <p className="activate-section-copy">
+                Optional. We pay experts manually for now — this tells ops where to send funds.
+              </p>
               {payoutState?.message && !payoutState.success ? (
-                <FormAlert message={payoutState.message} />
+                <div className="mt-6">
+                  <FormAlert message={payoutState.message} />
+                </div>
               ) : null}
-              <fieldset className="grid gap-2 sm:grid-cols-2">
+              <fieldset className="mt-8 flex flex-col gap-1">
                 <legend className="sr-only">Payout method</legend>
-                {PAYOUT_OPTIONS.map((opt) => {
-                  const selected = payoutMethod === opt.value;
-                  return (
-                    <label
-                      key={opt.value}
-                      className={
-                        selected
-                          ? 'activate-tile activate-tile-selected'
-                          : 'activate-tile'
-                      }
-                    >
-                      <input
-                        type="radio"
-                        name="payoutMethod"
-                        value={opt.value}
-                        checked={selected}
-                        onChange={() => setPayoutMethod(opt.value)}
-                        className="mt-1 accent-[var(--color-primary,#0058bc)]"
-                      />
-                      <span className="flex min-w-0 flex-1 items-start gap-2">
-                        <MaterialIcon
-                          name={opt.icon}
-                          size={20}
-                          className={selected ? 'text-primary' : 'text-on-surface-variant'}
-                        />
-                        <span className="min-w-0">
-                          <span className="block text-sm font-semibold text-on-surface">
-                            {opt.label}
-                          </span>
-                          <span className="block text-xs text-on-surface-variant">{opt.hint}</span>
-                        </span>
-                      </span>
-                    </label>
-                  );
-                })}
+                {PAYOUT_OPTIONS.map((opt) => (
+                  <label key={opt.value} className="activate-payout-option">
+                    <input
+                      type="radio"
+                      name="payoutMethod"
+                      value={opt.value}
+                      checked={payoutMethod === opt.value}
+                      onChange={() => setPayoutMethod(opt.value)}
+                    />
+                    <span>{opt.label}</span>
+                  </label>
+                ))}
               </fieldset>
               {payoutMethod !== 'unset' && payoutMethod !== 'bank_manual' ? (
-                <div>
+                <div className="mt-8">
                   <FieldLabel htmlFor="payoutHandle">Account email / phone / username</FieldLabel>
                   <input
                     id="payoutHandle"
@@ -438,22 +352,17 @@ export function ActivateSetupClient({
           )}
 
           {step === 4 && (
-            <div className="space-y-6">
-              <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:text-left">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-on-primary shadow-[0_4px_20px_rgba(0,88,188,0.22)]">
-                  <MaterialIcon name="check_circle" size={32} className="text-on-primary" />
+            <div>
+              <h2 className="activate-section-title">You&apos;re ready</h2>
+              <p className="activate-section-copy">
+                Your expert account is activated. Open your dashboard for sessions and profile
+                updates anytime.
+              </p>
+              {completeState?.message ? (
+                <div className="mt-6">
+                  <FormAlert message={completeState.message} />
                 </div>
-                <div className="min-w-0 space-y-2">
-                  <h2 className="text-xl font-semibold tracking-tight text-on-surface">
-                    You&apos;re ready
-                  </h2>
-                  <p className="text-sm leading-relaxed text-on-surface-variant text-pretty">
-                    Your expert account is activated. Open your dashboard for sessions and profile
-                    updates anytime.
-                  </p>
-                </div>
-              </div>
-              {completeState?.message ? <FormAlert message={completeState.message} /> : null}
+              ) : null}
               <StepNav>
                 <button
                   type="button"
@@ -462,14 +371,7 @@ export function ActivateSetupClient({
                   className={activatePrimaryBtnClass}
                   data-testid="activate-complete"
                 >
-                  {completePending ? (
-                    'Finishing…'
-                  ) : (
-                    <>
-                      Go to dashboard
-                      <MaterialIcon name="arrow_forward" size={18} className="text-on-primary" />
-                    </>
-                  )}
+                  {completePending ? 'Finishing…' : 'Go to dashboard'}
                 </button>
               </StepNav>
             </div>
