@@ -26,8 +26,8 @@ export default async function ActivatePage({
           subtitle="Open the invite email we sent you and use Activate your account."
         />
         <ActivateCard>
-          <p className="text-center text-sm leading-relaxed text-on-surface-variant text-pretty">
-            If you need a new link, contact AstroLink support or your ops contact.
+          <p className="activate-meta-line">
+            If you need a new link, contact AstroLink support.
           </p>
         </ActivateCard>
       </ActivatePageFrame>
@@ -46,7 +46,7 @@ export default async function ActivatePage({
       <ActivatePageFrame>
         <ActivateBrandHeader
           title="Activate your expert account"
-          subtitle="One secure step to claim your profile and open your dashboard."
+          subtitle="Claim your profile in one secure step, then confirm your details."
         />
         <ActivateCard>
           <ActivateClaimClient
@@ -67,14 +67,11 @@ export default async function ActivatePage({
       <ActivatePageFrame>
         <ActivateBrandHeader
           title="Link unavailable"
-          subtitle="This invite cannot be used. Request a new one from AstroLink ops."
+          subtitle="Request a new invite from AstroLink ops if you still need access."
         />
         <ActivateCard>
-          <p className="mb-2 text-center text-base font-medium text-on-surface text-pretty">
-            {message}
-          </p>
-          <p className="text-center text-xs uppercase tracking-widest text-on-surface-variant">
-            Links expire and can only be used once
+          <p className="activate-meta-line">
+            <strong>{message}</strong>
           </p>
         </ActivateCard>
       </ActivatePageFrame>

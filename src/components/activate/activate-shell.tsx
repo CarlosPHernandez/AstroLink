@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { MaterialIcon } from '@/components/ui/material-icon';
 import '@/components/activate/activate-flow.css';
 
 const STEP_LABELS = ['Welcome', 'Identity', 'Profile', 'Payouts', 'Done'] as const;
@@ -13,23 +13,25 @@ export function ActivateBrandHeader({
   subtitle?: string;
 }) {
   return (
-    <header className="mb-8 flex w-full flex-col items-center px-1">
-      <Link
-        href="/"
-        className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-[0_4px_20px_rgba(0,88,188,0.18)]"
-        aria-label="AstroLink home"
-      >
-        <MaterialIcon name="rocket_launch" className="text-on-primary" size={28} />
+    <header className="mb-10 flex w-full flex-col items-center">
+      <Link href="/" className="mb-8" aria-label="AstroLink home">
+        <Image
+          src="/logo.jpg"
+          alt="AstroLink"
+          width={140}
+          height={36}
+          className="activate-logo"
+          priority
+        />
       </Link>
-      <p className="activate-eyebrow mb-3">Expert setup</p>
-      {/* Explicit block stack — never max-w-md/lg (spacing token collision). */}
+      {/* Block stack only — no max-w-md/lg (spacing token collision). */}
       <h1 className="activate-title">{title}</h1>
       {subtitle ? <p className="activate-subtitle">{subtitle}</p> : null}
     </header>
   );
 }
 
-/** Chris-style skewed segments on white (primary fill). */
+/** Chris-style skewed segmented progress bar. */
 export function ActivateStepProgress({
   currentStep,
   totalSteps = 5,
@@ -40,33 +42,23 @@ export function ActivateStepProgress({
   const safe = Math.min(Math.max(currentStep, 0), totalSteps - 1);
   return (
     <div
-      className="mb-6 flex w-full flex-col items-center gap-3"
-      aria-label={`Step ${safe + 1} of ${totalSteps}`}
+      className="mb-10 flex w-full flex-col items-center"
+      aria-label={`Step ${safe + 1} of ${totalSteps}: ${STEP_LABELS[safe] ?? ''}`}
     >
-      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-on-surface-variant/70">
-        Progress
-      </span>
-      <div className="flex items-center gap-1.5" aria-hidden="true">
-        {Array.from({ length: totalSteps }, (_, i) => {
-          const filled = i <= safe;
-          return (
-            <div
-              key={STEP_LABELS[i] ?? i}
-              className={
-                filled
-                  ? 'activate-segment activate-segment-filled'
-                  : 'activate-segment activate-segment-empty'
-              }
-            />
-          );
-        })}
+      <div className="activate-segments" aria-hidden="true">
+        {Array.from({ length: totalSteps }, (_, i) => (
+          <div
+            key={STEP_LABELS[i] ?? i}
+            className={
+              i <= safe
+                ? 'activate-segment activate-segment-filled'
+                : 'activate-segment activate-segment-empty'
+            }
+          />
+        ))}
       </div>
-      <p className="text-center text-xs font-medium uppercase tracking-widest text-on-surface">
-        {STEP_LABELS[safe] ?? `Step ${safe + 1}`}
-        <span className="font-normal text-on-surface-variant">
-          {' '}
-          · {safe + 1}/{totalSteps}
-        </span>
+      <p className="activate-step-caption">
+        {STEP_LABELS[safe]} · {safe + 1} of {totalSteps}
       </p>
     </div>
   );
@@ -74,14 +66,15 @@ export function ActivateStepProgress({
 
 export function ActivatePageFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="activate-flow flex flex-col items-center justify-center px-4 py-10 sm:px-6">
+    <div className="activate-flow flex flex-col items-center justify-center px-6 py-12 sm:px-8 sm:py-16">
       <div className="activate-form-max flex w-full flex-col">{children}</div>
     </div>
   );
 }
 
+/** Content region without a heavy card chrome. */
 export function ActivateCard({ children }: { children: ReactNode }) {
-  return <div className="activate-card">{children}</div>;
+  return <div className="w-full">{children}</div>;
 }
 
 export const activateInputClass = 'activate-input';

@@ -4,7 +4,6 @@ import { useActionState } from 'react';
 import { beginClaimAction, type ActivateActionState } from '@/app/activate/actions';
 import { activatePrimaryBtnClass } from '@/components/activate/activate-shell';
 import { FormAlert } from '@/components/forms/form-alert';
-import { MaterialIcon } from '@/components/ui/material-icon';
 
 export function ActivateClaimClient({
   token,
@@ -28,28 +27,22 @@ export function ActivateClaimClient({
   });
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-xl border border-outline-variant/80 bg-surface-container-low/70 p-4 sm:p-5">
-        <p className="text-center text-base leading-relaxed text-on-surface text-pretty sm:text-left">
-          Hi <span className="font-semibold">{expertName}</span>
-          {' — '}
-          we already prepared your expert profile. Confirm sign-in, then review your details.
+    <div className="flex flex-col gap-10">
+      <div className="space-y-4">
+        <p className="activate-meta-line">
+          Hi <strong>{expertName}</strong>. We already prepared your expert profile. Continue to
+          sign in and review your details.
         </p>
-        <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="activate-meta-chip">
-            <dt>Sign-in email</dt>
-            <dd>{email}</dd>
-          </div>
-          <div className="activate-meta-chip">
-            <dt>Link expires</dt>
-            <dd>{expiresLabel}</dd>
-          </div>
-        </dl>
+        <p className="activate-meta-line">
+          Sign-in email: <strong>{email}</strong>
+          <br />
+          Link expires {expiresLabel}
+        </p>
       </div>
 
       {state?.message ? <FormAlert message={state.message} /> : null}
 
-      <form action={formAction} className="flex flex-col gap-3">
+      <form action={formAction} className="flex flex-col gap-4">
         <input type="hidden" name="token" value={token} />
         <button
           type="submit"
@@ -57,17 +50,10 @@ export function ActivateClaimClient({
           className={activatePrimaryBtnClass}
           data-testid="activate-begin-claim"
         >
-          {pending ? (
-            'Starting secure sign-in…'
-          ) : (
-            <>
-              Continue securely
-              <MaterialIcon name="arrow_forward" size={18} className="text-on-primary" />
-            </>
-          )}
+          {pending ? 'Starting secure sign-in…' : 'Continue'}
         </button>
-        <p className="text-center text-xs uppercase tracking-widest text-on-surface-variant/80">
-          Stay on AstroLink · no password for this invite
+        <p className="activate-step-caption" style={{ marginTop: 0 }}>
+          No password required for this invite
         </p>
       </form>
     </div>
