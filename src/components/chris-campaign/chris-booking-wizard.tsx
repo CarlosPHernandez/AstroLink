@@ -24,7 +24,11 @@ import {
   loadDraft,
   saveDraft,
 } from '@/lib/chris-campaign/chris-booking-draft';
-import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-booking-mode';
+import {
+  defaultChrisScheduledAtDatetimeLocal,
+  getChrisCampaignDurationMinutes,
+  resolveChrisPrefillScheduledAt,
+} from '@/lib/chris-campaign/chris-booking-mode';
 import {
   trackChrisAuthSuccess,
   trackChrisBookingPageView,
@@ -340,7 +344,7 @@ export function ChrisBookingWizard({
   const [goals, setGoals] = useState('');
   const [background, setBackground] = useState('');
   const [scheduledAt, setScheduledAt] = useState(
-    prefillScheduledAt ?? `${new Date().toISOString().slice(0, 10)}T12:00`,
+    prefillScheduledAt ?? defaultChrisScheduledAtDatetimeLocal(),
   );
   const [durationMinutes, setDurationMinutes] = useState(() =>
     clampSessionDurationMinutes(prefillDurationMinutes ?? defaultDurationMinutes),
@@ -391,11 +395,14 @@ export function ChrisBookingWizard({
       setDurationMinutes(nextDurationMinutes);
     }
 
-    let nextScheduledAt =
-      prefillScheduledAt ?? `${new Date().toISOString().slice(0, 10)}T12:00`;
+    let nextScheduledAt = prefillScheduledAt ?? defaultChrisScheduledAtDatetimeLocal();
     if (!prefillScheduledAt && draft?.scheduledAt) {
-      nextScheduledAt = draft.scheduledAt;
-      setScheduledAt(draft.scheduledAt);
+      // Only restore draft dates that still meet lead + Chris rules.
+      const restored = resolveChrisPrefillScheduledAt(draft.scheduledAt.slice(0, 10));
+      if (restored) {
+        nextScheduledAt = restored;
+        setScheduledAt(restored);
+      }
     }
 
     const complete = isChrisDraftSessionComplete({

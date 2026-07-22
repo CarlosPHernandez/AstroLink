@@ -1,5 +1,7 @@
 /** Session schedule helpers (datetime-local ↔ wall-clock presets in America/New_York). */
 
+import { getEarliestBookableDate } from '@/lib/booking-lead-time';
+
 export const BOOKING_TIMEZONE_ET = 'America/New_York';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -106,13 +108,28 @@ export type SchedulePreset = {
   minuteEt: number;
 };
 
-/** Ops-friendly presets for dry-run booking (Eastern). */
+/** Ops-friendly presets for dry-run booking (Eastern) — earliest bookable day (today+2). */
 export const DEFAULT_SCHEDULE_PRESETS: SchedulePreset[] = [
-  { id: 'et-1900', label: 'Tonight 7:00 PM ET', hourEt: 19, minuteEt: 0 },
-  { id: 'et-1930', label: 'Tonight 7:30 PM ET', hourEt: 19, minuteEt: 30 },
-  { id: 'et-2000', label: 'Tonight 8:00 PM ET', hourEt: 20, minuteEt: 0 },
-  { id: 'et-1830', label: 'Tonight 6:30 PM ET', hourEt: 18, minuteEt: 30 },
+  { id: 'et-1900', label: 'First open day · 7:00 PM ET', hourEt: 19, minuteEt: 0 },
+  { id: 'et-1930', label: 'First open day · 7:30 PM ET', hourEt: 19, minuteEt: 30 },
+  { id: 'et-2000', label: 'First open day · 8:00 PM ET', hourEt: 20, minuteEt: 0 },
+  { id: 'et-1830', label: 'First open day · 6:30 PM ET', hourEt: 18, minuteEt: 30 },
 ];
+
+/**
+ * datetime-local value for a wall-clock time on the earliest bookable Eastern day
+ * (today + 2 calendar days), converted into the viewer's local timezone.
+ */
+export function datetimeLocalForEarliestBookableEastern(
+  hour: number,
+  minute: number,
+  now: Date = new Date(),
+): string {
+  const earliest = getEarliestBookableDate({ now, timezone: BOOKING_TIMEZONE_ET });
+  const [year, month, day] = earliest.split('-').map(Number);
+  const instant = dateFromZonedWallTime(year, month, day, hour, minute, BOOKING_TIMEZONE_ET);
+  return toDatetimeLocalValue(instant);
+}
 
 export function formatEasternPreview(datetimeLocal: string): string | null {
   const date = fromDatetimeLocalValue(datetimeLocal);
