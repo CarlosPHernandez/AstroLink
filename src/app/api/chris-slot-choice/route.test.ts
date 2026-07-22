@@ -49,23 +49,24 @@ describe('POST /api/chris-slot-choice', () => {
     vi.clearAllMocks();
     mockGetSession.mockResolvedValue(null);
     mockSendEmail.mockResolvedValue({ ok: true, messageId: 'msg_1' });
+    // Far-future slot so the past-start guard does not reject the happy path.
     mockGenerateSlots.mockReturnValue([
       {
-        dayKey: 'tue',
-        isoDate: '2026-07-21',
-        startUtcIso: '2026-07-21T19:00:00.000Z',
-        endUtcIso: '2026-07-21T19:45:00.000Z',
-        label: 'Tue, Jul 21 · 12:00–12:45 PM PDT',
-        timeRangeLabel: '12:00–12:45 PM',
+        dayKey: 'thu',
+        isoDate: '2030-07-25',
+        startUtcIso: '2030-07-25T20:00:00.000Z',
+        endUtcIso: '2030-07-25T20:45:00.000Z',
+        label: 'Thu, Jul 25 · 1:00–1:45 PM PDT',
+        timeRangeLabel: '1:00–1:45 PM',
       },
     ]);
     mockFindSlot.mockReturnValue({
-      dayKey: 'tue',
-      isoDate: '2026-07-21',
-      startUtcIso: '2026-07-21T19:00:00.000Z',
-      endUtcIso: '2026-07-21T19:45:00.000Z',
-      label: 'Tue, Jul 21 · 12:00–12:45 PM PDT',
-      timeRangeLabel: '12:00–12:45 PM',
+      dayKey: 'thu',
+      isoDate: '2030-07-25',
+      startUtcIso: '2030-07-25T20:00:00.000Z',
+      endUtcIso: '2030-07-25T20:45:00.000Z',
+      label: 'Thu, Jul 25 · 1:00–1:45 PM PDT',
+      timeRangeLabel: '1:00–1:45 PM',
     });
     mockVerify.mockReturnValue({
       ok: true,
@@ -84,7 +85,7 @@ describe('POST /api/chris-slot-choice', () => {
       data: {
         id: 'book-1',
         status: 'confirmed',
-        scheduled_at: '2026-07-20T19:00:00.000Z',
+        scheduled_at: '2030-07-20T19:00:00.000Z',
         mentee_id: 'user-1',
         campaign_id: 'chris-sembroski',
         duration_minutes: 45,
@@ -110,13 +111,13 @@ describe('POST /api/chris-slot-choice', () => {
     const res = await POST(
       jsonRequest({
         token: 'a'.repeat(20),
-        startUtcIso: '2026-07-21T19:00:00.000Z',
+        startUtcIso: '2030-07-25T20:00:00.000Z',
       }),
     );
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.success).toBe(true);
-    expect(body.data.label).toContain('Jul 21');
+    expect(body.data.label).toContain('Jul 25');
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: CHRIS_SLOT_OPS_NOTIFY_EMAIL,
@@ -130,7 +131,7 @@ describe('POST /api/chris-slot-choice', () => {
     const res = await POST(
       jsonRequest({
         token: 'a'.repeat(20),
-        startUtcIso: '2026-07-21T19:00:00.000Z',
+        startUtcIso: '2030-07-25T20:00:00.000Z',
       }),
     );
     expect(res.status).toBe(410);
@@ -141,9 +142,29 @@ describe('POST /api/chris-slot-choice', () => {
     const res = await POST(
       jsonRequest({
         token: 'a'.repeat(20),
+        startUtcIso: '2030-07-25T20:00:00.000Z',
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects past slot starts', async () => {
+    mockFindSlot.mockReturnValue({
+      dayKey: 'tue',
+      isoDate: '2026-07-21',
+      startUtcIso: '2026-07-21T19:00:00.000Z',
+      endUtcIso: '2026-07-21T19:45:00.000Z',
+      label: 'Tue, Jul 21 · 12:00–12:45 PM PDT',
+      timeRangeLabel: '12:00–12:45 PM',
+    });
+    const res = await POST(
+      jsonRequest({
+        token: 'a'.repeat(20),
         startUtcIso: '2026-07-21T19:00:00.000Z',
       }),
     );
     expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toMatch(/already passed/i);
   });
 });

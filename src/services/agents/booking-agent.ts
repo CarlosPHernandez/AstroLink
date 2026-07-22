@@ -16,6 +16,10 @@ import {
   releaseChrisCampaignSlot,
   reserveChrisCampaignSlot,
 } from '@/lib/chris-campaign/chris-campaign-slots';
+import {
+  BOOKING_LEAD_TIME_ERROR,
+  isScheduledAtOnOrAfterEarliestBookable,
+} from '@/lib/booking-lead-time';
 import { computeBookingTotalCents } from '@/lib/booking-pricing';
 import {
   createDevSkippedPaymentIntentId,
@@ -49,6 +53,11 @@ export class BookingAgent {
   }) {
     // 1. Audit Log: BOOKING_INITIATED
     await this.logAudit('BOOKING_INITIATED', null, { params });
+
+    // Defense-in-depth: same 2-day lead as BookBodySchema (covers callers that skip schema).
+    if (!isScheduledAtOnOrAfterEarliestBookable(params.scheduledAt)) {
+      throw new Error(BOOKING_LEAD_TIME_ERROR);
+    }
 
     let campaignSlotReserved = false;
     if (params.campaignId) {

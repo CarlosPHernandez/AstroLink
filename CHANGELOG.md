@@ -2,6 +2,17 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.6.0] - 2026-07-22
+
+### Fixed
+- **Booking lead time:** sessions cannot be booked for today or tomorrow. The earliest open day is two calendar days ahead (Eastern Time)—for example, Wednesday booking starts Friday. Applies to Chris, directory experts (e.g. Eiman), and the booking API so past or too-soon dates cannot slip through.
+- Chris date strip and booking wizard no longer offer same-day or next-day tiles; invalid `?date=` prefills are dropped.
+- Directory booking picker no longer offers “Tonight” same-day presets; times land on the first open day.
+- Chris ops slot-reschedule links reject times that have already passed.
+
+### Added
+- Shared platform rule `getEarliestBookableDate` (2-day lead, America/New_York) used by booking validation, Chris calendar, and schedule presets.
+
 ## [0.8.5.2] - 2026-07-22
 
 ### Fixed

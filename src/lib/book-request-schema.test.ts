@@ -7,7 +7,8 @@ describe('BookBodySchema', () => {
     mentorId: 'a0000002-0000-4000-8000-000000000002',
     serviceType: 'session_1on1' as const,
     includePreCallBrief: true,
-    scheduledAt: '2026-06-15T18:00:00.000Z',
+    // Far-future so 2-day lead rule stays green in unit tests
+    scheduledAt: '2030-06-15T18:00:00.000Z',
     // ≥ CHRIS_GOALS_MIN_CHARS so chrisFuture reuses this goals string after hybrid floor.
     goals: 'Understand commercial crew certification path for our vehicle.',
     background: 'Series A space startup building reusable orbital tug with 12 engineers.',
@@ -107,7 +108,18 @@ describe('BookBodySchema', () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.flatten().fieldErrors.scheduledAt?.[0]).toMatch(/on or after today/i);
+      expect(result.error.flatten().fieldErrors.scheduledAt?.[0]).toMatch(/at least 2 days/i);
+    }
+  });
+
+  it('rejects non-Chris bookings inside the 2-day lead window', () => {
+    const result = BookBodySchema.safeParse({
+      ...validBody,
+      scheduledAt: new Date().toISOString(),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.scheduledAt?.[0]).toMatch(/at least 2 days/i);
     }
   });
 

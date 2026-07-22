@@ -76,6 +76,14 @@ export async function POST(request: Request) {
     );
   }
 
+  // Reschedule of an existing hold: reject past starts only (do not re-apply new-booking 2-day lead).
+  if (new Date(slot.startUtcIso).getTime() < Date.now()) {
+    return NextResponse.json(
+      { success: false, error: 'That time has already passed. Please pick another slot.' },
+      { status: 400 },
+    );
+  }
+
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .select(

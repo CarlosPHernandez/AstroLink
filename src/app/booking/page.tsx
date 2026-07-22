@@ -1,7 +1,7 @@
 import { isStripePaymentsSkipped } from '@/lib/booking-payments';
 import {
-  chrisCampaignDateToDatetimeLocal,
   isChrisCampaignBookingQuery,
+  resolveChrisPrefillScheduledAt,
 } from '@/lib/chris-campaign/chris-booking-mode';
 import { getChrisMentorSlug } from '@/lib/chris-campaign/chris-campaign-config';
 import { parseChrisCampaignReferrer } from '@/lib/chris-campaign/chris-campaign-referrer';
@@ -47,7 +47,8 @@ export default async function BookingPage({
       redirect('/talk-with-chris');
     }
 
-    const prefillScheduledAt = date ? chrisCampaignDateToDatetimeLocal(date) : null;
+    const prefillScheduledAt = resolveChrisPrefillScheduledAt(date);
+    const prefillDate = prefillScheduledAt ? (date?.trim() || null) : null;
     const marketingReferrer = parseChrisCampaignReferrer(refParam ? `?ref=${refParam}` : '');
     const parsedDuration = durationParam ? Number.parseInt(durationParam, 10) : NaN;
     const prefillDurationMinutes = Number.isFinite(parsedDuration)
@@ -60,7 +61,7 @@ export default async function BookingPage({
         mentor={mentor}
         marketingReferrer={marketingReferrer ?? null}
         prefillScheduledAt={prefillScheduledAt}
-        prefillDate={date?.trim() || null}
+        prefillDate={prefillDate}
         prefillDurationMinutes={prefillDurationMinutes}
       />
     );

@@ -2,9 +2,10 @@
 
 import React, { useMemo } from 'react';
 
+import { getEarliestBookableDate } from '@/lib/booking-lead-time';
 import {
   DEFAULT_SCHEDULE_PRESETS,
-  datetimeLocalForEasternToday,
+  datetimeLocalForEarliestBookableEastern,
   formatEasternPreview,
   formatLocalPreview,
   type SchedulePreset,
@@ -36,7 +37,10 @@ export function SessionSchedulePicker({
     <div className="space-y-3" data-testid="session-schedule-picker">
       <div className="flex flex-wrap gap-2">
         {presets.map((preset) => {
-          const presetValue = datetimeLocalForEasternToday(preset.hourEt, preset.minuteEt);
+          const presetValue = datetimeLocalForEarliestBookableEastern(
+            preset.hourEt,
+            preset.minuteEt,
+          );
           const active = value === presetValue;
           return (
             <button
@@ -66,6 +70,7 @@ export function SessionSchedulePicker({
         required={required}
         className={fieldClass}
         value={value}
+        min={`${getEarliestBookableDate()}T00:00`}
         onChange={(e) => onChange(e.target.value)}
       />
 

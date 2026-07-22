@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   dateFromZonedWallTime,
+  datetimeLocalForEarliestBookableEastern,
   datetimeLocalForEasternToday,
   easternTodayParts,
   formatEasternPreview,
@@ -41,6 +42,15 @@ describe('session-schedule', () => {
     const preview = formatEasternPreview(local);
     expect(preview).toMatch(/7:00/);
     expect(preview).toMatch(/EDT|EST|ET/);
+  });
+
+  it('builds earliest-bookable-day preset (Wed → Fri Eastern)', () => {
+    // 2026-07-22 15:00 ET = 19:00 UTC → earliest bookable Fri 24
+    const fixed = new Date('2026-07-22T19:00:00.000Z');
+    const local = datetimeLocalForEarliestBookableEastern(19, 0, fixed);
+    const preview = formatEasternPreview(local);
+    expect(preview).toMatch(/Jul 24|Jul 24/);
+    expect(preview).toMatch(/7:00/);
   });
 
   it('easternTodayParts uses America/New_York calendar day', () => {
