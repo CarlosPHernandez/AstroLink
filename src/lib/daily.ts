@@ -238,6 +238,9 @@ export async function createDailyRoomForBooking(
         enforce_unique_user_ids: true,
         eject_at_room_exp: true,
         eject_after_elapsed: ejectAfterElapsed,
+        // Defense in depth: domain storage can drift; rooms must store WebVTT
+        // for post-call transcript download (see daily-transcription-storage-incident).
+        enable_transcription_storage: true,
       },
     }),
   });

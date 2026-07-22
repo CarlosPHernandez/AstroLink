@@ -254,6 +254,70 @@ describe('fulfillBookingAfterTranscriptReady', () => {
       status: 'cancelled',
     });
   });
+
+  it('propagates fetch/persist failures (durable-first 500 path)', async () => {
+    mockBookingMaybeSingle.mockResolvedValueOnce({ data: bookingRow, error: null });
+    mockTranscriptMaybeSingle.mockResolvedValueOnce({ data: null, error: null });
+    mockFetchVtt.mockRejectedValueOnce(new Error('Daily transcript access-link failed: 404'));
+
+    await expect(
+      fulfillBookingAfterTranscriptReady({
+        transcriptId: 'tx_1',
+        roomName: 'astrolink-booking1',
+      }),
+    ).rejects.toThrow('Daily transcript access-link failed');
+  });
+
+  it('does not throw when synthesis fails after successful persist', async () => {
+    const utterances = [
+      {
+        id: 'u1',
+        text: 'Hi',
+        startMs: 0,
+        endMs: 1000,
+        speakerId: 's1',
+        speakerRole: 'mentor' as const,
+        isFinal: true,
+      },
+    ];
+    mockBookingMaybeSingle.mockResolvedValueOnce({
+      data: { ...bookingRow, status: 'completed' },
+      error: null,
+    });
+    // 1) existing check empty; 2) gate load after persist
+    mockTranscriptMaybeSingle
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({
+        data: { id: 't1', utterances_json: utterances, vtt_text: 'WEBVTT' },
+        error: null,
+      });
+    mockFetchVtt.mockResolvedValueOnce(
+      'WEBVTT\n\n1\n00:00:00.000 --> 00:00:01.000\n<v Mentor>Hi',
+    );
+    mockPersistTranscript.mockResolvedValueOnce({ created: true, upgraded: false });
+    // persistTranscriptForBooking booking load + gate booking status
+    mockBookingSingle
+      .mockResolvedValueOnce({
+        data: { id: 'booking-1', mentee_id: 'mentee-1', mentor_id: 'mentor-1' },
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: { status: 'completed' }, error: null });
+    mockSynthesizeSession.mockRejectedValueOnce(new Error('LLM timeout'));
+    mockAuditInsert.mockResolvedValue({ error: null });
+
+    const result = await fulfillBookingAfterTranscriptReady({
+      transcriptId: 'tx_1',
+      roomName: 'astrolink-booking1',
+      durationSeconds: 120,
+    });
+
+    expect(result.processed).toBe(true);
+    expect(result).toMatchObject({
+      bookingId: 'booking-1',
+      synthesisFailedAfterPersist: true,
+    });
+    expect(mockAuditInsert).toHaveBeenCalled();
+  });
 });
 
 describe('fulfillBookingAfterTranscriptError', () => {

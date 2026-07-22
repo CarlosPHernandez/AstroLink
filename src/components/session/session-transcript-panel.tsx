@@ -1,7 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
+import {
+  honestyCopyForPhase,
+  resolveTranscriptHonestyPhase,
+  shouldPollForTranscript,
+  TRANSCRIPT_HONESTY_POLL_MS,
+  type TranscriptHonestyPhase,
+} from '@/lib/session-transcript-honesty';
 import { resolveSessionSpeakerLabel } from '@/lib/transcript-translation/speaker-label';
 import type { TranscriptUtterance } from '@/lib/transcript-translation/types';
 
@@ -18,6 +25,34 @@ type TranslateTranscriptResponse = {
   error?: string;
 };
 
+type LoadOutcome =
+  | { kind: 'success'; utterances: TranscriptUtterance[]; sourceLocale?: string }
+  | { kind: 'missing' }
+  | { kind: 'error'; message: string };
+
+async function fetchTranscript(bookingId: string): Promise<LoadOutcome> {
+  const res = await fetch(`/api/session/${bookingId}/transcript`);
+  let data: TranscriptResponse = {};
+  try {
+    data = (await res.json()) as TranscriptResponse;
+  } catch {
+    data = {};
+  }
+
+  if (res.status === 404) {
+    return { kind: 'missing' };
+  }
+  if (!res.ok) {
+    return { kind: 'error', message: data.error ?? 'Could not load transcript' };
+  }
+
+  const utterances = data.utterances ?? [];
+  if (utterances.length === 0) {
+    return { kind: 'missing' };
+  }
+  return { kind: 'success', utterances, sourceLocale: data.sourceLocale };
+}
+
 export function SessionTranscriptPanel({
   bookingId,
   mentorName,
@@ -30,48 +65,99 @@ export function SessionTranscriptPanel({
   viewerRole: 'mentee' | 'mentor' | 'admin';
 }) {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoadError, setIsLoadError] = useState(false);
+  const [isMissing, setIsMissing] = useState(false);
   const [canonical, setCanonical] = useState<TranscriptUtterance[]>([]);
   const [display, setDisplay] = useState<TranscriptUtterance[]>([]);
   const [viewLocalized, setViewLocalized] = useState(false);
   const [translating, setTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState<string | null>(null);
   const [targetLocale, setTargetLocale] = useState('es');
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const missingSinceRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const applyOutcome = useCallback((outcome: LoadOutcome) => {
+    if (outcome.kind === 'success') {
+      missingSinceRef.current = null;
+      setIsMissing(false);
+      setIsLoadError(false);
+      setCanonical(outcome.utterances);
+      setDisplay(outcome.utterances);
+      setTargetLocale(outcome.sourceLocale === 'es' ? 'en' : 'es');
+      return;
+    }
+    if (outcome.kind === 'missing') {
+      if (missingSinceRef.current == null) {
+        missingSinceRef.current = Date.now();
+      }
+      setIsMissing(true);
+      setIsLoadError(false);
+      setCanonical([]);
+      setDisplay([]);
+      return;
+    }
+    setIsLoadError(true);
+    setIsMissing(false);
+    setCanonical([]);
+    setDisplay([]);
+  }, []);
 
-    async function load() {
-      setLoading(true);
-      setError(null);
+  const loadOnce = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!opts?.silent) {
+        setLoading(true);
+      }
       try {
-        const res = await fetch(`/api/session/${bookingId}/transcript`);
-        const data = (await res.json()) as TranscriptResponse;
-        if (!res.ok) {
-          throw new Error(data.error ?? 'Could not load transcript');
-        }
-        if (cancelled) {
-          return;
-        }
-        const utterances = data.utterances ?? [];
-        setCanonical(utterances);
-        setDisplay(utterances);
-        setTargetLocale(data.sourceLocale === 'es' ? 'en' : 'es');
-      } catch (err: unknown) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Could not load transcript');
-        }
+        const outcome = await fetchTranscript(bookingId);
+        applyOutcome(outcome);
+      } catch {
+        setIsLoadError(true);
+        setIsMissing(false);
+        setCanonical([]);
+        setDisplay([]);
       } finally {
-        if (!cancelled) {
+        if (!opts?.silent) {
           setLoading(false);
         }
       }
-    }
+    },
+    [applyOutcome, bookingId],
+  );
 
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [bookingId]);
+  useEffect(() => {
+    void loadOnce();
+  }, [loadOnce]);
+
+  const missingElapsedMs =
+    missingSinceRef.current != null ? Math.max(0, nowMs - missingSinceRef.current) : 0;
+
+  const phase: TranscriptHonestyPhase = resolveTranscriptHonestyPhase({
+    loading,
+    hasUtterances: display.length > 0,
+    isLoadError,
+    isMissing,
+    missingElapsedMs,
+  });
+
+  // Advance honesty clock while missing so processing → delayed → unavailable.
+  useEffect(() => {
+    if (!isMissing || display.length > 0) {
+      return;
+    }
+    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [display.length, isMissing]);
+
+  // Poll API while processing/delayed.
+  useEffect(() => {
+    if (!shouldPollForTranscript(phase)) {
+      return;
+    }
+    const id = window.setInterval(() => {
+      void loadOnce({ silent: true });
+    }, TRANSCRIPT_HONESTY_POLL_MS);
+    return () => window.clearInterval(id);
+  }, [loadOnce, phase]);
 
   const toggleLocalized = useCallback(async () => {
     if (viewLocalized) {
@@ -81,7 +167,7 @@ export function SessionTranscriptPanel({
     }
 
     setTranslating(true);
-    setError(null);
+    setTranslateError(null);
     try {
       const res = await fetch(`/api/session/${bookingId}/transcript/translate`, {
         method: 'POST',
@@ -95,35 +181,56 @@ export function SessionTranscriptPanel({
       setDisplay(data.utterances ?? canonical);
       setViewLocalized(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Translation failed');
+      setTranslateError(err instanceof Error ? err.message : 'Translation failed');
     } finally {
       setTranslating(false);
     }
   }, [bookingId, canonical, targetLocale, viewLocalized]);
 
-  if (loading) {
-    return (
-      <p className="text-body-md text-on-surface-variant mb-6" data-testid="session-transcript-loading">
-        Loading session transcript…
-      </p>
-    );
-  }
-
-  if (error && display.length === 0) {
-    return (
-      <p className="text-body-md text-on-surface-variant mb-6" data-testid="session-transcript-error">
-        {error}
-      </p>
-    );
-  }
-
-  if (display.length === 0) {
+  if (phase === 'loading') {
     return (
       <p
         className="text-body-md text-on-surface-variant mb-6"
-        data-testid="session-transcript-unavailable"
+        data-testid="session-transcript-loading"
+        aria-live="polite"
       >
-        Transcript not available for this session yet.
+        {honestyCopyForPhase('loading')}
+      </p>
+    );
+  }
+
+  if (phase === 'error') {
+    return (
+      <div className="mb-6 space-y-2" data-testid="session-transcript-error">
+        <p className="text-body-md text-on-surface-variant" aria-live="polite">
+          {honestyCopyForPhase('error')}
+        </p>
+        <button
+          type="button"
+          data-testid="session-transcript-retry"
+          onClick={() => void loadOnce()}
+          className="inline-flex min-h-11 items-center justify-center rounded-md border border-outline-variant px-5 py-2.5 text-label-sm font-semibold text-on-surface"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (phase === 'processing' || phase === 'delayed' || phase === 'unavailable') {
+    return (
+      <p
+        className="text-body-md text-on-surface-variant mb-6"
+        data-testid={
+          phase === 'processing'
+            ? 'session-transcript-processing'
+            : phase === 'delayed'
+              ? 'session-transcript-delayed'
+              : 'session-transcript-unavailable'
+        }
+        aria-live="polite"
+      >
+        {honestyCopyForPhase(phase)}
       </p>
     );
   }
@@ -144,9 +251,9 @@ export function SessionTranscriptPanel({
           {viewLocalized ? 'View original' : `View in ${localeLabel}`}
         </button>
       </div>
-      {error ? (
+      {translateError ? (
         <p className="text-label-sm text-error mb-2" data-testid="session-transcript-inline-error">
-          {error}
+          {translateError}
         </p>
       ) : null}
       <ul className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-outline-variant bg-surface-container-low p-3">

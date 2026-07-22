@@ -444,7 +444,38 @@ export async function fulfillBookingAfterMeetingEndedForBooking(
 }
 
 /**
+ * Run synthesis gate without failing durable transcript work.
+ * LLM timeouts must not 500 Daily webhooks after VTT is already stored.
+ */
+async function runSynthesisGateBestEffort(params: {
+  bookingId: string;
+  durationMinutes?: number;
+}): Promise<Record<string, unknown>> {
+  try {
+    return (await maybeRunSynthesisGate(params)) as Record<string, unknown>;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[post-session] synthesis gate failed after durable transcript', {
+      bookingId: params.bookingId,
+      error: message,
+    });
+    await supabaseAdmin.from('audit_log').insert({
+      agent_id: 'APX-03',
+      event: 'TRANSCRIPT_SYNTHESIS_AFTER_PERSIST_FAILED',
+      ref_id: params.bookingId,
+      payload: { error: message } as Json,
+    });
+    return {
+      synthesisFailedAfterPersist: true as const,
+      synthesisError: message,
+    };
+  }
+}
+
+/**
  * D3 Phase 1: fetch Daily WebVTT, persist session_transcripts, then synthesis gate.
+ * Durable-first: fetch/persist errors throw (webhook 500 → Daily retry).
+ * Synthesis/translation failures after persist are logged and do not throw.
  */
 export async function fulfillBookingAfterTranscriptReady(payload: TranscriptReadyPayload) {
   const booking = await findBookingByDailyRoom(payload.roomName);
@@ -468,7 +499,7 @@ export async function fulfillBookingAfterTranscriptReady(payload: TranscriptRead
 
   const existing = await loadSessionTranscript(booking.id);
   if (existing && countUtterancesFromJson(existing.utterances_json) > 0) {
-    const gate = await maybeRunSynthesisGate({
+    const gate = await runSynthesisGateBestEffort({
       bookingId: booking.id,
       durationMinutes,
     });
@@ -495,7 +526,7 @@ export async function fulfillBookingAfterTranscriptReady(payload: TranscriptRead
     durationMinutes,
   });
 
-  const gate = await maybeRunSynthesisGate({
+  const gate = await runSynthesisGateBestEffort({
     bookingId: booking.id,
     durationMinutes: persist.durationMinutes,
   });
