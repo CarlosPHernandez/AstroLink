@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import {
+  BOOKING_LEAD_TIME_ERROR,
+  isScheduledAtOnOrAfterEarliestBookable,
+} from '@/lib/booking-lead-time';
+import {
   CHRIS_BOOKING_CAMPAIGN_QUERY,
   CHRIS_GOALS_MIN_CHARS,
 } from '@/lib/chris-campaign/chris-campaign-constants';
@@ -67,6 +71,16 @@ export const BookBodySchema = z
       }
     }
 
+    // All bookings: 2 calendar-day lead in platform timezone (today + tomorrow blocked).
+    const meetsLead = isScheduledAtOnOrAfterEarliestBookable(data.scheduledAt);
+    if (!meetsLead) {
+      ctx.addIssue({
+        code: 'custom',
+        message: BOOKING_LEAD_TIME_ERROR,
+        path: ['scheduledAt'],
+      });
+    }
+
     if (!isChris) {
       return;
     }
@@ -94,10 +108,13 @@ export const BookBodySchema = z
       }
     }
 
-    if (!isChrisScheduledDateBookable(data.scheduledAt)) {
+    // Chris: Wed–Sun + campaign start (lead days already inside min helper).
+    // Skip if lead already failed so we don't double-message the same field.
+    if (meetsLead && !isChrisScheduledDateBookable(data.scheduledAt)) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Choose a session date on or after today (Wednesday–Sunday).',
+        message:
+          'Choose a session date at least 2 days from today (Wednesday–Sunday).',
         path: ['scheduledAt'],
       });
     }

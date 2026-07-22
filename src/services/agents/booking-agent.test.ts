@@ -141,7 +141,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     const result = await agent.bookSession({
       menteeId: 'mentee-1',
       serviceType: 'session_1on1',
-      scheduledAt: new Date().toISOString(),
+      scheduledAt: '2030-01-15T18:00:00.000Z',
       menteeGoals: 'Learn about propulsion',
       menteeBackground: 'Early-career engineer',
     });
@@ -162,7 +162,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
       agent.bookSession({
         menteeId: 'mentee-1',
         serviceType: 'session_1on1',
-        scheduledAt: new Date().toISOString(),
+        scheduledAt: '2030-01-15T18:00:00.000Z',
         menteeGoals: 'Learn about propulsion',
         menteeBackground: 'Early-career engineer',
       }),
@@ -177,7 +177,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
       agent.bookSession({
         menteeId: 'mentee-1',
         serviceType: 'session_1on1',
-        scheduledAt: new Date().toISOString(),
+        scheduledAt: '2030-01-15T18:00:00.000Z',
         menteeGoals: 'Learn about propulsion',
         menteeBackground: 'Early-career engineer',
       }),
@@ -191,7 +191,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
       menteeId: 'mentee-1',
       mentorId: 'mentor-1',
       serviceType: 'session_1on1',
-      scheduledAt: new Date().toISOString(),
+      scheduledAt: '2030-01-15T18:00:00.000Z',
       menteeGoals: 'Learn about propulsion',
       menteeBackground: 'Early-career engineer',
       campaignId: 'chris-sembroski',
@@ -213,7 +213,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
         menteeId: 'mentee-1',
         mentorId: 'mentor-1',
         serviceType: 'session_1on1',
-        scheduledAt: new Date().toISOString(),
+        scheduledAt: '2030-01-15T18:00:00.000Z',
         menteeGoals: 'Learn about propulsion',
         menteeBackground: 'Early-career engineer',
         campaignId: 'chris-sembroski',
@@ -221,6 +221,21 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     ).rejects.toThrow('Failed to create database booking');
 
     expect(mockReleaseSlot).toHaveBeenCalledWith('chris-sembroski');
+  });
+
+  it('rejects scheduled times inside the 2-day lead window', async () => {
+    const agent = new BookingAgent();
+    await expect(
+      agent.bookSession({
+        menteeId: 'mentee-1',
+        mentorId: 'mentor-1',
+        serviceType: 'session_1on1',
+        scheduledAt: new Date().toISOString(),
+        menteeGoals: 'Learn about propulsion',
+        menteeBackground: 'Early-career engineer',
+      }),
+    ).rejects.toThrow(/at least 2 days/i);
+    expect(mockReserveSlot).not.toHaveBeenCalled();
   });
 
   it('throws sold out when campaign reserve returns false', async () => {
@@ -233,7 +248,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
         menteeId: 'mentee-1',
         mentorId: 'mentor-1',
         serviceType: 'session_1on1',
-        scheduledAt: new Date().toISOString(),
+        scheduledAt: '2030-01-15T18:00:00.000Z',
         menteeGoals: 'Learn about propulsion',
         menteeBackground: 'Early-career engineer',
         campaignId: 'chris-sembroski',

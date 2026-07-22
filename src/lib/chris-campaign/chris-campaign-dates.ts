@@ -1,3 +1,5 @@
+import { getEarliestBookableDate } from '@/lib/booking-lead-time';
+
 /** First day Chris sessions can be scheduled (July 20 2026 onward — heads-up for Chris). */
 export const CHRIS_CAMPAIGN_BOOKING_START = new Date(Date.UTC(2026, 6, 20));
 
@@ -84,14 +86,20 @@ export function calendarDateInEastern(now: Date = new Date()): string {
 }
 
 /**
- * Earliest bookable calendar day: max(campaign start, today Eastern),
+ * Earliest bookable calendar day: max(campaign start, platform earliest with 2-day lead),
  * advanced past Monday/Tuesday when needed.
  * Returns YYYY-MM-DD.
+ *
+ * Platform lead: today and tomorrow are never bookable (America/New_York).
+ * Example: Wednesday → earliest raw Friday, then next Wed–Sun if needed.
  */
 export function getChrisMinBookableIsoDate(now: Date = new Date()): string {
   const campaignStartIso = CHRIS_CAMPAIGN_BOOKING_START.toISOString().slice(0, 10);
-  const todayEastern = calendarDateInEastern(now);
-  const raw = todayEastern > campaignStartIso ? todayEastern : campaignStartIso;
+  const earliestLead = getEarliestBookableDate({
+    now,
+    timezone: CHRIS_BOOKING_DATE_TIMEZONE,
+  });
+  const raw = earliestLead > campaignStartIso ? earliestLead : campaignStartIso;
   return nextChrisBookableIsoDate(raw);
 }
 
@@ -144,7 +152,8 @@ export function getChrisCampaignMonthLabel(year: number, monthIndex: number): st
 
 /**
  * Bookable day tiles for a calendar month.
- * Only days on/after campaign start, on/after today (Eastern), and Wed–Sun.
+ * Only days on/after campaign start, on/after platform earliest (today+2 Eastern),
+ * and Wed–Sun.
  */
 export function getChrisCampaignDatesForMonth(
   year: number,
