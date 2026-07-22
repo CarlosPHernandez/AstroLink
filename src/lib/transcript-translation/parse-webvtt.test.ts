@@ -8,6 +8,7 @@ import { mapSpeakersToRoles } from '@/lib/transcript-translation/map-speakers';
 
 const fixtureDir = dirname(fileURLToPath(import.meta.url));
 const sampleVtt = readFileSync(join(fixtureDir, '__fixtures__/sample.vtt'), 'utf8');
+const dailyStoredVtt = readFileSync(join(fixtureDir, '__fixtures__/daily-stored.vtt'), 'utf8');
 
 describe('parseWebVtt', () => {
   it('parses cue timestamps and voice tags', () => {
@@ -18,6 +19,21 @@ describe('parseWebVtt', () => {
       text: 'We should review the RPO corridor before launch.',
       startMs: 1_000,
       endMs: 5_000,
+    });
+  });
+
+  it('parses Daily stored WebVTT (transcript:N ids + <v>Name:</v>text)', () => {
+    const utterances = parseWebVtt(dailyStoredVtt);
+    expect(utterances).toHaveLength(4);
+    expect(utterances[0]).toMatchObject({
+      speakerId: 'risk hernandez',
+      text: '¿Aló?',
+      startMs: 7_370,
+      endMs: 8_370,
+    });
+    expect(utterances[1]).toMatchObject({
+      speakerId: 'Demo Activation Expert',
+      text: 'Hi, Steph.',
     });
   });
 
