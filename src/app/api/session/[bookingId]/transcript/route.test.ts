@@ -4,7 +4,7 @@ const mockGetSession = vi.hoisted(() => vi.fn());
 const mockBookingMaybeSingle = vi.hoisted(() => vi.fn());
 const mockTranscriptMaybeSingle = vi.hoisted(() => vi.fn());
 const mockMentorMaybeSingle = vi.hoisted(() => vi.fn());
-const mockMenteeMaybeSingle = vi.hoisted(() => vi.fn());
+const mockUsersIn = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/session', () => ({
   getSession: () => mockGetSession(),
@@ -37,7 +37,7 @@ vi.mock('@/lib/supabase', () => ({
       if (table === 'users') {
         return {
           select: vi.fn(() => ({
-            eq: vi.fn(() => ({ maybeSingle: mockMenteeMaybeSingle })),
+            in: mockUsersIn,
           })),
         };
       }
@@ -68,6 +68,8 @@ describe('GET /api/session/[bookingId]/transcript', () => {
     mockTranscriptMaybeSingle.mockResolvedValue({
       data: {
         source_locale: 'en',
+        vtt_text: null,
+        daily_transcript_id: null,
         utterances_json: [
           {
             id: 'utt-1',
@@ -82,12 +84,15 @@ describe('GET /api/session/[bookingId]/transcript', () => {
       },
       error: null,
     });
-    mockMentorMaybeSingle.mockResolvedValue({
-      data: { full_name: 'Chris Sembroski' },
+    mockUsersIn.mockResolvedValue({
+      data: [
+        { id: 'mentor-uuid', full_name: 'Chris Sembroski' },
+        { id: 'mentee-uuid', full_name: 'Carlos Hernandez' },
+      ],
       error: null,
     });
-    mockMenteeMaybeSingle.mockResolvedValue({
-      data: { full_name: 'Carlos Hernandez' },
+    mockMentorMaybeSingle.mockResolvedValue({
+      data: { full_name: 'Chris Sembroski' },
       error: null,
     });
   });
@@ -122,8 +127,57 @@ describe('GET /api/session/[bookingId]/transcript', () => {
     });
     expect(res.status).toBe(200);
     const body = await res.json();
+    expect(body.status).toBe('ready');
     expect(body.utterances).toHaveLength(1);
     expect(body.utterances[0].speakerRole).toBe('mentor');
     expect(body.utterances[0].text).toBe('Hello orbit');
+  });
+
+  it('re-parses VTT when utterances_json is empty and returns ready', async () => {
+    mockTranscriptMaybeSingle.mockResolvedValueOnce({
+      data: {
+        source_locale: 'en',
+        daily_transcript_id: null,
+        utterances_json: [],
+        vtt_text: `WEBVTT
+
+1
+00:00:01.000 --> 00:00:05.000
+<v Chris Sembroski>We should review the corridor.
+`,
+      },
+      error: null,
+    });
+    // persist backfill may touch session_transcripts again — allow no-op select/update
+    const res = await GET(new Request('http://localhost'), {
+      params: Promise.resolve({ bookingId }),
+    });
+    // Backfill may fail on incomplete mock; status can still be 200 ready if re-parse works
+    // before backfill. If backfill throws we still return ready (caught).
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe('ready');
+    expect(body.utterances.length).toBeGreaterThanOrEqual(1);
+    expect(body.utterances[0].text).toMatch(/corridor/i);
+  });
+
+  it('returns empty status when row exists but no parseable speech', async () => {
+    mockTranscriptMaybeSingle.mockResolvedValueOnce({
+      data: {
+        source_locale: 'en',
+        daily_transcript_id: null,
+        utterances_json: [],
+        vtt_text: 'WEBVTT\n\nNOTE empty\n',
+      },
+      error: null,
+    });
+    const res = await GET(new Request('http://localhost'), {
+      params: Promise.resolve({ bookingId }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe('empty');
+    expect(body.utterances).toEqual([]);
+    expect(body.hasVtt).toBe(true);
   });
 });

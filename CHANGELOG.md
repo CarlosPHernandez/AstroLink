@@ -2,6 +2,14 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.7.0] - 2026-07-22
+
+### Fixed
+- **Post-call transcript UI:** a session with a saved transcript in the database no longer stays on “Preparing your transcript…” when speech lines were empty or only the WebVTT file was stored. The API re-parses stored VTT on read, backfills utterances when possible, and the panel treats a true wait (no row yet) differently from a stored-but-empty file.
+
+### Added
+- Shared read resolver for session transcripts (`resolveSessionTranscriptForBooking` / pure content helper) used by GET `/api/session/[bookingId]/transcript`.
+
 ## [0.8.6.0] - 2026-07-22
 
 ### Fixed
