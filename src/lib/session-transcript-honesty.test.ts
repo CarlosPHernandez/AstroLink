@@ -22,7 +22,7 @@ describe('resolveTranscriptHonestyPhase', () => {
     ).toBe('success');
   });
 
-  it('returns processing for first 2 minutes of missing', () => {
+  it('returns processing for first 2 minutes of true missing (404)', () => {
     expect(
       resolveTranscriptHonestyPhase({
         loading: false,
@@ -76,6 +76,30 @@ describe('resolveTranscriptHonestyPhase', () => {
     ).toBe('unavailable');
   });
 
+  it('returns empty_stored when row exists but has no lines (not preparing)', () => {
+    expect(
+      resolveTranscriptHonestyPhase({
+        loading: false,
+        hasUtterances: false,
+        isLoadError: false,
+        isMissing: false,
+        isEmptyStored: true,
+        missingElapsedMs: 0,
+      }),
+    ).toBe('empty_stored');
+    // Even if missingElapsed would be in "processing" range, empty_stored wins
+    expect(
+      resolveTranscriptHonestyPhase({
+        loading: false,
+        hasUtterances: false,
+        isLoadError: false,
+        isMissing: false,
+        isEmptyStored: true,
+        missingElapsedMs: 30_000,
+      }),
+    ).toBe('empty_stored');
+  });
+
   it('returns error for non-404 failures', () => {
     expect(
       resolveTranscriptHonestyPhase({
@@ -94,14 +118,16 @@ describe('honestyCopyForPhase', () => {
     expect(honestyCopyForPhase('processing')).toBe(TRANSCRIPT_HONESTY_COPY.processing);
     expect(honestyCopyForPhase('delayed')).toBe(TRANSCRIPT_HONESTY_COPY.delayed);
     expect(honestyCopyForPhase('unavailable')).toBe(TRANSCRIPT_HONESTY_COPY.unavailable);
+    expect(honestyCopyForPhase('empty_stored')).toBe(TRANSCRIPT_HONESTY_COPY.emptyStored);
   });
 });
 
 describe('shouldPollForTranscript', () => {
-  it('polls only processing and delayed', () => {
+  it('polls only processing and delayed (not empty_stored)', () => {
     expect(shouldPollForTranscript('processing')).toBe(true);
     expect(shouldPollForTranscript('delayed')).toBe(true);
     expect(shouldPollForTranscript('unavailable')).toBe(false);
+    expect(shouldPollForTranscript('empty_stored')).toBe(false);
     expect(shouldPollForTranscript('success')).toBe(false);
   });
 });

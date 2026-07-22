@@ -15,6 +15,8 @@ import type { TranscriptUtterance } from '@/lib/transcript-translation/types';
 type TranscriptResponse = {
   utterances?: TranscriptUtterance[];
   sourceLocale?: string;
+  status?: 'ready' | 'empty';
+  hasVtt?: boolean;
   error?: string;
 };
 
@@ -28,6 +30,7 @@ type TranslateTranscriptResponse = {
 type LoadOutcome =
   | { kind: 'success'; utterances: TranscriptUtterance[]; sourceLocale?: string }
   | { kind: 'missing' }
+  | { kind: 'empty_stored'; hasVtt?: boolean }
   | { kind: 'error'; message: string };
 
 async function fetchTranscript(bookingId: string): Promise<LoadOutcome> {
@@ -47,10 +50,17 @@ async function fetchTranscript(bookingId: string): Promise<LoadOutcome> {
   }
 
   const utterances = data.utterances ?? [];
-  if (utterances.length === 0) {
-    return { kind: 'missing' };
+  if (utterances.length > 0) {
+    return { kind: 'success', utterances, sourceLocale: data.sourceLocale };
   }
-  return { kind: 'success', utterances, sourceLocale: data.sourceLocale };
+
+  // Explicit empty stored row (or legacy 200 with [] after row existed)
+  if (data.status === 'empty' || data.status === 'ready') {
+    return { kind: 'empty_stored', hasVtt: data.hasVtt };
+  }
+
+  // Ambiguous empty 200 without status: treat as empty stored, not "still preparing"
+  return { kind: 'empty_stored', hasVtt: data.hasVtt };
 }
 
 export function SessionTranscriptPanel({
@@ -67,6 +77,7 @@ export function SessionTranscriptPanel({
   const [loading, setLoading] = useState(true);
   const [isLoadError, setIsLoadError] = useState(false);
   const [isMissing, setIsMissing] = useState(false);
+  const [isEmptyStored, setIsEmptyStored] = useState(false);
   const [canonical, setCanonical] = useState<TranscriptUtterance[]>([]);
   const [display, setDisplay] = useState<TranscriptUtterance[]>([]);
   const [viewLocalized, setViewLocalized] = useState(false);
@@ -80,6 +91,7 @@ export function SessionTranscriptPanel({
     if (outcome.kind === 'success') {
       missingSinceRef.current = null;
       setIsMissing(false);
+      setIsEmptyStored(false);
       setIsLoadError(false);
       setCanonical(outcome.utterances);
       setDisplay(outcome.utterances);
@@ -91,6 +103,16 @@ export function SessionTranscriptPanel({
         missingSinceRef.current = Date.now();
       }
       setIsMissing(true);
+      setIsEmptyStored(false);
+      setIsLoadError(false);
+      setCanonical([]);
+      setDisplay([]);
+      return;
+    }
+    if (outcome.kind === 'empty_stored') {
+      missingSinceRef.current = null;
+      setIsMissing(false);
+      setIsEmptyStored(true);
       setIsLoadError(false);
       setCanonical([]);
       setDisplay([]);
@@ -98,6 +120,7 @@ export function SessionTranscriptPanel({
     }
     setIsLoadError(true);
     setIsMissing(false);
+    setIsEmptyStored(false);
     setCanonical([]);
     setDisplay([]);
   }, []);
@@ -113,6 +136,7 @@ export function SessionTranscriptPanel({
       } catch {
         setIsLoadError(true);
         setIsMissing(false);
+        setIsEmptyStored(false);
         setCanonical([]);
         setDisplay([]);
       } finally {
@@ -136,6 +160,7 @@ export function SessionTranscriptPanel({
     hasUtterances: display.length > 0,
     isLoadError,
     isMissing,
+    isEmptyStored,
     missingElapsedMs,
   });
 
@@ -148,7 +173,7 @@ export function SessionTranscriptPanel({
     return () => window.clearInterval(id);
   }, [display.length, isMissing]);
 
-  // Poll API while processing/delayed.
+  // Poll API while processing/delayed (true wait only).
   useEffect(() => {
     if (!shouldPollForTranscript(phase)) {
       return;
@@ -214,6 +239,18 @@ export function SessionTranscriptPanel({
           Retry
         </button>
       </div>
+    );
+  }
+
+  if (phase === 'empty_stored') {
+    return (
+      <p
+        className="text-body-md text-on-surface-variant mb-6"
+        data-testid="session-transcript-empty-stored"
+        aria-live="polite"
+      >
+        {honestyCopyForPhase('empty_stored')}
+      </p>
     );
   }
 

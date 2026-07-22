@@ -10,7 +10,9 @@ export type TranscriptHonestyPhase =
   | 'error'
   | 'processing'
   | 'delayed'
-  | 'unavailable';
+  | 'unavailable'
+  /** Row exists but no parseable speech lines (not a true wait). */
+  | 'empty_stored';
 
 export const TRANSCRIPT_HONESTY_COPY = {
   loading: 'Loading session transcript…',
@@ -19,25 +21,33 @@ export const TRANSCRIPT_HONESTY_COPY = {
   delayed:
     'Transcript is still processing. You can leave and return later — it will appear here when ready.',
   unavailable: 'Transcript is not available for this session.',
+  emptyStored:
+    'Transcript file was saved but no speech lines could be read. Contact support if this was a paid session.',
   loadError: 'Could not load transcript. Try again in a moment.',
 } as const;
 
 /**
  * Resolve which honesty state to show when transcript is missing or loading.
- * Timers start when the panel first sees a missing transcript (404 / empty).
+ * Timers start when the panel first sees a true missing transcript (404 only).
+ * Stored-but-empty is never "processing".
  */
 export function resolveTranscriptHonestyPhase(params: {
   loading: boolean;
   hasUtterances: boolean;
   /** Non-404 load failure */
   isLoadError: boolean;
-  /** 404 or successful response with zero utterances */
+  /** True wait: 404 — no session_transcripts row yet */
   isMissing: boolean;
+  /** Row exists but utterances empty after resolve (status: empty) */
+  isEmptyStored?: boolean;
   /** ms since first missing observation (or panel mount when missing) */
   missingElapsedMs: number;
 }): TranscriptHonestyPhase {
   if (params.hasUtterances) {
     return 'success';
+  }
+  if (params.isEmptyStored) {
+    return 'empty_stored';
   }
   if (params.loading && !params.isMissing && !params.isLoadError) {
     return 'loading';
@@ -45,7 +55,17 @@ export function resolveTranscriptHonestyPhase(params: {
   if (params.isLoadError && !params.isMissing) {
     return 'error';
   }
-  if (params.isMissing || (!params.loading && !params.hasUtterances)) {
+  if (params.isMissing) {
+    if (params.missingElapsedMs < TRANSCRIPT_HONESTY_PROCESSING_MS) {
+      return 'processing';
+    }
+    if (params.missingElapsedMs < TRANSCRIPT_HONESTY_DELAYED_MS) {
+      return 'delayed';
+    }
+    return 'unavailable';
+  }
+  if (!params.loading && !params.hasUtterances) {
+    // Defensive: treated as true wait if flags not set (legacy)
     if (params.missingElapsedMs < TRANSCRIPT_HONESTY_PROCESSING_MS) {
       return 'processing';
     }
@@ -67,6 +87,8 @@ export function honestyCopyForPhase(phase: TranscriptHonestyPhase): string {
       return TRANSCRIPT_HONESTY_COPY.delayed;
     case 'unavailable':
       return TRANSCRIPT_HONESTY_COPY.unavailable;
+    case 'empty_stored':
+      return TRANSCRIPT_HONESTY_COPY.emptyStored;
     case 'error':
       return TRANSCRIPT_HONESTY_COPY.loadError;
     case 'success':
