@@ -90,7 +90,21 @@ Referrer ids are documented in [marketing-referrer-taxonomy.md](./marketing-refe
 - [ ] Exit anyone who books so they only get transactional confirm/brief emails
 - [ ] Full sequence runbook: [chris-early-waitlist-email-automation.md](./chris-early-waitlist-email-automation.md)
 
-## 5. Admin ops
+## 5. Daily video + transcript durability (do not skip)
+
+Paid Chris sessions use Daily for A/V. If product or ops expects a **post-call transcript or recap grounded in the conversation**, storage must be proven **before** the first real call — not after.
+
+**Incident:** 2026-07-21 Chris session had live captions and a finished Daily transcript **job**, but domain `enable_transcription_storage` was false. No WebVTT was downloadable; `session_transcripts` stayed empty; enabling storage later did not recover the call. Write-up: [daily-transcription-storage-incident.md](../explanation/daily-transcription-storage-incident.md).
+
+- [ ] Domain `enable_transcription_storage=true` (Daily REST `GET /v1/` config)
+- [ ] Production `DAILY_TRANSCRIPTION_ENABLED=true` if live STT + transcript-ready synthesis path is required
+- [ ] Webhook events include `meeting.ended` and `transcript.ready-to-download` (HMAC verified once)
+- [ ] **Storage preflight passed:** rehearsal call → `access-link` returns WebVTT with real speech → `session_transcripts` row non-empty ([runbook](./daily-transcription-storage-preflight.md))
+- [ ] Product copy does **not** promise “transcript after the call” unless the preflight passed on this Daily domain
+
+Optional: cloud **recording** is a separate recovery path (privacy/consent). It was **not** enabled on the incident call and is not a substitute for storage preflight.
+
+## 6. Admin ops
 
 Sign in as admin → **Dashboard → Ops**:
 

@@ -21,6 +21,8 @@ AstroLink connects buyers with aerospace experts across language barriers. This 
 | [transcript-translation-engineering-review.md](../../docs/explanation/transcript-translation-engineering-review.md) | Token optimization, eng decisions |
 | [transcript-translation-ai-sdk-review.md](../../docs/explanation/transcript-translation-ai-sdk-review.md) | AI SDK fit assessment |
 | [transcript-translation-case-studies.md](../../docs/explanation/transcript-translation-case-studies.md) | Competitive landscape |
+| [daily-transcription-storage-incident.md](../../docs/explanation/daily-transcription-storage-incident.md) | **Required reading:** live captions ≠ stored WebVTT (2026-07-21 data loss) |
+| [daily-transcription-storage-preflight.md](../../docs/how-to/daily-transcription-storage-preflight.md) | Ops preflight: access-link + `session_transcripts` proof |
 
 ## Dependencies
 
@@ -65,9 +67,11 @@ AstroLink connects buyers with aerospace experts across language barriers. This 
 ### Phase 1 — Capture (no translation yet)
 
 1. Enable Daily transcription on domain (`enable_transcription`).
-2. After payment provision, set `auto_start_transcription` on meeting tokens for mentors.
-3. On `meeting.ended`, fetch WebVTT via Daily REST API → persist `session_transcripts` (migration in roadmap).
-4. Pass real transcript (truncated per token budget) to `SessionAgent.synthesizeSession`.
+2. **Also set `enable_transcription_storage: true` on domain (and ideally rooms).** Without storage, live STT can work and Daily may still show a `t_finished` transcript id, but `access-link` fails forever and `session_transcripts` stays empty. See storage incident + preflight docs above.
+3. After payment provision, set `auto_start_transcription` on meeting tokens for mentors when product requires STT.
+4. On `transcript.ready-to-download`, fetch WebVTT via Daily access-link → persist `session_transcripts`.
+5. Pass real transcript (truncated per token budget) to `SessionAgent.synthesizeSession`.
+6. Before any paid session: run [storage preflight](../../docs/how-to/daily-transcription-storage-preflight.md) — not just “captions looked fine.”
 
 ### Phase 2 — Post-session translation ✅ shipped
 
@@ -126,6 +130,9 @@ Target: {target_locale}
 - Send full 60-min transcript to APX-03 — use `selectTranscriptWindow()` (see engineering review).
 - Add `@ai-sdk/*` packages in Phase 0–2 without updating the AI SDK review doc.
 - Auto-translate intake or payment flows in v1 — scope is **in-session + recap** only.
+- Ship or claim post-call transcripts when Daily `enable_transcription_storage` is false, or when you have only proven live captions.
+- Treat Daily transcript list `t_finished` as proof of downloadable WebVTT.
+- Assume enabling storage later recovers past meetings — it does not.
 
 ## Related agents
 

@@ -25,11 +25,12 @@ npm run dev
 1. `DAILY_API_KEY` and `DAILY_WEBHOOK_HMAC` set in `.env.local`.
 2. Daily dashboard webhook points to your tunnel: `https://<tunnel>/api/webhooks/daily`, events `meeting.ended` and (when transcription is on) `transcript.ready-to-download`.
 3. Daily domain transcription enabled when using `DAILY_TRANSCRIPTION_ENABLED=true`.
-4. Send a test webhook from Daily or complete one dry-run call and confirm app logs show `received: true`.
-5. If using Stripe: `stripe listen --forward-to localhost:3000/api/webhooks/stripe` running.
-6. Two browsers (or profiles): mentee `carlos@astrolink.ai`, mentor `chris@astrolink.ai` (seed users).
-7. **Phone / second device on Wi‑Fi:** run `npm run dev:lan` and open the **Phone** URL it prints (e.g. `https://10.0.0.49:3000` — not `https://0.0.0.0:3000`). Accept Safari's cert warning. Plain `http://<LAN-IP>:3000` blocks camera/mic. **Mac mentor:** `https://localhost:3000` while `dev:lan` is running.
-8. Allow camera/microphone for your Daily domain when the call UI loads.
+4. **If you promise a post-call transcript or grounded recap:** complete [transcription storage preflight](./daily-transcription-storage-preflight.md) — domain `enable_transcription_storage=true` **and** a real `access-link` WebVTT download. Live captions alone do **not** prove storage (see [incident](../explanation/daily-transcription-storage-incident.md)).
+5. Send a test webhook from Daily or complete one dry-run call and confirm app logs show `received: true`.
+6. If using Stripe: `stripe listen --forward-to localhost:3000/api/webhooks/stripe` running.
+7. Two browsers (or profiles): mentee `carlos@astrolink.ai`, mentor `chris@astrolink.ai` (seed users).
+8. **Phone / second device on Wi‑Fi:** run `npm run dev:lan` and open the **Phone** URL it prints (e.g. `https://10.0.0.49:3000` — not `https://0.0.0.0:3000`). Accept Safari's cert warning. Plain `http://<LAN-IP>:3000` blocks camera/mic. **Mac mentor:** `https://localhost:3000` while `dev:lan` is running.
+9. Allow camera/microphone for your Daily domain when the call UI loads.
 
 ## Standard demo script (&lt;15 min)
 
@@ -69,6 +70,8 @@ npm run dev
 | Call UI “something went wrong” / no camera on phone | Plain HTTP on LAN IP blocks camera/mic | `npm run dev:lan` → `https://<LAN-IP>:3000` on phone; session page shows steps |
 | Booking stuck `confirmed`, no recap | `meeting.ended` webhook missed | Re-end call in Daily, or dev simulate (below) |
 | Booking `completed` but recap is generic apology | Transcription off or `transcript.ready` missed | Set `DAILY_TRANSCRIPTION_ENABLED=true`; subscribe webhook; or `simulate_transcript_ready` |
+| Captions worked; no `session_transcripts` row; access-link “not stored” | Domain/room `enable_transcription_storage` was false for that meeting | Enable storage; run **new** call; old transcript ids never gain a VTT — [preflight](./daily-transcription-storage-preflight.md) / [incident](../explanation/daily-transcription-storage-incident.md) |
+| Daily list shows `t_finished` but download fails | Same as storage off | `t_finished` is not proof of WebVTT persistence |
 | Booking not completed after call | Webhook never ran | Same as above; payment remains collected and the session needs completion recovery |
 
 ## No-show / webhook miss

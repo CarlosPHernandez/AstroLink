@@ -19,9 +19,11 @@ Structured using [Diataxis](https://diataxis.fr/): tutorials teach, how-tos guid
 | [tutorial/first-video-session.md](./tutorial/first-video-session.md) | Tutorial | First local video call from install to recap |
 | [tutorial/bidirectional-live-captions.md](./tutorial/bidirectional-live-captions.md) | Tutorial | Two-device bidirectional live captions + post-call transcript |
 | [how-to/video-session-demo.md](./how-to/video-session-demo.md) | How-to | Investor demo runbook, cheatsheet, dev operator |
+| [how-to/daily-transcription-storage-preflight.md](./how-to/daily-transcription-storage-preflight.md) | How-to | **Mandatory** prove WebVTT download + `session_transcripts` before paid sessions |
 | [how-to/daily-live-account-guardrails-plan.md](./how-to/daily-live-account-guardrails-plan.md) | How-to | Live Daily account quota guardrails and demo approval plan |
-| [reference/video-session.md](./reference/video-session.md) | Reference | APIs, gates, env vars, module map |
+| [reference/video-session.md](./reference/video-session.md) | Reference | APIs, gates, env vars, Daily domain storage properties, module map |
 | [explanation/video-session-architecture.md](./explanation/video-session-architecture.md) | Explanation | Why private rooms, tokens, and webhooks |
+| [explanation/daily-transcription-storage-incident.md](./explanation/daily-transcription-storage-incident.md) | Explanation | Postmortem: live captions ≠ stored transcript (2026-07-21) |
 
 ## Transcript translation (D3 wedge)
 
