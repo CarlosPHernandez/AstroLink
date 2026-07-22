@@ -54,6 +54,7 @@ Each viewer gets their own translate direction: when detected speech locale ≠ 
 Daily owns ASR. AstroLink does **not** run its own STT in D3 v1.
 
 - Enable `enable_transcription` on Daily domain.
+- **Enable `enable_transcription_storage` on domain (and rooms if provisioned explicitly).** Live captions stream without storage; post-call WebVTT/`session_transcripts` require it. See [storage incident](./daily-transcription-storage-incident.md) and [preflight](../how-to/daily-transcription-storage-preflight.md).
 - Mentor owner join calls `startTranscription({ language: 'multi', model: 'nova-3' })` when `DAILY_TRANSCRIPTION_ENABLED=true` (guarded against duplicate starts on rejoin).
 - Receive `transcription-message` events with per-utterance `detectedLocale` during call (Phase 3).
 - After `meeting.ended`, fetch WebVTT via Daily REST API (Phase 1).
