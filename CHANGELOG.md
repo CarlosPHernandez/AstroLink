@@ -2,6 +2,16 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.5.2] - 2026-07-22
+
+### Fixed
+- **Paid-call transcript reliability:** after a live call, stored speech (WebVTT) is less likely to be lost. New Daily rooms request transcription storage; post-call save no longer fails the whole webhook when AI recap is slow; ops can re-pull a Daily transcript by ID if the automatic path missed.
+- After the call, the session screen is honest when a transcript is still preparing, delayed, or unavailable—instead of implying it will appear forever.
+
+### Added
+- Admin reclaim endpoint for a booking’s transcript (`POST /api/admin/bookings/[id]/reclaim-transcript`).
+- Preflight notes for recovering Daily webhook HMAC and proving storage before the next paid session.
+
 ## [0.8.5.1] - 2026-07-21
 
 ### Added
