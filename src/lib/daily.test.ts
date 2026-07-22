@@ -292,6 +292,7 @@ describe('Daily helpers', () => {
           enforce_unique_user_ids: boolean;
           eject_at_room_exp: boolean;
           eject_after_elapsed: number;
+          enable_transcription_storage: boolean;
         };
       };
       expect(body.privacy).toBe('private');
@@ -299,6 +300,7 @@ describe('Daily helpers', () => {
       expect(body.properties.enforce_unique_user_ids).toBe(true);
       expect(body.properties.eject_at_room_exp).toBe(true);
       expect(body.properties.eject_after_elapsed).toBe(45 * 60);
+      expect(body.properties.enable_transcription_storage).toBe(true);
       expect(body.properties.exp).toBeGreaterThan(Math.floor(Date.now() / 1000));
     });
   });

@@ -62,12 +62,41 @@ the minimum bar.
 |--------|--------|-----------------------------------------------|
 | `DAILY_TRANSCRIPTION_ENABLED` | Vercel / `.env.local` | `true` |
 | `DAILY_API_KEY` | same | present |
-| `DAILY_WEBHOOK_HMAC` | same | matches Daily dashboard secret |
-| Daily webhook URL | Daily dashboard | `https://<prod-host>/api/webhooks/daily` |
-| Webhook events | Daily dashboard | includes `transcript.ready-to-download` |
+| `DAILY_WEBHOOK_HMAC` | same | matches Daily webhook `hmac` (base64) |
+| Daily webhook URL | Daily dashboard / REST | `https://<prod-host>/api/webhooks/daily` |
+| Webhook events | Daily | includes `transcript.ready-to-download` |
 
 App flag starts STT and routes synthesis to the transcript-ready path. It does
 **not** create storage.
+
+#### Recover `DAILY_WEBHOOK_HMAC` (required — empty secret = every webhook returns 500)
+
+Daily returns a base64 `hmac` when the webhook is **created**. It is not a separate
+optional toggle. Without it in Vercel, `POST /api/webhooks/daily` fails immediately.
+
+```bash
+# List webhooks (note uuid, url, state, hmac, eventTypes)
+curl -sS -H "Authorization: Bearer $DAILY_API_KEY" \
+  "https://api.daily.co/v1/webhooks" | python3 -m json.tool
+
+# Create if missing (save hmac from response immediately)
+curl -sS -X POST \
+  -H "Authorization: Bearer $DAILY_API_KEY" \
+  -H "Content-Type: application/json" \
+  "https://api.daily.co/v1/webhooks" \
+  -d '{
+    "url": "https://www.astro-link.space/api/webhooks/daily",
+    "eventTypes": ["meeting.ended", "transcript.ready-to-download", "transcript.error"]
+  }' | python3 -m json.tool
+```
+
+Put the returned `hmac` value into Vercel Production as `DAILY_WEBHOOK_HMAC` (and
+Preview if you test webhooks there). If `state` is `FAILED`, fix the endpoint (HMAC
+must be set so probes get 200), then re-activate via Daily’s update webhook API.
+
+**Admin reclaim** (webhook miss but VTT exists):  
+`POST /api/admin/bookings/<bookingId>/reclaim-transcript` with body
+`{ "transcriptId": "<Daily transcript id>" }` as an admin session.
 
 ### 3. Run a rehearsal call (≥2–3 minutes of real speech)
 

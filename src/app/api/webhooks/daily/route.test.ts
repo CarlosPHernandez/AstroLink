@@ -60,6 +60,21 @@ describe('POST /api/webhooks/daily', () => {
     expect(mockFulfillMeetingEnded).not.toHaveBeenCalled();
   });
 
+  it('returns 500 when DAILY_WEBHOOK_HMAC is missing', async () => {
+    delete process.env.DAILY_WEBHOOK_HMAC;
+    const response = await POST(
+      new Request('http://localhost/api/webhooks/daily', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ type: 'meeting.ended' }),
+      }),
+    );
+    expect(response.status).toBe(500);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toContain('DAILY_WEBHOOK_HMAC');
+    expect(mockFulfillMeetingEnded).not.toHaveBeenCalled();
+  });
+
   it('routes transcript.ready before meeting.ended', async () => {
     const body = JSON.stringify({
       type: 'transcript.ready-to-download',
