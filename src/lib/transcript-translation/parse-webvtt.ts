@@ -3,7 +3,14 @@ import type { TranscriptUtterance } from '@/lib/transcript-translation/types';
 const TIMESTAMP_LINE =
   /^(\d{2}:\d{2}:\d{2}\.\d{3})\s+-->\s+(\d{2}:\d{2}:\d{2}\.\d{3})/;
 
-const VOICE_TAG = /^<v\s+([^>]+)>(.*)$/i;
+/** Classic WebVTT: <v Speaker Name>spoken text */
+const VOICE_TAG_INLINE = /^<v\s+([^>]+)>(.*)$/i;
+
+/**
+ * Daily stored transcripts: <v>Speaker Name:</v>spoken text
+ * (closing tag; speaker often ends with a colon).
+ */
+const VOICE_TAG_DAILY = /^<v>([^<]+)<\/v>\s*(.*)$/i;
 
 function parseTimestampToMs(timestamp: string): number {
   const [hours, minutes, rest] = timestamp.split(':');
@@ -18,18 +25,45 @@ function parseTimestampToMs(timestamp: string): number {
 
 function parseCueText(rawLines: string[]): { speakerId: string; text: string } {
   const joined = rawLines.join(' ').trim();
-  const voiceMatch = joined.match(VOICE_TAG);
-  if (voiceMatch?.[1]) {
+
+  const dailyMatch = joined.match(VOICE_TAG_DAILY);
+  if (dailyMatch?.[1]) {
+    const speakerId = dailyMatch[1].trim().replace(/:+\s*$/, '');
     return {
-      speakerId: voiceMatch[1].trim(),
-      text: (voiceMatch[2] ?? '').trim(),
+      speakerId: speakerId || 'unknown',
+      text: (dailyMatch[2] ?? '').trim(),
     };
   }
+
+  const inlineMatch = joined.match(VOICE_TAG_INLINE);
+  if (inlineMatch?.[1]) {
+    return {
+      speakerId: inlineMatch[1].trim(),
+      text: (inlineMatch[2] ?? '').trim(),
+    };
+  }
+
   return { speakerId: 'unknown', text: joined };
 }
 
 /**
- * Parse Daily WebVTT into utterances. Speaker labels come from `<v Name>` cues when present.
+ * True if the first line of a cue block is a cue identifier (not timing).
+ * Numeric (`1`) or Daily (`transcript:0`).
+ */
+function isCueIdentifierLine(line: string): boolean {
+  if (/^\d+$/.test(line)) {
+    return true;
+  }
+  // Daily: transcript:0, transcript:12, etc.
+  if (/^transcript:\d+$/i.test(line)) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Parse Daily (or classic) WebVTT into utterances.
+ * Speaker labels from `<v Name>text` or Daily `<v>Name:</v>text` when present.
  */
 export function parseWebVtt(vttText: string): TranscriptUtterance[] {
   const normalized = vttText.replace(/\r\n/g, '\n').trim();
@@ -52,7 +86,7 @@ export function parseWebVtt(vttText: string): TranscriptUtterance[] {
     }
 
     let lineOffset = 0;
-    if (/^\d+$/.test(lines[0])) {
+    if (isCueIdentifierLine(lines[0])) {
       lineOffset = 1;
     }
 

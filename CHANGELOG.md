@@ -2,6 +2,11 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.8.0] - 2026-07-22
+
+### Fixed
+- **Daily transcript display:** stored WebVTT from Daily uses cue ids like `transcript:0` and voice tags like `<v>Name:</v>text`. The parser now understands that format, so sessions that already have `vtt_text` in the database (with empty `utterances_json`) show speech lines after a page load instead of “not available.”
+
 ## [0.8.7.0] - 2026-07-22
 
 ### Fixed
