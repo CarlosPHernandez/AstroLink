@@ -123,6 +123,27 @@ describe('BookBodySchema', () => {
     }
   });
 
+  it('accepts applyCompGrantId with 15-minute live session', () => {
+    const parsed = BookBodySchema.parse({
+      ...validBody,
+      durationMinutes: 15,
+      applyCompGrantId: 'a0000001-0000-4000-8000-000000000099',
+    });
+    expect(parsed.applyCompGrantId).toBe('a0000001-0000-4000-8000-000000000099');
+  });
+
+  it('rejects applyCompGrantId when duration is not 15', () => {
+    const result = BookBodySchema.safeParse({
+      ...validBody,
+      durationMinutes: 30,
+      applyCompGrantId: 'a0000001-0000-4000-8000-000000000099',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.durationMinutes?.[0]).toMatch(/15-minute/i);
+    }
+  });
+
   it('sanitizes marketingReferrer on Chris bookings', () => {
     expect(
       BookBodySchema.parse({

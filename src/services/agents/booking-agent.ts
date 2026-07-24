@@ -28,6 +28,11 @@ import {
 } from '@/lib/booking-payments';
 import { callLlmWithBackoff, generateStructuredJson, llmFlashModel } from '@/lib/llm';
 import { confirmBookingWithoutPayment } from '@/lib/post-payment';
+import {
+  assertGrantApplicable,
+  getGrantForApply,
+  redeemGrantForBooking,
+} from '@/lib/session-comp-grants';
 import { getOrCreateStripeCustomerForMentee } from '@/lib/stripe-customer';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
@@ -50,6 +55,8 @@ export class BookingAgent {
     durationMinutes?: number; // from slider for variable 1:1; used for prorated price + persisted
     campaignId?: string;
     marketingReferrer?: string;
+    /** Single-use complimentary 15-min grant (server-validated). */
+    applyCompGrantId?: string;
   }) {
     // 1. Audit Log: BOOKING_INITIATED
     await this.logAudit('BOOKING_INITIATED', null, { params });
@@ -101,10 +108,12 @@ export class BookingAgent {
       durationMinutes?: number;
       campaignId?: string;
       marketingReferrer?: string;
+      applyCompGrantId?: string;
     },
   ) {
     let finalMentorId = params.mentorId;
     let matchReason = 'User selected mentor directly.';
+    let appliedCompGrantId: string | null = null;
 
     // 2. Matching Engine (if no mentor selected)
     if (!finalMentorId) {
@@ -147,6 +156,22 @@ export class BookingAgent {
         )
       : params.durationMinutes;
 
+    if (params.applyCompGrantId) {
+      if (params.serviceType !== 'session_1on1') {
+        throw new Error('Complimentary session only applies to live 1:1 bookings.');
+      }
+      const grant = await getGrantForApply({
+        grantId: params.applyCompGrantId,
+        userId: params.menteeId,
+      });
+      assertGrantApplicable({
+        grant,
+        menteeId: params.menteeId,
+        durationMinutes,
+      });
+      appliedCompGrantId = grant.id;
+    }
+
     // Briefing (APX-02) is always included for live sessions as part of the standard offering.
     // Duration (slider) makes 1:1 price variable (prorated hourly rate from live_session_price_cents).
     const includePreCallBrief = params.serviceType === 'session_1on1';
@@ -165,7 +190,10 @@ export class BookingAgent {
     const chrisChargeCents = isChrisCampaign
       ? resolveChrisChargeCents(params.marketingReferrer, durationMinutes)
       : null;
-    const stripeAmountCents = chrisChargeCents ?? servicePriceCents;
+    // Comp grant: full session free at 15 minutes (existing free-session path).
+    let stripeAmountCents = appliedCompGrantId
+      ? 0
+      : (chrisChargeCents ?? servicePriceCents);
     const displayAmountCents = stripeAmountCents;
 
     const skipPayments = isStripePaymentsSkipped();
@@ -268,9 +296,32 @@ export class BookingAgent {
         booking_id: booking.id,
         skip_payments: skipPayments,
         free_session: isFreeSession,
+        comp_grant_id: appliedCompGrantId,
       });
 
       await confirmBookingWithoutPayment(booking.id);
+
+      if (appliedCompGrantId) {
+        const redeemed = await redeemGrantForBooking({
+          grantId: appliedCompGrantId,
+          userId: params.menteeId,
+          bookingId: booking.id,
+        });
+        if (!redeemed) {
+          console.error('[booking-agent] comp grant redeem failed after free confirm', {
+            grantId: appliedCompGrantId,
+            bookingId: booking.id,
+            menteeId: params.menteeId,
+          });
+          await this.logAudit('COMP_GRANT_REDEEM_FAILED', booking.id, {
+            grant_id: appliedCompGrantId,
+          });
+        } else {
+          await this.logAudit('COMP_GRANT_REDEEMED', booking.id, {
+            grant_id: appliedCompGrantId,
+          });
+        }
+      }
 
       return {
         bookingId: booking.id,

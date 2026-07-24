@@ -39,11 +39,31 @@ export const BookBodySchema = z
       .string()
       .optional()
       .transform((value) => sanitizeEarlyAccessReferrer(value)),
+    /** Single-use complimentary 15-min grant id (server validates ownership). */
+    applyCompGrantId: z.string().uuid().optional(),
   })
   .superRefine((data, ctx) => {
     const isChris = data.campaign === CHRIS_BOOKING_CAMPAIGN_QUERY;
     const goalsTrim = data.goals.trim();
     const bgTrim = data.background.trim();
+
+    if (data.applyCompGrantId) {
+      if (data.serviceType !== 'session_1on1') {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Complimentary session only applies to live 1:1 bookings.',
+          path: ['applyCompGrantId'],
+        });
+      }
+      if (data.durationMinutes != null && data.durationMinutes !== 15) {
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            'Complimentary session only applies to 15-minute bookings. Longer sessions are full price.',
+          path: ['durationMinutes'],
+        });
+      }
+    }
 
     if (isChris) {
       if (goalsTrim.length < CHRIS_GOALS_MIN_CHARS) {

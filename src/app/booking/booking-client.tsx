@@ -6,6 +6,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BookingExpertPicker } from '@/components/booking/booking-expert-picker';
+import {
+  SessionCompGrantBanner,
+  type SessionCompGrantBannerGrant,
+} from '@/components/booking/session-comp-grant-banner';
 import { SessionSchedulePicker } from '@/components/booking/session-schedule-picker';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { toOptimizedImageUrl } from '@/lib/public-images';
@@ -20,6 +24,7 @@ import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-book
 import { BookBodySchema } from '@/lib/book-request-schema';
 import { getDashboardPathForRole, getPostBookingDashboardPath } from '@/lib/dashboard-paths';
 import type { SessionData } from '@/lib/session';
+import { SESSION_DURATION_MIN } from '@/lib/session-duration';
 import {
   type FieldErrors,
   fieldErrorInputClass,
@@ -326,6 +331,7 @@ export default function BookingClient({
   chrisCampaign = false,
   prefillScheduledAt = null,
   prefillDurationMinutes = 30,
+  initialCompGrant = null,
 }: {
   session: SessionData;
   experts: ListedExpert[];
@@ -335,6 +341,7 @@ export default function BookingClient({
   chrisCampaign?: boolean;
   prefillScheduledAt?: string | null;
   prefillDurationMinutes?: number;
+  initialCompGrant?: SessionCompGrantBannerGrant | null;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -343,6 +350,10 @@ export default function BookingClient({
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [pendingSlug, setPendingSlug] = useState<string | null>(mentor?.slug ?? null);
   const [showPicker, setShowPicker] = useState(!mentor);
+  const [compGrant, setCompGrant] = useState<SessionCompGrantBannerGrant | null>(
+    initialCompGrant,
+  );
+  const [applyCompGrant, setApplyCompGrant] = useState(false);
   const chrisDurationMinutes = getChrisCampaignDurationMinutes();
   const [form, setForm] = useState<BookingFormState>({
     serviceType: 'session_1on1',
@@ -351,6 +362,35 @@ export default function BookingClient({
     scheduledAt: prefillScheduledAt ?? '',
     durationMinutes: chrisCampaign ? chrisDurationMinutes : prefillDurationMinutes,
   });
+
+  useEffect(() => {
+    if (initialCompGrant) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch('/api/me/session-comp-grant');
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as {
+          available?: boolean;
+          grantId?: string;
+          creditMinutes?: number;
+          expiresAt?: string | null;
+        };
+        if (data.available && data.grantId && !cancelled) {
+          setCompGrant({
+            id: data.grantId,
+            creditMinutes: data.creditMinutes ?? 15,
+            expiresAt: data.expiresAt ?? null,
+          });
+        }
+      } catch {
+        // Banner optional if lookup fails
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialCompGrant]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -393,12 +433,25 @@ export default function BookingClient({
   const baseCents = activeMentor?.liveSessionPriceCents ?? 0;
   // Duration slider (in summary card) makes live 1:1 price dynamic (prorated hourly rate).
   // Briefing always bundled. pre_call_brief remains fixed.
-  const totalCents = computeBookingTotalCents({
+  const listTotalCents = computeBookingTotalCents({
     serviceType: form.serviceType,
     liveSessionPriceCents: baseCents,
     includePreCallBrief: false,
     durationMinutes: form.serviceType === 'session_1on1' ? form.durationMinutes : undefined,
   });
+  const effectiveDuration = chrisCampaign ? chrisDurationMinutes : form.durationMinutes;
+  const canApplyComp =
+    Boolean(compGrant) &&
+    form.serviceType === 'session_1on1' &&
+    effectiveDuration === SESSION_DURATION_MIN;
+  const totalCents =
+    applyCompGrant && canApplyComp ? 0 : listTotalCents;
+
+  useEffect(() => {
+    if (applyCompGrant && !canApplyComp) {
+      setApplyCompGrant(false);
+    }
+  }, [applyCompGrant, canApplyComp]);
 
   const step: 1 | 2 = checkout?.clientSecret ? 2 : 1;
 
@@ -419,6 +472,9 @@ export default function BookingClient({
       background: form.background,
       durationMinutes: chrisCampaign ? chrisDurationMinutes : form.durationMinutes,
       ...(chrisCampaign ? { campaign: CHRIS_BOOKING_CAMPAIGN_QUERY } : {}),
+      ...(applyCompGrant && canApplyComp && compGrant
+        ? { applyCompGrantId: compGrant.id }
+        : {}),
     };
 
     const parsed = BookBodySchema.safeParse(payload);
@@ -589,6 +645,10 @@ export default function BookingClient({
                 />
               ) : (
                 <form onSubmit={handleSubmit} method="post" className="space-y-10">
+                  {compGrant ? (
+                    <SessionCompGrantBanner grant={compGrant} showBookCta={false} />
+                  ) : null}
+
                   {pickerVisible ? (
                     <BookingExpertPicker
                       experts={experts}
@@ -597,6 +657,37 @@ export default function BookingClient({
                       onSelect={handleSelectExpert}
                       onClearSelection={handleClearExpertSelection}
                     />
+                  ) : null}
+
+                  {compGrant && form.serviceType === 'session_1on1' ? (
+                    <section
+                      className="rounded-lg border border-outline-variant bg-surface-container-low px-4 py-3"
+                      data-testid="session-comp-grant-apply"
+                    >
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="mt-1 h-4 w-4 rounded border-outline-variant"
+                          checked={applyCompGrant && canApplyComp}
+                          disabled={!canApplyComp}
+                          data-testid="session-comp-grant-apply-checkbox"
+                          onChange={(e) => setApplyCompGrant(e.target.checked)}
+                        />
+                        <span className="text-body-md text-on-surface">
+                          <span className="font-semibold">Apply complimentary 15-minute session</span>
+                          {canApplyComp ? (
+                            <span className="block text-label-sm text-on-surface-variant mt-0.5">
+                              Session total becomes free (no card charge).
+                            </span>
+                          ) : (
+                            <span className="block text-label-sm text-on-surface-variant mt-0.5">
+                              Set duration to 15 minutes to use your complimentary session.
+                              Longer sessions are full price.
+                            </span>
+                          )}
+                        </span>
+                      </label>
+                    </section>
                   ) : null}
 
                   {chrisCampaign ? (

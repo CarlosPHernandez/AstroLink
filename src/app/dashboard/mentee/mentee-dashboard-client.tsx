@@ -14,6 +14,10 @@ import {
 } from '@/lib/booking-partition';
 import type { BriefingPayload } from '@/lib/briefing-display';
 import { formatServiceTypeLabel } from '@/lib/types';
+import {
+  SessionCompGrantBanner,
+  type SessionCompGrantBannerGrant,
+} from '@/components/booking/session-comp-grant-banner';
 import { DashboardSessionTranscript } from '@/components/session/dashboard-session-transcript';
 import { formatSessionWhen } from '@/lib/format';
 import {
@@ -39,10 +43,13 @@ export default function MenteeDashboardClient({
   session,
   bookings,
   skipPayments = false,
+  compGrant = null,
 }: {
   session: SessionData;
   bookings: MenteeBookingView[];
   skipPayments?: boolean;
+  /** Available complimentary 15-min grant (server-loaded; hide when null). */
+  compGrant?: SessionCompGrantBannerGrant | null;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -351,6 +358,12 @@ export default function MenteeDashboardClient({
               </button>
             </div>
           </header>
+
+          {compGrant ? (
+            <div className="mb-8">
+              <SessionCompGrantBanner grant={compGrant} showBookCta />
+            </div>
+          ) : null}
 
           {bookings.length === 0 ? (
             <div className="border border-outline-variant rounded-md p-8 text-center text-on-surface-variant text-sm">
