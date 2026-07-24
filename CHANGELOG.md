@@ -2,6 +2,11 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.9.2] - 2026-07-24
+
+### Changed
+- Complimentary session banner: plain bordered card without gradient, icons, chips, or side accent—calmer match to the rest of the mentee dashboard.
+
 ## [0.8.9.1] - 2026-07-23
 
 ### Changed
