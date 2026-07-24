@@ -2,6 +2,11 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.9.1] - 2026-07-23
+
+### Changed
+- Complimentary session banner styling: clearer hierarchy, offer chips, and a stronger book CTA so the free 15-minute grant feels intentional on the mentee dashboard and booking page.
+
 ## [0.8.9.0] - 2026-07-23
 
 ### Added
