@@ -588,6 +588,62 @@ export type Database = {
           },
         ]
       }
+      session_comp_grants: {
+        Row: {
+          id: string
+          user_id: string
+          credit_minutes: number
+          eligible_scope: string
+          eligible_mentor_ids: string[] | null
+          status: string
+          expires_at: string | null
+          internal_note: string | null
+          created_at: string
+          created_by: string | null
+          redeemed_at: string | null
+          redeemed_booking_id: string | null
+          source_booking_id: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          credit_minutes?: number
+          eligible_scope?: string
+          eligible_mentor_ids?: string[] | null
+          status?: string
+          expires_at?: string | null
+          internal_note?: string | null
+          created_at?: string
+          created_by?: string | null
+          redeemed_at?: string | null
+          redeemed_booking_id?: string | null
+          source_booking_id?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          credit_minutes?: number
+          eligible_scope?: string
+          eligible_mentor_ids?: string[] | null
+          status?: string
+          expires_at?: string | null
+          internal_note?: string | null
+          created_at?: string
+          created_by?: string | null
+          redeemed_at?: string | null
+          redeemed_booking_id?: string | null
+          source_booking_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_comp_grants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_transcripts: {
         Row: {
           booking_id: string

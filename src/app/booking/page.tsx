@@ -8,6 +8,7 @@ import { parseChrisCampaignReferrer } from '@/lib/chris-campaign/chris-campaign-
 import { ChrisBookingWizard } from '@/components/chris-campaign/chris-booking-wizard';
 import { getMentorBySlug, listPublicMentors } from '@/lib/mentor-directory';
 import { clampSessionDurationMinutes, SESSION_DURATION_DEFAULT } from '@/lib/session-duration';
+import { getAvailableGrantForUser } from '@/lib/session-comp-grants';
 import { getSession } from '@/lib/session';
 import { requireSession } from '@/lib/require-session';
 import { redirect } from 'next/navigation';
@@ -78,6 +79,8 @@ export default async function BookingPage({
     ? clampSessionDurationMinutes(parsedDuration)
     : SESSION_DURATION_DEFAULT;
 
+  const compGrant = await getAvailableGrantForUser(session.userId).catch(() => null);
+
   return (
     <BookingClient
       session={session}
@@ -88,6 +91,15 @@ export default async function BookingPage({
       chrisCampaign={false}
       prefillScheduledAt={null}
       prefillDurationMinutes={prefillDurationMinutes}
+      initialCompGrant={
+        compGrant
+          ? {
+              id: compGrant.id,
+              creditMinutes: compGrant.creditMinutes,
+              expiresAt: compGrant.expiresAt,
+            }
+          : null
+      }
     />
   );
 }

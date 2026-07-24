@@ -93,6 +93,7 @@ export async function POST(request: Request) {
       durationMinutes,
       campaignId: chrisCampaign?.campaignId,
       marketingReferrer: body.marketingReferrer,
+      applyCompGrantId: body.applyCompGrantId,
     });
 
     return NextResponse.json({

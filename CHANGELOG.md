@@ -2,6 +2,11 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.9.0] - 2026-07-23
+
+### Added
+- **Complimentary 15-minute session grant:** ops can grant a single free 15-minute live 1:1 (any listed expert) to a mentee via Supabase. The buyer sees a dashboard banner and can apply the offer at checkout; the server charges $0 and marks the grant redeemed so it cannot be reused. Not a multi-balance wallet—one row, one redeem. Ops steps: `docs/how-to/session-comp-grant-ops.md`.
+
 ## [0.8.8.0] - 2026-07-22
 
 ### Fixed
