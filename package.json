@@ -1,6 +1,6 @@
 {
   "name": "astrolink",
-  "version": "0.8.9.2",
+  "version": "0.8.9.3",
   "private": true,
   "scripts": {
     "dev": "next dev",
