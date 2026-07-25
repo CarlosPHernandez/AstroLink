@@ -1,5 +1,6 @@
 import LandingHero from '@/components/landing/landing-hero';
 import { LandingBenefits } from '@/components/landing/landing-benefits';
+import { LandingParticipation } from '@/components/landing/landing-participation';
 import { LandingTrust } from '@/components/landing/landing-trust';
 import { LandingStory } from '@/components/landing/landing-story';
 import ExpertDirectory from '@/components/landing/expert-directory';
@@ -13,6 +14,7 @@ export default function LandingPage({ experts }: { experts: ListedExpert[] }) {
       <LandingHeader />
       <main>
         <LandingHero experts={experts} />
+        <LandingParticipation />
         <LandingBenefits />
         <LandingTrust />
         <LandingStory experts={experts} />

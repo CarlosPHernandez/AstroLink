@@ -5,6 +5,7 @@ import {
   findLandingFeaturedExpert,
   landingFeaturedPortrait,
   landingHeroPortrait,
+  landingHeroPortraitStrip,
   orderLandingExperts,
   pickLandingRelayExpert,
 } from '@/lib/landing/featured-expert';
@@ -70,6 +71,35 @@ describe('landing-featured-expert', () => {
     expect(portrait.src).toBe('/chris_sembroski.webp');
     expect(portrait.alt).toBe('Chris Sembroski');
     expect(portrait.href).toBe('/experts/chris-sembroski');
+  });
+
+  it('builds a hero strip with Chris first and caps length', () => {
+    const strip = landingHeroPortraitStrip(
+      [
+        expert('other-1', 'Other One'),
+        expert(LANDING_FEATURED_EXPERT_SLUG, 'Eiman Jahangir', EIMAN_SUPABASE_IMAGE),
+        expert('chris-sembroski', 'Chris Sembroski'),
+        expert('other-2', 'Other Two'),
+        expert('other-3', 'Other Three'),
+        expert('other-4', 'Other Four'),
+      ],
+      3,
+    );
+    expect(strip).toHaveLength(3);
+    expect(strip[0]?.slug).toBe('chris-sembroski');
+    expect(strip[0]?.src).toBe('/chris_sembroski.webp');
+    expect(strip.map((p) => p.slug)).toEqual([
+      'chris-sembroski',
+      'other-1',
+      LANDING_FEATURED_EXPERT_SLUG,
+    ]);
+  });
+
+  it('falls back to Chris alone when roster is empty', () => {
+    const strip = landingHeroPortraitStrip([]);
+    expect(strip).toHaveLength(1);
+    expect(strip[0]?.slug).toBe('chris-sembroski');
+    expect(strip[0]?.src).toBe('/chris_sembroski.webp');
   });
 
   it('routes propulsion goals to Eiman from roster media', () => {

@@ -82,6 +82,59 @@ export function landingHeroPortrait(experts: ListedExpert[]): {
   };
 }
 
+export type LandingHeroStripPortrait = {
+  slug: string;
+  name: string;
+  src: string;
+  alt: string;
+};
+
+/** Cap for multi-face hero helpers (currently deferred on homepage; see DESIGN.md). */
+export const LANDING_HERO_STRIP_MAX = 3;
+
+/**
+ * Ordered portraits (Chris first, then roster). Used for multi-expert experiments;
+ * homepage hero ships single-face via landingHeroPortrait. Empty roster → Chris fallback.
+ */
+export function landingHeroPortraitStrip(
+  experts: ListedExpert[],
+  max = LANDING_HERO_STRIP_MAX,
+): LandingHeroStripPortrait[] {
+  const limit = Math.max(1, max);
+  const chris = findLandingHeroExpert(experts);
+  const rest = experts.filter((expert) => !isChrisExpert(expert));
+
+  const ordered: ListedExpert[] = [];
+  if (chris) {
+    ordered.push(chris);
+  }
+  for (const expert of rest) {
+    if (ordered.length >= limit) break;
+    ordered.push(expert);
+  }
+
+  if (ordered.length === 0) {
+    return [
+      {
+        slug: LANDING_HERO_EXPERT_SLUG,
+        name: 'Chris Sembroski',
+        src: CHRIS_PORTRAIT,
+        alt: 'Chris Sembroski, verified aerospace expert',
+      },
+    ];
+  }
+
+  return ordered.slice(0, limit).map((expert) => {
+    const relay = listedExpertToRelay(expert);
+    return {
+      slug: expert.slug,
+      name: expert.name,
+      src: relay.portraitSrc,
+      alt: expert.name,
+    };
+  });
+}
+
 /** Portrait for the featured expert — prefers Supabase/roster image_url. */
 export function landingFeaturedPortrait(expert: ListedExpert | null): { src: string; alt: string } {
   if (expert) {

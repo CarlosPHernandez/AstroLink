@@ -2,6 +2,12 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.8.9.3] - 2026-07-24
+
+### Added
+- **Gemini XPRIZE participation strip** on the homepage: “Proudly participating in” with official Gemini and XPRIZE marks (white band under the hero) and a link to learn more about the competition.
+- Project `DESIGN.md` design system notes (including deferred multi-expert hero experiments).
+
 ## [0.8.9.2] - 2026-07-24
 
 ### Changed
