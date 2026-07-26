@@ -2,6 +2,19 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.9.0.0] - 2026-07-26
+
+### Added
+- **Expert dashboard workspace:** dark app shell with fixed sidebar (Overview, Sessions, Earnings, Listing, Settings), overview home with stats strip plus upcoming and attention panels, and a dedicated Settings surface for account, password, and compliance.
+- US-made brand footer on the expert rail (Astro-Link · Designed and Developed in the United States · Version 1.0 July 2026).
+
+### Changed
+- Expert dashboard UI tokens: shared page headers, cards, chips, and controls so sessions, earnings, and listing match the dark chrome.
+- Password and civil-servant / NF-1860 flows live under Settings; listing stays public profile fields only.
+
+### Fixed
+- Civil-servant toggle no longer updates form action state during React render (stable Settings compliance save).
+
 ## [0.8.9.3] - 2026-07-24
 
 ### Added
