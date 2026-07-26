@@ -18,9 +18,19 @@ test.describe('Mentor dashboard', () => {
       }
     });
 
-    test('loads sessions tab', async ({ page }) => {
+    test('loads overview home with KPIs and panels', async ({ page }) => {
       await page.goto('/dashboard/mentor');
-      await expect(page.getByRole('heading', { name: /Hello, Chris Sembroski/i })).toBeVisible();
+      await expect(page.getByTestId('mentor-dashboard-sidebar')).toBeVisible();
+      await expect(page.getByTestId('mentor-tab-overview')).toHaveAttribute('aria-selected', 'true');
+      await expect(page.getByTestId('mentor-overview-tab')).toBeVisible();
+      await expect(page.getByRole('heading', { name: /Welcome back,/i })).toBeVisible();
+      await expect(page.getByTestId('mentor-overview-kpis')).toBeVisible();
+      await expect(page.getByTestId('mentor-overview-kpi-sessions')).toBeVisible();
+      await expect(page.getByTestId('mentor-overview-kpi-earnings')).toBeVisible();
+      await expect(page.getByTestId('mentor-overview-upcoming-panel')).toBeVisible();
+      await expect(page.getByTestId('mentor-overview-attention-panel')).toBeVisible();
+
+      await page.getByTestId('mentor-tab-sessions').click();
       await expect(page.getByTestId('mentor-consultations-tab')).toBeVisible();
       await expect(page.getByTestId('mentor-tab-sessions')).toHaveAttribute('aria-selected', 'true');
     });
@@ -53,9 +63,8 @@ test.describe('Mentor dashboard', () => {
 
       await expect(listingCard).toBeVisible();
       await expect(page.getByTestId('mentor-listing-compliance')).toHaveText('Approved');
-      await expect(page.getByTestId('mentor-listing-listed')).toHaveText('Yes');
-      await expect(page.getByText('Live on the expert directory')).toBeVisible();
-      await expect(page.getByText('/experts/chris-sembroski')).toBeVisible();
+      await expect(page.getByTestId('mentor-listing-listed')).toHaveText('Listed on directory');
+      await expect(page.getByText(/Live on the expert directory|directory/i).first()).toBeVisible();
       await expect(page.getByTestId('mentor-listing-preview')).toHaveAttribute(
         'href',
         '/experts/chris-sembroski',
@@ -120,9 +129,34 @@ test.describe('Mentor dashboard', () => {
       await expect(page.getByTestId('mentor-profile-form')).toBeVisible();
     });
 
+    test('settings tab opens dark account window', async ({ page }) => {
+      await page.goto('/dashboard/mentor');
+      await page.getByTestId('mentor-tab-settings').click();
+
+      await expect(page.getByTestId('mentor-settings-tab')).toBeVisible();
+      await expect(page.getByTestId('mentor-tab-settings')).toHaveAttribute(
+        'aria-selected',
+        'true',
+      );
+      await expect(page.getByTestId('mentor-settings-account')).toBeVisible();
+      await expect(page.getByLabel('Name')).toBeVisible();
+      await expect(page.getByLabel('Email')).toBeVisible();
+    });
+
+    test('settings password section is available', async ({ page }) => {
+      await page.goto('/dashboard/mentor');
+      await page.getByTestId('mentor-tab-settings').click();
+      await page.getByTestId('mentor-settings-section-password').click();
+
+      await expect(page.getByTestId('mentor-password-form')).toBeVisible();
+      await expect(page.getByTestId('mentor-current-password')).toBeVisible();
+      await expect(page.getByTestId('mentor-new-password')).toBeVisible();
+    });
+
     test('civil servant toggle shows NF-1860 upload', async ({ page }) => {
       await page.goto('/dashboard/mentor');
-      await page.getByTestId('mentor-tab-profile').click();
+      await page.getByTestId('mentor-tab-settings').click();
+      await page.getByTestId('mentor-settings-section-compliance').click();
 
       await page.getByRole('checkbox', { name: /Federal civil servant/i }).check();
       await expect(page.getByTestId('mentor-nf1860-upload')).toBeVisible();
@@ -130,7 +164,8 @@ test.describe('Mentor dashboard', () => {
 
     test('NF-1860 rejects non-PDF file', async ({ page }) => {
       await page.goto('/dashboard/mentor');
-      await page.getByTestId('mentor-tab-profile').click();
+      await page.getByTestId('mentor-tab-settings').click();
+      await page.getByTestId('mentor-settings-section-compliance').click();
       await page.getByRole('checkbox', { name: /Federal civil servant/i }).check();
 
       const invalidPath = path.join(__dirname, 'fixtures/nf1860-invalid.txt');
@@ -143,7 +178,8 @@ test.describe('Mentor dashboard', () => {
 
     test('NF-1860 accepts minimal PDF when Supabase is configured', async ({ page }) => {
       await page.goto('/dashboard/mentor');
-      await page.getByTestId('mentor-tab-profile').click();
+      await page.getByTestId('mentor-tab-settings').click();
+      await page.getByTestId('mentor-settings-section-compliance').click();
       await page.getByRole('checkbox', { name: /Federal civil servant/i }).check();
 
       await page.getByTestId('mentor-nf1860-upload').setInputFiles(minimalPdf);

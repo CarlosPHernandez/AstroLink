@@ -15,29 +15,27 @@ import {
   type BriefingSidebarState,
 } from '@/components/briefing/briefing-sidebar';
 import type { BriefingPayload } from '@/lib/briefing-display';
-import { logoutAction } from '@/app/auth/actions';
 import {
   changeMentorPasswordAction,
   updateMentorProfileAction,
   uploadMentorNf1860Action,
   type MentorProfileActionState,
 } from '@/app/dashboard/mentor/actions';
-import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
-import { fieldErrorInputClass } from '@/lib/zod-field-errors';
 import { MentorConsultationCard } from '@/app/dashboard/mentor/mentor-consultation-card';
 import {
   MentorDashboardNav,
   type MentorDashboardTab,
 } from '@/app/dashboard/mentor/mentor-dashboard-nav';
 import { MentorListingCard } from '@/app/dashboard/mentor/mentor-listing-card';
+import { MentorOverviewPanel } from '@/app/dashboard/mentor/mentor-overview-panel';
+import { MentorPageHeader } from '@/app/dashboard/mentor/mentor-page-header';
 import { MentorPayoutsPanel } from '@/app/dashboard/mentor/mentor-payouts-panel';
+import { MentorSettingsPanel } from '@/app/dashboard/mentor/mentor-settings-panel';
 import { partitionMentorBookings, type MentorBookingView } from '@/lib/mentor-booking-partition';
 import type { MentorEarningRow, MentorEarningsSummary } from '@/lib/mentor-earnings-types';
 import { resolvePayoutNavStatus } from '@/lib/mentor-payouts-config';
 import '@/components/dashboard/mentor-dashboard.css';
-import Image from 'next/image';
-import Link from 'next/link';
 
 interface SessionData {
   userId: string;
@@ -108,12 +106,15 @@ export default function MentorDashboardClient({
   const [localBriefings, setLocalBriefings] = useState<Record<string, BriefingPayload>>({});
   const [sidebar, setSidebar] = useState<BriefingSidebarState>({ mode: 'closed' });
   const [generatingId, setGeneratingId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<MentorDashboardTab>('sessions');
+  const [activeTab, setActiveTab] = useState<MentorDashboardTab>('overview');
   const [profile, setProfile] = useState<MentorProfileState>(
     mentorProfile ?? emptyProfileFromSession(session),
   );
   const profileNeedsOnboarding = mentorProfile === null;
-  const { upcoming, past } = useMemo(() => partitionMentorBookings(bookings), [bookings]);
+  const { upcoming, past, nextUpcoming } = useMemo(
+    () => partitionMentorBookings(bookings),
+    [bookings],
+  );
 
   const resolveBriefing = useCallback(
     (booking: MentorBookingView): BriefingPayload | null => {
@@ -290,6 +291,12 @@ export default function MentorDashboardClient({
   });
 
   const firstName = profile.fullName.split(' ')[0] || profile.fullName;
+  const expertInitials = profile.fullName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('') || '?';
   const profileComplete =
     !profileNeedsOnboarding &&
     profile.bio.trim().length >= 10 &&
@@ -312,32 +319,18 @@ export default function MentorDashboardClient({
   return (
     <>
     <div className="mentor-dash">
-      <div className="md-shell">
-        <header className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 space-y-4">
-            <Link href="/" aria-label="AstroLink home">
-              <Image
-                src="/logo.jpg"
-                alt="AstroLink"
-                width={180}
-                height={48}
-                className="md-logo"
-                priority
-              />
-            </Link>
-            <div>
-              <h1 className="md-title">Welcome back, {firstName}</h1>
-              <p className="md-subtitle">
-                Your sessions, earnings, and public profile — same calm setup as activation.
-              </p>
-            </div>
-          </div>
-          <button type="button" onClick={() => logoutAction()} className="md-sign-out self-start">
-            Sign out
-          </button>
-        </header>
+      <MentorDashboardNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        payoutNavStatus={payoutNavStatus}
+        expertName={profile.fullName}
+        expertInitials={expertInitials}
+        upcomingCount={upcoming.length}
+      />
 
-        {showSetupBar ? (
+      <div className={activeTab === 'settings' ? 'md-shell md-shell-settings' : 'md-shell'}>
+        <div className="md-shell-inner">
+        {showSetupBar && activeTab !== 'settings' && activeTab !== 'overview' ? (
           <div className="md-setup" data-testid="mentor-setup-progress">
             <p className="md-setup-label">Getting set up</p>
             <div className="md-segments" aria-hidden="true">
@@ -361,21 +354,37 @@ export default function MentorDashboardClient({
           </div>
         ) : null}
 
-        <MentorDashboardNav
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          payoutNavStatus={payoutNavStatus}
-        />
-
           <main>
+            {activeTab === 'overview' && (
+              <MentorOverviewPanel
+                firstName={firstName}
+                nextSession={nextUpcoming}
+                upcoming={upcoming.map((b) => ({
+                  ...b,
+                  briefing: resolveBriefing(b),
+                }))}
+                pastCount={past.length}
+                earningsSummary={earningsSummary}
+                payoutNavStatus={payoutNavStatus}
+                listing={{
+                  complianceStatus: profile.complianceStatus,
+                  isListed: profile.isListed,
+                  slug: profile.slug,
+                }}
+                profileComplete={profileComplete}
+                setupSteps={setupSteps}
+                onNavigate={setActiveTab}
+              />
+            )}
+
             {activeTab === 'sessions' && (
-              <div className="space-y-10" data-testid="mentor-consultations-tab">
-                <header className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="md-section-title">Sessions</h2>
-                  <p className="md-section-meta">
-                    {upcoming.length} upcoming · {past.length} past
-                  </p>
-                </header>
+              <div className="md-stack" data-testid="mentor-consultations-tab">
+                <MentorPageHeader
+                  as="h2"
+                  title="Sessions"
+                  description="Upcoming and past consultations with prep context."
+                  meta={`${upcoming.length} upcoming · ${past.length} past`}
+                />
 
                 {bookings.length === 0 ? (
                   <p className="md-empty">
@@ -384,12 +393,12 @@ export default function MentorDashboardClient({
                   </p>
                 ) : (
                   <>
-                    <section data-testid="mentor-upcoming-section">
-                      <h3 className="mb-3 text-sm font-medium text-on-surface-variant">Upcoming</h3>
+                    <section className="md-stack-tight" data-testid="mentor-upcoming-section">
+                      <h3 className="md-section-label">Upcoming</h3>
                       {upcoming.length === 0 ? (
-                        <p className="text-sm text-on-surface-variant">No upcoming sessions.</p>
+                        <p className="md-empty">No upcoming sessions.</p>
                       ) : (
-                        <div className="space-y-4">
+                        <div className="md-stack-tight">
                           {upcoming.map((booking) => (
                             <MentorConsultationCard
                               key={booking.id}
@@ -406,12 +415,12 @@ export default function MentorDashboardClient({
                       )}
                     </section>
 
-                    <section data-testid="mentor-past-section">
-                      <h3 className="mb-3 text-sm font-medium text-on-surface-variant">Past</h3>
+                    <section className="md-stack-tight" data-testid="mentor-past-section">
+                      <h3 className="md-section-label">Past</h3>
                       {past.length === 0 ? (
-                        <p className="text-sm text-on-surface-variant">No past sessions.</p>
+                        <p className="md-empty">No past sessions.</p>
                       ) : (
-                        <div className="space-y-4">
+                        <div className="md-stack-tight">
                           {past.map((booking) => (
                             <MentorConsultationCard
                               key={booking.id}
@@ -441,13 +450,12 @@ export default function MentorDashboardClient({
             )}
 
             {activeTab === 'profile' && (
-              <div className="space-y-8">
-                <header>
-                  <h2 className="md-section-title">Profile</h2>
-                  <p className="md-subtitle" style={{ marginTop: '0.5rem' }}>
-                    Information shown to buyers on your expert listing.
-                  </p>
-                </header>
+              <div className="md-stack">
+                <MentorPageHeader
+                  as="h2"
+                  title="Listing"
+                  description="Information shown to buyers on your expert listing."
+                />
 
                 <MentorListingCard
                   complianceStatus={profile.complianceStatus}
@@ -457,7 +465,7 @@ export default function MentorDashboardClient({
 
                 <form
                   onSubmit={handleSaveProfile}
-                  className="md-field-stack"
+                  className="md-field-stack md-form-col"
                   data-testid="mentor-profile-form"
                 >
                   {profileState?.success ? (
@@ -530,70 +538,6 @@ export default function MentorDashboardClient({
                     />
                   </div>
 
-                  <div
-                    className="md-field-stack"
-                    data-testid="mentor-civil-servant-row"
-                  >
-                    <label className="flex items-center justify-between gap-3 text-sm text-on-surface cursor-pointer">
-                      <span>
-                        Federal civil servant
-                        <span className="mt-1 block text-sm font-normal text-on-surface-variant">
-                          Requires NASA Form NF-1860 for outside consulting.
-                        </span>
-                      </span>
-                      <input
-                        type="checkbox"
-                        aria-label="Federal civil servant"
-                        checked={profile.isCivilServant}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          setProfile((prev) => ({
-                            ...prev,
-                            isCivilServant: checked,
-                            complianceStatus:
-                              checked && !pdfUploaded
-                                ? 'document_required'
-                                : prev.complianceStatus,
-                          }));
-                        }}
-                        className="h-5 w-5 shrink-0 cursor-pointer rounded border-outline-variant text-primary focus:ring-primary"
-                      />
-                    </label>
-                  </div>
-
-                  {profile.isCivilServant ? (
-                    <div className="md-field-stack">
-                      <p className="md-label" style={{ marginBottom: 0 }}>
-                        NF-1860 upload
-                      </p>
-                      <input
-                        type="file"
-                        accept=".pdf"
-                        onChange={handlePdfUpload}
-                        disabled={uploadPending}
-                        data-testid="mentor-nf1860-upload"
-                        className="w-full text-sm text-on-surface-variant file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white disabled:opacity-50"
-                      />
-                      {uploadState?.errors?.file?.[0] ? (
-                        <p
-                          className="text-xs text-on-error-container"
-                          data-testid="mentor-nf1860-upload-error"
-                        >
-                          {uploadState.errors.file[0]}
-                        </p>
-                      ) : null}
-                      {uploadState?.message && !uploadState.success ? (
-                        <FormAlert message={uploadState.message} />
-                      ) : null}
-                      {uploadPending ? (
-                        <p className="md-empty">Uploading…</p>
-                      ) : null}
-                      {pdfUploaded ? (
-                        <p className="md-empty">Document received.</p>
-                      ) : null}
-                    </div>
-                  ) : null}
-
                   <button
                     type="submit"
                     disabled={profilePending}
@@ -602,120 +546,50 @@ export default function MentorDashboardClient({
                     {profilePending ? 'Saving…' : 'Save profile'}
                   </button>
                 </form>
-
-                <section
-                  className="md-field-stack border-t border-outline-variant pt-8"
-                  data-testid="mentor-password-section"
-                  aria-labelledby="mentor-password-heading"
-                >
-                  <header>
-                    <h3 id="mentor-password-heading" className="md-section-title">
-                      Password
-                    </h3>
-                    <p className="md-subtitle" style={{ marginTop: '0.5rem' }}>
-                      Change the password you use to sign in to your expert dashboard.
-                    </p>
-                  </header>
-
-                  <form
-                    ref={passwordFormRef}
-                    action={passwordAction}
-                    className="md-field-stack"
-                    data-testid="mentor-password-form"
-                  >
-                    {passwordState?.success ? (
-                      <p className="md-empty" data-testid="mentor-password-success">
-                        {passwordState.message ?? 'Password updated.'}
-                      </p>
-                    ) : null}
-                    {passwordState?.message && !passwordState.success ? (
-                      <FormAlert message={passwordState.message} />
-                    ) : null}
-
-                    <div>
-                      <label htmlFor="mentor-current-password" className="md-label">
-                        Current password
-                      </label>
-                      <input
-                        id="mentor-current-password"
-                        name="currentPassword"
-                        type="password"
-                        required
-                        autoComplete="current-password"
-                        disabled={passwordPending}
-                        data-testid="mentor-current-password"
-                        className={fieldErrorInputClass(
-                          !!passwordState?.errors?.currentPassword,
-                          'md-input',
-                        )}
-                      />
-                      <FieldError message={passwordState?.errors?.currentPassword?.[0]} />
-                    </div>
-
-                    <div className="md-field-grid md-field-grid-2">
-                      <div>
-                        <label htmlFor="mentor-new-password" className="md-label">
-                          New password
-                        </label>
-                        <input
-                          id="mentor-new-password"
-                          name="password"
-                          type="password"
-                          required
-                          minLength={8}
-                          autoComplete="new-password"
-                          disabled={passwordPending}
-                          data-testid="mentor-new-password"
-                          className={fieldErrorInputClass(
-                            !!passwordState?.errors?.password,
-                            'md-input',
-                          )}
-                        />
-                        <FieldError message={passwordState?.errors?.password?.[0]} />
-                      </div>
-                      <div>
-                        <label htmlFor="mentor-confirm-password" className="md-label">
-                          Confirm new password
-                        </label>
-                        <input
-                          id="mentor-confirm-password"
-                          name="confirmPassword"
-                          type="password"
-                          required
-                          minLength={8}
-                          autoComplete="new-password"
-                          disabled={passwordPending}
-                          data-testid="mentor-confirm-password"
-                          className={fieldErrorInputClass(
-                            !!passwordState?.errors?.confirmPassword,
-                            'md-input',
-                          )}
-                        />
-                        <FieldError message={passwordState?.errors?.confirmPassword?.[0]} />
-                      </div>
-                    </div>
-
-                    <p className="md-empty" style={{ margin: 0 }}>
-                      Forgot your current password?{' '}
-                      <Link href="/auth/forgot-password" className="text-primary font-medium">
-                        Reset via email
-                      </Link>
-                    </p>
-
-                    <button
-                      type="submit"
-                      disabled={passwordPending}
-                      className="md-btn-primary"
-                      data-testid="mentor-password-submit"
-                    >
-                      {passwordPending ? 'Updating…' : 'Update password'}
-                    </button>
-                  </form>
-                </section>
               </div>
             )}
 
+            {activeTab === 'settings' && (
+              <MentorSettingsPanel
+                fullName={profile.fullName}
+                email={profile.email}
+                payoutNavStatus={payoutNavStatus}
+                isCivilServant={profile.isCivilServant}
+                onCivilServantChange={(checked) => {
+                  const next = {
+                    ...profile,
+                    isCivilServant: checked,
+                    complianceStatus:
+                      checked && !pdfUploaded
+                        ? 'document_required'
+                        : profile.complianceStatus,
+                  };
+                  setProfile(next);
+                  const formData = new FormData();
+                  formData.set('rate', String(next.rate));
+                  formData.set('employer', next.employer);
+                  formData.set('expertise', next.expertise);
+                  formData.set('bio', next.bio);
+                  if (checked) {
+                    formData.set('isCivilServant', 'on');
+                  }
+                  startTransition(() => {
+                    profileAction(formData);
+                  });
+                }}
+                pdfUploaded={!!pdfUploaded}
+                uploadPending={uploadPending}
+                uploadState={uploadState}
+                onPdfUpload={handlePdfUpload}
+                passwordFormRef={passwordFormRef}
+                passwordAction={passwordAction}
+                passwordState={passwordState}
+                passwordPending={passwordPending}
+              />
+            )}
+
           </main>
+        </div>
       </div>
     </div>
 

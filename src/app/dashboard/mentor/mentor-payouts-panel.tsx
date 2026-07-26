@@ -7,6 +7,7 @@ import {
   resolvePayoutNavStatus,
   type PayoutNavStatus,
 } from '@/lib/mentor-payouts-config';
+import { MentorPageHeader } from '@/app/dashboard/mentor/mentor-page-header';
 
 const PLATFORM_FEE_RATE = 0.2;
 const MENTOR_SHARE_RATE = 0.8;
@@ -37,59 +38,53 @@ function transferStatusLabel(status: MentorEarningRow['transferStatus']): string
   }
 }
 
-function transferStatusStyles(status: MentorEarningRow['transferStatus']): string {
+function transferChipClass(status: MentorEarningRow['transferStatus']): string {
   switch (status) {
     case 'awaiting':
-      return 'bg-amber-50 text-amber-800';
+      return 'md-chip md-chip-warn';
     case 'transferred':
-      return 'bg-emerald-50 text-emerald-800';
+      return 'md-chip md-chip-success';
     default:
-      return 'bg-surface-container text-on-surface-variant';
+      return 'md-chip md-chip-neutral';
   }
 }
 
-function paymentStatusStyles(status: MentorEarningRow['status']): string {
+function paymentChipClass(status: MentorEarningRow['status']): string {
   switch (status) {
     case 'completed':
-      return 'bg-emerald-50 text-emerald-800';
+      return 'md-chip md-chip-success';
     case 'refunded':
-      return 'bg-red-50 text-red-800';
+      return 'md-chip md-chip-danger';
     case 'pending':
-      return 'bg-amber-50 text-amber-800';
+      return 'md-chip md-chip-warn';
     default:
-      return 'bg-surface-container text-on-surface-variant';
+      return 'md-chip md-chip-neutral';
   }
 }
 
 function EarningsSummaryCards({ summary }: { summary: MentorEarningsSummary }) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-      <div className="rounded-lg border border-outline-variant bg-surface p-4">
-        <p className="text-xs text-on-surface-variant">Recorded share</p>
-        <p className="mt-1 text-xl font-semibold text-on-surface">
-          {formatMoney(summary.recordedShareCents)}
-        </p>
-        <p className="mt-1 text-[11px] text-on-surface-variant">
+    <div className="md-card-grid md-card-grid-3">
+      <div className="md-card">
+        <p className="md-card-label">Recorded share</p>
+        <p className="md-card-primary">{formatMoney(summary.recordedShareCents)}</p>
+        <p className="md-card-meta">
           {summary.sessionCount} recorded session{summary.sessionCount === 1 ? '' : 's'}
         </p>
       </div>
-      <div className="rounded-lg border border-outline-variant bg-surface p-4">
-        <p className="text-xs text-on-surface-variant">Awaiting transfer</p>
-        <p className="mt-1 text-xl font-semibold text-amber-700">
+      <div className="md-card">
+        <p className="md-card-label">Awaiting transfer</p>
+        <p className="md-card-primary md-card-primary-warn">
           {formatMoney(summary.awaitingTransferCents)}
         </p>
-        <p className="mt-1 text-[11px] text-on-surface-variant">
-          Your share not yet sent to your bank
-        </p>
+        <p className="md-card-meta">Your share not yet sent to your bank</p>
       </div>
-      <div className="rounded-lg border border-outline-variant bg-surface p-4">
-        <p className="text-xs text-on-surface-variant">Transferred</p>
-        <p className="mt-1 text-xl font-semibold text-emerald-700">
+      <div className="md-card">
+        <p className="md-card-label">Transferred</p>
+        <p className="md-card-primary md-card-primary-success">
           {formatMoney(summary.transferredCents)}
         </p>
-        <p className="mt-1 text-[11px] text-on-surface-variant">
-          Paid to your bank by AstroLink ops
-        </p>
+        <p className="md-card-meta">Paid to your bank by AstroLink ops</p>
       </div>
     </div>
   );
@@ -97,51 +92,41 @@ function EarningsSummaryCards({ summary }: { summary: MentorEarningsSummary }) {
 
 function EarningsLedger({ rows }: { rows: MentorEarningRow[] }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-outline-variant" data-testid="mentor-earnings-ledger">
-      <table className="min-w-full text-left text-sm">
-        <thead className="border-b border-outline-variant bg-surface-container-low text-xs uppercase text-on-surface-variant">
+    <div className="md-table-wrap" data-testid="mentor-earnings-ledger">
+      <table className="md-table">
+        <thead>
           <tr>
-            <th className="px-4 py-3 font-medium">Session</th>
-            <th className="px-4 py-3 font-medium">Buyer</th>
-            <th className="px-4 py-3 font-medium">Gross</th>
-            <th className="px-4 py-3 font-medium">Your payout</th>
-            <th className="px-4 py-3 font-medium">Payment</th>
-            <th className="px-4 py-3 font-medium">Transfer</th>
+            <th>Session</th>
+            <th>Buyer</th>
+            <th>Gross</th>
+            <th>Your payout</th>
+            <th>Payment</th>
+            <th>Transfer</th>
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td
-                colSpan={6}
-                className="px-4 py-6 text-sm text-on-surface-variant"
-                data-testid="mentor-earnings-empty"
-              >
+              <td colSpan={6} data-testid="mentor-earnings-empty">
                 No earnings yet. When a buyer pays for a session, the split and status appear here.
               </td>
             </tr>
           ) : null}
           {rows.map((row) => (
-            <tr key={row.id} className="border-b border-outline-variant/40 last:border-0">
-              <td className="px-4 py-3 text-on-surface">
+            <tr key={row.id}>
+              <td className="md-table-strong">
                 <span suppressHydrationWarning>{formatSessionWhen(row.scheduledAt)}</span>
               </td>
-              <td className="px-4 py-3 text-on-surface-variant">{row.menteeName}</td>
-              <td className="px-4 py-3 text-on-surface-variant">{formatMoney(row.grossCents)}</td>
-              <td className="px-4 py-3 font-medium text-on-surface">
-                {formatMoney(row.mentorPayoutCents)}
-              </td>
-              <td className="px-4 py-3">
-                <span
-                  className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${paymentStatusStyles(row.status)}`}
-                >
+              <td>{row.menteeName}</td>
+              <td>{formatMoney(row.grossCents)}</td>
+              <td className="md-table-strong">{formatMoney(row.mentorPayoutCents)}</td>
+              <td>
+                <span className={paymentChipClass(row.status)}>
                   {paymentStatusLabel(row.status)}
                 </span>
               </td>
-              <td className="px-4 py-3">
-                <span
-                  className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${transferStatusStyles(row.transferStatus)}`}
-                >
+              <td>
+                <span className={transferChipClass(row.transferStatus)}>
                   {transferStatusLabel(row.transferStatus)}
                 </span>
               </td>
@@ -160,18 +145,24 @@ function FeeEstimator({ hourlyRateDollars }: { hourlyRateDollars: number }) {
   const mentorPayoutCents = grossCents - platformFeeCents;
 
   return (
-    <div className="rounded-lg border border-outline-variant bg-surface p-5">
-      <h3 className="text-sm font-semibold text-on-surface">Session payout estimator</h3>
-      <p className="mt-1 text-xs text-on-surface-variant">
-        AstroLink collects payment when buyers book. After session completion, we record{' '}
-        {Math.round(MENTOR_SHARE_RATE * 100)}% to you / {Math.round(PLATFORM_FEE_RATE * 100)}%
-        platform fee. Rate: {formatMoney(hourlyRateDollars * 100)}/hr.
-      </p>
+    <div className="md-card">
+      <div>
+        <h3 className="md-card-title">Session payout estimator</h3>
+        <p className="md-card-meta" style={{ marginTop: 4 }}>
+          AstroLink collects payment when buyers book. After session completion, we record{' '}
+          {Math.round(MENTOR_SHARE_RATE * 100)}% to you / {Math.round(PLATFORM_FEE_RATE * 100)}%
+          platform fee. Rate: {formatMoney(hourlyRateDollars * 100)}/hr.
+        </p>
+      </div>
 
-      <div className="mt-4">
-        <div className="mb-2 flex items-center justify-between text-xs text-on-surface-variant">
-          <label htmlFor="session-duration">Session length</label>
-          <span className="font-medium text-on-surface">{durationMinutes} min</span>
+      <div>
+        <div className="md-card-head" style={{ marginBottom: 8 }}>
+          <label htmlFor="session-duration" className="md-card-meta">
+            Session length
+          </label>
+          <span className="md-card-meta" style={{ color: 'var(--md-text)' }}>
+            {durationMinutes} min
+          </span>
         </div>
         <input
           id="session-duration"
@@ -185,22 +176,22 @@ function FeeEstimator({ hourlyRateDollars }: { hourlyRateDollars: number }) {
         />
       </div>
 
-      <dl className="mt-4 grid grid-cols-3 gap-3 text-center text-sm">
-        <div className="rounded-md bg-surface-container-low p-3">
-          <dt className="text-xs text-on-surface-variant">Buyer pays</dt>
-          <dd className="mt-1 font-semibold text-on-surface">{formatMoney(grossCents)}</dd>
+      <div className="md-card-grid md-card-grid-3">
+        <div className="md-card" style={{ background: 'var(--md-surface-soft)' }}>
+          <p className="md-card-label">Buyer pays</p>
+          <p className="md-card-title">{formatMoney(grossCents)}</p>
         </div>
-        <div className="rounded-md bg-surface-container-low p-3">
-          <dt className="text-xs text-on-surface-variant">Platform fee</dt>
-          <dd className="mt-1 font-semibold text-on-surface-variant">
-            {formatMoney(platformFeeCents)}
-          </dd>
+        <div className="md-card" style={{ background: 'var(--md-surface-soft)' }}>
+          <p className="md-card-label">Platform fee</p>
+          <p className="md-card-title">{formatMoney(platformFeeCents)}</p>
         </div>
-        <div className="rounded-md bg-surface-container-low p-3">
-          <dt className="text-xs text-on-surface-variant">You receive</dt>
-          <dd className="mt-1 font-semibold text-primary">{formatMoney(mentorPayoutCents)}</dd>
+        <div className="md-card" style={{ background: 'var(--md-surface-soft)' }}>
+          <p className="md-card-label">You receive</p>
+          <p className="md-card-title" style={{ color: 'var(--md-accent)' }}>
+            {formatMoney(mentorPayoutCents)}
+          </p>
         </div>
-      </dl>
+      </div>
     </div>
   );
 }
@@ -212,12 +203,17 @@ const PAYOUT_BADGE_LABELS: Record<PayoutNavStatus, string> = {
   setup_required: 'Not connected',
 };
 
-const PAYOUT_BADGE_STYLES: Record<PayoutNavStatus, string> = {
-  dev_skip: 'bg-emerald-50 text-emerald-800',
-  manual: 'bg-surface-container text-on-surface-variant',
-  connected: 'bg-emerald-50 text-emerald-800',
-  setup_required: 'bg-amber-50 text-amber-800',
-};
+function payoutChipClass(status: PayoutNavStatus): string {
+  switch (status) {
+    case 'dev_skip':
+    case 'connected':
+      return 'md-chip md-chip-success';
+    case 'manual':
+      return 'md-chip md-chip-neutral';
+    case 'setup_required':
+      return 'md-chip md-chip-warn';
+  }
+}
 
 export function MentorPayoutsPanel({
   summary,
@@ -282,39 +278,39 @@ export function MentorPayoutsPanel({
   }
 
   return (
-    <div className="space-y-8" data-testid="mentor-earnings-tab">
-      <header>
-        <h2 className="text-lg font-semibold text-on-surface">Earnings & payouts</h2>
-        <p className="mt-1 text-sm text-on-surface-variant">
-          Track session revenue from AstroLink bookings
-          {showConnectActions ? ' and manage your Stripe payout account' : ''}.
-        </p>
-      </header>
+    <div className="md-stack" data-testid="mentor-earnings-tab">
+      <MentorPageHeader
+        as="h2"
+        title="Earnings & payouts"
+        description={
+          showConnectActions
+            ? 'Track session revenue from AstroLink bookings and manage your Stripe payout account.'
+            : 'Track session revenue from AstroLink bookings.'
+        }
+      />
 
-      <section className="space-y-4">
-        <h3 className="text-sm font-medium text-on-surface">Income summary</h3>
+      <section className="md-stack-tight">
+        <h3 className="md-section-label">Income summary</h3>
         <EarningsSummaryCards summary={summary} />
         <EarningsLedger rows={rows} />
       </section>
 
-      <section className="space-y-4">
-        <h3 className="text-sm font-medium text-on-surface">Bank account</h3>
+      <section className="md-stack-tight">
+        <h3 className="md-section-label">Bank account</h3>
         <div
-          className="space-y-4 rounded-lg border border-outline-variant bg-surface p-5"
+          className="md-card"
           data-testid={payoutStatus === 'manual' ? 'mentor-payouts-manual' : undefined}
         >
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <p className="min-w-0 text-sm font-medium text-on-surface">
+          <div className="md-card-head">
+            <p className="md-card-title">
               {payoutStatus === 'manual' ? 'Payouts at launch' : 'Stripe Connect'}
             </p>
-            <span
-              className={`inline-flex shrink-0 items-center rounded px-2 py-1 text-xs font-medium ${PAYOUT_BADGE_STYLES[payoutStatus]}`}
-            >
+            <span className={payoutChipClass(payoutStatus)}>
               {PAYOUT_BADGE_LABELS[payoutStatus]}
             </span>
           </div>
 
-          <p className="text-sm leading-relaxed text-on-surface-variant">
+          <p className="md-card-meta">
             {payoutStatus === 'dev_skip'
               ? 'Stripe is turned off in this environment. Earnings above reflect test bookings only.'
               : payoutStatus === 'manual'
@@ -323,41 +319,44 @@ export function MentorPayoutsPanel({
           </p>
 
           {stripeConnectAccountId ? (
-            <p className="font-mono text-xs text-on-surface-variant">
+            <p className="md-card-meta" style={{ fontFamily: 'ui-monospace, monospace' }}>
               Account {stripeConnectAccountId.slice(0, 12)}…
             </p>
           ) : null}
           {stripeError ? (
-            <p className="text-xs text-amber-800" role="alert">
+            <p className="md-card-meta md-overview-meta-warn" role="alert">
               {stripeError}
             </p>
           ) : null}
 
           {showConnectActions ? (
-            <div className="flex flex-wrap gap-2 border-t border-outline-variant/40 pt-4">
-              {payoutStatus === 'setup_required' ? (
-                <button
-                  type="button"
-                  onClick={() => openStripe('onboard')}
-                  disabled={stripeLoading}
-                  data-testid="mentor-stripe-onboard"
-                  className="cursor-pointer rounded-md bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white hover:bg-primary-container disabled:opacity-50"
-                >
-                  {stripeLoading ? 'Opening…' : 'Connect bank account'}
-                </button>
-              ) : null}
-              {payoutStatus === 'connected' ? (
-                <button
-                  type="button"
-                  onClick={() => openStripe('dashboard')}
-                  disabled={stripeLoading}
-                  data-testid="mentor-stripe-dashboard"
-                  className="cursor-pointer rounded-md border border-outline-variant px-4 py-2 text-xs font-semibold uppercase tracking-wide text-on-surface hover:bg-surface-container-low disabled:opacity-50"
-                >
-                  {stripeLoading ? 'Opening…' : 'Open Stripe dashboard'}
-                </button>
-              ) : null}
-            </div>
+            <>
+              <hr className="md-card-divider" />
+              <div className="md-btn-row">
+                {payoutStatus === 'setup_required' ? (
+                  <button
+                    type="button"
+                    onClick={() => openStripe('onboard')}
+                    disabled={stripeLoading}
+                    data-testid="mentor-stripe-onboard"
+                    className="md-btn md-btn-primary"
+                  >
+                    {stripeLoading ? 'Opening…' : 'Connect bank account'}
+                  </button>
+                ) : null}
+                {payoutStatus === 'connected' ? (
+                  <button
+                    type="button"
+                    onClick={() => openStripe('dashboard')}
+                    disabled={stripeLoading}
+                    data-testid="mentor-stripe-dashboard"
+                    className="md-btn md-btn-ghost"
+                  >
+                    {stripeLoading ? 'Opening…' : 'Open Stripe dashboard'}
+                  </button>
+                ) : null}
+              </div>
+            </>
           ) : null}
         </div>
       </section>
