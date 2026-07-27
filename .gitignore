@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+tools/maintain/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -46,5 +47,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .gstack/
+
+# astro-maintain local state
+.astro-maintain/
 
 certificates

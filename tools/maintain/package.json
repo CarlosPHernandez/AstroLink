@@ -1,0 +1,29 @@
+{
+  "name": "astro-maintain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Autonomous maintenance CLI for AstroLink external services (OpenAI, Stripe, Supabase, Daily)",
+  "type": "module",
+  "bin": {
+    "astro-maintain": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsx src/index.ts check",
+    "migrate": "tsx src/index.ts migrate",
+    "status": "tsx src/index.ts status",
+    "astro-maintain": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "openai": "^6.39.1",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/yargs": "^17.0.33",
+    "tsx": "^4.19.4",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

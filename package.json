@@ -16,7 +16,10 @@
     "optimize:images": "node scripts/optimize-public-images.mjs",
     "email:chris-waitlist-test": "node --experimental-strip-types --env-file=.env.local scripts/send-chris-waitlist-test.mjs",
     "email:chris-incomplete-booking": "node --experimental-strip-types --env-file=.env.local scripts/send-chris-incomplete-booking.mjs",
-    "email:chris-slot-reschedule": "node --experimental-strip-types --env-file=.env.local scripts/send-chris-slot-reschedule.mjs"
+    "email:chris-slot-reschedule": "node --experimental-strip-types --env-file=.env.local scripts/send-chris-slot-reschedule.mjs",
+    "maintain": "npm exec --prefix tools/maintain -- tsx tools/maintain/src/index.ts",
+    "maintain:check": "npm exec --prefix tools/maintain -- tsx tools/maintain/src/index.ts check",
+    "maintain:status": "npm exec --prefix tools/maintain -- tsx tools/maintain/src/index.ts status"
   },
   "dependencies": {
     "@daily-co/daily-js": "^0.83.1",
