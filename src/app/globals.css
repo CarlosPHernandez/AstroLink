@@ -1587,6 +1587,42 @@ body {
   white-space: nowrap;
 }
 
+/* Secondary personal-video action — outline, not a second white pill */
+.experts-pro-video-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.8rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.experts-pro-video-cta:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.experts-pro-video-cta--compact {
+  width: auto;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.7rem;
+}
+
+.experts-pro-sticky-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 .experts-pro-book-note {
   margin: 0.85rem 0 0;
   font-size: 0.7rem;
