@@ -2,11 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import { formatUsdFromCents } from '@/lib/session-duration';
+import { toOptimizedImageUrl } from '@/lib/public-images';
 import {
   VIDEO_REQUEST_OCCASION_LABELS,
   VIDEO_REQUEST_OCCASIONS,
@@ -25,9 +26,11 @@ type ExpertProps = {
 function PayForm({
   onError,
   onSuccess,
+  priceLabel,
 }: {
   onError: (msg: string) => void;
   onSuccess: () => void;
+  priceLabel: string;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -54,14 +57,18 @@ function PayForm({
   }
 
   return (
-    <form onSubmit={handlePay} className="vr-form">
-      <PaymentElement />
+    <form onSubmit={handlePay} className="vr-panel__body">
+      <PaymentElement
+        options={{
+          layout: 'tabs',
+        }}
+      />
       <button
         type="submit"
-        className="experts-pro-book-cta vr-form-submit"
+        className="vr-submit"
         disabled={submitting || !stripe}
       >
-        {submitting ? 'Processing…' : 'Pay · Get your video'}
+        {submitting ? 'Processing…' : `Pay ${priceLabel} · Get your video`}
       </button>
     </form>
   );
@@ -76,6 +83,7 @@ export default function VideoRequestClient({
 }) {
   const firstName = expert.name.split(' ')[0];
   const priceLabel = formatUsdFromCents(expert.videoRequestPriceCents);
+  const portraitSrc = toOptimizedImageUrl(expert.imageUrl);
 
   const [email, setEmail] = useState('');
   const [fromName, setFromName] = useState('');
@@ -139,75 +147,116 @@ export default function VideoRequestClient({
   }
 
   return (
-    <div className="experts-profile min-h-screen">
-      <header className="experts-pro-header">
-        <div className="experts-pro-header__inner">
-          <Link href="/" className="experts-pro-logo">
+    <div className="vr-page">
+      <header className="vr-page__header">
+        <div className="vr-page__header-inner">
+          <Link href="/" className="vr-page__logo">
             AstroLink
           </Link>
-          <div className="experts-pro-header__nav">
-            <Link href={`/experts/${expert.slug}`} className="experts-pro-dir-link">
-              <MaterialIcon name="arrow_back" size={18} />
-              <span className="hidden sm:inline">{firstName}</span>
-            </Link>
-          </div>
+          <Link href={`/experts/${expert.slug}`} className="vr-page__back">
+            <MaterialIcon name="arrow_back" size={18} />
+            <span>Back to {firstName}</span>
+          </Link>
         </div>
       </header>
 
-      <main className="experts-pro-main">
-        <div className="experts-pro-hero">
-          <div className="experts-pro-portrait">
-            <ExpertIntroMedia
-              name={expert.name}
-              imageUrl={expert.imageUrl}
-              introVideoUrl={null}
-              className="experts-pro-media"
+      <main className="vr-page__main">
+        {/* Expert summary strip — not fighting the form for attention */}
+        <aside className="vr-expert" aria-label="Expert">
+          <div className="vr-expert__photo">
+            <Image
+              src={portraitSrc}
+              alt={expert.name}
+              fill
+              className="object-cover object-top"
+              sizes="(max-width: 768px) 88px, 120px"
               priority
-              overlayVariant="minimal"
             />
           </div>
-
-          <div className="experts-pro-copy">
-            <p className="experts-pro-eyebrow">Personal video</p>
-            <h1>{expert.name}</h1>
-            <p className="experts-pro-role">{expert.role}</p>
-            <p className="experts-pro-lede">
-              {firstName} will record a short message for you and email the private link.
+          <div className="vr-expert__meta">
+            <p className="vr-expert__eyebrow">Personal video</p>
+            <h1 className="vr-expert__name">{expert.name}</h1>
+            <p className="vr-expert__role">{expert.role}</p>
+            <p className="vr-expert__price">
+              <strong>{priceLabel}</strong>
+              <span> · usually within {expert.videoRequestSlaDays} days</span>
             </p>
+          </div>
+        </aside>
 
-            <div className="experts-pro-price">
-              <p className="experts-pro-price__total">
-                {priceLabel}
-                <span>video</span>
+        <section className="vr-panel" aria-labelledby="vr-panel-title">
+          {success ? (
+            <div className="vr-panel__body" data-testid="video-request-success">
+              <h2 id="vr-panel-title" className="vr-panel__title">
+                You&apos;re set
+              </h2>
+              <p className="vr-panel__lede">
+                Check your email for confirmation. We&apos;ll send a private link when{' '}
+                {firstName} delivers your video.
               </p>
-              <p className="experts-pro-price__rate">
-                Usually ready within {expert.videoRequestSlaDays} days · sent to your email
-              </p>
+              <Link href={`/experts/${expert.slug}`} className="vr-submit vr-submit--ghost">
+                Back to profile
+              </Link>
             </div>
-
-            {success ? (
-              <div className="vr-form" data-testid="video-request-success">
-                <p className="experts-pro-lede" style={{ marginBottom: 0 }}>
-                  You&apos;re set. Check your email for confirmation.
-                </p>
-                <p className="experts-pro-book-note">
-                  We&apos;ll send a private link when {firstName} delivers your video.
+          ) : clientSecret && stripePromise ? (
+            <>
+              <div className="vr-panel__head">
+                <h2 id="vr-panel-title" className="vr-panel__title">
+                  Payment
+                </h2>
+                <p className="vr-panel__lede">
+                  {priceLabel} for a personal video from {firstName}.
                 </p>
               </div>
-            ) : clientSecret && stripePromise ? (
-              <Elements stripe={stripePromise} options={{ clientSecret }}>
-                <PayForm onError={setError} onSuccess={() => setSuccess(true)} />
-                {error ? (
-                  <p className="vr-form-error" role="alert">
-                    {error}
-                  </p>
-                ) : null}
+              <Elements
+                stripe={stripePromise}
+                options={{
+                  clientSecret,
+                  appearance: {
+                    theme: 'night',
+                    variables: {
+                      colorPrimary: '#b4c5ff',
+                      colorBackground: '#1a1a1a',
+                      colorText: '#f5f5f5',
+                      colorDanger: '#ffb4ab',
+                      borderRadius: '10px',
+                      fontFamily: 'system-ui, sans-serif',
+                    },
+                  },
+                }}
+              >
+                <PayForm
+                  onError={setError}
+                  onSuccess={() => setSuccess(true)}
+                  priceLabel={priceLabel}
+                />
               </Elements>
-            ) : (
-              <form onSubmit={startCheckout} className="vr-form" data-testid="video-request-form">
+              {error ? (
+                <p className="vr-form-error" role="alert">
+                  {error}
+                </p>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <div className="vr-panel__head">
+                <h2 id="vr-panel-title" className="vr-panel__title">
+                  Request details
+                </h2>
+                <p className="vr-panel__lede">
+                  {firstName} will record a short private message and email you the link.
+                </p>
+              </div>
+
+              <form
+                onSubmit={startCheckout}
+                className="vr-panel__body"
+                data-testid="video-request-form"
+                noValidate
+              >
                 <div className="vr-field">
                   <label htmlFor="vr-email" className="vr-label">
-                    Email
+                    Email address
                   </label>
                   <input
                     id="vr-email"
@@ -215,14 +264,16 @@ export default function VideoRequestClient({
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="vr-input"
+                    className="vr-control"
                     autoComplete="email"
-                    placeholder="you@email.com"
+                    inputMode="email"
+                    placeholder="name@example.com"
                     data-testid="video-request-email"
                   />
+                  <p className="vr-help">We send confirmation and the finished video here.</p>
                 </div>
 
-                <div className="vr-field-row">
+                <div className="vr-field-grid">
                   <div className="vr-field">
                     <label htmlFor="vr-from" className="vr-label">
                       Your name
@@ -233,23 +284,24 @@ export default function VideoRequestClient({
                       type="text"
                       value={fromName}
                       onChange={(e) => setFromName(e.target.value)}
-                      className="vr-input"
+                      className="vr-control"
                       autoComplete="name"
-                      placeholder="First name"
+                      placeholder="How they should address you"
                       data-testid="video-request-from"
                     />
                   </div>
                   <div className="vr-field">
                     <label htmlFor="vr-recipient" className="vr-label">
-                      For <span className="vr-label-optional">(optional)</span>
+                      For
+                      <span className="vr-label__optional">Optional</span>
                     </label>
                     <input
                       id="vr-recipient"
                       type="text"
                       value={recipientName}
                       onChange={(e) => setRecipientName(e.target.value)}
-                      className="vr-input"
-                      placeholder="Who is this for?"
+                      className="vr-control"
+                      placeholder="Someone else's name"
                       data-testid="video-request-recipient"
                     />
                   </div>
@@ -260,7 +312,7 @@ export default function VideoRequestClient({
                     Occasion
                   </span>
                   <div
-                    className="vr-occasion-badges"
+                    className="vr-toggle-group"
                     role="radiogroup"
                     aria-labelledby="vr-occasion-label"
                   >
@@ -274,7 +326,9 @@ export default function VideoRequestClient({
                           aria-checked={selected}
                           onClick={() => setOccasion(key)}
                           className={
-                            selected ? 'vr-occasion-badge vr-occasion-badge--on' : 'vr-occasion-badge'
+                            selected
+                              ? 'vr-toggle vr-toggle--selected'
+                              : 'vr-toggle'
                           }
                           data-testid={`video-request-occasion-${key}`}
                         >
@@ -287,21 +341,24 @@ export default function VideoRequestClient({
 
                 <div className="vr-field">
                   <label htmlFor="vr-instructions" className="vr-label">
-                    What should {firstName} say?
+                    Message notes
                   </label>
                   <textarea
                     id="vr-instructions"
                     required
                     minLength={12}
                     maxLength={1200}
-                    rows={4}
+                    rows={5}
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
-                    className="vr-input vr-textarea"
-                    placeholder={`A few sentences for ${firstName} — context, tone, anything to include.`}
+                    className="vr-control vr-control--area"
+                    placeholder={`What should ${firstName} cover? Tone, names, anything to include.`}
                     data-testid="video-request-instructions"
                   />
-                  <p className="vr-field-hint">{instructions.length}/1200</p>
+                  <div className="vr-field-footer">
+                    <p className="vr-help">A few sentences is enough.</p>
+                    <p className="vr-count">{instructions.length}/1200</p>
+                  </div>
                 </div>
 
                 {error ? (
@@ -312,22 +369,21 @@ export default function VideoRequestClient({
 
                 <button
                   type="submit"
-                  className="experts-pro-book-cta vr-form-submit"
+                  className="vr-submit"
                   disabled={submitting}
                   data-testid="video-request-continue"
                 >
                   {submitting ? 'Starting…' : `Continue · ${priceLabel}`}
                 </button>
-                <p className="experts-pro-book-note">
-                  Private video · link by email when ready
+                <p className="vr-footnote">
+                  Private video · emailed when ready
                   {skipStripe ? ' · (dev skip-stripe)' : ''}
                 </p>
               </form>
-            )}
-          </div>
-        </div>
+            </>
+          )}
+        </section>
       </main>
-
     </div>
   );
 }
