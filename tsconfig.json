@@ -31,8 +31,7 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules",
-    "tools"
+    "node_modules"
   ]
 }
 
