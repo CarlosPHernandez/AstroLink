@@ -2,12 +2,11 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import { formatUsdFromCents } from '@/lib/session-duration';
-import { toOptimizedImageUrl } from '@/lib/public-images';
 import {
   VIDEO_REQUEST_OCCASION_LABELS,
   VIDEO_REQUEST_OCCASIONS,
@@ -57,16 +56,13 @@ function PayForm({
   }
 
   return (
-    <form onSubmit={handlePay} className="vr-panel__body">
-      <PaymentElement
-        options={{
-          layout: 'tabs',
-        }}
-      />
+    <form onSubmit={handlePay} className="experts-pro-book experts-pro-form">
+      <PaymentElement />
       <button
         type="submit"
-        className="vr-submit"
+        className="experts-pro-book-cta"
         disabled={submitting || !stripe}
+        style={{ width: '100%', border: 0, cursor: 'pointer', marginTop: '1rem' }}
       >
         {submitting ? 'Processing…' : `Pay ${priceLabel} · Get your video`}
       </button>
@@ -83,7 +79,6 @@ export default function VideoRequestClient({
 }) {
   const firstName = expert.name.split(' ')[0];
   const priceLabel = formatUsdFromCents(expert.videoRequestPriceCents);
-  const portraitSrc = toOptimizedImageUrl(expert.imageUrl);
 
   const [email, setEmail] = useState('');
   const [fromName, setFromName] = useState('');
@@ -92,7 +87,6 @@ export default function VideoRequestClient({
   const [instructions, setInstructions] = useState('');
   const [error, setError] = useState('');
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [skipStripe, setSkipStripe] = useState(false);
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -139,7 +133,6 @@ export default function VideoRequestClient({
         return;
       }
       setClientSecret(data.clientSecret);
-      setSkipStripe(false);
     } catch {
       setError('Network error');
     }
@@ -147,242 +140,172 @@ export default function VideoRequestClient({
   }
 
   return (
-    <div className="vr-page">
-      <header className="vr-page__header">
-        <div className="vr-page__header-inner">
-          <Link href="/" className="vr-page__logo">
+    <div className="experts-profile min-h-screen">
+      <header className="experts-pro-header">
+        <div className="experts-pro-header__inner">
+          <Link href="/" className="experts-pro-logo">
             AstroLink
           </Link>
-          <Link href={`/experts/${expert.slug}`} className="vr-page__back">
-            <MaterialIcon name="arrow_back" size={18} />
-            <span>Back to {firstName}</span>
-          </Link>
+          <div className="experts-pro-header__nav">
+            <Link href={`/experts/${expert.slug}`} className="experts-pro-dir-link">
+              <MaterialIcon name="arrow_back" size={18} />
+              <span className="hidden sm:inline">{firstName}</span>
+            </Link>
+          </div>
         </div>
       </header>
 
-      <main className="vr-page__main">
-        {/* Expert summary strip — not fighting the form for attention */}
-        <aside className="vr-expert" aria-label="Expert">
-          <div className="vr-expert__photo">
-            <Image
-              src={portraitSrc}
-              alt={expert.name}
-              fill
-              className="object-cover object-top"
-              sizes="(max-width: 768px) 88px, 120px"
+      <main className="experts-pro-main">
+        <div className="experts-pro-hero">
+          <div className="experts-pro-portrait">
+            <ExpertIntroMedia
+              name={expert.name}
+              imageUrl={expert.imageUrl}
+              introVideoUrl={null}
+              className="experts-pro-media"
               priority
+              overlayVariant="minimal"
             />
           </div>
-          <div className="vr-expert__meta">
-            <p className="vr-expert__eyebrow">Personal video</p>
-            <h1 className="vr-expert__name">{expert.name}</h1>
-            <p className="vr-expert__role">{expert.role}</p>
-            <p className="vr-expert__price">
-              <strong>{priceLabel}</strong>
-              <span> · usually within {expert.videoRequestSlaDays} days</span>
-            </p>
-          </div>
-        </aside>
 
-        <section className="vr-panel" aria-labelledby="vr-panel-title">
-          {success ? (
-            <div className="vr-panel__body" data-testid="video-request-success">
-              <h2 id="vr-panel-title" className="vr-panel__title">
-                You&apos;re set
-              </h2>
-              <p className="vr-panel__lede">
-                Check your email for confirmation. We&apos;ll send a private link when{' '}
-                {firstName} delivers your video.
+          <div className="experts-pro-copy">
+            <p className="experts-pro-eyebrow">Personal video</p>
+            <h1>{expert.name}</h1>
+            <p className="experts-pro-role">{expert.role}</p>
+            <p className="experts-pro-lede">
+              A short private video from {firstName} — made for you, emailed when ready.
+            </p>
+
+            <div className="experts-pro-price">
+              <p className="experts-pro-price__total">
+                {priceLabel}
+                <span>video</span>
               </p>
-              <Link href={`/experts/${expert.slug}`} className="vr-submit vr-submit--ghost">
-                Back to profile
-              </Link>
+              <p className="experts-pro-price__rate">
+                Usually ready within {expert.videoRequestSlaDays} days · sent to your email
+              </p>
             </div>
-          ) : clientSecret && stripePromise ? (
-            <>
-              <div className="vr-panel__head">
-                <h2 id="vr-panel-title" className="vr-panel__title">
-                  Payment
-                </h2>
-                <p className="vr-panel__lede">
-                  {priceLabel} for a personal video from {firstName}.
+
+            {success ? (
+              <div className="experts-pro-book" data-testid="video-request-success">
+                <p className="experts-pro-lede" style={{ marginBottom: 0 }}>
+                  You&apos;re set. Check your email for confirmation.
+                </p>
+                <p className="experts-pro-book-note">
+                  We&apos;ll send a private link when {firstName} delivers your video.
                 </p>
               </div>
-              <Elements
-                stripe={stripePromise}
-                options={{
-                  clientSecret,
-                  appearance: {
-                    theme: 'night',
-                    variables: {
-                      colorPrimary: '#b4c5ff',
-                      colorBackground: '#1a1a1a',
-                      colorText: '#f5f5f5',
-                      colorDanger: '#ffb4ab',
-                      borderRadius: '10px',
-                      fontFamily: 'system-ui, sans-serif',
-                    },
-                  },
-                }}
-              >
+            ) : clientSecret && stripePromise ? (
+              <Elements stripe={stripePromise} options={{ clientSecret }}>
                 <PayForm
                   onError={setError}
                   onSuccess={() => setSuccess(true)}
                   priceLabel={priceLabel}
                 />
+                {error ? (
+                  <p className="experts-pro-book-note" style={{ color: '#ffb4ab' }} role="alert">
+                    {error}
+                  </p>
+                ) : null}
               </Elements>
-              {error ? (
-                <p className="vr-form-error" role="alert">
-                  {error}
-                </p>
-              ) : null}
-            </>
-          ) : (
-            <>
-              <div className="vr-panel__head">
-                <h2 id="vr-panel-title" className="vr-panel__title">
-                  Request details
-                </h2>
-                <p className="vr-panel__lede">
-                  {firstName} will record a short private message and email you the link.
-                </p>
-              </div>
-
+            ) : (
               <form
                 onSubmit={startCheckout}
-                className="vr-panel__body"
+                className="experts-pro-book experts-pro-form"
                 data-testid="video-request-form"
-                noValidate
               >
-                <div className="vr-field">
-                  <label htmlFor="vr-email" className="vr-label">
-                    Email address
-                  </label>
+                <label className="experts-pro-field">
+                  <span className="experts-pro-field__label">Email</span>
                   <input
-                    id="vr-email"
                     required
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="vr-control"
+                    className="experts-pro-field__input"
                     autoComplete="email"
-                    inputMode="email"
-                    placeholder="name@example.com"
                     data-testid="video-request-email"
                   />
-                  <p className="vr-help">We send confirmation and the finished video here.</p>
-                </div>
+                </label>
 
-                <div className="vr-field-grid">
-                  <div className="vr-field">
-                    <label htmlFor="vr-from" className="vr-label">
-                      Your name
-                    </label>
-                    <input
-                      id="vr-from"
-                      required
-                      type="text"
-                      value={fromName}
-                      onChange={(e) => setFromName(e.target.value)}
-                      className="vr-control"
-                      autoComplete="name"
-                      placeholder="How they should address you"
-                      data-testid="video-request-from"
-                    />
-                  </div>
-                  <div className="vr-field">
-                    <label htmlFor="vr-recipient" className="vr-label">
-                      For
-                      <span className="vr-label__optional">Optional</span>
-                    </label>
-                    <input
-                      id="vr-recipient"
-                      type="text"
-                      value={recipientName}
-                      onChange={(e) => setRecipientName(e.target.value)}
-                      className="vr-control"
-                      placeholder="Someone else's name"
-                      data-testid="video-request-recipient"
-                    />
-                  </div>
-                </div>
+                <label className="experts-pro-field">
+                  <span className="experts-pro-field__label">Your name</span>
+                  <input
+                    required
+                    type="text"
+                    value={fromName}
+                    onChange={(e) => setFromName(e.target.value)}
+                    className="experts-pro-field__input"
+                    autoComplete="name"
+                    data-testid="video-request-from"
+                  />
+                </label>
 
-                <div className="vr-field">
-                  <span className="vr-label" id="vr-occasion-label">
-                    Occasion
+                <label className="experts-pro-field">
+                  <span className="experts-pro-field__label">
+                    For <span className="experts-pro-field__optional">(optional)</span>
                   </span>
-                  <div
-                    className="vr-toggle-group"
-                    role="radiogroup"
-                    aria-labelledby="vr-occasion-label"
-                  >
-                    {VIDEO_REQUEST_OCCASIONS.map((key) => {
-                      const selected = occasion === key;
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          role="radio"
-                          aria-checked={selected}
-                          onClick={() => setOccasion(key)}
-                          className={
-                            selected
-                              ? 'vr-toggle vr-toggle--selected'
-                              : 'vr-toggle'
-                          }
-                          data-testid={`video-request-occasion-${key}`}
-                        >
-                          {VIDEO_REQUEST_OCCASION_LABELS[key]}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                  <input
+                    type="text"
+                    value={recipientName}
+                    onChange={(e) => setRecipientName(e.target.value)}
+                    className="experts-pro-field__input"
+                    data-testid="video-request-recipient"
+                  />
+                </label>
 
-                <div className="vr-field">
-                  <label htmlFor="vr-instructions" className="vr-label">
-                    Message notes
-                  </label>
+                <label className="experts-pro-field">
+                  <span className="experts-pro-field__label">Occasion</span>
+                  <select
+                    value={occasion}
+                    onChange={(e) => setOccasion(e.target.value as VideoRequestOccasion)}
+                    className="experts-pro-field__input experts-pro-field__select"
+                    data-testid="video-request-occasion"
+                  >
+                    {VIDEO_REQUEST_OCCASIONS.map((key) => (
+                      <option key={key} value={key}>
+                        {VIDEO_REQUEST_OCCASION_LABELS[key]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="experts-pro-field">
+                  <span className="experts-pro-field__label">What should {firstName} say?</span>
                   <textarea
-                    id="vr-instructions"
                     required
                     minLength={12}
                     maxLength={1200}
-                    rows={5}
+                    rows={4}
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
-                    className="vr-control vr-control--area"
-                    placeholder={`What should ${firstName} cover? Tone, names, anything to include.`}
+                    className="experts-pro-field__input experts-pro-field__textarea"
                     data-testid="video-request-instructions"
                   />
-                  <div className="vr-field-footer">
-                    <p className="vr-help">A few sentences is enough.</p>
-                    <p className="vr-count">{instructions.length}/1200</p>
-                  </div>
-                </div>
+                </label>
 
                 {error ? (
-                  <p className="vr-form-error" role="alert">
+                  <p className="experts-pro-book-note" style={{ color: '#ffb4ab' }} role="alert">
                     {error}
                   </p>
                 ) : null}
 
                 <button
                   type="submit"
-                  className="vr-submit"
+                  className="experts-pro-book-cta"
                   disabled={submitting}
+                  style={{ width: '100%', border: 0, cursor: 'pointer' }}
                   data-testid="video-request-continue"
                 >
                   {submitting ? 'Starting…' : `Continue · ${priceLabel}`}
                 </button>
-                <p className="vr-footnote">
-                  Private video · emailed when ready
-                  {skipStripe ? ' · (dev skip-stripe)' : ''}
+
+                <p className="experts-pro-book-note">
+                  Private video · link by email when ready
                 </p>
               </form>
-            </>
-          )}
-        </section>
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );
