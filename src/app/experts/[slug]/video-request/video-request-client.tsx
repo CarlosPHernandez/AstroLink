@@ -282,7 +282,7 @@ export default function VideoRequestClient({
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
                     className="experts-pro-field__input experts-pro-field__textarea"
-                    placeholder={`A few sentences for ${firstName} — context, tone, names, anything to include.`}
+                    placeholder={`Hey ${firstName} — congrats to my niece Maya on her high school graduation. She wants to study aerospace. A short pep talk about sticking with hard problems would mean a lot.`}
                     data-testid="video-request-instructions"
                   />
                 </label>
