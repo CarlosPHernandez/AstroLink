@@ -10,6 +10,7 @@ import { formatUsdFromCents } from '@/lib/session-duration';
 import {
   VIDEO_REQUEST_OCCASION_LABELS,
   VIDEO_REQUEST_OCCASIONS,
+  videoRequestInstructionsPlaceholder,
   type VideoRequestOccasion,
 } from '@/lib/video-requests/types';
 
@@ -93,6 +94,11 @@ export default function VideoRequestClient({
   const stripePromise = useMemo(
     () => (stripePublishableKey ? loadStripe(stripePublishableKey) : null),
     [stripePublishableKey],
+  );
+
+  const instructionsPlaceholder = useMemo(
+    () => videoRequestInstructionsPlaceholder(occasion, firstName),
+    [occasion, firstName],
   );
 
   async function startCheckout(e: React.FormEvent) {
@@ -282,7 +288,7 @@ export default function VideoRequestClient({
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
                     className="experts-pro-field__input experts-pro-field__textarea"
-                    placeholder={`Hey ${firstName} — congrats to my niece Maya on her high school graduation. She wants to study aerospace. A short pep talk about sticking with hard problems would mean a lot.`}
+                    placeholder={instructionsPlaceholder}
                     data-testid="video-request-instructions"
                   />
                 </label>
