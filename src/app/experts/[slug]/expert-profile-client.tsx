@@ -36,6 +36,13 @@ export default function ExpertProfileClient({
   const firstName = expert.name.split(' ')[0];
   const isWaitlist = expertCta.variant === 'waitlist';
   const isSignedIn = Boolean(session);
+  const videoOfferActive =
+    !isWaitlist &&
+    Boolean(expert.videoRequestsEnabled) &&
+    (expert.videoRequestPriceCents ?? 0) > 0;
+  const videoPriceLabel = formatUsdFromCents(expert.videoRequestPriceCents ?? 0);
+  const videoHref = `/experts/${expert.slug}/video-request`;
+  const slaDays = expert.videoRequestSlaDays ?? 7;
 
   const bookHref = useMemo(() => {
     if (isWaitlist) return expertCta.href;
@@ -50,11 +57,20 @@ export default function ExpertProfileClient({
 
   const primaryCtaLabel = isWaitlist
     ? 'Get early access'
-    : `Book ${durationMinutes} min · ${priceLabel}`;
-  const headerCtaLabel = isWaitlist ? 'Get early access' : 'Book session';
+    : videoOfferActive
+      ? `Get a video from ${firstName} · ${videoPriceLabel}`
+      : `Book ${durationMinutes} min · ${priceLabel}`;
+  const headerCtaLabel = isWaitlist
+    ? 'Get early access'
+    : videoOfferActive
+      ? 'Personal video'
+      : 'Book session';
   const compactCtaLabel = isWaitlist
     ? 'Get early access'
-    : `Book with ${firstName}`;
+    : videoOfferActive
+      ? `Get a video · ${videoPriceLabel}`
+      : `Book with ${firstName}`;
+  const primaryHref = isWaitlist ? bookHref : videoOfferActive ? videoHref : bookHref;
 
   const paragraphs = expert.bio.split('\n').filter(Boolean);
   const COLLAPSE_AT = 3;
@@ -75,7 +91,7 @@ export default function ExpertProfileClient({
             </Link>
 
             <Link
-              href={bookHref}
+              href={primaryHref}
               data-testid="expert-profile-book"
               className="experts-pro-header-cta"
             >
@@ -123,34 +139,66 @@ export default function ExpertProfileClient({
             <p className="experts-pro-role">{expert.role}</p>
             <p className="experts-pro-employer">{expert.employer}</p>
             <p className="experts-pro-lede">
-              A private session with someone who has done the work — prepared on your goals,
-              without the conference circuit.
+              {videoOfferActive
+                ? `A short private video from ${firstName} — made for you.`
+                : 'A private session with someone who has done the work — prepared on your goals, without the conference circuit.'}
             </p>
 
             <div className="experts-pro-book" id="book">
-              {!isWaitlist ? (
+              {videoOfferActive ? (
                 <>
-                  <DurationStepper value={durationMinutes} onChange={setDurationMinutes} />
-
                   <div className="experts-pro-price">
                     <p className="experts-pro-price__total">
-                      {priceLabel}
-                      <span>session</span>
+                      {videoPriceLabel}
+                      <span>video</span>
                     </p>
                     <p className="experts-pro-price__rate">
-                      ${expert.rate}/hr · prorated to {durationMinutes} min
+                      Usually ready within {slaDays} days · sent to your email
                     </p>
                   </div>
+                  <Link
+                    href={videoHref}
+                    data-testid="expert-profile-video-cta"
+                    className="experts-pro-book-cta"
+                  >
+                    {primaryCtaLabel}
+                  </Link>
+                  <p className="experts-pro-book-note">
+                    Private message · no account required · refunded if not delivered in time
+                  </p>
+                  <p className="experts-pro-book-note" style={{ marginTop: '0.75rem' }}>
+                    <Link href={bookHref} className="experts-pro-text-link">
+                      Prefer a live session?
+                    </Link>
+                  </p>
                 </>
-              ) : null}
+              ) : (
+                <>
+                  {!isWaitlist ? (
+                    <>
+                      <DurationStepper value={durationMinutes} onChange={setDurationMinutes} />
 
-              <Link href={bookHref} className="experts-pro-book-cta">
-                {primaryCtaLabel}
-              </Link>
+                      <div className="experts-pro-price">
+                        <p className="experts-pro-price__total">
+                          {priceLabel}
+                          <span>session</span>
+                        </p>
+                        <p className="experts-pro-price__rate">
+                          ${expert.rate}/hr · prorated to {durationMinutes} min
+                        </p>
+                      </div>
+                    </>
+                  ) : null}
 
-              <p className="experts-pro-book-note">
-                Encrypted video · AI briefing included · Refundable up to 24 hours before start
-              </p>
+                  <Link href={bookHref} className="experts-pro-book-cta">
+                    {primaryCtaLabel}
+                  </Link>
+
+                  <p className="experts-pro-book-note">
+                    Encrypted video · AI briefing included · Refundable up to 24 hours before start
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -209,9 +257,11 @@ export default function ExpertProfileClient({
           <p>
             {isWaitlist
               ? `Join early access for sessions with ${firstName}.`
-              : `${durationMinutes} min with ${firstName} · ${priceLabel}`}
+              : videoOfferActive
+                ? `Personal video from ${firstName} · ${videoPriceLabel}`
+                : `${durationMinutes} min with ${firstName} · ${priceLabel}`}
           </p>
-          <Link href={bookHref} className="experts-pro-book-cta experts-pro-book-cta--compact">
+          <Link href={primaryHref} className="experts-pro-book-cta experts-pro-book-cta--compact">
             {compactCtaLabel}
           </Link>
         </div>

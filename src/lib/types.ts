@@ -72,6 +72,10 @@ export interface Mentor {
   image_url: string | null;
   intro_video_url: string | null;
   live_session_price_cents: number;
+  /** Personal video offer (Cameo-style). */
+  video_requests_enabled?: boolean;
+  video_request_price_cents?: number;
+  video_request_sla_days?: number;
   stripe_connect_account_id: string | null;
   stripe_onboarding_completed: boolean;
   compliance_status: ComplianceStatus;

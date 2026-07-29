@@ -10,6 +10,7 @@ import { MentorBrandFooter } from '@/app/dashboard/mentor/mentor-brand-footer';
 export type MentorDashboardTab =
   | 'overview'
   | 'sessions'
+  | 'videos'
   | 'earnings'
   | 'profile'
   | 'settings';
@@ -17,12 +18,13 @@ export type MentorDashboardTab =
 type NavItem = {
   id: MentorDashboardTab;
   label: string;
-  icon: 'home' | 'sessions' | 'earnings' | 'listing' | 'settings';
+  icon: 'home' | 'sessions' | 'videos' | 'earnings' | 'listing' | 'settings';
 };
 
 const PRIMARY_NAV: NavItem[] = [
   { id: 'overview', label: 'Overview', icon: 'home' },
   { id: 'sessions', label: 'Sessions', icon: 'sessions' },
+  { id: 'videos', label: 'Videos', icon: 'videos' },
   { id: 'earnings', label: 'Earnings', icon: 'earnings' },
   { id: 'profile', label: 'Listing', icon: 'listing' },
 ];
@@ -72,6 +74,26 @@ function NavIcon({ name, className }: { name: NavItem['icon']; className?: strin
             strokeWidth="1.25"
           />
           <path d="M2 6.5h12M5.5 2v2.5M10.5 2v2.5" stroke="currentColor" strokeWidth="1.25" />
+        </svg>
+      );
+    case 'videos':
+      return (
+        <svg {...common}>
+          <rect
+            x="1.5"
+            y="3.5"
+            width="9"
+            height="9"
+            rx="1.5"
+            stroke="currentColor"
+            strokeWidth="1.25"
+          />
+          <path
+            d="M10.5 6.5 14.5 4.5v7l-4-2"
+            stroke="currentColor"
+            strokeWidth="1.25"
+            strokeLinejoin="round"
+          />
         </svg>
       );
     case 'earnings':

@@ -1181,6 +1181,23 @@ body {
   padding-bottom: 5.5rem;
 }
 
+.experts-pro-input {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #2a2a2a;
+  color: #fff;
+  font-size: 0.9375rem;
+}
+
+.experts-pro-input:focus {
+  outline: 2px solid var(--pro-accent, #b4c5ff);
+  outline-offset: 1px;
+}
+
 .experts-pro-header {
   position: sticky;
   top: 0;
