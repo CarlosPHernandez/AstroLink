@@ -162,20 +162,21 @@ export default function ExpertProfileClient({
 
               {videoOfferActive ? (
                 <div className="experts-pro-video-offer" data-testid="expert-profile-video-offer">
-                  <p className="experts-pro-section-label" style={{ marginTop: '1.25rem' }}>
-                    Or a personal video
-                  </p>
-                  <p className="experts-pro-book-note" style={{ marginBottom: '0.65rem' }}>
-                    A short private message from {firstName} · usually within {slaDays} days ·{' '}
-                    {videoPriceLabel}
-                  </p>
                   <Link
                     href={videoHref}
                     data-testid="expert-profile-video-cta"
-                    className="experts-pro-video-cta"
+                    className="experts-pro-book-cta"
+                    style={{ marginTop: '0.85rem' }}
                   >
                     {videoCtaLabel}
                   </Link>
+                  <p className="experts-pro-section-label" style={{ marginTop: '0.85rem' }}>
+                    Or a personal video
+                  </p>
+                  <p className="experts-pro-book-note" style={{ marginTop: '0.35rem' }}>
+                    A short private message from {firstName} · usually within {slaDays} days ·{' '}
+                    {videoPriceLabel}
+                  </p>
                 </div>
               ) : null}
             </div>
@@ -242,7 +243,7 @@ export default function ExpertProfileClient({
             {videoOfferActive ? (
               <Link
                 href={videoHref}
-                className="experts-pro-video-cta experts-pro-video-cta--compact"
+                className="experts-pro-book-cta experts-pro-book-cta--compact"
                 data-testid="expert-profile-video-cta-sticky"
               >
                 Video · {videoPriceLabel}
