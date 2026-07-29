@@ -146,7 +146,7 @@ export default function VideoRequestClient({
   }
 
   return (
-    <div className="experts-profile min-h-screen">
+    <div className="experts-profile experts-pro-video-page min-h-screen">
       <header className="experts-pro-header">
         <div className="experts-pro-header__inner">
           <Link href="/" className="experts-pro-logo">
@@ -155,15 +155,15 @@ export default function VideoRequestClient({
           <div className="experts-pro-header__nav">
             <Link href={`/experts/${expert.slug}`} className="experts-pro-dir-link">
               <MaterialIcon name="arrow_back" size={18} />
-              <span className="hidden sm:inline">{firstName}</span>
+              <span className="experts-pro-back-label">Back</span>
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="experts-pro-main">
-        <div className="experts-pro-hero">
-          <div className="experts-pro-portrait">
+      <main className="experts-pro-main experts-pro-video-main">
+        <div className="experts-pro-hero experts-pro-video-hero">
+          <div className="experts-pro-portrait experts-pro-video-portrait experts-pro-anim experts-pro-anim--1">
             <ExpertIntroMedia
               name={expert.name}
               imageUrl={expert.imageUrl}
@@ -174,26 +174,31 @@ export default function VideoRequestClient({
             />
           </div>
 
-          <div className="experts-pro-copy">
-            <p className="experts-pro-eyebrow">Personal video</p>
-            <h1>{expert.name}</h1>
-            <p className="experts-pro-role">{expert.role}</p>
-            <p className="experts-pro-lede">
-              A short private video from {firstName} — made for you, emailed when ready.
-            </p>
+          <div className="experts-pro-copy experts-pro-video-copy">
+            <div className="experts-pro-anim experts-pro-anim--2">
+              <p className="experts-pro-eyebrow">Personal video</p>
+              <h1>{expert.name}</h1>
+              <p className="experts-pro-role">{expert.role}</p>
+              <p className="experts-pro-lede">
+                A short private video from {firstName} — made for you, emailed when ready.
+              </p>
 
-            <div className="experts-pro-price">
-              <p className="experts-pro-price__total">
-                {priceLabel}
-                <span>video</span>
-              </p>
-              <p className="experts-pro-price__rate">
-                Usually ready within {expert.videoRequestSlaDays} days · sent to your email
-              </p>
+              <div className="experts-pro-price">
+                <p className="experts-pro-price__total">
+                  {priceLabel}
+                  <span>video</span>
+                </p>
+                <p className="experts-pro-price__rate">
+                  Usually ready within {expert.videoRequestSlaDays} days · sent to your email
+                </p>
+              </div>
             </div>
 
             {success ? (
-              <div className="experts-pro-book" data-testid="video-request-success">
+              <div
+                className="experts-pro-book experts-pro-anim experts-pro-anim--3"
+                data-testid="video-request-success"
+              >
                 <p className="experts-pro-lede" style={{ marginBottom: 0 }}>
                   You&apos;re set. Check your email for confirmation.
                 </p>
@@ -202,25 +207,27 @@ export default function VideoRequestClient({
                 </p>
               </div>
             ) : clientSecret && stripePromise ? (
-              <Elements stripe={stripePromise} options={{ clientSecret }}>
-                <PayForm
-                  onError={setError}
-                  onSuccess={() => setSuccess(true)}
-                  priceLabel={priceLabel}
-                />
-                {error ? (
-                  <p className="experts-pro-book-note" style={{ color: '#ffb4ab' }} role="alert">
-                    {error}
-                  </p>
-                ) : null}
-              </Elements>
+              <div className="experts-pro-anim experts-pro-anim--3">
+                <Elements stripe={stripePromise} options={{ clientSecret }}>
+                  <PayForm
+                    onError={setError}
+                    onSuccess={() => setSuccess(true)}
+                    priceLabel={priceLabel}
+                  />
+                  {error ? (
+                    <p className="experts-pro-book-note" style={{ color: '#ffb4ab' }} role="alert">
+                      {error}
+                    </p>
+                  ) : null}
+                </Elements>
+              </div>
             ) : (
               <form
                 onSubmit={startCheckout}
-                className="experts-pro-book experts-pro-form"
+                className="experts-pro-book experts-pro-form experts-pro-anim experts-pro-anim--3"
                 data-testid="video-request-form"
               >
-                <label className="experts-pro-field">
+                <label className="experts-pro-field experts-pro-field-anim" style={{ ['--i' as string]: 0 }}>
                   <span className="experts-pro-field__label">Email</span>
                   <input
                     required
@@ -234,7 +241,7 @@ export default function VideoRequestClient({
                   />
                 </label>
 
-                <label className="experts-pro-field">
+                <label className="experts-pro-field experts-pro-field-anim" style={{ ['--i' as string]: 1 }}>
                   <span className="experts-pro-field__label">Your name</span>
                   <input
                     required
@@ -248,7 +255,7 @@ export default function VideoRequestClient({
                   />
                 </label>
 
-                <label className="experts-pro-field">
+                <label className="experts-pro-field experts-pro-field-anim" style={{ ['--i' as string]: 2 }}>
                   <span className="experts-pro-field__label">
                     For <span className="experts-pro-field__optional">(optional)</span>
                   </span>
@@ -262,7 +269,7 @@ export default function VideoRequestClient({
                   />
                 </label>
 
-                <label className="experts-pro-field">
+                <label className="experts-pro-field experts-pro-field-anim" style={{ ['--i' as string]: 3 }}>
                   <span className="experts-pro-field__label">Occasion</span>
                   <select
                     value={occasion}
@@ -278,7 +285,7 @@ export default function VideoRequestClient({
                   </select>
                 </label>
 
-                <label className="experts-pro-field">
+                <label className="experts-pro-field experts-pro-field-anim" style={{ ['--i' as string]: 4 }}>
                   <span className="experts-pro-field__label">What should {firstName} say?</span>
                   <textarea
                     required
@@ -299,19 +306,17 @@ export default function VideoRequestClient({
                   </p>
                 ) : null}
 
-                <button
-                  type="submit"
-                  className="experts-pro-book-cta"
-                  disabled={submitting}
-                  style={{ width: '100%', border: 0, cursor: 'pointer' }}
-                  data-testid="video-request-continue"
-                >
-                  {submitting ? 'Starting…' : `Continue · ${priceLabel}`}
-                </button>
-
-                <p className="experts-pro-book-note">
-                  Private video · link by email when ready
-                </p>
+                <div className="experts-pro-form-actions experts-pro-field-anim" style={{ ['--i' as string]: 5 }}>
+                  <button
+                    type="submit"
+                    className="experts-pro-book-cta experts-pro-form-submit"
+                    disabled={submitting}
+                    data-testid="video-request-continue"
+                  >
+                    {submitting ? 'Starting…' : `Continue · ${priceLabel}`}
+                  </button>
+                  <p className="experts-pro-book-note">Private video · link by email when ready</p>
+                </div>
               </form>
             )}
           </div>
