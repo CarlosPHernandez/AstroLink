@@ -100,6 +100,18 @@ Index: [docs/README.md](docs/README.md)
 | Why private rooms + webhooks | [docs/explanation/video-session-architecture.md](docs/explanation/video-session-architecture.md) |
 | D1 status & checklist | [docs/d1-implementation-plan.md](docs/d1-implementation-plan.md) |
 
+## External SDK maintenance
+
+SDK drift for OpenAI, Stripe, Supabase, and Daily is handled by the published CLI [`simon-maintain`](https://www.npmjs.com/package/simon-maintain) (source: [simon-maintain](https://github.com/CarlosPHernandez/simon-maintain)) — not a vendored copy in this repo.
+
+```bash
+npm run maintain:check -- openai   # or: stripe | supabase | daily | all
+npm run maintain:status
+npm run maintain -- migrate openai --dry-run
+```
+
+State is written under `.simon/` (gitignored). Legacy `.astro-maintain/` is also ignored.
+
 ## Tests
 
 ```bash
