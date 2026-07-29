@@ -1,0 +1,349 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
+import { MaterialIcon } from '@/components/ui/material-icon';
+import { formatUsdFromCents } from '@/lib/session-duration';
+import {
+  VIDEO_REQUEST_OCCASION_LABELS,
+  VIDEO_REQUEST_OCCASIONS,
+  videoRequestInstructionsPlaceholder,
+  type VideoRequestOccasion,
+} from '@/lib/video-requests/types';
+
+type ExpertProps = {
+  slug: string;
+  name: string;
+  role: string;
+  imageUrl: string;
+  introVideoUrl: string | null;
+  videoRequestPriceCents: number;
+  videoRequestSlaDays: number;
+};
+
+/** Single-SKU total — one line only (no lease/cash, no double price). */
+function CheckoutTotal({ priceLabel }: { priceLabel: string }) {
+  return (
+    <div
+      className="experts-pro-checkout"
+      data-testid="video-request-checkout-total"
+      aria-label="Order total"
+    >
+      <div className="experts-pro-checkout__row experts-pro-checkout__row--total">
+        <span className="experts-pro-checkout__label">
+          Total due today
+          <span className="experts-pro-checkout__sub">Personal video</span>
+        </span>
+        <span className="experts-pro-checkout__amount">{priceLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+function PayForm({
+  onError,
+  onSuccess,
+  priceLabel,
+}: {
+  onError: (msg: string) => void;
+  onSuccess: () => void;
+  priceLabel: string;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handlePay(e: React.FormEvent) {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setSubmitting(true);
+    onError('');
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: typeof window !== 'undefined' ? window.location.href : undefined,
+      },
+      redirect: 'if_required',
+    });
+    setSubmitting(false);
+    if (error) {
+      onError(error.message ?? 'Payment failed');
+      return;
+    }
+    onSuccess();
+  }
+
+  return (
+    <form onSubmit={handlePay} className="experts-pro-book experts-pro-form">
+      <CheckoutTotal priceLabel={priceLabel} />
+      <PaymentElement />
+      <button
+        type="submit"
+        className="experts-pro-book-cta experts-pro-form-submit"
+        disabled={submitting || !stripe}
+      >
+        {submitting ? 'Processing…' : `Pay ${priceLabel} · Get your video`}
+      </button>
+      <p className="experts-pro-book-note">
+        Private · emailed when ready · full refund if not delivered
+      </p>
+    </form>
+  );
+}
+
+export default function VideoRequestClient({
+  expert,
+  stripePublishableKey,
+}: {
+  expert: ExpertProps;
+  stripePublishableKey: string;
+}) {
+  const firstName = expert.name.split(' ')[0];
+  const priceLabel = formatUsdFromCents(expert.videoRequestPriceCents);
+
+  const [email, setEmail] = useState('');
+  const [fromName, setFromName] = useState('');
+  const [recipientName, setRecipientName] = useState('');
+  const [occasion, setOccasion] = useState<VideoRequestOccasion>('career_advice');
+  const [instructions, setInstructions] = useState('');
+  const [error, setError] = useState('');
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const stripePromise = useMemo(
+    () => (stripePublishableKey ? loadStripe(stripePublishableKey) : null),
+    [stripePublishableKey],
+  );
+
+  const instructionsPlaceholder = useMemo(
+    () => videoRequestInstructionsPlaceholder(occasion, firstName),
+    [occasion, firstName],
+  );
+
+  async function startCheckout(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/video-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mentorSlug: expert.slug,
+          buyerEmail: email,
+          fromName,
+          recipientName: recipientName || null,
+          occasion,
+          instructions,
+        }),
+      });
+      const data = (await res.json()) as {
+        error?: string;
+        clientSecret?: string | null;
+        skipStripe?: boolean;
+      };
+      if (!res.ok) {
+        setError(data.error ?? 'Could not start checkout');
+        setSubmitting(false);
+        return;
+      }
+      if (data.skipStripe) {
+        setSuccess(true);
+        setSubmitting(false);
+        return;
+      }
+      if (!data.clientSecret) {
+        setError('Payment could not be started');
+        setSubmitting(false);
+        return;
+      }
+      setClientSecret(data.clientSecret);
+    } catch {
+      setError('Network error');
+    }
+    setSubmitting(false);
+  }
+
+  return (
+    <div className="experts-profile experts-pro-video-page min-h-screen">
+      <header className="experts-pro-header">
+        <div className="experts-pro-header__inner">
+          <Link href="/" className="experts-pro-logo">
+            AstroLink
+          </Link>
+          <div className="experts-pro-header__nav">
+            <Link href={`/experts/${expert.slug}`} className="experts-pro-dir-link">
+              <MaterialIcon name="arrow_back" size={18} />
+              <span className="experts-pro-back-label">Back</span>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="experts-pro-main experts-pro-video-main">
+        <div className="experts-pro-hero experts-pro-video-hero">
+          <div className="experts-pro-portrait experts-pro-video-portrait experts-pro-anim experts-pro-anim--1">
+            <ExpertIntroMedia
+              name={expert.name}
+              imageUrl={expert.imageUrl}
+              introVideoUrl={expert.introVideoUrl}
+              className="experts-pro-media"
+              priority
+              overlayVariant="minimal"
+            />
+          </div>
+
+          <div className="experts-pro-copy experts-pro-video-copy">
+            <div className="experts-pro-anim experts-pro-anim--2">
+              <p className="experts-pro-eyebrow">Personal video</p>
+              <h1>{expert.name}</h1>
+              <p className="experts-pro-role">{expert.role}</p>
+              <p className="experts-pro-lede">
+                A short private video from {firstName} — made for you, emailed when ready.
+              </p>
+              <p className="experts-pro-price__rate experts-pro-video-sla">
+                Usually ready within {expert.videoRequestSlaDays} days · sent to your email
+              </p>
+            </div>
+
+            {success ? (
+              <div
+                className="experts-pro-book experts-pro-anim experts-pro-anim--3"
+                data-testid="video-request-success"
+              >
+                <p className="experts-pro-lede" style={{ marginBottom: 0 }}>
+                  You&apos;re set. Check your email for confirmation.
+                </p>
+                <p className="experts-pro-book-note">
+                  We&apos;ll send a private link when {firstName} delivers your video.
+                </p>
+              </div>
+            ) : clientSecret && stripePromise ? (
+              <div className="experts-pro-anim experts-pro-anim--3">
+                <Elements stripe={stripePromise} options={{ clientSecret }}>
+                  <PayForm
+                    onError={setError}
+                    onSuccess={() => setSuccess(true)}
+                    priceLabel={priceLabel}
+                  />
+                  {error ? (
+                    <p className="experts-pro-book-note" style={{ color: '#ffb4ab' }} role="alert">
+                      {error}
+                    </p>
+                  ) : null}
+                </Elements>
+              </div>
+            ) : (
+              <form
+                onSubmit={startCheckout}
+                className="experts-pro-book experts-pro-form experts-pro-anim experts-pro-anim--3"
+                data-testid="video-request-form"
+              >
+                <label className="experts-pro-field experts-pro-field-anim" style={{ ['--i' as string]: 0 }}>
+                  <span className="experts-pro-field__label">Email</span>
+                  <input
+                    required
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="experts-pro-field__input"
+                    autoComplete="email"
+                    placeholder="you@email.com"
+                    data-testid="video-request-email"
+                  />
+                </label>
+
+                <label className="experts-pro-field experts-pro-field-anim" style={{ ['--i' as string]: 1 }}>
+                  <span className="experts-pro-field__label">Your name</span>
+                  <input
+                    required
+                    type="text"
+                    value={fromName}
+                    onChange={(e) => setFromName(e.target.value)}
+                    className="experts-pro-field__input"
+                    autoComplete="name"
+                    placeholder="How they should address you"
+                    data-testid="video-request-from"
+                  />
+                </label>
+
+                <label className="experts-pro-field experts-pro-field-anim" style={{ ['--i' as string]: 2 }}>
+                  <span className="experts-pro-field__label">
+                    For <span className="experts-pro-field__optional">(optional)</span>
+                  </span>
+                  <input
+                    type="text"
+                    value={recipientName}
+                    onChange={(e) => setRecipientName(e.target.value)}
+                    className="experts-pro-field__input"
+                    placeholder="Someone else's name, if not you"
+                    data-testid="video-request-recipient"
+                  />
+                </label>
+
+                <label className="experts-pro-field experts-pro-field-anim" style={{ ['--i' as string]: 3 }}>
+                  <span className="experts-pro-field__label">Occasion</span>
+                  <select
+                    value={occasion}
+                    onChange={(e) => setOccasion(e.target.value as VideoRequestOccasion)}
+                    className="experts-pro-field__input experts-pro-field__select"
+                    data-testid="video-request-occasion"
+                  >
+                    {VIDEO_REQUEST_OCCASIONS.map((key) => (
+                      <option key={key} value={key}>
+                        {VIDEO_REQUEST_OCCASION_LABELS[key]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="experts-pro-field experts-pro-field-anim" style={{ ['--i' as string]: 4 }}>
+                  <span className="experts-pro-field__label">What should {firstName} say?</span>
+                  <textarea
+                    required
+                    minLength={12}
+                    maxLength={1200}
+                    rows={4}
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    className="experts-pro-field__input experts-pro-field__textarea"
+                    placeholder={instructionsPlaceholder}
+                    data-testid="video-request-instructions"
+                  />
+                </label>
+
+                {error ? (
+                  <p className="experts-pro-book-note" style={{ color: '#ffb4ab' }} role="alert">
+                    {error}
+                  </p>
+                ) : null}
+
+                <div className="experts-pro-checkout-wrap experts-pro-field-anim" style={{ ['--i' as string]: 5 }}>
+                  <CheckoutTotal priceLabel={priceLabel} />
+                </div>
+
+                <div className="experts-pro-form-actions experts-pro-field-anim" style={{ ['--i' as string]: 6 }}>
+                  <button
+                    type="submit"
+                    className="experts-pro-book-cta experts-pro-form-submit"
+                    disabled={submitting}
+                    data-testid="video-request-continue"
+                  >
+                    {submitting ? 'Starting…' : 'Continue'}
+                  </button>
+                  <p className="experts-pro-book-note">
+                    Private · emailed when ready · full refund if not delivered
+                  </p>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

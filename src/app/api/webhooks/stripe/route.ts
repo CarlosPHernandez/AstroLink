@@ -8,6 +8,7 @@ import {
 import { syncMentorStripeAccountStatus } from '@/lib/mentor-stripe-connect';
 import { fulfillBookingAfterPayment } from '@/lib/post-payment';
 import { PaymentAgent } from '@/services/agents/payment-agent';
+import { VideoRequestAgent } from '@/services/agents/video-request-agent';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -65,6 +66,18 @@ export async function POST(request: Request) {
         paymentIntent.status !== 'requires_capture'
       ) {
         return NextResponse.json({ received: true, skipped: true });
+      }
+
+      // Personal video requests — never provision Daily / briefing
+      if (paymentIntent.metadata?.product === 'personalized_video') {
+        if (event.type === 'payment_intent.succeeded') {
+          const agent = new VideoRequestAgent();
+          await agent.markPaid({
+            paymentIntentId: paymentIntent.id,
+            videoRequestId: paymentIntent.metadata.video_request_id || undefined,
+          });
+        }
+        return NextResponse.json({ received: true, product: 'personalized_video' });
       }
 
       const mentorId = paymentIntent.metadata?.mentor_id;

@@ -22,6 +22,10 @@ export interface ListedExpert {
   availability: 'Available Now' | 'Book Session';
   liveSessionPriceCents: number;
   stripeOnboardingCompleted: boolean;
+  /** Present when columns exist; treat missing as false / 0 for older fixtures. */
+  videoRequestsEnabled?: boolean;
+  videoRequestPriceCents?: number;
+  videoRequestSlaDays?: number;
 }
 
 function hasPublicSupabaseConfig(): boolean {
@@ -65,6 +69,9 @@ export function mentorToListedExpert(mentor: Mentor): ListedExpert {
     availability: mentor.stripe_onboarding_completed ? 'Available Now' : 'Book Session',
     liveSessionPriceCents: mentor.live_session_price_cents,
     stripeOnboardingCompleted: mentor.stripe_onboarding_completed,
+    videoRequestsEnabled: Boolean(mentor.video_requests_enabled),
+    videoRequestPriceCents: mentor.video_request_price_cents ?? 0,
+    videoRequestSlaDays: mentor.video_request_sla_days ?? 7,
   };
 }
 

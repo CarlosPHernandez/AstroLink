@@ -348,6 +348,9 @@ export type Database = {
           stripe_onboarding_completed: boolean
           title: string | null
           user_id: string | null
+          video_request_price_cents: number
+          video_request_sla_days: number
+          video_requests_enabled: boolean
         }
         Insert: {
           activated_at?: string | null
@@ -373,6 +376,9 @@ export type Database = {
           stripe_onboarding_completed?: boolean
           title?: string | null
           user_id?: string | null
+          video_request_price_cents?: number
+          video_request_sla_days?: number
+          video_requests_enabled?: boolean
         }
         Update: {
           activated_at?: string | null
@@ -398,8 +404,97 @@ export type Database = {
           stripe_onboarding_completed?: boolean
           title?: string | null
           user_id?: string | null
+          video_request_price_cents?: number
+          video_request_sla_days?: number
+          video_requests_enabled?: boolean
         }
         Relationships: []
+      }
+      video_requests: {
+        Row: {
+          buyer_email: string
+          buyer_user_id: string | null
+          created_at: string
+          decline_reason: string | null
+          declined_at: string | null
+          delivered_at: string | null
+          due_at: string | null
+          from_name: string
+          id: string
+          instructions: string
+          marketing_referrer: string | null
+          mentor_id: string
+          occasion: string
+          paid_at: string | null
+          price_cents: number
+          pronunciation_notes: string | null
+          recipient_name: string | null
+          status: Database["public"]["Enums"]["video_request_status"]
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string
+          updated_at: string
+          video_duration_seconds: number | null
+          video_storage_path: string | null
+        }
+        Insert: {
+          buyer_email: string
+          buyer_user_id?: string | null
+          created_at?: string
+          decline_reason?: string | null
+          declined_at?: string | null
+          delivered_at?: string | null
+          due_at?: string | null
+          from_name?: string
+          id?: string
+          instructions?: string
+          marketing_referrer?: string | null
+          mentor_id: string
+          occasion?: string
+          paid_at?: string | null
+          price_cents: number
+          pronunciation_notes?: string | null
+          recipient_name?: string | null
+          status?: Database["public"]["Enums"]["video_request_status"]
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id: string
+          updated_at?: string
+          video_duration_seconds?: number | null
+          video_storage_path?: string | null
+        }
+        Update: {
+          buyer_email?: string
+          buyer_user_id?: string | null
+          created_at?: string
+          decline_reason?: string | null
+          declined_at?: string | null
+          delivered_at?: string | null
+          due_at?: string | null
+          from_name?: string
+          id?: string
+          instructions?: string
+          marketing_referrer?: string | null
+          mentor_id?: string
+          occasion?: string
+          paid_at?: string | null
+          price_cents?: number
+          pronunciation_notes?: string | null
+          recipient_name?: string | null
+          status?: Database["public"]["Enums"]["video_request_status"]
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string
+          updated_at?: string
+          video_duration_seconds?: number | null
+          video_storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_requests_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "mentors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mentor_claim_tokens: {
         Row: {
@@ -841,6 +936,13 @@ export type Database = {
         | "rejected"
       integration_provider: "google_calendar"
       mentor_activation_status: "pending" | "active"
+      video_request_status:
+        | "pending_payment"
+        | "paid_awaiting_expert"
+        | "delivered"
+        | "declined"
+        | "expired"
+        | "refunded"
       mentor_payout_method:
         | "paypal"
         | "zelle"
@@ -986,6 +1088,14 @@ export const Constants = {
       ],
       integration_provider: ["google_calendar"],
       mentor_activation_status: ["pending", "active"],
+      video_request_status: [
+        "pending_payment",
+        "paid_awaiting_expert",
+        "delivered",
+        "declined",
+        "expired",
+        "refunded",
+      ],
       mentor_payout_method: ["paypal", "zelle", "cashapp", "bank_manual", "unset"],
       service_type: ["session_1on1", "pre_call_brief", "extended_session"],
       transaction_status: ["pending", "completed", "failed", "refunded"],

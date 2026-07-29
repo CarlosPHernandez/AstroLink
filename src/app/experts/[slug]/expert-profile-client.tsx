@@ -36,6 +36,11 @@ export default function ExpertProfileClient({
   const firstName = expert.name.split(' ')[0];
   const isWaitlist = expertCta.variant === 'waitlist';
   const isSignedIn = Boolean(session);
+  const videoOfferActive =
+    !isWaitlist &&
+    Boolean(expert.videoRequestsEnabled) &&
+    (expert.videoRequestPriceCents ?? 0) > 0;
+  const videoHref = `/experts/${expert.slug}/video-request`;
 
   const bookHref = useMemo(() => {
     if (isWaitlist) return expertCta.href;
@@ -55,6 +60,7 @@ export default function ExpertProfileClient({
   const compactCtaLabel = isWaitlist
     ? 'Get early access'
     : `Book with ${firstName}`;
+  const videoCtaLabel = 'Get a personalized video';
 
   const paragraphs = expert.bio.split('\n').filter(Boolean);
   const COLLAPSE_AT = 3;
@@ -144,13 +150,26 @@ export default function ExpertProfileClient({
                 </>
               ) : null}
 
-              <Link href={bookHref} className="experts-pro-book-cta">
+              <Link href={bookHref} className="experts-pro-book-cta" data-testid="expert-profile-book-cta">
                 {primaryCtaLabel}
               </Link>
 
               <p className="experts-pro-book-note">
                 Encrypted video · AI briefing included · Refundable up to 24 hours before start
               </p>
+
+              {videoOfferActive ? (
+                <div className="experts-pro-video-offer" data-testid="expert-profile-video-offer">
+                  <Link
+                    href={videoHref}
+                    data-testid="expert-profile-video-cta"
+                    className="experts-pro-book-cta"
+                    style={{ marginTop: '0.85rem' }}
+                  >
+                    {videoCtaLabel}
+                  </Link>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -211,9 +230,20 @@ export default function ExpertProfileClient({
               ? `Join early access for sessions with ${firstName}.`
               : `${durationMinutes} min with ${firstName} · ${priceLabel}`}
           </p>
-          <Link href={bookHref} className="experts-pro-book-cta experts-pro-book-cta--compact">
-            {compactCtaLabel}
-          </Link>
+          <div className="experts-pro-sticky-bar__actions">
+            {videoOfferActive ? (
+              <Link
+                href={videoHref}
+                className="experts-pro-book-cta experts-pro-book-cta--compact"
+                data-testid="expert-profile-video-cta-sticky"
+              >
+                Personalized video
+              </Link>
+            ) : null}
+            <Link href={bookHref} className="experts-pro-book-cta experts-pro-book-cta--compact">
+              {compactCtaLabel}
+            </Link>
+          </div>
         </div>
       </div>
     </div>

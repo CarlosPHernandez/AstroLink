@@ -2,6 +2,20 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.10.0.0] - 2026-07-29
+
+### Added
+- **Personal video requests:** buy a short private video from a listed expert without a live session — guest checkout by email, confirmation + private watch link when delivered, full refund if the expert misses the window.
+- Mentor **Videos** tab to fulfill, decline, or deliver requests before the due date.
+- Expert profile and sticky bar CTAs for **Get a personalized video** when the expert has the offer enabled.
+- Signed private watch page for delivered videos (email-bound access token).
+
+### Changed
+- Video request form uses a single-SKU checkout total (“Total due today”), experts-pro mobile layout with full-width portrait/intro media, and clearer CTA copy.
+
+### Fixed
+- Expert profile portrait collapsed to a few pixels on mobile when the media used absolute fill — portrait container now keeps full width so headshots and intro videos show correctly.
+
 ## [0.9.0.0] - 2026-07-26
 
 ### Added

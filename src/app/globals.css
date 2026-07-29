@@ -1181,6 +1181,332 @@ body {
   padding-bottom: 5.5rem;
 }
 
+.experts-pro-input {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #2a2a2a;
+  color: #fff;
+  font-size: 0.9375rem;
+}
+
+.experts-pro-input:focus {
+  outline: 2px solid var(--pro-accent, #b4c5ff);
+  outline-offset: 1px;
+}
+
+/* Form fields on experts-pro video request (same shell as profile) */
+.experts-pro-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.25rem;
+}
+
+.experts-pro-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.experts-pro-field__label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.experts-pro-field__optional {
+  font-weight: 400;
+  color: var(--pro-faint);
+}
+
+.experts-pro-field__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #2a2a2a;
+  color: #fff;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  font-family: inherit;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.experts-pro-field__input::placeholder {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.experts-pro-field__input:focus {
+  outline: none;
+  border-color: var(--pro-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pro-accent) 25%, transparent);
+}
+
+.experts-pro-field__select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23c9c6c5' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  padding-right: 2.25rem;
+  cursor: pointer;
+}
+
+.experts-pro-field__select option {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+.experts-pro-field__textarea {
+  min-height: 6.5rem;
+  resize: vertical;
+}
+
+.experts-pro-form-submit {
+  width: 100%;
+  border: 0;
+  cursor: pointer;
+}
+
+.experts-pro-form-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.experts-pro-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.15rem;
+}
+
+/* Checkout total — single SKU, one price (no lease/cash, no double lines) */
+.experts-pro-checkout-wrap {
+  width: 100%;
+}
+
+.experts-pro-checkout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.9rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.experts-pro-checkout__row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.experts-pro-checkout__label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.experts-pro-checkout__sub {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--pro-faint);
+  letter-spacing: 0;
+}
+
+.experts-pro-checkout__amount {
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  text-align: right;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.experts-pro-checkout__row--total .experts-pro-checkout__label,
+.experts-pro-checkout__row--total .experts-pro-checkout__amount {
+  color: #fff;
+}
+
+.experts-pro-video-sla {
+  margin: 0.65rem 0 0;
+}
+
+/* Entry motion (restrained) */
+@keyframes experts-pro-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.experts-pro-anim {
+  animation: experts-pro-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.experts-pro-anim--1 {
+  animation-delay: 0.04s;
+}
+
+.experts-pro-anim--2 {
+  animation-delay: 0.12s;
+}
+
+.experts-pro-anim--3 {
+  animation-delay: 0.2s;
+}
+
+.experts-pro-field-anim {
+  animation: experts-pro-fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(0.22s + (var(--i, 0) * 0.05s));
+}
+
+/* Video request page — mobile-first (~393 Helios frame), portrait always visible */
+.experts-pro-video-page {
+  padding-bottom: 1.5rem;
+}
+
+.experts-pro-video-main {
+  padding-top: 0.75rem;
+  padding-bottom: 2rem;
+}
+
+.experts-pro-video-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.25rem;
+}
+
+/* Full-width face on small screens — was max ~180px and easy to miss */
+.experts-pro-video-portrait {
+  display: block;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.experts-pro-video-portrait .experts-pro-media {
+  aspect-ratio: 4 / 5;
+  max-height: min(52vh, 420px);
+  width: 100%;
+  border-radius: 1rem !important;
+}
+
+.experts-pro-video-copy {
+  width: 100%;
+}
+
+.experts-pro-video-copy h1 {
+  font-size: clamp(1.5rem, 5.5vw, 2.15rem);
+}
+
+.experts-pro-back-label {
+  display: inline;
+}
+
+@media (max-width: 899px) {
+  .experts-pro-video-main {
+    /* bleed portrait to screen edges slightly for presence */
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .experts-pro-video-hero {
+    gap: 1.1rem;
+  }
+
+  .experts-pro-video-copy .experts-pro-lede {
+    font-size: 0.9rem;
+  }
+
+  .experts-pro-form {
+    gap: 0.9rem;
+    width: 100%;
+    max-width: none;
+  }
+
+  .experts-pro-field__input {
+    min-height: 3rem;
+    font-size: 1rem; /* avoid iOS zoom */
+  }
+
+  .experts-pro-field__textarea {
+    min-height: 7.5rem;
+  }
+
+  /* Sticky CTA only — total scrolls with form (avoids giant sticky stack) */
+  .experts-pro-form-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    margin: 0.35rem -0.25rem 0;
+    padding: 0.75rem 0.25rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(
+      to top,
+      color-mix(in srgb, var(--pro-bg) 98%, transparent) 60%,
+      transparent
+    );
+  }
+
+  .experts-pro-checkout-wrap {
+    margin-top: 0.15rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .experts-pro-video-main {
+    padding-top: 2rem;
+  }
+
+  .experts-pro-video-hero {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 3.5rem;
+    align-items: start;
+  }
+
+  .experts-pro-video-portrait {
+    max-width: 380px;
+    margin: 0;
+  }
+
+  .experts-pro-video-portrait .experts-pro-media {
+    aspect-ratio: 3 / 4;
+    max-height: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .experts-pro-anim,
+  .experts-pro-field-anim {
+    animation: none !important;
+  }
+}
+
 .experts-pro-header {
   position: sticky;
   top: 0;
@@ -1290,9 +1616,16 @@ body {
   }
 }
 
+/*
+ * Portrait must have an explicit width. ExpertIntroMedia uses next/image fill
+ * + absolute video, so min-content width is ~0. With margin: 0 auto and width:auto,
+ * the box shrinks to 2px (borders only) and the face disappears — especially on mobile.
+ */
 .experts-pro-portrait {
+  width: 100%;
   max-width: 400px;
   margin: 0 auto;
+  min-width: 0;
 }
 
 @media (min-width: 900px) {
@@ -1303,13 +1636,82 @@ body {
 }
 
 .experts-pro-media {
+  position: relative;
+  display: block;
   aspect-ratio: 3 / 4;
   width: 100%;
+  min-height: 16rem;
   border-radius: 1.25rem !important;
   overflow: hidden;
   border-color: rgba(255, 255, 255, 0.08) !important;
   background: #242424 !important;
   box-shadow: 0 40px 80px -40px rgba(0, 0, 0, 0.7);
+}
+
+/* Mobile profile: full-width portrait */
+@media (max-width: 899px) {
+  .experts-pro-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.25rem;
+  }
+
+  .experts-pro-portrait {
+    max-width: none;
+    margin: 0;
+  }
+
+  .experts-pro-media {
+    aspect-ratio: 4 / 5;
+    max-height: min(52vh, 420px);
+    min-height: 12rem;
+    border-radius: 1rem !important;
+  }
+}
+
+/* Video request: keep portrait full-bleed on mobile (beat base portrait max-width) */
+.experts-pro-hero.experts-pro-video-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.25rem;
+  min-height: 0;
+}
+
+.experts-pro-portrait.experts-pro-video-portrait {
+  display: block;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.experts-pro-portrait.experts-pro-video-portrait .experts-pro-media {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  max-height: min(52vh, 420px);
+  width: 100%;
+  border-radius: 1rem !important;
+}
+
+@media (min-width: 900px) {
+  .experts-pro-hero.experts-pro-video-hero {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 3.5rem;
+    align-items: start;
+    min-height: 0;
+  }
+
+  .experts-pro-portrait.experts-pro-video-portrait {
+    max-width: 380px;
+    margin: 0;
+  }
+
+  .experts-pro-portrait.experts-pro-video-portrait .experts-pro-media {
+    aspect-ratio: 3 / 4;
+    max-height: none;
+  }
 }
 
 .experts-pro-eyebrow {
@@ -1568,6 +1970,42 @@ body {
   padding: 0.75rem 1.25rem;
   font-size: 0.75rem;
   white-space: nowrap;
+}
+
+/* Secondary personal-video action — outline, not a second white pill */
+.experts-pro-video-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.8rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.experts-pro-video-cta:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.experts-pro-video-cta--compact {
+  width: auto;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.7rem;
+}
+
+.experts-pro-sticky-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .experts-pro-book-note {
