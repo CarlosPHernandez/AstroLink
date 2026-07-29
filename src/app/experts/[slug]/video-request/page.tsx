@@ -31,6 +31,7 @@ export default async function VideoRequestPage({
         name: expert.name,
         role: expert.role,
         imageUrl: expert.imageUrl,
+        introVideoUrl: expert.introVideoUrl ?? null,
         videoRequestPriceCents: expert.videoRequestPriceCents ?? 0,
         videoRequestSlaDays: expert.videoRequestSlaDays ?? 7,
       }}

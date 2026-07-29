@@ -40,9 +40,7 @@ export default function ExpertProfileClient({
     !isWaitlist &&
     Boolean(expert.videoRequestsEnabled) &&
     (expert.videoRequestPriceCents ?? 0) > 0;
-  const videoPriceLabel = formatUsdFromCents(expert.videoRequestPriceCents ?? 0);
   const videoHref = `/experts/${expert.slug}/video-request`;
-  const slaDays = expert.videoRequestSlaDays ?? 7;
 
   const bookHref = useMemo(() => {
     if (isWaitlist) return expertCta.href;
@@ -62,7 +60,7 @@ export default function ExpertProfileClient({
   const compactCtaLabel = isWaitlist
     ? 'Get early access'
     : `Book with ${firstName}`;
-  const videoCtaLabel = `Get a video from ${firstName} · ${videoPriceLabel}`;
+  const videoCtaLabel = 'Get a personalized video';
 
   const paragraphs = expert.bio.split('\n').filter(Boolean);
   const COLLAPSE_AT = 3;
@@ -170,13 +168,6 @@ export default function ExpertProfileClient({
                   >
                     {videoCtaLabel}
                   </Link>
-                  <p className="experts-pro-section-label" style={{ marginTop: '0.85rem' }}>
-                    Or a personal video
-                  </p>
-                  <p className="experts-pro-book-note" style={{ marginTop: '0.35rem' }}>
-                    A short private message from {firstName} · usually within {slaDays} days ·{' '}
-                    {videoPriceLabel}
-                  </p>
                 </div>
               ) : null}
             </div>
@@ -246,7 +237,7 @@ export default function ExpertProfileClient({
                 className="experts-pro-book-cta experts-pro-book-cta--compact"
                 data-testid="expert-profile-video-cta-sticky"
               >
-                Video · {videoPriceLabel}
+                Personalized video
               </Link>
             ) : null}
             <Link href={bookHref} className="experts-pro-book-cta experts-pro-book-cta--compact">

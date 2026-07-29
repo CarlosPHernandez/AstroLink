@@ -19,9 +19,29 @@ type ExpertProps = {
   name: string;
   role: string;
   imageUrl: string;
+  introVideoUrl: string | null;
   videoRequestPriceCents: number;
   videoRequestSlaDays: number;
 };
+
+/** Single-SKU total — one line only (no lease/cash, no double price). */
+function CheckoutTotal({ priceLabel }: { priceLabel: string }) {
+  return (
+    <div
+      className="experts-pro-checkout"
+      data-testid="video-request-checkout-total"
+      aria-label="Order total"
+    >
+      <div className="experts-pro-checkout__row experts-pro-checkout__row--total">
+        <span className="experts-pro-checkout__label">
+          Total due today
+          <span className="experts-pro-checkout__sub">Personal video</span>
+        </span>
+        <span className="experts-pro-checkout__amount">{priceLabel}</span>
+      </div>
+    </div>
+  );
+}
 
 function PayForm({
   onError,
@@ -58,15 +78,18 @@ function PayForm({
 
   return (
     <form onSubmit={handlePay} className="experts-pro-book experts-pro-form">
+      <CheckoutTotal priceLabel={priceLabel} />
       <PaymentElement />
       <button
         type="submit"
-        className="experts-pro-book-cta"
+        className="experts-pro-book-cta experts-pro-form-submit"
         disabled={submitting || !stripe}
-        style={{ width: '100%', border: 0, cursor: 'pointer', marginTop: '1rem' }}
       >
         {submitting ? 'Processing…' : `Pay ${priceLabel} · Get your video`}
       </button>
+      <p className="experts-pro-book-note">
+        Private · emailed when ready · full refund if not delivered
+      </p>
     </form>
   );
 }
@@ -167,7 +190,7 @@ export default function VideoRequestClient({
             <ExpertIntroMedia
               name={expert.name}
               imageUrl={expert.imageUrl}
-              introVideoUrl={null}
+              introVideoUrl={expert.introVideoUrl}
               className="experts-pro-media"
               priority
               overlayVariant="minimal"
@@ -182,16 +205,9 @@ export default function VideoRequestClient({
               <p className="experts-pro-lede">
                 A short private video from {firstName} — made for you, emailed when ready.
               </p>
-
-              <div className="experts-pro-price">
-                <p className="experts-pro-price__total">
-                  {priceLabel}
-                  <span>video</span>
-                </p>
-                <p className="experts-pro-price__rate">
-                  Usually ready within {expert.videoRequestSlaDays} days · sent to your email
-                </p>
-              </div>
+              <p className="experts-pro-price__rate experts-pro-video-sla">
+                Usually ready within {expert.videoRequestSlaDays} days · sent to your email
+              </p>
             </div>
 
             {success ? (
@@ -306,16 +322,22 @@ export default function VideoRequestClient({
                   </p>
                 ) : null}
 
-                <div className="experts-pro-form-actions experts-pro-field-anim" style={{ ['--i' as string]: 5 }}>
+                <div className="experts-pro-checkout-wrap experts-pro-field-anim" style={{ ['--i' as string]: 5 }}>
+                  <CheckoutTotal priceLabel={priceLabel} />
+                </div>
+
+                <div className="experts-pro-form-actions experts-pro-field-anim" style={{ ['--i' as string]: 6 }}>
                   <button
                     type="submit"
                     className="experts-pro-book-cta experts-pro-form-submit"
                     disabled={submitting}
                     data-testid="video-request-continue"
                   >
-                    {submitting ? 'Starting…' : `Continue · ${priceLabel}`}
+                    {submitting ? 'Starting…' : 'Continue'}
                   </button>
-                  <p className="experts-pro-book-note">Private video · link by email when ready</p>
+                  <p className="experts-pro-book-note">
+                    Private · emailed when ready · full refund if not delivered
+                  </p>
                 </div>
               </form>
             )}
