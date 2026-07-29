@@ -1237,6 +1237,10 @@ body {
   font-family: inherit;
 }
 
+.experts-pro-field__input::placeholder {
+  color: rgba(255, 255, 255, 0.38);
+}
+
 .experts-pro-field__input:focus {
   outline: none;
   border-color: var(--pro-accent);

@@ -223,6 +223,7 @@ export default function VideoRequestClient({
                     onChange={(e) => setEmail(e.target.value)}
                     className="experts-pro-field__input"
                     autoComplete="email"
+                    placeholder="you@email.com"
                     data-testid="video-request-email"
                   />
                 </label>
@@ -236,6 +237,7 @@ export default function VideoRequestClient({
                     onChange={(e) => setFromName(e.target.value)}
                     className="experts-pro-field__input"
                     autoComplete="name"
+                    placeholder="How they should address you"
                     data-testid="video-request-from"
                   />
                 </label>
@@ -249,6 +251,7 @@ export default function VideoRequestClient({
                     value={recipientName}
                     onChange={(e) => setRecipientName(e.target.value)}
                     className="experts-pro-field__input"
+                    placeholder="Someone else's name, if not you"
                     data-testid="video-request-recipient"
                   />
                 </label>
@@ -279,6 +282,7 @@ export default function VideoRequestClient({
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
                     className="experts-pro-field__input experts-pro-field__textarea"
+                    placeholder={`A few sentences for ${firstName} — context, tone, names, anything to include.`}
                     data-testid="video-request-instructions"
                   />
                 </label>
