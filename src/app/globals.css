@@ -1198,6 +1198,160 @@ body {
   outline-offset: 1px;
 }
 
+/* —— Personal video request form —— */
+.vr-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  margin-top: 0.5rem;
+  max-width: 26rem;
+}
+
+.vr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.vr-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .vr-field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vr-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: 0.01em;
+}
+
+.vr-label-optional {
+  font-weight: 400;
+  color: var(--pro-faint);
+}
+
+.vr-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.875rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #2a2a2a;
+  color: #fff;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.vr-input::placeholder {
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.vr-input:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.vr-input:focus {
+  outline: none;
+  border-color: var(--pro-accent, #b4c5ff);
+  background: #2e2e2e;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pro-accent, #b4c5ff) 22%, transparent);
+}
+
+.vr-textarea {
+  min-height: 7rem;
+  resize: vertical;
+  padding-top: 0.85rem;
+  padding-bottom: 0.85rem;
+}
+
+.vr-field-hint {
+  margin: 0;
+  font-size: 0.6875rem;
+  color: var(--pro-faint);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.vr-occasion-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.vr-occasion-badge {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.vr-occasion-badge:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.vr-occasion-badge:active {
+  transform: scale(0.98);
+}
+
+.vr-occasion-badge--on {
+  border-color: color-mix(in srgb, var(--pro-accent, #b4c5ff) 70%, #fff);
+  background: color-mix(in srgb, var(--pro-accent, #b4c5ff) 18%, transparent);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pro-accent, #b4c5ff) 35%, transparent);
+}
+
+.vr-occasion-badge:focus-visible {
+  outline: 2px solid var(--pro-accent, #b4c5ff);
+  outline-offset: 2px;
+}
+
+.vr-form-submit {
+  width: 100%;
+  margin-top: 0.25rem;
+  border: 0;
+  cursor: pointer;
+}
+
+.vr-form-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.vr-form-error {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #ffb4ab;
+  line-height: 1.4;
+}
+
 .experts-pro-header {
   position: sticky;
   top: 0;

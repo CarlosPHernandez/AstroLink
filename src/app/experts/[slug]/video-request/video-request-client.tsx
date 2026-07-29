@@ -54,9 +54,13 @@ function PayForm({
   }
 
   return (
-    <form onSubmit={handlePay} className="experts-pro-book" style={{ marginTop: '1rem' }}>
+    <form onSubmit={handlePay} className="vr-form">
       <PaymentElement />
-      <button type="submit" className="experts-pro-book-cta" disabled={submitting || !stripe} style={{ marginTop: '1rem', width: '100%', border: 0, cursor: 'pointer' }}>
+      <button
+        type="submit"
+        className="experts-pro-book-cta vr-form-submit"
+        disabled={submitting || !stripe}
+      >
         {submitting ? 'Processing…' : 'Pay · Get your video'}
       </button>
     </form>
@@ -182,7 +186,7 @@ export default function VideoRequestClient({
             </div>
 
             {success ? (
-              <div className="experts-pro-book" data-testid="video-request-success">
+              <div className="vr-form" data-testid="video-request-success">
                 <p className="experts-pro-lede" style={{ marginBottom: 0 }}>
                   You&apos;re set. Check your email for confirmation.
                 </p>
@@ -194,97 +198,122 @@ export default function VideoRequestClient({
               <Elements stripe={stripePromise} options={{ clientSecret }}>
                 <PayForm onError={setError} onSuccess={() => setSuccess(true)} />
                 {error ? (
-                  <p className="experts-pro-book-note" style={{ color: '#ffb4ab' }} role="alert">
+                  <p className="vr-form-error" role="alert">
                     {error}
                   </p>
                 ) : null}
               </Elements>
             ) : (
-              <form onSubmit={startCheckout} className="experts-pro-book" data-testid="video-request-form">
-                <label className="experts-pro-book-note" style={{ display: 'block', marginBottom: '0.75rem' }}>
-                  Email
+              <form onSubmit={startCheckout} className="vr-form" data-testid="video-request-form">
+                <div className="vr-field">
+                  <label htmlFor="vr-email" className="vr-label">
+                    Email
+                  </label>
                   <input
+                    id="vr-email"
                     required
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="experts-pro-input"
+                    className="vr-input"
                     autoComplete="email"
+                    placeholder="you@email.com"
                     data-testid="video-request-email"
                   />
-                </label>
-                <label className="experts-pro-book-note" style={{ display: 'block', marginBottom: '0.75rem' }}>
-                  Your name
-                  <input
-                    required
-                    type="text"
-                    value={fromName}
-                    onChange={(e) => setFromName(e.target.value)}
-                    className="experts-pro-input"
-                    autoComplete="name"
-                    data-testid="video-request-from"
-                  />
-                </label>
-                <label className="experts-pro-book-note" style={{ display: 'block', marginBottom: '0.75rem' }}>
-                  For (optional)
-                  <input
-                    type="text"
-                    value={recipientName}
-                    onChange={(e) => setRecipientName(e.target.value)}
-                    className="experts-pro-input"
-                    data-testid="video-request-recipient"
-                  />
-                </label>
-
-                <p className="experts-pro-section-label" style={{ marginTop: '1rem' }}>
-                  Occasion
-                </p>
-                <div className="experts-pro-chips" role="radiogroup" aria-label="Occasion">
-                  {VIDEO_REQUEST_OCCASIONS.map((key) => (
-                    <button
-                      key={key}
-                      type="button"
-                      role="radio"
-                      aria-checked={occasion === key}
-                      onClick={() => setOccasion(key)}
-                      className={occasion === key ? 'experts-pro-chip-selected' : undefined}
-                      style={
-                        occasion === key
-                          ? { borderColor: 'var(--pro-accent)', color: '#fff' }
-                          : undefined
-                      }
-                    >
-                      {VIDEO_REQUEST_OCCASION_LABELS[key]}
-                    </button>
-                  ))}
                 </div>
 
-                <label className="experts-pro-book-note" style={{ display: 'block', marginTop: '1rem' }}>
-                  What should {firstName} say?
+                <div className="vr-field-row">
+                  <div className="vr-field">
+                    <label htmlFor="vr-from" className="vr-label">
+                      Your name
+                    </label>
+                    <input
+                      id="vr-from"
+                      required
+                      type="text"
+                      value={fromName}
+                      onChange={(e) => setFromName(e.target.value)}
+                      className="vr-input"
+                      autoComplete="name"
+                      placeholder="First name"
+                      data-testid="video-request-from"
+                    />
+                  </div>
+                  <div className="vr-field">
+                    <label htmlFor="vr-recipient" className="vr-label">
+                      For <span className="vr-label-optional">(optional)</span>
+                    </label>
+                    <input
+                      id="vr-recipient"
+                      type="text"
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                      className="vr-input"
+                      placeholder="Who is this for?"
+                      data-testid="video-request-recipient"
+                    />
+                  </div>
+                </div>
+
+                <div className="vr-field">
+                  <span className="vr-label" id="vr-occasion-label">
+                    Occasion
+                  </span>
+                  <div
+                    className="vr-occasion-badges"
+                    role="radiogroup"
+                    aria-labelledby="vr-occasion-label"
+                  >
+                    {VIDEO_REQUEST_OCCASIONS.map((key) => {
+                      const selected = occasion === key;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => setOccasion(key)}
+                          className={
+                            selected ? 'vr-occasion-badge vr-occasion-badge--on' : 'vr-occasion-badge'
+                          }
+                          data-testid={`video-request-occasion-${key}`}
+                        >
+                          {VIDEO_REQUEST_OCCASION_LABELS[key]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="vr-field">
+                  <label htmlFor="vr-instructions" className="vr-label">
+                    What should {firstName} say?
+                  </label>
                   <textarea
+                    id="vr-instructions"
                     required
                     minLength={12}
                     maxLength={1200}
-                    rows={5}
+                    rows={4}
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
-                    className="experts-pro-input"
+                    className="vr-input vr-textarea"
+                    placeholder={`A few sentences for ${firstName} — context, tone, anything to include.`}
                     data-testid="video-request-instructions"
-                    style={{ resize: 'vertical' }}
                   />
-                </label>
+                  <p className="vr-field-hint">{instructions.length}/1200</p>
+                </div>
 
                 {error ? (
-                  <p className="experts-pro-book-note" style={{ color: '#ffb4ab' }} role="alert">
+                  <p className="vr-form-error" role="alert">
                     {error}
                   </p>
                 ) : null}
 
                 <button
                   type="submit"
-                  className="experts-pro-book-cta"
+                  className="experts-pro-book-cta vr-form-submit"
                   disabled={submitting}
-                  style={{ width: '100%', border: 0, cursor: 'pointer' }}
                   data-testid="video-request-continue"
                 >
                   {submitting ? 'Starting…' : `Continue · ${priceLabel}`}
