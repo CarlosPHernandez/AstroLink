@@ -58,6 +58,14 @@ export interface User {
   updated_at: string;
 }
 
+/** Public expert session review (DTO — not a full DB row). */
+export type {
+  ExpertReviewAttributionType,
+  ExpertReviewSource,
+  ExpertReviewStatus,
+  PublicExpertReview,
+} from '@/lib/expert-reviews/types';
+
 // 2. Mentors Table
 export interface Mentor {
   id: string; // UUID
@@ -141,7 +149,7 @@ export interface Transaction {
 // 7. Global Audit Log
 export interface AuditLog {
   id: string; // UUID
-  agent_id: 'APX-01' | 'APX-02' | 'APX-03' | 'APX-04' | 'APX-05' | 'APX-06' | 'APX-08';
+  agent_id: 'APX-01' | 'APX-02' | 'APX-03' | 'APX-04' | 'APX-05' | 'APX-06' | 'APX-08' | 'APX-09';
   event: string;
   ref_id: string | null;
   payload: object | null;

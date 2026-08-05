@@ -250,6 +250,85 @@ export type Database = {
           },
         ]
       }
+      expert_reviews: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          attribution_type: string
+          booking_id: string | null
+          consent_notes: string | null
+          consent_to_publish: boolean
+          created_at: string
+          display_name: string
+          expert_id: string
+          id: string
+          locale: string | null
+          quote: string
+          rating: number
+          reviewer_user_id: string | null
+          source: string
+          status: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          attribution_type: string
+          booking_id?: string | null
+          consent_notes?: string | null
+          consent_to_publish?: boolean
+          created_at?: string
+          display_name: string
+          expert_id: string
+          id?: string
+          locale?: string | null
+          quote: string
+          rating: number
+          reviewer_user_id?: string | null
+          source?: string
+          status?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          attribution_type?: string
+          booking_id?: string | null
+          consent_notes?: string | null
+          consent_to_publish?: boolean
+          created_at?: string
+          display_name?: string
+          expert_id?: string
+          id?: string
+          locale?: string | null
+          quote?: string
+          rating?: number
+          reviewer_user_id?: string | null
+          source?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expert_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expert_reviews_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "mentors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expert_reviews_reviewer_user_id_fkey"
+            columns: ["reviewer_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_deliveries: {
         Row: {
           booking_id: string
@@ -918,6 +997,7 @@ export type Database = {
         | "APX-05"
         | "APX-06"
         | "APX-08"
+        | "APX-09"
       bio_risk_rating: "low" | "medium" | "high"
       booking_status:
         | "pending_payment"
@@ -1069,6 +1149,7 @@ export const Constants = {
         "APX-05",
         "APX-06",
         "APX-08",
+        "APX-09",
       ],
       bio_risk_rating: ["low", "medium", "high"],
       booking_status: [
