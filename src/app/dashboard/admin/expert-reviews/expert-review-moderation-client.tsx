@@ -4,8 +4,10 @@ import Link from 'next/link';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 const REVIEW_STATUSES = ['pending', 'approved', 'hidden', 'withdrawn'] as const;
+const VERDICTS = ['', 'clear', 'flagged', 'error'] as const;
 
 type ReviewStatus = (typeof REVIEW_STATUSES)[number];
+type VerdictFilter = (typeof VERDICTS)[number];
 
 type ExpertReviewRow = {
   id: string;
@@ -22,6 +24,12 @@ type ExpertReviewRow = {
   created_at: string;
   approved_at: string | null;
   approved_by: string | null;
+  auto_published?: boolean;
+  moderation_verdict?: string;
+  moderation_reason?: string | null;
+  moderation_flags?: string[] | null;
+  moderation_json?: unknown;
+  moderated_at?: string | null;
   mentors: { id: string; full_name: string; slug: string } | null;
   bookings: { status: string } | null;
 };
@@ -38,6 +46,8 @@ function formatDate(iso: string): string {
 
 export default function ExpertReviewModerationClient() {
   const [statusFilter, setStatusFilter] = useState<ReviewStatus>('pending');
+  const [verdictFilter, setVerdictFilter] = useState<VerdictFilter>('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [reviews, setReviews] = useState<ExpertReviewRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +59,9 @@ export default function ExpertReviewModerationClient() {
     setError(null);
     setActionMessage(null);
     try {
-      const response = await fetch(`/api/admin/expert-reviews?status=${encodeURIComponent(statusFilter)}`);
+      const params = new URLSearchParams({ status: statusFilter });
+      if (verdictFilter) params.set('verdict', verdictFilter);
+      const response = await fetch(`/api/admin/expert-reviews?${params.toString()}`);
       const payload = (await response.json()) as {
         success?: boolean;
         reviews?: ExpertReviewRow[];
@@ -64,7 +76,7 @@ export default function ExpertReviewModerationClient() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, verdictFilter]);
 
   useEffect(() => {
     void fetchReviews();
@@ -102,23 +114,43 @@ export default function ExpertReviewModerationClient() {
 
   const statusSelect = useMemo(
     () => (
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <div>
-          <label htmlFor="review-status" className="text-xs uppercase tracking-widest text-on-surface-variant">
-            Filter status
-          </label>
-          <select
-            id="review-status"
-            className="mt-1 block w-full sm:w-auto rounded-md border border-outline-variant bg-surface p-2 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value as ReviewStatus)}
-          >
-            {REVIEW_STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div>
+            <label htmlFor="review-status" className="text-xs uppercase tracking-widest text-on-surface-variant">
+              Filter status
+            </label>
+            <select
+              id="review-status"
+              className="mt-1 block w-full sm:w-auto rounded-md border border-outline-variant bg-surface p-2 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value as ReviewStatus)}
+            >
+              {REVIEW_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="review-verdict" className="text-xs uppercase tracking-widest text-on-surface-variant">
+              AI verdict
+            </label>
+            <select
+              id="review-verdict"
+              className="mt-1 block w-full sm:w-auto rounded-md border border-outline-variant bg-surface p-2 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+              value={verdictFilter}
+              onChange={(event) => setVerdictFilter(event.target.value as VerdictFilter)}
+            >
+              <option value="">all</option>
+              {VERDICTS.filter(Boolean).map((verdict) => (
+                <option key={verdict} value={verdict}>
+                  {verdict}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <button
           type="button"
@@ -130,7 +162,7 @@ export default function ExpertReviewModerationClient() {
         </button>
       </div>
     ),
-    [fetchReviews, loading, statusFilter],
+    [fetchReviews, loading, statusFilter, verdictFilter],
   );
 
   return (
@@ -177,87 +209,141 @@ export default function ExpertReviewModerationClient() {
                     <th className="px-3 py-2">Quote</th>
                     <th className="px-3 py-2">Display name</th>
                     <th className="px-3 py-2">Consent</th>
+                    <th className="px-3 py-2">AI verdict</th>
                     <th className="px-3 py-2">Status</th>
                     <th className="px-3 py-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
                   {reviews.map((review) => (
-                    <tr key={review.id}>
-                      <td className="px-3 py-3 align-top">
-                        <div className="font-medium text-on-surface">
-                          {review.mentors?.full_name ?? 'Unknown expert'}
-                        </div>
-                        <div className="text-xs text-on-surface-variant">
-                          {review.mentors?.slug ?? review.expert_id}
-                        </div>
-                      </td>
-                      <td className="px-3 py-3 align-top">
-                        <div>{review.booking_id ?? 'None'}</div>
-                        <div className="text-xs text-on-surface-variant">{review.bookings?.status ?? 'unknown'}</div>
-                      </td>
-                      <td className="px-3 py-3 align-top">{review.rating}</td>
-                      <td className="px-3 py-3 align-top max-w-[300px] break-words text-sm text-on-surface-variant">
-                        {review.quote}
-                      </td>
-                      <td className="px-3 py-3 align-top">
-                        <div>{review.display_name}</div>
-                        <div className="text-xs text-on-surface-variant">{review.attribution_type}</div>
-                      </td>
-                      <td className="px-3 py-3 align-top">
-                        <span
-                          className={`rounded-full py-1 px-2 text-[11px] uppercase tracking-widest ${
-                            review.consent_to_publish
-                              ? 'bg-success/15 text-on-surface'
-                              : 'bg-error/15 text-on-surface'
-                          }`}
-                        >
-                          {review.consent_to_publish ? 'Yes' : 'No'}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 align-top">
-                        <span className="rounded-full bg-surface py-1 px-2 text-[11px] uppercase tracking-widest text-on-surface-variant">
-                          {review.status}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 align-top space-y-2">
-                        <div className="grid gap-2">
-                          <button
-                            type="button"
-                            className="rounded-md bg-success px-3 py-2 text-xs font-semibold text-black hover:bg-success/90 disabled:opacity-40"
-                            onClick={() => void handleAction(review.id, 'approve')}
-                            disabled={
-                              busyReviewId === review.id ||
-                              review.status === 'approved' ||
-                              !review.consent_to_publish
-                            }
-                            title={
-                              !review.consent_to_publish
-                                ? 'Cannot approve without reviewer consent to publish'
-                                : undefined
-                            }
+                    <React.Fragment key={review.id}>
+                      <tr>
+                        <td className="px-3 py-3 align-top">
+                          <div className="font-medium text-on-surface">
+                            {review.mentors?.full_name ?? 'Unknown expert'}
+                          </div>
+                          <div className="text-xs text-on-surface-variant">
+                            {review.mentors?.slug ?? review.expert_id}
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          <div className="text-xs break-all">{review.booking_id ?? 'None'}</div>
+                          <div className="text-xs text-on-surface-variant">
+                            {review.bookings?.status ?? 'unknown'}
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 align-top">{review.rating}</td>
+                        <td className="px-3 py-3 align-top max-w-[280px] break-words text-sm text-on-surface-variant">
+                          {review.quote}
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          <div>{review.display_name}</div>
+                          <div className="text-xs text-on-surface-variant">{review.attribution_type}</div>
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          <span
+                            className={`rounded-full py-1 px-2 text-[11px] uppercase tracking-widest ${
+                              review.consent_to_publish
+                                ? 'bg-success/15 text-on-surface'
+                                : 'bg-error/15 text-on-surface'
+                            }`}
                           >
-                            Approve
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded-md bg-warning px-3 py-2 text-xs font-semibold text-black hover:bg-warning/90 disabled:opacity-40"
-                            onClick={() => void handleAction(review.id, 'hide')}
-                            disabled={busyReviewId === review.id || review.status === 'hidden'}
-                          >
-                            Hide
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded-md bg-error px-3 py-2 text-xs font-semibold text-black hover:bg-error/90 disabled:opacity-40"
-                            onClick={() => void handleAction(review.id, 'withdraw')}
-                            disabled={busyReviewId === review.id || review.status === 'withdrawn'}
-                          >
-                            Withdraw
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                            {review.consent_to_publish ? 'Yes' : 'No'}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          <div className="flex flex-col gap-1">
+                            <span
+                              className={`rounded-full py-1 px-2 text-[11px] uppercase tracking-widest w-fit ${
+                                review.moderation_verdict === 'flagged' ||
+                                review.moderation_verdict === 'error'
+                                  ? 'bg-warning/20 text-on-surface'
+                                  : 'bg-surface text-on-surface-variant'
+                              }`}
+                            >
+                              {review.moderation_verdict ?? '—'}
+                            </span>
+                            {review.auto_published ? (
+                              <span className="text-[10px] uppercase tracking-widest text-success">
+                                Auto-published
+                              </span>
+                            ) : null}
+                            {review.moderation_reason ? (
+                              <p className="text-xs text-on-surface-variant max-w-[180px]">
+                                {review.moderation_reason}
+                              </p>
+                            ) : null}
+                            {review.moderation_flags && review.moderation_flags.length > 0 ? (
+                              <p className="text-[10px] text-on-surface-variant">
+                                {review.moderation_flags.join(', ')}
+                              </p>
+                            ) : null}
+                            <button
+                              type="button"
+                              className="text-left text-[11px] text-primary underline"
+                              onClick={() =>
+                                setExpandedId((id) => (id === review.id ? null : review.id))
+                              }
+                            >
+                              {expandedId === review.id ? 'Hide diagnosis' : 'Full diagnosis'}
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          <span className="rounded-full bg-surface py-1 px-2 text-[11px] uppercase tracking-widest text-on-surface-variant">
+                            {review.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 align-top space-y-2">
+                          <div className="grid gap-2">
+                            <button
+                              type="button"
+                              className="rounded-md bg-success px-3 py-2 text-xs font-semibold text-black hover:bg-success/90 disabled:opacity-40"
+                              onClick={() => void handleAction(review.id, 'approve')}
+                              disabled={
+                                busyReviewId === review.id ||
+                                review.status === 'approved' ||
+                                !review.consent_to_publish
+                              }
+                              title={
+                                !review.consent_to_publish
+                                  ? 'Cannot approve without reviewer consent to publish'
+                                  : undefined
+                              }
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-md bg-warning px-3 py-2 text-xs font-semibold text-black hover:bg-warning/90 disabled:opacity-40"
+                              onClick={() => void handleAction(review.id, 'hide')}
+                              disabled={busyReviewId === review.id || review.status === 'hidden'}
+                            >
+                              Hide
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-md bg-error px-3 py-2 text-xs font-semibold text-black hover:bg-error/90 disabled:opacity-40"
+                              onClick={() => void handleAction(review.id, 'withdraw')}
+                              disabled={
+                                busyReviewId === review.id || review.status === 'withdrawn'
+                              }
+                            >
+                              Withdraw
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {expandedId === review.id ? (
+                        <tr>
+                          <td colSpan={9} className="px-3 py-3 bg-surface">
+                            <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words text-on-surface-variant">
+                              {JSON.stringify(review.moderation_json ?? {}, null, 2)}
+                            </pre>
+                          </td>
+                        </tr>
+                      ) : null}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

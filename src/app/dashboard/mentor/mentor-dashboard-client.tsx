@@ -33,6 +33,7 @@ import { MentorPageHeader } from '@/app/dashboard/mentor/mentor-page-header';
 import { MentorPayoutsPanel } from '@/app/dashboard/mentor/mentor-payouts-panel';
 import { MentorSettingsPanel } from '@/app/dashboard/mentor/mentor-settings-panel';
 import { MentorVideoRequestsPanel } from '@/app/dashboard/mentor/mentor-video-requests-panel';
+import { MentorSessionFeedbackPanel } from '@/app/dashboard/mentor/mentor-session-feedback-panel';
 import { partitionMentorBookings, type MentorBookingView } from '@/lib/mentor-booking-partition';
 import type { MentorEarningRow, MentorEarningsSummary } from '@/lib/mentor-earnings-types';
 import { resolvePayoutNavStatus } from '@/lib/mentor-payouts-config';
@@ -357,25 +358,28 @@ export default function MentorDashboardClient({
 
           <main>
             {activeTab === 'overview' && (
-              <MentorOverviewPanel
-                firstName={firstName}
-                nextSession={nextUpcoming}
-                upcoming={upcoming.map((b) => ({
-                  ...b,
-                  briefing: resolveBriefing(b),
-                }))}
-                pastCount={past.length}
-                earningsSummary={earningsSummary}
-                payoutNavStatus={payoutNavStatus}
-                listing={{
-                  complianceStatus: profile.complianceStatus,
-                  isListed: profile.isListed,
-                  slug: profile.slug,
-                }}
-                profileComplete={profileComplete}
-                setupSteps={setupSteps}
-                onNavigate={setActiveTab}
-              />
+              <div className="md-stack">
+                <MentorOverviewPanel
+                  firstName={firstName}
+                  nextSession={nextUpcoming}
+                  upcoming={upcoming.map((b) => ({
+                    ...b,
+                    briefing: resolveBriefing(b),
+                  }))}
+                  pastCount={past.length}
+                  earningsSummary={earningsSummary}
+                  payoutNavStatus={payoutNavStatus}
+                  listing={{
+                    complianceStatus: profile.complianceStatus,
+                    isListed: profile.isListed,
+                    slug: profile.slug,
+                  }}
+                  profileComplete={profileComplete}
+                  setupSteps={setupSteps}
+                  onNavigate={setActiveTab}
+                />
+                <MentorSessionFeedbackPanel />
+              </div>
             )}
 
             {activeTab === 'videos' && <MentorVideoRequestsPanel />}
