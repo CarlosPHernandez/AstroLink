@@ -20,10 +20,105 @@ export type SubmitExpertReviewInput = {
   consentNotes?: string | null;
 };
 
+export type SubmitExpertReviewResult = {
+  reviewId: string;
+  status: 'pending' | 'approved';
+  autoPublished: boolean;
+  moderationVerdict: 'clear' | 'flagged' | 'error';
+};
+
+export type ReviewModerationVerdict = 'clear' | 'flagged' | 'error';
+
+export type ReviewModerationResult = {
+  verdict: ReviewModerationVerdict;
+  reason: string;
+  quote_safe: boolean;
+  display_name_safe: boolean;
+  recommended_display_name: string;
+  policy_flags: string[];
+};
+
+/** Hard public-safety flags — anything else (tone, criticism) stays clear. */
+const HARD_POLICY_FLAGS = new Set([
+  'pii',
+  'harassment',
+  'hate',
+  'hate_speech',
+  'contact_info',
+  'contact',
+  'doxxing',
+  'abuse',
+  'threat',
+  'sexual',
+  'illegal',
+]);
+
+export function isAutoPublishEligible(
+  moderation: ReviewModerationResult,
+  consentToPublish: boolean,
+): boolean {
+  if (!consentToPublish) return false;
+  if (moderation.verdict !== 'clear') return false;
+  if (moderation.quote_safe !== true || moderation.display_name_safe !== true) return false;
+  const flags = Array.isArray(moderation.policy_flags) ? moderation.policy_flags : [];
+  for (const flag of flags) {
+    const normalized = String(flag).trim().toLowerCase().replace(/\s+/g, '_');
+    if (HARD_POLICY_FLAGS.has(normalized)) return false;
+  }
+  return true;
+}
+
+function normalizeModeration(raw: {
+  verdict?: unknown;
+  reason?: unknown;
+  quote_safe?: unknown;
+  display_name_safe?: unknown;
+  recommended_display_name?: unknown;
+  policy_flags?: unknown;
+}): ReviewModerationResult {
+  const quoteSafe = raw.quote_safe === true;
+  const displayNameSafe = raw.display_name_safe === true;
+  const flags = Array.isArray(raw.policy_flags)
+    ? raw.policy_flags.filter((f): f is string => typeof f === 'string')
+    : [];
+  const hasHardFlag = flags.some((f) =>
+    HARD_POLICY_FLAGS.has(String(f).trim().toLowerCase().replace(/\s+/g, '_')),
+  );
+
+  let verdict: ReviewModerationVerdict = 'flagged';
+  if (raw.verdict === 'clear' || raw.verdict === 'flagged' || raw.verdict === 'error') {
+    verdict = raw.verdict;
+  } else if (quoteSafe && displayNameSafe && !hasHardFlag) {
+    verdict = 'clear';
+  }
+
+  // Safety: never treat as clear if quote/name unsafe or hard flags present.
+  if (verdict === 'clear' && (!quoteSafe || !displayNameSafe || hasHardFlag)) {
+    verdict = 'flagged';
+  }
+
+  return {
+    verdict,
+    reason:
+      typeof raw.reason === 'string' && raw.reason.trim()
+        ? raw.reason.trim()
+        : verdict === 'clear'
+          ? 'Safe for public display.'
+          : 'Needs human review before public display.',
+    quote_safe: quoteSafe,
+    display_name_safe: displayNameSafe,
+    recommended_display_name:
+      typeof raw.recommended_display_name === 'string' && raw.recommended_display_name.trim()
+        ? raw.recommended_display_name.trim()
+        : 'Verified Astro-Link user',
+    policy_flags: flags,
+  };
+}
+
 export class ReviewAgent {
   private agentId = 'APX-09' as const;
 
-  async submitReview(input: SubmitExpertReviewInput): Promise<string> {
+  async submitReview(input: SubmitExpertReviewInput): Promise<SubmitExpertReviewResult> {
     const bookingId = input.bookingId?.trim();
     const quote = input.quote?.trim();
     const displayName = input.displayName?.trim();
@@ -74,21 +169,16 @@ export class ReviewAgent {
       throw new Error('A review already exists for this booking.');
     }
 
-    const moderation = await this.moderateReview({
+    // Screen only — never block store on LLM soft denials.
+    const moderation = await this.screenReview({
       quote,
       displayName,
       reviewerUserId: input.reviewerUserId,
-      consentToPublish: input.consentToPublish,
     });
 
-    // Strict equality: LLM/JSON may coerce or return non-booleans; only explicit true allows store.
-    if (moderation.allowed !== true) {
-      const reason =
-        typeof moderation.reason === 'string' && moderation.reason.trim()
-          ? moderation.reason.trim()
-          : 'Content did not pass safety checks.';
-      throw new Error(`Review failed moderation: ${reason}`);
-    }
+    const now = new Date().toISOString();
+    const autoPublish = isAutoPublishEligible(moderation, input.consentToPublish);
+    const status: 'pending' | 'approved' = autoPublish ? 'approved' : 'pending';
 
     const { data: inserted, error: insertError } = await supabaseAdmin
       .from('expert_reviews')
@@ -102,16 +192,23 @@ export class ReviewAgent {
         attribution_type: input.attributionType,
         consent_to_publish: input.consentToPublish,
         consent_notes: input.consentNotes ?? null,
-        status: 'pending',
+        status,
         source: input.source ?? 'post_session_survey',
         locale: input.locale ?? null,
+        moderation_verdict: moderation.verdict,
+        moderation_reason: moderation.reason,
+        moderation_flags: moderation.policy_flags,
+        moderation_json: moderation as unknown as Json,
+        moderated_at: now,
+        auto_published: autoPublish,
+        approved_at: autoPublish ? now : null,
+        approved_by: autoPublish ? 'APX-09' : null,
       })
       .select('id')
       .single();
 
     if (insertError || !inserted) {
       const msg = insertError?.message ?? 'unknown error';
-      // Unique index expert_reviews_booking_id_uidx — concurrent double-submit race.
       if (/duplicate key|unique constraint|expert_reviews_booking_id/i.test(msg)) {
         throw new Error('A review already exists for this booking.');
       }
@@ -122,11 +219,25 @@ export class ReviewAgent {
       reviewId: inserted.id,
       expertId: booking.mentor_id,
       reviewerUserId: input.reviewerUserId,
-      status: 'pending',
+      status,
+      autoPublished: autoPublish,
       moderation,
     });
 
-    return inserted.id;
+    if (autoPublish) {
+      await this.logAudit('EXPERT_REVIEW_AUTO_APPROVED', inserted.id, {
+        expertId: booking.mentor_id,
+        approvedAt: now,
+      });
+      revalidateExpertReviews(booking.mentor_id);
+    }
+
+    return {
+      reviewId: inserted.id,
+      status,
+      autoPublished: autoPublish,
+      moderationVerdict: moderation.verdict,
+    };
   }
 
   async approveReview(reviewId: string, approvedBy: string): Promise<void> {
@@ -135,7 +246,6 @@ export class ReviewAgent {
     }
     const now = new Date().toISOString();
 
-    // Do not force consent — only publish when the reviewer already consented.
     const { data: existing, error: lookupError } = await supabaseAdmin
       .from('expert_reviews')
       .select('id, expert_id, consent_to_publish, status')
@@ -160,6 +270,7 @@ export class ReviewAgent {
         status: 'approved',
         approved_at: now,
         approved_by: approvedBy,
+        auto_published: false,
       })
       .eq('id', reviewId)
       .eq('consent_to_publish', true)
@@ -235,83 +346,95 @@ export class ReviewAgent {
     revalidateExpertReviews(data.expert_id);
   }
 
-  private async moderateReview(input: {
+  /**
+   * Public-safety screen only. Fail-open on LLM errors (verdict=error, still store).
+   * Critical/negative feedback without policy issues should return clear.
+   */
+  private async screenReview(input: {
     quote: string;
     displayName: string;
     reviewerUserId: string;
-    consentToPublish: boolean;
-  }) {
-    const systemInstruction = `You are the AstroLink review safety moderator (APX-09). Assess whether the review quote and display name are safe for public display on an expert profile page. Do not invent any new content.
+  }): Promise<ReviewModerationResult> {
+    try {
+      const raw = await callLlmWithBackoff(() =>
+        generateStructuredJson<{
+          verdict: string;
+          reason: string;
+          quote_safe: boolean;
+          display_name_safe: boolean;
+          recommended_display_name: string;
+          policy_flags: string[];
+        }>({
+          model: llmFlashModel,
+          rateLimitKey: input.reviewerUserId,
+          systemInstruction: `You are APX-09, AstroLink's public-safety screener for expert session reviews.
+
+You do NOT block storage. You classify whether the quote and display name are safe for the PUBLIC expert profile.
 
 Return JSON only with:
-- allowed: boolean
-- reason: string
+- verdict: "clear" | "flagged" (never invent other values)
+- reason: short explanation for admins
 - quote_safe: boolean
 - display_name_safe: boolean
-- recommended_display_name: string
-- policy_flags: string[]
-`;
+- recommended_display_name: string (safe alternative if display name is too specific)
+- policy_flags: string[] (use: pii, harassment, hate, contact_info, doxxing, abuse — empty if none)
 
-    const prompt = `Review the expert feedback text and the display name.
+Rules:
+- Critical, negative, or low-star feedback is OK for public if it is not abusive. Prefer verdict=clear for constructive criticism.
+- Flag PII, contact details, schools/employers as identifiers, hate, harassment, threats, or doxxing.
+- Do not invent or rewrite the quote. Do not sanitize silently.
+- If the quote is safe but the display name is too identifying, set display_name_safe=false, verdict=flagged, and suggest recommended_display_name.
+`,
+          prompt: `Screen this review for public expert-profile display.
 
 Quote:
 ${input.quote}
 
 Display name:
 ${input.displayName}
-
-Guidelines:
-- Flag PII, private data, personal identifiers, schools, employers, or contact details.
-- Flag hate speech, harassment, or abusive language.
-- Flag anything that would make the quote unsafe for publication.
-- Prefer safe, anonymized attribution if the original display name is too specific.
-- If the quote is safe but the display name is unsafe, suggest a generic alternative.
-
-If the review is safe to store as pending but not yet safe to publish, set allowed=false and explain why. Do not sanitize silently.
-`;
-
-    return callLlmWithBackoff(() =>
-      generateStructuredJson<{
-        allowed: boolean;
-        reason: string;
-        quote_safe: boolean;
-        display_name_safe: boolean;
-        recommended_display_name: string;
-        policy_flags: string[];
-      }>({
-        model: llmFlashModel,
-        rateLimitKey: input.reviewerUserId,
-        systemInstruction,
-        prompt,
-        audit: {
-          agentId: 'APX-09',
-          operation: 'expert_review_moderation',
-          refId: input.reviewerUserId,
-        },
-        schema: {
-          type: 'OBJECT',
-          properties: {
-            allowed: { type: 'BOOLEAN' },
-            reason: { type: 'STRING' },
-            quote_safe: { type: 'BOOLEAN' },
-            display_name_safe: { type: 'BOOLEAN' },
-            recommended_display_name: { type: 'STRING' },
-            policy_flags: {
-              type: 'ARRAY',
-              items: { type: 'STRING' },
-            },
+`,
+          audit: {
+            agentId: 'APX-09',
+            operation: 'expert_review_moderation',
+            refId: input.reviewerUserId,
           },
-          required: [
-            'allowed',
-            'reason',
-            'quote_safe',
-            'display_name_safe',
-            'recommended_display_name',
-            'policy_flags',
-          ],
-        },
-      }),
-    );
+          schema: {
+            type: 'OBJECT',
+            properties: {
+              verdict: { type: 'STRING' },
+              reason: { type: 'STRING' },
+              quote_safe: { type: 'BOOLEAN' },
+              display_name_safe: { type: 'BOOLEAN' },
+              recommended_display_name: { type: 'STRING' },
+              policy_flags: {
+                type: 'ARRAY',
+                items: { type: 'STRING' },
+              },
+            },
+            required: [
+              'verdict',
+              'reason',
+              'quote_safe',
+              'display_name_safe',
+              'recommended_display_name',
+              'policy_flags',
+            ],
+          },
+        }),
+      );
+
+      return normalizeModeration(raw);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Moderation unavailable';
+      return {
+        verdict: 'error',
+        reason: `Screening failed: ${message}. Held for human review.`,
+        quote_safe: false,
+        display_name_safe: false,
+        recommended_display_name: 'Verified Astro-Link user',
+        policy_flags: ['moderation_error'],
+      };
+    }
   }
 
   private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {

@@ -10,7 +10,9 @@ const mockCallLlmWithBackoff = vi.hoisted(() => vi.fn());
 const mockRevalidateExpertReviews = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/llm', () => ({
-  callLlmWithBackoff: () => mockCallLlmWithBackoff(),
+  callLlmWithBackoff: (fn: () => Promise<unknown>) => mockCallLlmWithBackoff(fn),
+  generateStructuredJson: vi.fn(),
+  llmFlashModel: 'test-model',
 }));
 
 vi.mock('@/lib/expert-reviews', () => ({
@@ -52,9 +54,34 @@ vi.mock('@/lib/supabase', () => ({
   },
 }));
 
-import { ReviewAgent } from '@/services/agents/review-agent';
+import { isAutoPublishEligible, ReviewAgent } from '@/services/agents/review-agent';
 
 const bookingId = 'booking-0000-0000-0000-000000000001';
+
+const clearModeration = {
+  verdict: 'clear',
+  reason: 'Safe to publish',
+  quote_safe: true,
+  display_name_safe: true,
+  recommended_display_name: 'Verified Astro-Link user',
+  policy_flags: [] as string[],
+};
+
+describe('isAutoPublishEligible', () => {
+  it('requires consent and clear safe screens', () => {
+    expect(isAutoPublishEligible(clearModeration, true)).toBe(true);
+    expect(isAutoPublishEligible(clearModeration, false)).toBe(false);
+    expect(
+      isAutoPublishEligible({ ...clearModeration, verdict: 'flagged' }, true),
+    ).toBe(false);
+    expect(
+      isAutoPublishEligible(
+        { ...clearModeration, policy_flags: ['pii'] },
+        true,
+      ),
+    ).toBe(false);
+  });
+});
 
 describe('ReviewAgent', () => {
   beforeEach(() => {
@@ -71,20 +98,19 @@ describe('ReviewAgent', () => {
     mockReviewSelect.mockResolvedValue({ data: [], error: null });
     mockReviewInsert.mockResolvedValue({ data: { id: 'review-1' }, error: null });
     mockAuditInsert.mockResolvedValue({ error: null });
-    mockCallLlmWithBackoff.mockResolvedValue({
-      allowed: true,
-      reason: 'Safe to publish',
-      quote_safe: true,
-      display_name_safe: true,
-      recommended_display_name: 'Verified Astro-Link user',
-      policy_flags: [],
+    mockCallLlmWithBackoff.mockImplementation(async (fn: () => Promise<unknown>) => {
+      if (typeof fn === 'function') {
+        // screenReview passes a thunk that calls generateStructuredJson;
+        // we short-circuit the whole callLlmWithBackoff result.
+      }
+      return clearModeration;
     });
   });
 
-  it('creates a pending review for a completed booking', async () => {
+  it('creates a review and auto-publishes when clear + consent', async () => {
     const agent = new ReviewAgent();
 
-    const reviewId = await agent.submitReview({
+    const result = await agent.submitReview({
       bookingId,
       reviewerUserId: 'mentee-1',
       rating: 5,
@@ -94,14 +120,84 @@ describe('ReviewAgent', () => {
       consentToPublish: true,
     });
 
-    expect(reviewId).toBe('review-1');
+    expect(result).toEqual({
+      reviewId: 'review-1',
+      status: 'approved',
+      autoPublished: true,
+      moderationVerdict: 'clear',
+    });
     expect(mockReviewInsert).toHaveBeenCalled();
+    expect(mockRevalidateExpertReviews).toHaveBeenCalledWith('mentor-1');
     expect(mockAuditInsert).toHaveBeenCalledWith(
       expect.objectContaining({
         agent_id: 'APX-09',
         event: 'EXPERT_REVIEW_SUBMITTED',
       }),
     );
+  });
+
+  it('still stores flagged reviews as pending (does not block mentee)', async () => {
+    mockCallLlmWithBackoff.mockResolvedValueOnce({
+      verdict: 'flagged',
+      reason: 'Possible PII in quote',
+      quote_safe: false,
+      display_name_safe: true,
+      recommended_display_name: 'Verified Astro-Link user',
+      policy_flags: ['pii'],
+    });
+
+    const agent = new ReviewAgent();
+    const result = await agent.submitReview({
+      bookingId,
+      reviewerUserId: 'mentee-1',
+      rating: 2,
+      quote: 'This session was extremely helpful and actionable.',
+      displayName: 'Verified Astro-Link user',
+      attributionType: 'anonymous',
+      consentToPublish: true,
+    });
+
+    expect(result.status).toBe('pending');
+    expect(result.autoPublished).toBe(false);
+    expect(result.moderationVerdict).toBe('flagged');
+    expect(mockReviewInsert).toHaveBeenCalled();
+    expect(mockRevalidateExpertReviews).not.toHaveBeenCalled();
+  });
+
+  it('keeps clear reviews pending when consent is false', async () => {
+    const agent = new ReviewAgent();
+    const result = await agent.submitReview({
+      bookingId,
+      reviewerUserId: 'mentee-1',
+      rating: 5,
+      quote: 'This session was extremely helpful and actionable.',
+      displayName: 'Verified Astro-Link user',
+      attributionType: 'anonymous',
+      consentToPublish: false,
+    });
+
+    expect(result.status).toBe('pending');
+    expect(result.autoPublished).toBe(false);
+    expect(mockReviewInsert).toHaveBeenCalled();
+  });
+
+  it('stores as pending with error verdict when LLM fails', async () => {
+    mockCallLlmWithBackoff.mockRejectedValueOnce(new Error('quota'));
+
+    const agent = new ReviewAgent();
+    const result = await agent.submitReview({
+      bookingId,
+      reviewerUserId: 'mentee-1',
+      rating: 5,
+      quote: 'This session was extremely helpful and actionable.',
+      displayName: 'Verified Astro-Link user',
+      attributionType: 'anonymous',
+      consentToPublish: true,
+    });
+
+    expect(result.status).toBe('pending');
+    expect(result.moderationVerdict).toBe('error');
+    expect(mockReviewInsert).toHaveBeenCalled();
   });
 
   it('rejects when the booking is not completed', async () => {
@@ -190,30 +286,5 @@ describe('ReviewAgent', () => {
       }),
     );
     expect(mockRevalidateExpertReviews).toHaveBeenCalledWith('mentor-1');
-  });
-
-  it('rejects LLM moderation when allowed is not strictly true', async () => {
-    mockCallLlmWithBackoff.mockResolvedValueOnce({
-      allowed: 'false',
-      reason: 'Looks fine',
-      quote_safe: true,
-      display_name_safe: true,
-      recommended_display_name: 'Verified Astro-Link user',
-      policy_flags: [],
-    });
-    const agent = new ReviewAgent();
-
-    await expect(
-      agent.submitReview({
-        bookingId,
-        reviewerUserId: 'mentee-1',
-        rating: 5,
-        quote: 'This session was extremely helpful and actionable.',
-        displayName: 'Verified Astro-Link user',
-        attributionType: 'anonymous',
-        consentToPublish: true,
-      }),
-    ).rejects.toThrow('Review failed moderation');
-    expect(mockReviewInsert).not.toHaveBeenCalled();
   });
 });
