@@ -25,6 +25,7 @@ import {
   isJoinRoomEnabled,
   joinRoomAvailabilityTitle,
 } from '@/lib/join-window';
+import PostSessionReviewClient from './post-session-review-client';
 
 interface SessionData {
   userId: string;
@@ -303,13 +304,16 @@ export default function MenteeDashboardClient({
           </div>
         </div>
         {booking.status === 'completed' ? (
-          <DashboardSessionTranscript
-            bookingId={booking.id}
-            mentorName={booking.mentorName}
-            menteeName={session.fullName}
-            viewerRole="mentee"
-            testIdPrefix={`booking-past-${booking.id}`}
-          />
+          <>
+            <DashboardSessionTranscript
+              bookingId={booking.id}
+              mentorName={booking.mentorName}
+              menteeName={session.fullName}
+              viewerRole="mentee"
+              testIdPrefix={`booking-past-${booking.id}`}
+            />
+            <PostSessionReviewClient bookingId={booking.id} />
+          </>
         ) : null}
       </div>
     );

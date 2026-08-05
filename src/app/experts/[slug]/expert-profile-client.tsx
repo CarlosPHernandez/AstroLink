@@ -3,11 +3,13 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { DurationStepper } from '@/components/experts/duration-stepper';
+import { ExpertReviews } from '@/components/experts/expert-reviews';
 import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import { computeDurationPriceCents } from '@/lib/booking-pricing';
 import { getExpertBookHref } from '@/lib/expert-book-href';
 import type { ExpertCta } from '@/lib/expert-cta';
+import type { PublicExpertReview } from '@/lib/expert-reviews';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import {
   SESSION_DURATION_DEFAULT,
@@ -25,10 +27,12 @@ export default function ExpertProfileClient({
   expert,
   session,
   expertCta,
+  reviews = [],
 }: {
   expert: ListedExpert;
   session: SessionData | null;
   expertCta: ExpertCta;
+  reviews?: PublicExpertReview[];
 }) {
   const [bioExpanded, setBioExpanded] = useState(false);
   const [durationMinutes, setDurationMinutes] = useState(SESSION_DURATION_DEFAULT);
@@ -204,6 +208,8 @@ export default function ExpertProfileClient({
             </div>
           </section>
         ) : null}
+
+        <ExpertReviews reviews={reviews} />
 
         <section className="experts-pro-trust">
           <p className="experts-pro-section-label">The AstroLink standard</p>
