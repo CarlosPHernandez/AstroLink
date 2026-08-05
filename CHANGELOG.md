@@ -2,6 +2,20 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.11.1.0] - 2026-08-05
+
+### Added
+- APX-09 **non-blocking screening:** mentees can always submit valid feedback; LLM diagnosis is stored for admins.
+- Clear + consented reviews may **auto-publish** to the public profile (`approved_by = APX-09`).
+- Mentor dashboard **Session feedback** panel (private view of guest reviews, including flagged items).
+- Admin queue shows AI verdict, reason, flags, and full diagnosis JSON.
+
+### Changed
+- Critical or negative tone is not treated as a safety reject; only policy issues (PII, hate, etc.) flag for human review.
+
+### Fixed
+- Mentee submit no longer fails when the safety model marks content unsafe for public display.
+
 ## [0.11.0.0] - 2026-08-05
 
 ### Added
