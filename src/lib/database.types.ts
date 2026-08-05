@@ -255,6 +255,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           attribution_type: string
+          auto_published: boolean
           booking_id: string | null
           consent_notes: string | null
           consent_to_publish: boolean
@@ -263,6 +264,11 @@ export type Database = {
           expert_id: string
           id: string
           locale: string | null
+          moderated_at: string | null
+          moderation_flags: string[]
+          moderation_json: Json | null
+          moderation_reason: string | null
+          moderation_verdict: string
           quote: string
           rating: number
           reviewer_user_id: string | null
@@ -273,6 +279,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           attribution_type: string
+          auto_published?: boolean
           booking_id?: string | null
           consent_notes?: string | null
           consent_to_publish?: boolean
@@ -281,6 +288,11 @@ export type Database = {
           expert_id: string
           id?: string
           locale?: string | null
+          moderated_at?: string | null
+          moderation_flags?: string[]
+          moderation_json?: Json | null
+          moderation_reason?: string | null
+          moderation_verdict?: string
           quote: string
           rating: number
           reviewer_user_id?: string | null
@@ -291,6 +303,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           attribution_type?: string
+          auto_published?: boolean
           booking_id?: string | null
           consent_notes?: string | null
           consent_to_publish?: boolean
@@ -299,6 +312,11 @@ export type Database = {
           expert_id?: string
           id?: string
           locale?: string | null
+          moderated_at?: string | null
+          moderation_flags?: string[]
+          moderation_json?: Json | null
+          moderation_reason?: string | null
+          moderation_verdict?: string
           quote?: string
           rating?: number
           reviewer_user_id?: string | null
