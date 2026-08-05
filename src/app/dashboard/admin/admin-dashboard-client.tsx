@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useCallback, useEffect, useState } from 'react';
 import { logoutAction } from '@/app/auth/actions';
 import { CreateExpertPanel } from './create-expert-panel';
@@ -171,6 +172,26 @@ export default function AdminDashboardClient({ session }: { session: SessionData
 
         <div className="space-y-6">
           <CreateExpertPanel />
+
+          <div className="p-6 rounded-md border border-outline-variant bg-surface-container-lowest shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+              <div>
+                <h2 className="text-sm font-bold uppercase tracking-wider text-on-surface flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                  Expert reviews moderation
+                </h2>
+                <p className="text-on-surface-variant text-xs mt-1">
+                  Open the review queue to approve, hide, or withdraw customer feedback.
+                </p>
+              </div>
+              <Link
+                href="/dashboard/admin/expert-reviews"
+                className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-xs font-semibold text-black hover:bg-primary/90"
+              >
+                Open review queue
+              </Link>
+            </div>
+          </div>
 
           <div className="p-6 rounded-md border border-outline-variant bg-surface-container-lowest shadow-sm">
             <div className="flex items-center justify-between gap-4 mb-4">

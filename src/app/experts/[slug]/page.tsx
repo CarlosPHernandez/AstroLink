@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { SeoJsonLd } from '@/components/seo/seo-json-ld';
 import { ExpertProfileSkeleton } from '@/components/loading/route-loading';
+import { getApprovedReviewsForExpert } from '@/lib/expert-reviews';
 import { getMentorBySlug } from '@/lib/mentor-directory';
 import { buildPageMetadata } from '@/lib/seo/build-page-metadata';
 import { buildPersonJsonLd } from '@/lib/seo/json-ld';
@@ -34,11 +35,13 @@ export default async function ExpertProfilePage({ params }: PageProps) {
     notFound();
   }
 
+  const reviews = await getApprovedReviewsForExpert(expert.id);
+
   return (
     <>
       <SeoJsonLd data={buildPersonJsonLd(expert)} />
       <Suspense fallback={<ExpertProfileSkeleton />}>
-        <ExpertProfileShell expert={expert} />
+        <ExpertProfileShell expert={expert} reviews={reviews} />
       </Suspense>
     </>
   );
