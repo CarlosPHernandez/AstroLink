@@ -2,6 +2,20 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.11.0.0] - 2026-08-05
+
+### Added
+- **Expert session reviews:** after a completed session, buyers can submit a short rating and quote for admin review before it appears on the expert profile.
+- Admin **Expert feedback** queue to approve, hide, or withdraw pending reviews (publish only when the buyer consented).
+- Public **Session feedback** block on expert profiles (approved + consented quotes only, up to three).
+- **APX-09** ReviewAgent for submit moderation, audit events, and status transitions (`agent_id` enum).
+
+### Changed
+- Review display names are capped to 2–80 characters to match the database constraint.
+
+### Fixed
+- Admin approve no longer forces consent on; missing reviews return not-found instead of silent success.
+
 ## [0.10.0.0] - 2026-07-29
 
 ### Added
