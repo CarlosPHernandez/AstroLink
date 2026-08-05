@@ -42,7 +42,7 @@ export async function POST(request: Request) {
   const agent = new ReviewAgent();
 
   try {
-    const reviewId = await agent.submitReview({
+    const result = await agent.submitReview({
       bookingId: parsed.data.bookingId,
       reviewerUserId: session.userId,
       rating: parsed.data.rating,
@@ -53,7 +53,15 @@ export async function POST(request: Request) {
       source: 'post_session_survey',
     });
 
-    return NextResponse.json({ success: true, data: { reviewId } });
+    // Never expose moderation diagnosis to mentees.
+    return NextResponse.json({
+      success: true,
+      data: {
+        reviewId: result.reviewId,
+        status: result.status,
+        autoPublished: result.autoPublished,
+      },
+    });
   } catch (error: unknown) {
     if (error instanceof Error) {
       const message = error.message;
@@ -70,13 +78,11 @@ export async function POST(request: Request) {
       ) {
         return NextResponse.json({ success: false, error: message }, { status: 409 });
       }
-      // Client-fixable validation / moderation — not a server fault.
       if (
         message.includes('Quote must be') ||
         message.includes('displayName') ||
         message.includes('rating must') ||
-        message.includes('bookingId is required') ||
-        message.includes('failed moderation')
+        message.includes('bookingId is required')
       ) {
         return NextResponse.json({ success: false, error: message }, { status: 400 });
       }

@@ -39,11 +39,18 @@ export default function PostSessionReviewClient({ bookingId }: Props) {
         }),
       });
 
-      const json = await res.json().catch(() => ({}));
+      const json = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        data?: { autoPublished?: boolean };
+      };
       if (!res.ok) {
         throw new Error(json?.error ?? 'Failed to submit review');
       }
-      setSuccess('Thanks — your review was submitted and is pending approval.');
+      setSuccess(
+        json?.data?.autoPublished
+          ? 'Thanks — your feedback was submitted and may appear on the expert profile shortly.'
+          : 'Thanks — your feedback was submitted. The expert can see it privately; public quotes go live after a quick review when needed.',
+      );
       setQuote('');
       setConsent(false);
       // refresh to reflect any state change (e.g., hide CTA)

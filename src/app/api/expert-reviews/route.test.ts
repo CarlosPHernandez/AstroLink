@@ -27,10 +27,15 @@ describe('POST /api/expert-reviews', () => {
       userId: 'mentee-1',
       role: 'mentee',
     });
-    mockSubmitReview.mockResolvedValue('review-1');
+    mockSubmitReview.mockResolvedValue({
+      reviewId: 'review-1',
+      status: 'pending',
+      autoPublished: false,
+      moderationVerdict: 'flagged',
+    });
   });
 
-  it('creates a review for a signed-in mentee', async () => {
+  it('creates a review for a signed-in mentee without exposing diagnosis', async () => {
     const res = await POST(
       makeRequest({
         bookingId: '7d787c79-7f66-4fde-b1db-1b8fe4b2f2f2',
@@ -43,7 +48,14 @@ describe('POST /api/expert-reviews', () => {
     );
 
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ success: true, data: { reviewId: 'review-1' } });
+    await expect(res.json()).resolves.toEqual({
+      success: true,
+      data: {
+        reviewId: 'review-1',
+        status: 'pending',
+        autoPublished: false,
+      },
+    });
     expect(mockSubmitReview).toHaveBeenCalledWith({
       bookingId: '7d787c79-7f66-4fde-b1db-1b8fe4b2f2f2',
       reviewerUserId: 'mentee-1',

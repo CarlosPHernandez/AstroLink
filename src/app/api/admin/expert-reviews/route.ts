@@ -5,10 +5,14 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { ReviewAgent } from '@/services/agents/review-agent';
 
 const ReviewStatusSchema = z.enum(['pending', 'approved', 'hidden', 'withdrawn']);
+const VerdictSchema = z.enum(['clear', 'flagged', 'error']);
 const ReviewActionSchema = z.object({
   reviewId: z.string().uuid('reviewId must be a valid UUID.'),
   action: z.enum(['approve', 'hide', 'withdraw']),
 });
+
+const ADMIN_SELECT =
+  'id, expert_id, booking_id, reviewer_user_id, rating, quote, display_name, attribution_type, consent_to_publish, status, source, created_at, approved_at, approved_by, auto_published, moderation_verdict, moderation_reason, moderation_flags, moderation_json, moderated_at, mentors(id, full_name, slug), bookings(status)';
 
 export async function GET(request: Request) {
   const sessionOrResponse = await requireApiRole('admin');
@@ -16,7 +20,9 @@ export async function GET(request: Request) {
     return sessionOrResponse;
   }
 
-  const statusParam = new URL(request.url).searchParams.get('status') ?? 'pending';
+  const url = new URL(request.url);
+  const statusParam = url.searchParams.get('status') ?? 'pending';
+  const verdictParam = url.searchParams.get('verdict');
   const parsedStatus = ReviewStatusSchema.safeParse(statusParam);
 
   if (!parsedStatus.success) {
@@ -26,13 +32,24 @@ export async function GET(request: Request) {
     );
   }
 
-  const { data, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from('expert_reviews')
-    .select(
-      'id, expert_id, booking_id, reviewer_user_id, rating, quote, display_name, attribution_type, consent_to_publish, status, source, created_at, approved_at, approved_by, mentors(id, full_name, slug), bookings(status)',
-    )
+    .select(ADMIN_SELECT)
     .eq('status', parsedStatus.data)
     .order('created_at', { ascending: false });
+
+  if (verdictParam) {
+    const parsedVerdict = VerdictSchema.safeParse(verdictParam);
+    if (!parsedVerdict.success) {
+      return NextResponse.json(
+        { success: false, error: 'verdict must be one of clear, flagged, or error.' },
+        { status: 400 },
+      );
+    }
+    query = query.eq('moderation_verdict', parsedVerdict.data);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -73,7 +90,11 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: 'Invalid action.' }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, reviewId: parsed.data.reviewId, status: parsed.data.action });
+    return NextResponse.json({
+      success: true,
+      reviewId: parsed.data.reviewId,
+      status: parsed.data.action,
+    });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Could not update review.';
     const status =

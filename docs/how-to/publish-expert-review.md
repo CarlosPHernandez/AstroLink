@@ -2,6 +2,10 @@
 
 Post-session mentee submit + admin moderation UI ship with this feature
 (`/dashboard/admin/expert-reviews`, `POST /api/expert-reviews`).
+Mentee submit is **never blocked by LLM soft denials** — APX-09 screens in the
+background. Clear + consented reviews may auto-publish; flagged ones stay pending
+for admins (mentors see private feedback on their dashboard).
+
 Jotform and pure SQL remain supported for launch ops without a mentee account.
 
 For manual / Jotform: Ops inserts rows in Supabase after consent is clear.
