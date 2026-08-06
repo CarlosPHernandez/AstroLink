@@ -19,6 +19,26 @@ export async function listMenteeBookings(menteeId: string): Promise<MenteeBookin
     return [];
   }
 
+  const bookingIds = data.map((row) => row.id as string);
+  const reviewedBookingIds = new Set<string>();
+
+  if (bookingIds.length > 0) {
+    const { data: reviews, error: reviewsError } = await supabaseAdmin
+      .from('expert_reviews')
+      .select('booking_id')
+      .eq('reviewer_user_id', menteeId)
+      .in('booking_id', bookingIds);
+
+    if (reviewsError) {
+      console.error('listMenteeBookings reviews:', reviewsError.message);
+    } else {
+      for (const row of reviews ?? []) {
+        const bookingId = (row as { booking_id: string | null }).booking_id;
+        if (bookingId) reviewedBookingIds.add(bookingId);
+      }
+    }
+  }
+
   return data.map((row) => {
     const mentor = row.mentors as { full_name: string } | null;
     return {
@@ -31,6 +51,7 @@ export async function listMenteeBookings(menteeId: string): Promise<MenteeBookin
       dailyRoomUrl: row.daily_room_url,
       briefing: (row.briefing_json as BriefingPayload | null) ?? null,
       durationMinutes: row.duration_minutes ?? undefined,
+      hasSubmittedReview: reviewedBookingIds.has(row.id),
     };
   });
 }

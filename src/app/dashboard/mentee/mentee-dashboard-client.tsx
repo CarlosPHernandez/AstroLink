@@ -312,7 +312,10 @@ export default function MenteeDashboardClient({
               viewerRole="mentee"
               testIdPrefix={`booking-past-${booking.id}`}
             />
-            <PostSessionReviewClient bookingId={booking.id} />
+            <PostSessionReviewClient
+              bookingId={booking.id}
+              alreadySubmitted={Boolean(booking.hasSubmittedReview)}
+            />
           </>
         ) : null}
       </div>

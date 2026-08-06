@@ -15,6 +15,8 @@ export interface MenteeBookingView {
   dailyRoomUrl: string | null;
   briefing: BriefingPayload | null;
   durationMinutes?: number; // from slider for 1:1; shown in cards + used for prorated price
+  /** True when mentee already left session feedback for this booking. */
+  hasSubmittedReview?: boolean;
 }
 
 export interface PartitionedMenteeBookings {
