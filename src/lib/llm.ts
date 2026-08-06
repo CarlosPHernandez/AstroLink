@@ -74,8 +74,19 @@ function loadE2eRecapStub<T>(): T {
   return loadE2eStub<T>('recap-stub.json');
 }
 
+function loadE2ePathAssessmentStub<T>(): T {
+  return loadE2eStub<T>('path-assessment-stub.json');
+}
+
 function isPostSessionRecapSchema(schema: LlmJsonSchema): boolean {
   return schema.required?.includes('session_summary') ?? false;
+}
+
+function isPathAssessmentSchema(schema: LlmJsonSchema): boolean {
+  return (
+    (schema.required?.includes('standing_summary') ?? false) &&
+    (schema.required?.includes('upsell_bridge_live') ?? false)
+  );
 }
 
 let openaiClient: OpenAI | null = null;
@@ -363,6 +374,9 @@ export async function generateStructuredJson<T>(req: StructuredJsonRequest): Pro
   if (isE2eStubLlmEnabled()) {
     if (isPostSessionRecapSchema(req.schema)) {
       return loadE2eRecapStub<T>();
+    }
+    if (isPathAssessmentSchema(req.schema)) {
+      return loadE2ePathAssessmentStub<T>();
     }
     return loadE2eBriefingStub<T>();
   }

@@ -39,6 +39,13 @@ export function isWaitlistSeoCrawlPage(pathname: string): boolean {
   return pathname === '/robots.txt' || pathname === '/sitemap.xml';
 }
 
+/** Free Space Path Assessment funnel (no account). */
+export function isPathAssessmentPublicPage(pathname: string): boolean {
+  if (pathname === '/assessment') return true;
+  const prefix = '/assessment/';
+  return pathname.startsWith(prefix) && pathname.length > prefix.length;
+}
+
 export function isWaitlistPublicPage(pathname: string, chrisBookingEnabled = isChrisBookingEnabled()): boolean {
   if (chrisBookingEnabled && isWaitlistExpertsPage(pathname)) {
     return false;
@@ -47,7 +54,8 @@ export function isWaitlistPublicPage(pathname: string, chrisBookingEnabled = isC
   return (
     (WAITLIST_PUBLIC_PAGES as readonly string[]).includes(pathname) ||
     isWaitlistExpertsPage(pathname) ||
-    isWaitlistSeoCrawlPage(pathname)
+    isWaitlistSeoCrawlPage(pathname) ||
+    isPathAssessmentPublicPage(pathname)
   );
 }
 
@@ -58,6 +66,9 @@ export function isWaitlistAdminPage(pathname: string): boolean {
 /** API routes that remain reachable in waitlist mode (handlers enforce auth). */
 export function isWaitlistAllowedApi(pathname: string): boolean {
   if (pathname === '/api/early-access') return true;
+  if (pathname === '/api/path-assessment' || pathname.startsWith('/api/path-assessment/')) {
+    return true;
+  }
   if (pathname.startsWith('/api/admin/')) return true;
   if (pathname.startsWith('/api/webhooks/')) return true;
   return false;

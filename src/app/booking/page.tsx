@@ -23,6 +23,7 @@ export default async function BookingPage({
     date?: string;
     ref?: string;
     duration?: string;
+    assessment?: string;
   }>;
 }) {
   const {
@@ -31,6 +32,7 @@ export default async function BookingPage({
     date,
     ref: refParam,
     duration: durationParam,
+    assessment: assessmentTokenParam,
   } = await searchParams;
   const chrisCampaign = isChrisCampaignBookingQuery(campaign);
 
@@ -81,6 +83,8 @@ export default async function BookingPage({
 
   const compGrant = await getAvailableGrantForUser(session.userId).catch(() => null);
 
+  const assessmentToken = assessmentTokenParam?.trim() || null;
+
   return (
     <BookingClient
       session={session}
@@ -91,6 +95,7 @@ export default async function BookingPage({
       chrisCampaign={false}
       prefillScheduledAt={null}
       prefillDurationMinutes={prefillDurationMinutes}
+      assessmentToken={assessmentToken}
       initialCompGrant={
         compGrant
           ? {

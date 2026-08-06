@@ -4,7 +4,14 @@ import { createHash } from 'node:crypto';
 import type { Json } from '@/lib/database.types';
 import { supabaseAdmin } from '@/lib/supabase';
 
-export type LlmAuditAgentId = 'APX-01' | 'APX-02' | 'APX-03' | 'APX-04' | 'APX-06' | 'APX-09';
+export type LlmAuditAgentId =
+  | 'APX-01'
+  | 'APX-02'
+  | 'APX-03'
+  | 'APX-04'
+  | 'APX-06'
+  | 'APX-09'
+  | 'APX-10';
 
 export type LlmAuditContext = {
   agentId: LlmAuditAgentId;

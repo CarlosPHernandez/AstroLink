@@ -41,6 +41,11 @@ export const BookBodySchema = z
       .transform((value) => sanitizeEarlyAccessReferrer(value)),
     /** Single-use complimentary 15-min grant id (server validates ownership). */
     applyCompGrantId: z.string().uuid().optional(),
+    /** Space Path Assessment public token — attaches report context to the booking. */
+    assessmentToken: z
+      .string()
+      .regex(/^[a-f0-9]{64}$/i, { message: 'Invalid assessment reference.' })
+      .optional(),
   })
   .superRefine((data, ctx) => {
     const isChris = data.campaign === CHRIS_BOOKING_CAMPAIGN_QUERY;

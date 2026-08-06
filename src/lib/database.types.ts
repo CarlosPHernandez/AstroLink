@@ -56,6 +56,7 @@ export type Database = {
           mentee_token: string | null
           mentor_id: string
           mentor_token: string | null
+          path_assessment_id: string | null
           scheduled_at: string
           service_type: Database["public"]["Enums"]["service_type"]
           status: Database["public"]["Enums"]["booking_status"]
@@ -74,6 +75,7 @@ export type Database = {
           mentee_token?: string | null
           mentor_id: string
           mentor_token?: string | null
+          path_assessment_id?: string | null
           scheduled_at: string
           service_type: Database["public"]["Enums"]["service_type"]
           status?: Database["public"]["Enums"]["booking_status"]
@@ -92,6 +94,7 @@ export type Database = {
           mentee_token?: string | null
           mentor_id?: string
           mentor_token?: string | null
+          path_assessment_id?: string | null
           scheduled_at?: string
           service_type?: Database["public"]["Enums"]["service_type"]
           status?: Database["public"]["Enums"]["booking_status"]
@@ -110,6 +113,13 @@ export type Database = {
             columns: ["mentor_id"]
             isOneToOne: false
             referencedRelation: "mentors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_path_assessment_id_fkey"
+            columns: ["path_assessment_id"]
+            isOneToOne: false
+            referencedRelation: "path_assessments"
             referencedColumns: ["id"]
           },
         ]
@@ -202,6 +212,65 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "landing_goal_submissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      path_assessments: {
+        Row: {
+          answers_json: Json
+          created_at: string
+          email: string
+          email_message_id: string | null
+          email_sent_at: string | null
+          first_name: string
+          id: string
+          llm_error: string | null
+          public_token: string
+          report_html: string | null
+          report_json: Json | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          answers_json: Json
+          created_at?: string
+          email: string
+          email_message_id?: string | null
+          email_sent_at?: string | null
+          first_name?: string
+          id?: string
+          llm_error?: string | null
+          public_token: string
+          report_html?: string | null
+          report_json?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          answers_json?: Json
+          created_at?: string
+          email?: string
+          email_message_id?: string | null
+          email_sent_at?: string | null
+          first_name?: string
+          id?: string
+          llm_error?: string | null
+          public_token?: string
+          report_html?: string | null
+          report_json?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "path_assessments_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -1016,6 +1085,7 @@ export type Database = {
         | "APX-06"
         | "APX-08"
         | "APX-09"
+        | "APX-10"
       bio_risk_rating: "low" | "medium" | "high"
       booking_status:
         | "pending_payment"
@@ -1168,6 +1238,7 @@ export const Constants = {
         "APX-06",
         "APX-08",
         "APX-09",
+        "APX-10",
       ],
       bio_risk_rating: ["low", "medium", "high"],
       booking_status: [

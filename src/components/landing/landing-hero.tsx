@@ -210,24 +210,35 @@ export default function LandingHero({ experts }: LandingHeroProps) {
         ) : null}
 
         {!submittedGoal ? (
-          <p className="landing-hero-actions mt-4 sm:mt-5 text-xs sm:text-sm text-[var(--landing-faint)] leading-relaxed">
-            Free to browse.{' '}
-            <Link
-              href={BROWSE_HREF}
-              className="inline-block py-1 text-[var(--landing-muted)] underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
-            >
-              See all experts
-            </Link>
-            <span className="mx-1.5 text-[var(--landing-border)]" aria-hidden>
-              ·
-            </span>
-            <Link
-              href={BOOK_SIGNUP_HREF}
-              className="inline-block py-1 text-[var(--landing-muted)] underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
-            >
-              Create account to book
-            </Link>
-          </p>
+          <>
+            <p className="landing-hero-actions mt-4 sm:mt-5 text-xs sm:text-sm text-[var(--landing-faint)] leading-relaxed">
+              Free to browse.{' '}
+              <Link
+                href={BROWSE_HREF}
+                className="inline-block py-1 text-[var(--landing-muted)] underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
+              >
+                See all experts
+              </Link>
+              <span className="mx-1.5 text-[var(--landing-border)]" aria-hidden>
+                ·
+              </span>
+              <Link
+                href={BOOK_SIGNUP_HREF}
+                className="inline-block py-1 text-[var(--landing-muted)] underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
+              >
+                Create account to book
+              </Link>
+            </p>
+            <p className="mt-2 text-xs sm:text-sm text-[var(--landing-faint)] leading-relaxed">
+              <Link
+                href="/assessment"
+                className="inline-block py-1 text-[var(--landing-muted)] underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
+                data-testid="landing-hero-assessment-link"
+              >
+                Prefer a full readiness report? Free assessment →
+              </Link>
+            </p>
+          </>
         ) : null}
       </div>
 

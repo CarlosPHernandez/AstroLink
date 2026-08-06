@@ -2,6 +2,21 @@ import { isBookingUpcoming } from '@/lib/booking-partition';
 import { resolveExpertBrief } from '@/lib/briefing-display';
 import type { BookingStatus, BriefingPayload, ServiceType } from '@/lib/types';
 
+/** Attached Space Path Assessment summary for mentor prep (PR-A). */
+export type MentorPathAssessmentSummary = {
+  firstName: string;
+  stage: string | null;
+  primaryGoal: string | null;
+  network: string | null;
+  obstacle: string | null;
+  experience: string | null;
+  headline: string | null;
+  standingSummary: string | null;
+  focusAreas: string[];
+  keyGaps: Array<{ title: string; detail: string }>;
+  nextActions: Array<{ action: string; why: string }>;
+};
+
 export interface MentorBookingView {
   id: string;
   menteeName: string;
@@ -13,6 +28,7 @@ export interface MentorBookingView {
   intakeBackground: string | null;
   briefing: BriefingPayload | null;
   durationMinutes?: number;
+  pathAssessment?: MentorPathAssessmentSummary | null;
 }
 
 export interface PartitionedMentorBookings {
