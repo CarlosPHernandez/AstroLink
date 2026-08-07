@@ -1,0 +1,40 @@
+{
+  "headline": "You're closer than you think — clarify the next 90 days",
+  "standing_summary": "As an early-career professional aiming at flight software roles, you already have relevant coursework and project signals. The main unlock is translating that into operator-ready proof and conversations that stress-test your plan.",
+  "key_gaps": [
+    {
+      "title": "Mission-relevant proof points",
+      "detail": "Experts will ask for one artifact that shows how you reason under constraints — not a long résumé list."
+    },
+    {
+      "title": "Network density",
+      "detail": "With only a small network, prioritize two high-signal intros over broad outreach."
+    },
+    {
+      "title": "Obstacle framing",
+      "detail": "Name the blocker as a decision you need help making so the live session stays tactical."
+    }
+  ],
+  "focus_areas": [
+    "90-day skill + proof plan",
+    "Targeted operator conversations",
+    "Role-language translation"
+  ],
+  "expert_conversation_type": "A live path review with a flight software or avionics operator who can critique your next three moves.",
+  "next_actions": [
+    {
+      "action": "Draft a one-page standing note (goal, skills, proof, ask).",
+      "why": "Gives any expert a shared map before the call."
+    },
+    {
+      "action": "Pick three questions only an operator can answer.",
+      "why": "Protects live time for advice you cannot get from blogs."
+    },
+    {
+      "action": "Book a live expert review with this assessment attached.",
+      "why": "Lets the expert prepare specific advice for your situation."
+    }
+  ],
+  "upsell_bridge_live": "Want a verified expert to review this report with you live? We'll load your assessment so they can prepare.",
+  "upsell_bridge_written": "A written expert review of this report may be available later."
+}

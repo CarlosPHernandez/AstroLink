@@ -57,6 +57,13 @@ export const PRIVACY_POLICY = {
       ],
     },
     {
+      id: 'space-path-assessment',
+      title: 'Space Path Assessment',
+      paragraphs: [
+        'When you complete the free Space Path Assessment, we store your answers and generated report, and we email the report to the address you provide. We also collect anonymous interaction events on the assessment funnel (for example, whether the form was started, completed, or a next-step CTA was clicked) through Vercel Web Analytics. Analytics events do not include your email address or report contents.',
+      ],
+    },
+    {
       id: 'sharing',
       title: 'When we share information',
       paragraphs: [

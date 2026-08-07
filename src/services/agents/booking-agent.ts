@@ -57,6 +57,8 @@ export class BookingAgent {
     marketingReferrer?: string;
     /** Single-use complimentary 15-min grant (server-validated). */
     applyCompGrantId?: string;
+    /** Space Path Assessment public token — sets bookings.path_assessment_id when valid. */
+    assessmentToken?: string;
   }) {
     // 1. Audit Log: BOOKING_INITIATED
     await this.logAudit('BOOKING_INITIATED', null, { params });
@@ -109,11 +111,25 @@ export class BookingAgent {
       campaignId?: string;
       marketingReferrer?: string;
       applyCompGrantId?: string;
+      assessmentToken?: string;
     },
   ) {
     let finalMentorId = params.mentorId;
     let matchReason = 'User selected mentor directly.';
     let appliedCompGrantId: string | null = null;
+    let pathAssessmentId: string | null = null;
+
+    if (params.assessmentToken?.trim()) {
+      const token = params.assessmentToken.trim();
+      const { data: assessment } = await supabaseAdmin
+        .from('path_assessments')
+        .select('id')
+        .eq('public_token', token)
+        .maybeSingle();
+      if (assessment?.id) {
+        pathAssessmentId = assessment.id;
+      }
+    }
 
     // 2. Matching Engine (if no mentor selected)
     if (!finalMentorId) {
@@ -272,6 +288,7 @@ export class BookingAgent {
         durationMinutes ?? (params.serviceType === 'session_1on1' ? 30 : 15),
       ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
       ...(params.marketingReferrer ? { marketing_referrer: params.marketingReferrer } : {}),
+      ...(pathAssessmentId ? { path_assessment_id: pathAssessmentId } : {}),
     };
 
     const { data: booking, error: bookingErr } = await (

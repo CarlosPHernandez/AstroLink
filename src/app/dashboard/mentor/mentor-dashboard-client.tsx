@@ -33,6 +33,7 @@ import { MentorPageHeader } from '@/app/dashboard/mentor/mentor-page-header';
 import { MentorPayoutsPanel } from '@/app/dashboard/mentor/mentor-payouts-panel';
 import { MentorSettingsPanel } from '@/app/dashboard/mentor/mentor-settings-panel';
 import { MentorVideoRequestsPanel } from '@/app/dashboard/mentor/mentor-video-requests-panel';
+import { MentorReportReviewsPanel } from '@/app/dashboard/mentor/mentor-report-reviews-panel';
 import { MentorSessionFeedbackPanel } from '@/app/dashboard/mentor/mentor-session-feedback-panel';
 import { partitionMentorBookings, type MentorBookingView } from '@/lib/mentor-booking-partition';
 import type { MentorEarningRow, MentorEarningsSummary } from '@/lib/mentor-earnings-types';
@@ -383,6 +384,7 @@ export default function MentorDashboardClient({
             )}
 
             {activeTab === 'videos' && <MentorVideoRequestsPanel />}
+            {activeTab === 'reports' && <MentorReportReviewsPanel />}
 
             {activeTab === 'sessions' && (
               <div className="md-stack" data-testid="mentor-consultations-tab">

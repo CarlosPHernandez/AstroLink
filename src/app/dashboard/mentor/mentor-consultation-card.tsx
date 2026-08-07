@@ -6,6 +6,7 @@ import {
   getMentorBookingContextSummary,
   type MentorBookingView,
 } from '@/lib/mentor-booking-partition';
+import { MentorPathAssessmentPanel } from '@/components/path-assessment/mentor-path-assessment-panel';
 import { DashboardSessionTranscript } from '@/components/session/dashboard-session-transcript';
 import { formatSessionWhen } from '@/lib/format';
 import { formatServiceTypeLabel, type BookingStatus } from '@/lib/types';
@@ -111,6 +112,9 @@ export function MentorConsultationCard({
                 {contextSummary}
               </p>
             </div>
+            {booking.pathAssessment ? (
+              <MentorPathAssessmentPanel assessment={booking.pathAssessment} />
+            ) : null}
           </div>
         </>
       ) : (

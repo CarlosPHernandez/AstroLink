@@ -27,14 +27,23 @@ export class BriefingAgent {
     }
 
     const { service_type } = booking;
+    const pathEnrichment = await this.loadPathAssessmentEnrichment(
+      (booking as { path_assessment_id?: string | null }).path_assessment_id,
+    );
+    const buyerGoals = [booking.match_reason || '', pathEnrichment.goalsExtra]
+      .filter(Boolean)
+      .join('\n\n');
+    const buyerBackground = [booking.intake_background || '', pathEnrichment.backgroundExtra]
+      .filter(Boolean)
+      .join('\n\n');
 
     if (service_type === 'session_1on1' || service_type === 'extended_session') {
       const briefing = await this.generateDualSessionBriefing({
         bookingId,
         rateLimitKey: booking.mentee_id,
         buyerName: booking.users.full_name,
-        buyerGoals: booking.match_reason || '',
-        buyerBackground: booking.intake_background || '',
+        buyerGoals,
+        buyerBackground,
         expertName: booking.mentors.full_name,
         expertExpertise: booking.mentors.expertise.join(', '),
       });
@@ -52,8 +61,8 @@ export class BriefingAgent {
       const preCallBrief = await this.generatePreCallBrief({
         bookingId,
         rateLimitKey: booking.mentee_id,
-        buyerGoals: booking.match_reason || '',
-        buyerBackground: booking.intake_background || '',
+        buyerGoals,
+        buyerBackground,
         expertExpertise: booking.mentors.expertise.join(', '),
         expertName: booking.mentors.full_name,
       });
@@ -183,6 +192,71 @@ export class BriefingAgent {
         },
       }),
     );
+  }
+
+  /**
+   * Light enrichment from linked Space Path Assessment (no briefing redesign).
+   */
+  private async loadPathAssessmentEnrichment(
+    pathAssessmentId: string | null | undefined,
+  ): Promise<{ goalsExtra: string; backgroundExtra: string }> {
+    if (!pathAssessmentId) {
+      return { goalsExtra: '', backgroundExtra: '' };
+    }
+
+    try {
+      const { data } = await supabaseAdmin
+        .from('path_assessments')
+        .select('answers_json, report_json')
+        .eq('id', pathAssessmentId)
+        .maybeSingle();
+
+      if (!data) {
+        return { goalsExtra: '', backgroundExtra: '' };
+      }
+
+      const answers = data.answers_json as Record<string, unknown> | null;
+      const report = data.report_json as Record<string, unknown> | null;
+
+      const goalsParts: string[] = [];
+      if (report && typeof report.headline === 'string') {
+        goalsParts.push(`Path assessment headline: ${report.headline}`);
+      }
+      if (report && typeof report.standing_summary === 'string') {
+        goalsParts.push(`Standing summary: ${report.standing_summary}`);
+      }
+      if (report && Array.isArray(report.focus_areas)) {
+        const areas = report.focus_areas.filter((x): x is string => typeof x === 'string');
+        if (areas.length) {
+          goalsParts.push(`Focus areas: ${areas.join('; ')}`);
+        }
+      }
+
+      const bgParts: string[] = [];
+      if (answers && typeof answers.stage === 'string') {
+        bgParts.push(`Stage: ${answers.stage}`);
+      }
+      if (answers && typeof answers.network === 'string') {
+        bgParts.push(`Network: ${answers.network}`);
+      }
+      if (answers && typeof answers.experience === 'string') {
+        bgParts.push(answers.experience);
+      }
+      if (report && typeof report.expert_conversation_type === 'string') {
+        bgParts.push(`Suggested expert conversation: ${report.expert_conversation_type}`);
+      }
+
+      return {
+        goalsExtra: goalsParts.length
+          ? `[Space Path Assessment]\n${goalsParts.join('\n')}`
+          : '',
+        backgroundExtra: bgParts.length
+          ? `[Space Path Assessment context]\n${bgParts.join('\n')}`
+          : '',
+      };
+    } catch {
+      return { goalsExtra: '', backgroundExtra: '' };
+    }
   }
 
   private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {

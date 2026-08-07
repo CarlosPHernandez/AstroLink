@@ -2,6 +2,24 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.12.0.0] - 2026-08-07
+
+### Added
+- **Space Path Assessment:** free multi-step readiness quiz; Gemini-powered personalized report on-page and by email (no account required).
+- Landing discovery: compact top bar CTA, mid-page offer section, and hero soft link into the assessment.
+- **Live expert upsell:** book a 1:1 with the report attached so mentors see answers and the AI report before the session.
+- **$50 written expert review** of the same report (async tripwire): guest Stripe checkout, mentor **Report reviews** queue, buyer delivery page and email.
+- Vercel Web Analytics funnel events (`spa_*`) for assessment conversion (no email or tokens in event props).
+- Privacy policy section covering assessment data and anonymous funnel analytics.
+
+### Changed
+- Booking auth redirect preserves `?assessment=` so free reports still attach after signup.
+- Assessment form and results layouts are wider and mobile-friendly; CTAs use shorter labels on small screens.
+- Written review CTA on results is shown only when at least one mentor accepts written reviews.
+
+### Fixed
+- Assessment honeypot no longer returns a fake token that could confuse the form client.
+
 ## [0.11.1.0] - 2026-08-05
 
 ### Added

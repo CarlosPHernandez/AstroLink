@@ -8,7 +8,9 @@ import {
 import { syncMentorStripeAccountStatus } from '@/lib/mentor-stripe-connect';
 import { fulfillBookingAfterPayment } from '@/lib/post-payment';
 import { PaymentAgent } from '@/services/agents/payment-agent';
+import { PathAssessmentReviewAgent } from '@/services/agents/path-assessment-review-agent';
 import { VideoRequestAgent } from '@/services/agents/video-request-agent';
+import { WRITTEN_REPORT_REVIEW_PRODUCT } from '@/lib/path-assessment/written-review-pricing';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -78,6 +80,18 @@ export async function POST(request: Request) {
           });
         }
         return NextResponse.json({ received: true, product: 'personalized_video' });
+      }
+
+      // Written Space Path Assessment review ($50 tripwire)
+      if (paymentIntent.metadata?.product === WRITTEN_REPORT_REVIEW_PRODUCT) {
+        if (event.type === 'payment_intent.succeeded') {
+          const agent = new PathAssessmentReviewAgent();
+          await agent.markPaid({
+            paymentIntentId: paymentIntent.id,
+            reviewId: paymentIntent.metadata.path_assessment_review_id || undefined,
+          });
+        }
+        return NextResponse.json({ received: true, product: WRITTEN_REPORT_REVIEW_PRODUCT });
       }
 
       const mentorId = paymentIntent.metadata?.mentor_id;

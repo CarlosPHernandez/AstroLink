@@ -94,6 +94,7 @@ export async function POST(request: Request) {
       campaignId: chrisCampaign?.campaignId,
       marketingReferrer: body.marketingReferrer,
       applyCompGrantId: body.applyCompGrantId,
+      assessmentToken: body.assessmentToken,
     });
 
     return NextResponse.json({

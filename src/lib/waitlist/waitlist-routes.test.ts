@@ -31,6 +31,8 @@ describe('resolveWaitlistRoute', () => {
     expect(resolveWaitlistRoute('/experts/chris-sembroski', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/sitemap.xml', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/robots.txt', null)).toEqual({ action: 'allow' });
+    expect(resolveWaitlistRoute('/assessment', null)).toEqual({ action: 'allow' });
+    expect(resolveWaitlistRoute('/assessment/results/abc', null)).toEqual({ action: 'allow' });
   });
 
   it('redirects protected app surfaces', () => {
@@ -58,6 +60,8 @@ describe('resolveWaitlistRoute', () => {
 
   it('allows signup and webhook APIs only', () => {
     expect(resolveWaitlistRoute('/api/early-access', null)).toEqual({ action: 'allow' });
+    expect(resolveWaitlistRoute('/api/path-assessment', null)).toEqual({ action: 'allow' });
+    expect(resolveWaitlistRoute('/api/path-assessment/tok', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/api/admin/metrics', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/api/webhooks/stripe', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/api/webhooks/stripe/', null)).toEqual({ action: 'allow' });

@@ -332,6 +332,7 @@ export default function BookingClient({
   prefillScheduledAt = null,
   prefillDurationMinutes = 30,
   initialCompGrant = null,
+  assessmentToken = null,
 }: {
   session: SessionData;
   experts: ListedExpert[];
@@ -342,6 +343,8 @@ export default function BookingClient({
   prefillScheduledAt?: string | null;
   prefillDurationMinutes?: number;
   initialCompGrant?: SessionCompGrantBannerGrant | null;
+  /** Space Path Assessment public token from ?assessment= */
+  assessmentToken?: string | null;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -354,6 +357,10 @@ export default function BookingClient({
     initialCompGrant,
   );
   const [applyCompGrant, setApplyCompGrant] = useState(false);
+  const [attachedAssessmentToken, setAttachedAssessmentToken] = useState<string | null>(
+    assessmentToken,
+  );
+  const [assessmentPrefillNote, setAssessmentPrefillNote] = useState<string | null>(null);
   const chrisDurationMinutes = getChrisCampaignDurationMinutes();
   const [form, setForm] = useState<BookingFormState>({
     serviceType: 'session_1on1',
@@ -362,6 +369,59 @@ export default function BookingClient({
     scheduledAt: prefillScheduledAt ?? '',
     durationMinutes: chrisCampaign ? chrisDurationMinutes : prefillDurationMinutes,
   });
+
+  useEffect(() => {
+    if (!assessmentToken) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(`/api/path-assessment/${encodeURIComponent(assessmentToken)}`);
+        if (!res.ok || cancelled) return;
+        const json = (await res.json()) as {
+          success?: boolean;
+          data?: {
+            answers?: {
+              primaryGoal?: string;
+              experience?: string;
+              stage?: string;
+              network?: string;
+              obstacle?: string;
+              firstName?: string;
+            };
+          };
+        };
+        if (!json.success || !json.data?.answers || cancelled) return;
+        const a = json.data.answers;
+        const goals = [
+          a.primaryGoal?.trim() ?? '',
+          a.obstacle?.trim() ? `Biggest obstacle / clarity need: ${a.obstacle.trim()}` : '',
+        ]
+          .filter(Boolean)
+          .join('\n\n');
+        const background = [
+          a.stage ? `Stage: ${a.stage}` : '',
+          a.network ? `Network: ${a.network}` : '',
+          a.experience?.trim() ?? '',
+        ]
+          .filter(Boolean)
+          .join('\n');
+        setForm((prev) => ({
+          ...prev,
+          goals: prev.goals.trim() ? prev.goals : goals,
+          background: prev.background.trim() ? prev.background : background,
+        }));
+        setAttachedAssessmentToken(assessmentToken);
+        setAssessmentPrefillNote(
+          'Your Space Path Assessment is attached. Goals and background were prefilled — edit freely before booking.',
+        );
+      } catch {
+        // Prefill is optional; booking still works without it.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [assessmentToken]);
 
   useEffect(() => {
     if (initialCompGrant) return;
@@ -474,6 +534,9 @@ export default function BookingClient({
       ...(chrisCampaign ? { campaign: CHRIS_BOOKING_CAMPAIGN_QUERY } : {}),
       ...(applyCompGrant && canApplyComp && compGrant
         ? { applyCompGrantId: compGrant.id }
+        : {}),
+      ...(attachedAssessmentToken
+        ? { assessmentToken: attachedAssessmentToken }
         : {}),
     };
 
@@ -645,6 +708,18 @@ export default function BookingClient({
                 />
               ) : (
                 <form onSubmit={handleSubmit} method="post" className="space-y-10">
+                  {assessmentPrefillNote ? (
+                    <div
+                      className="rounded-lg border border-outline-variant bg-surface-container-low px-4 py-3 text-label-md text-on-surface"
+                      data-testid="path-assessment-booking-banner"
+                    >
+                      <p className="font-semibold text-on-surface">Space Path Assessment attached</p>
+                      <p className="mt-1 text-on-surface-variant leading-relaxed">
+                        {assessmentPrefillNote}
+                      </p>
+                    </div>
+                  ) : null}
+
                   {compGrant ? (
                     <SessionCompGrantBanner grant={compGrant} showBookCta={false} />
                   ) : null}

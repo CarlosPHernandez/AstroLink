@@ -1,4 +1,6 @@
 import LandingHero from '@/components/landing/landing-hero';
+import { LandingAssessmentBar } from '@/components/landing/landing-assessment-bar';
+import { LandingAssessmentOffer } from '@/components/landing/landing-assessment-offer';
 import { LandingBenefits } from '@/components/landing/landing-benefits';
 import { LandingParticipation } from '@/components/landing/landing-participation';
 import { LandingTrust } from '@/components/landing/landing-trust';
@@ -11,10 +13,12 @@ import type { ListedExpert } from '@/lib/mentor-directory';
 export default function LandingPage({ experts }: { experts: ListedExpert[] }) {
   return (
     <div className="landing-mission min-h-screen overflow-x-hidden bg-[var(--landing-canvas)] text-[var(--landing-text)] font-landing-body selection:bg-[color:var(--landing-accent)]/20">
+      <LandingAssessmentBar />
       <LandingHeader />
       <main>
         <LandingHero experts={experts} />
         <LandingParticipation />
+        <LandingAssessmentOffer />
         <LandingBenefits />
         <LandingTrust />
         <LandingStory experts={experts} />
