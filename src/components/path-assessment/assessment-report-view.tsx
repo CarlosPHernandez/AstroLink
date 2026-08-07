@@ -1,4 +1,10 @@
+'use client';
+
 import Link from 'next/link';
+import {
+  trackSpaCtaLiveClick,
+  trackSpaCtaWrittenClick,
+} from '@/lib/path-assessment/path-assessment-analytics';
 import {
   pathAssessmentBookingPath,
   pathAssessmentWrittenReviewPath,
@@ -103,6 +109,7 @@ export function AssessmentLiveCta({ token }: { token: string }) {
       </p>
       <Link
         href={href}
+        onClick={() => trackSpaCtaLiveClick('results')}
         className="mt-5 inline-flex min-h-11 w-full sm:w-auto touch-manipulation items-center justify-center rounded-full bg-[var(--landing-ink)] px-5 sm:px-6 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2"
         data-testid="path-assessment-book-live"
       >
@@ -132,6 +139,7 @@ export function AssessmentWrittenReviewCta({ token }: { token: string }) {
       </p>
       <Link
         href={href}
+        onClick={() => trackSpaCtaWrittenClick('results')}
         className="mt-4 inline-flex min-h-11 w-full sm:w-auto touch-manipulation items-center justify-center rounded-full border-2 border-[var(--landing-ink)] bg-transparent px-5 sm:px-6 text-sm font-semibold text-[var(--landing-ink)] hover:bg-[var(--landing-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2"
         data-testid="path-assessment-book-written"
       >

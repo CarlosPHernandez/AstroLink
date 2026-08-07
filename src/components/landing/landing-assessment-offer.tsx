@@ -1,6 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import { LandingScrollReveal } from '@/components/landing/landing-scroll-reveal';
+import { trackSpaOfferClick } from '@/lib/path-assessment/path-assessment-analytics';
 
 /**
  * Dedicated offer section for free Space Path Assessment.
@@ -40,6 +43,7 @@ export function LandingAssessmentOffer() {
                 <div className="mt-6 sm:mt-7 flex flex-col items-stretch sm:items-center lg:items-start gap-2.5 sm:gap-3">
                   <Link
                     href="/assessment"
+                    onClick={() => trackSpaOfferClick()}
                     className="inline-flex min-h-11 sm:min-h-12 w-full sm:w-auto max-w-full touch-manipulation items-center justify-center gap-1.5 rounded-full bg-[var(--landing-ink)] px-5 sm:px-6 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2"
                     data-testid="landing-assessment-offer-cta"
                   >
@@ -52,7 +56,7 @@ export function LandingAssessmentOffer() {
                 </div>
               </div>
 
-              <ul className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-2.5 sm:gap-3 text-left">
+              <ul className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-2.5 sm:gap-3 text-left">
                 {[
                   {
                     title: 'Where you stand',

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { AssessmentReportView } from '@/components/path-assessment/assessment-report-view';
+import { SpaResultsViewTracker } from '@/components/path-assessment/spa-analytics-effects';
 import {
   PathAssessmentAnswersSchema,
   PathAssessmentReportSchema,
@@ -9,6 +10,7 @@ import {
   type PathAssessmentStatus,
 } from '@/lib/path-assessment/schema';
 import { isValidPathAssessmentToken } from '@/lib/path-assessment/tokens';
+import { countWrittenReviewMentors } from '@/lib/path-assessment/written-review-mentors';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const metadata: Metadata = {
@@ -72,8 +74,12 @@ export default async function AssessmentResultsPage({
     notFound();
   }
 
+  const writtenMentorCount = await countWrittenReviewMentors();
+  const showWrittenReviewCta = writtenMentorCount > 0;
+
   return (
     <div className="landing-mission min-h-screen bg-[var(--landing-canvas)] text-[var(--landing-text)] font-landing-body">
+      <SpaResultsViewTracker />
       <header className="border-b border-[var(--landing-border)] bg-[var(--landing-surface)]">
         <div className="max-w-[1200px] mx-auto px-md sm:px-lg h-14 flex items-center justify-between">
           <Link
@@ -95,7 +101,7 @@ export default async function AssessmentResultsPage({
         <p className="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.18em] text-[var(--landing-faint)] mb-6">
           Your Space Path Assessment
         </p>
-        <AssessmentReportView view={view} showWrittenReviewCta />
+        <AssessmentReportView view={view} showWrittenReviewCta={showWrittenReviewCta} />
       </main>
     </div>
   );

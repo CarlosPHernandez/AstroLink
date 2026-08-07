@@ -18,6 +18,7 @@ import {
 } from '@/lib/landing/featured-expert';
 import { LANDING_PATH_CHIPS } from '@/lib/landing/path-chips';
 import { takeLandingRelayChatMessages } from '@/lib/landing/sanitize-teaser';
+import { trackSpaHeroLinkClick } from '@/lib/path-assessment/path-assessment-analytics';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 const BROWSE_HREF = '/experts';
@@ -232,6 +233,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
             <p className="mt-2 text-xs sm:text-sm text-[var(--landing-faint)] leading-relaxed">
               <Link
                 href="/assessment"
+                onClick={() => trackSpaHeroLinkClick()}
                 className="inline-block py-1 text-[var(--landing-muted)] underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
                 data-testid="landing-hero-assessment-link"
               >

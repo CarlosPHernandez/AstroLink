@@ -36,12 +36,11 @@ export async function POST(request: Request) {
     );
   }
 
-  // Honeypot: bots fill hidden fields — soft success with no side effects
+  // Honeypot: bots fill hidden fields — soft success, no token, no side effects
   if (parsed.data.website?.trim()) {
     return NextResponse.json({
       success: true,
-      token: 'honeypot',
-      status: 'ready',
+      ignored: true,
     });
   }
 

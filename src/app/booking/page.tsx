@@ -9,10 +9,11 @@ import { ChrisBookingWizard } from '@/components/chris-campaign/chris-booking-wi
 import { getMentorBySlug, listPublicMentors } from '@/lib/mentor-directory';
 import { clampSessionDurationMinutes, SESSION_DURATION_DEFAULT } from '@/lib/session-duration';
 import { getAvailableGrantForUser } from '@/lib/session-comp-grants';
+import { toAuthWithRedirect } from '@/lib/auth-redirect';
 import { getSession } from '@/lib/session';
-import { requireSession } from '@/lib/require-session';
 import { redirect } from 'next/navigation';
 import BookingClient from './booking-client';
+import { SpaBookingWithReportTracker } from '@/components/path-assessment/spa-analytics-effects';
 
 export default async function BookingPage({
   searchParams,
@@ -36,8 +37,7 @@ export default async function BookingPage({
   } = await searchParams;
   const chrisCampaign = isChrisCampaignBookingQuery(campaign);
 
-  const session = chrisCampaign ? await getSession() : await requireSession();
-
+  const session = await getSession();
   const mentorSlug = chrisCampaign ? getChrisMentorSlug() : mentorSlugParam;
 
   const [experts, mentor] = await Promise.all([
@@ -70,9 +70,17 @@ export default async function BookingPage({
     );
   }
 
+  // Preserve ?assessment= (and mentor) through auth so free report attaches after signup.
   if (!session) {
-    redirect('/auth');
+    const returnQs = new URLSearchParams();
+    if (mentorSlugParam?.trim()) returnQs.set('mentor', mentorSlugParam.trim());
+    if (assessmentTokenParam?.trim()) returnQs.set('assessment', assessmentTokenParam.trim());
+    if (durationParam?.trim()) returnQs.set('duration', durationParam.trim());
+    const returnPath = `/booking${returnQs.toString() ? `?${returnQs.toString()}` : ''}`;
+    redirect(toAuthWithRedirect(returnPath));
   }
+
+  const authedSession = session;
 
   const invalidMentorSlug = mentorSlug && !mentor ? mentorSlug : null;
 
@@ -81,30 +89,33 @@ export default async function BookingPage({
     ? clampSessionDurationMinutes(parsedDuration)
     : SESSION_DURATION_DEFAULT;
 
-  const compGrant = await getAvailableGrantForUser(session.userId).catch(() => null);
+  const compGrant = await getAvailableGrantForUser(authedSession.userId).catch(() => null);
 
   const assessmentToken = assessmentTokenParam?.trim() || null;
 
   return (
-    <BookingClient
-      session={session}
-      experts={experts}
-      mentor={mentor}
-      invalidMentorSlug={invalidMentorSlug}
-      skipPayments={isStripePaymentsSkipped()}
-      chrisCampaign={false}
-      prefillScheduledAt={null}
-      prefillDurationMinutes={prefillDurationMinutes}
-      assessmentToken={assessmentToken}
-      initialCompGrant={
-        compGrant
-          ? {
-              id: compGrant.id,
-              creditMinutes: compGrant.creditMinutes,
-              expiresAt: compGrant.expiresAt,
-            }
-          : null
-      }
-    />
+    <>
+      <SpaBookingWithReportTracker enabled={Boolean(assessmentToken)} />
+      <BookingClient
+        session={authedSession}
+        experts={experts}
+        mentor={mentor}
+        invalidMentorSlug={invalidMentorSlug}
+        skipPayments={isStripePaymentsSkipped()}
+        chrisCampaign={false}
+        prefillScheduledAt={null}
+        prefillDurationMinutes={prefillDurationMinutes}
+        assessmentToken={assessmentToken}
+        initialCompGrant={
+          compGrant
+            ? {
+                id: compGrant.id,
+                creditMinutes: compGrant.creditMinutes,
+                expiresAt: compGrant.expiresAt,
+              }
+            : null
+        }
+      />
+    </>
   );
 }

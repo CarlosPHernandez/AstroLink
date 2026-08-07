@@ -4,8 +4,14 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import {
+  trackSpaWrittenCheckoutFail,
+  trackSpaWrittenCheckoutStart,
+  trackSpaWrittenCheckoutSuccess,
+} from '@/lib/path-assessment/path-assessment-analytics';
 import { WRITTEN_REPORT_REVIEW_CENTS, WRITTEN_REPORT_REVIEW_SLA_DAYS } from '@/lib/path-assessment/written-review-pricing';
 import { pathAssessmentResultsPath } from '@/lib/path-assessment/public-url';
+import { SpaWrittenCheckoutViewTracker } from '@/components/path-assessment/spa-analytics-effects';
 
 type ExpertOption = {
   slug: string;
@@ -94,8 +100,10 @@ export function WrittenReviewCheckout({
     setError('');
     if (!mentorSlug) {
       setError('Choose an expert.');
+      trackSpaWrittenCheckoutFail('no_expert');
       return;
     }
+    trackSpaWrittenCheckoutStart();
     setSubmitting(true);
     try {
       const res = await fetch('/api/path-assessment/reviews', {
@@ -116,23 +124,27 @@ export function WrittenReviewCheckout({
       };
       if (!res.ok) {
         setError(data.error ?? 'Could not start checkout');
+        trackSpaWrittenCheckoutFail('create_order');
         setSubmitting(false);
         return;
       }
       if (data.publicToken) setReviewToken(data.publicToken);
       if (data.skipStripe) {
+        trackSpaWrittenCheckoutSuccess(true);
         setSuccess(true);
         setSubmitting(false);
         return;
       }
       if (!data.clientSecret) {
         setError('Payment could not be started');
+        trackSpaWrittenCheckoutFail('no_secret');
         setSubmitting(false);
         return;
       }
       setClientSecret(data.clientSecret);
     } catch {
       setError('Network error');
+      trackSpaWrittenCheckoutFail('network');
     }
     setSubmitting(false);
   }
@@ -172,6 +184,7 @@ export function WrittenReviewCheckout({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10" data-testid="written-review-checkout">
+      <SpaWrittenCheckoutViewTracker />
       <div className="rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-surface)] p-5 sm:p-7">
         <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--landing-faint)]">
           Written expert review
@@ -286,8 +299,14 @@ export function WrittenReviewCheckout({
           <Elements stripe={stripePromise} options={{ clientSecret }}>
             <PayForm
               amountLabel={amountLabel}
-              onError={setError}
-              onSuccess={() => setSuccess(true)}
+              onError={(msg) => {
+                setError(msg);
+                trackSpaWrittenCheckoutFail('stripe');
+              }}
+              onSuccess={() => {
+                trackSpaWrittenCheckoutSuccess(false);
+                setSuccess(true);
+              }}
             />
           </Elements>
         ) : null}

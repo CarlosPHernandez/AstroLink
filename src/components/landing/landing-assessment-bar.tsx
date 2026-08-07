@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import { MaterialIcon } from '@/components/ui/material-icon';
+import { trackSpaBarClick } from '@/lib/path-assessment/path-assessment-analytics';
 
 /**
  * Compact Space Path Assessment strip above the landing header.
@@ -27,6 +30,7 @@ export function LandingAssessmentBar() {
 
         <Link
           href="/assessment"
+          onClick={() => trackSpaBarClick()}
           className="inline-flex h-7 sm:h-8 shrink-0 touch-manipulation items-center justify-center gap-0.5 sm:gap-1 rounded-full bg-[var(--landing-accent)] px-2.5 sm:px-3 text-[11px] sm:text-[12px] font-semibold text-white transition-colors hover:bg-[var(--landing-accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-accent)] focus-visible:ring-offset-1"
           data-testid="landing-assessment-bar-link"
         >

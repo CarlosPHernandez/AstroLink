@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   PATH_ASSESSMENT_NETWORKS,
   PATH_ASSESSMENT_STAGES,
@@ -11,13 +11,20 @@ import {
   type PathAssessmentStage,
 } from '@/lib/path-assessment/schema';
 import {
+  classifySpaSubmitFail,
+  trackSpaFormStep,
+  trackSpaFormSubmitAttempt,
+  trackSpaFormSubmitFail,
+  trackSpaFormSubmitSuccess,
+  trackSpaFormView,
+} from '@/lib/path-assessment/path-assessment-analytics';
+import {
   type FieldErrors,
   fieldErrorInputClass,
   firstFieldError,
   formLevelSummary,
   toFieldErrors,
 } from '@/lib/zod-field-errors';
-
 const TOTAL_STEPS = 6;
 
 const STEP_META: { id: number; label: string; short: string }[] = [
@@ -73,6 +80,10 @@ export function AssessmentForm() {
   const progressPct = useMemo(() => Math.round((step / TOTAL_STEPS) * 100), [step]);
   const currentMeta = STEP_META[step - 1];
 
+  useEffect(() => {
+    trackSpaFormView();
+  }, []);
+
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setFieldErrors((prev) => {
@@ -120,7 +131,9 @@ export function AssessmentForm() {
 
   const goNext = () => {
     if (!validateStep(step)) return;
-    setStep((s) => Math.min(TOTAL_STEPS, s + 1));
+    const next = Math.min(TOTAL_STEPS, step + 1);
+    setStep(next);
+    trackSpaFormStep(next);
   };
 
   const goBack = () => {
@@ -130,7 +143,10 @@ export function AssessmentForm() {
   };
 
   const submit = async () => {
-    if (!validateStep(TOTAL_STEPS)) return;
+    if (!validateStep(TOTAL_STEPS)) {
+      trackSpaFormSubmitFail('validation');
+      return;
+    }
 
     const body = {
       firstName: form.firstName.trim(),
@@ -147,9 +163,11 @@ export function AssessmentForm() {
     if (!parsed.success) {
       setFieldErrors(toFieldErrors(parsed.error));
       setError(formLevelSummary());
+      trackSpaFormSubmitFail('validation');
       return;
     }
 
+    trackSpaFormSubmitAttempt();
     setSubmitting(true);
     setError(null);
 
@@ -161,22 +179,37 @@ export function AssessmentForm() {
       });
       const json = (await res.json()) as {
         success?: boolean;
+        ignored?: boolean;
         error?: string;
         fieldErrors?: FieldErrors;
         token?: string;
         status?: string;
       };
 
-      if (!res.ok || !json.success || !json.token || json.token === 'honeypot') {
+      // Honeypot: soft-success with no token — do not navigate
+      if (json.success && (json.ignored || !json.token)) {
+        trackSpaFormSubmitFail('ignored');
+        setSubmitting(false);
+        return;
+      }
+
+      if (!res.ok || !json.success || !json.token) {
         if (json.fieldErrors) {
           setFieldErrors(json.fieldErrors);
         }
-        throw new Error(json.error ?? 'Could not generate your assessment. Try again.');
+        trackSpaFormSubmitFail(classifySpaSubmitFail(res.status, json.error ?? ''));
+        setError(json.error ?? 'Could not generate your assessment. Try again.');
+        setSubmitting(false);
+        return;
       }
 
+      trackSpaFormSubmitSuccess();
       router.push(`/assessment/results/${encodeURIComponent(json.token)}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not generate your assessment. Try again.');
+      const message =
+        err instanceof Error ? err.message : 'Could not generate your assessment. Try again.';
+      trackSpaFormSubmitFail(classifySpaSubmitFail(0, message));
+      setError(message);
       setSubmitting(false);
     }
   };
