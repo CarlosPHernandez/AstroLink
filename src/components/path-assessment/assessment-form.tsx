@@ -234,15 +234,14 @@ export function AssessmentForm() {
                     aria-current={active ? 'step' : undefined}
                   >
                     <span
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                        active
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+                        active || done
                           ? 'bg-[var(--landing-ink)] text-white'
-                          : done
-                            ? 'bg-[var(--landing-ink)]/10 text-[var(--landing-ink)]'
-                            : 'bg-[var(--landing-surface-soft)] text-[var(--landing-faint)] border border-[var(--landing-border)]'
+                          : 'bg-[var(--landing-surface-soft)] text-[var(--landing-faint)] border border-[var(--landing-border)]'
                       }`}
+                      aria-label={done ? `${s.label}, completed` : active ? `${s.label}, current` : s.label}
                     >
-                      {done ? '✓' : s.id}
+                      {s.id}
                     </span>
                     <span className="leading-tight">{s.label}</span>
                   </div>
