@@ -2,43 +2,38 @@ import Link from 'next/link';
 import { MaterialIcon } from '@/components/ui/material-icon';
 
 /**
- * Space Path Assessment promo banner — Stitch pill layout, AstroLink DESIGN tokens.
- * Non-sticky; sits above the landing header.
+ * Compact Space Path Assessment strip above the landing header.
+ * Stitch structure (badge + title + CTA), scaled as page chrome — not a hero promo.
  */
 export function LandingAssessmentBar() {
   return (
     <div
-      className="bg-[var(--landing-surface-soft)] px-md sm:px-lg py-3 sm:py-4"
+      className="border-b border-[var(--landing-border)] bg-[var(--landing-surface)]"
       data-testid="landing-assessment-bar"
     >
-      <div className="mx-auto w-full max-w-[1280px]">
-        <div className="flex w-full flex-col items-center justify-between gap-3 rounded-full border border-[color:color-mix(in_srgb,var(--landing-border)_70%,transparent)] bg-[var(--landing-surface)] px-4 py-3 shadow-sm sm:flex-row sm:gap-4 sm:px-6 sm:py-3">
-          <div className="flex w-full flex-col items-center gap-3 text-center sm:w-auto sm:flex-row sm:gap-4 sm:text-left">
-            <span className="inline-flex shrink-0 items-center rounded-full bg-[var(--landing-ink)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-white font-mono">
-              Free
+      <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-x-3 gap-y-2 px-md py-2 sm:px-lg sm:py-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5">
+          <span className="inline-flex shrink-0 items-center rounded-full bg-[var(--landing-ink)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-white font-mono leading-none">
+            Free
+          </span>
+          <p className="min-w-0 text-[12px] leading-snug text-[var(--landing-text)] sm:text-[13px]">
+            <span className="font-semibold">Space Path Assessment</span>
+            <span className="text-[var(--landing-faint)]" aria-hidden>
+              {' '}
+              —{' '}
             </span>
-            <div className="flex flex-col items-center gap-0.5 sm:flex-row sm:items-baseline sm:gap-1">
-              <span className="font-landing-display text-lg font-semibold leading-8 tracking-tight text-[var(--landing-text)] sm:text-2xl sm:leading-8">
-                Space Path Assessment
-              </span>
-              <span className="mx-1 hidden text-[var(--landing-faint)] sm:inline" aria-hidden>
-                —
-              </span>
-              <span className="text-sm leading-6 text-[var(--landing-muted)] sm:text-base">
-                know where you stand in 2–3 minutes
-              </span>
-            </div>
-          </div>
-
-          <Link
-            href="/assessment"
-            className="inline-flex w-full shrink-0 touch-manipulation items-center justify-center gap-2 rounded-full bg-[var(--landing-accent)] px-6 py-3 text-sm font-semibold text-white transition-[background-color,transform,filter] duration-200 hover:bg-[var(--landing-accent-hover)] hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-accent)] focus-visible:ring-offset-2 active:scale-[0.98] sm:w-auto sm:hover:scale-[1.03]"
-            data-testid="landing-assessment-bar-link"
-          >
-            Start free assessment
-            <MaterialIcon name="arrow_forward" size={18} className="text-white" />
-          </Link>
+            <span className="text-[var(--landing-muted)]">know where you stand in 2–3 minutes</span>
+          </p>
         </div>
+
+        <Link
+          href="/assessment"
+          className="inline-flex h-8 shrink-0 touch-manipulation items-center justify-center gap-1 rounded-full bg-[var(--landing-accent)] px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[var(--landing-accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-accent)] focus-visible:ring-offset-1"
+          data-testid="landing-assessment-bar-link"
+        >
+          Start free assessment
+          <MaterialIcon name="arrow_forward" size={14} className="text-white" />
+        </Link>
       </div>
     </div>
   );
