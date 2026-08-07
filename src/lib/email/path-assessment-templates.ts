@@ -3,6 +3,7 @@ import 'server-only';
 import {
   pathAssessmentBookingUrl,
   pathAssessmentResultsUrl,
+  pathAssessmentWrittenReviewUrl,
 } from '@/lib/path-assessment/public-url.server';
 import { renderPathAssessmentReportHtml } from '@/lib/path-assessment/render-report';
 import type { PathAssessmentReport } from '@/lib/path-assessment/schema';
@@ -22,10 +23,13 @@ export function buildPathAssessmentEmail(params: {
 }): { subject: string; html: string } {
   const resultsUrl = pathAssessmentResultsUrl(params.token);
   const bookingUrl = pathAssessmentBookingUrl(params.token);
+  const writtenReviewUrl = pathAssessmentWrittenReviewUrl(params.token);
   const reportHtml = renderPathAssessmentReportHtml(params.report, {
     firstName: params.firstName,
     bookingUrl,
+    writtenReviewUrl,
     includeLiveCta: true,
+    includeWrittenCta: true,
   });
   const name = params.firstName.trim() || 'there';
 
@@ -44,6 +48,7 @@ export function buildPathAssessmentEmail(params: {
     <p style="margin:32px 0 0;font-size:12px;line-height:1.5;color:#9AA3AE;">
       You’re receiving this because you completed the free Space Path Assessment on AstroLink.
       No account was required. Primary next step: book a live expert review with your report attached.
+      Optional: written expert review for $50.
     </p>
   </div>
 </body>

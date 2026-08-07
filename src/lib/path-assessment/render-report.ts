@@ -19,18 +19,22 @@ function sectionTitle(text: string): string {
 
 /**
  * Safe HTML from structured report JSON (escaped). Used for email + optional storage.
- * PR-A: live CTA only — no $50 written review CTA.
+ * Live CTA primary; optional written review secondary (PR-B).
  */
 export function renderPathAssessmentReportHtml(
   report: PathAssessmentReport,
   options?: {
     firstName?: string;
     bookingUrl?: string;
+    writtenReviewUrl?: string;
     includeLiveCta?: boolean;
+    includeWrittenCta?: boolean;
   },
 ): string {
   const includeLiveCta = options?.includeLiveCta !== false;
+  const includeWrittenCta = options?.includeWrittenCta === true;
   const bookingUrl = options?.bookingUrl?.trim() || '';
+  const writtenReviewUrl = options?.writtenReviewUrl?.trim() || '';
   const firstName = options?.firstName?.trim();
 
   const gaps = report.key_gaps
@@ -74,6 +78,20 @@ export function renderPathAssessmentReportHtml(
     </div>`
         : '';
 
+  const writtenBridge =
+    report.upsell_bridge_written?.trim() ||
+    'Prefer async? Get a written expert review of this exact report for $50.';
+
+  const writtenCta =
+    includeWrittenCta && writtenReviewUrl
+      ? `
+    <div style="margin:16px 0 0;padding:16px 20px;border:1px solid #DDE2EA;border-radius:8px;background:#FFFFFF;">
+      <p style="margin:0 0 8px;font-weight:600;color:#171A1F;line-height:1.4;">Not ready for a live session?</p>
+      <p style="margin:0 0 12px;color:#66717F;font-size:14px;line-height:1.5;">${escapeHtml(writtenBridge)}</p>
+      <a href="${escapeHtml(writtenReviewUrl)}" style="display:inline-block;padding:10px 16px;border:2px solid #0E1420;color:#0E1420;text-decoration:none;border-radius:999px;font-size:14px;font-weight:600;">Get a written expert review — $50</a>
+    </div>`
+      : '';
+
   return `
 <div style="font-family:Montserrat,Helvetica,Arial,sans-serif;max-width:640px;margin:0 auto;color:#171A1F;">
   ${greeting}
@@ -88,6 +106,7 @@ export function renderPathAssessmentReportHtml(
   ${sectionTitle('Next actions')}
   <ol style="margin:0;padding-left:18px;">${actions}</ol>
   ${liveCta}
+  ${writtenCta}
 </div>
 `.trim();
 }

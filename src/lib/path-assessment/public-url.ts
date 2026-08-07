@@ -8,6 +8,15 @@ export function pathAssessmentBookingPath(token: string): string {
   return `/booking?assessment=${encodeURIComponent(token)}`;
 }
 
+/** Checkout for $50 written expert review of an existing assessment. */
+export function pathAssessmentWrittenReviewPath(assessmentToken: string): string {
+  return `/assessment/written-review?assessment=${encodeURIComponent(assessmentToken)}`;
+}
+
+export function pathAssessmentWrittenReviewViewPath(reviewToken: string): string {
+  return `/assessment/reviews/${encodeURIComponent(reviewToken)}`;
+}
+
 /** Prefill booking goals/background from assessment answers. */
 export function answersToBookingPrefill(answers: {
   primaryGoal: string;

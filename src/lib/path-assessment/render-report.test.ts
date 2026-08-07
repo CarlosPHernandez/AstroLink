@@ -45,7 +45,17 @@ describe('renderPathAssessmentReportHtml', () => {
     expect(html).toContain('Book live expert review with my report');
     expect(html).toContain('https://astro-link.space/booking?assessment=tok');
     expect(html).not.toContain('$50');
-    expect(html).not.toContain('written expert review product');
+  });
+
+  it('includes written CTA when enabled with URL', () => {
+    const html = renderPathAssessmentReportHtml(report, {
+      bookingUrl: 'https://astro-link.space/booking?assessment=tok',
+      writtenReviewUrl: 'https://astro-link.space/assessment/written-review?assessment=tok',
+      includeLiveCta: true,
+      includeWrittenCta: true,
+    });
+    expect(html).toContain('Get a written expert review — $50');
+    expect(html).toContain('written-review?assessment=tok');
   });
 });
 

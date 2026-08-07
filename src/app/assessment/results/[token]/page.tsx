@@ -91,11 +91,11 @@ export default async function AssessmentResultsPage({
         </div>
       </header>
 
-      <main className="max-w-[720px] mx-auto px-md sm:px-lg py-8 sm:py-14 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
+      <main className="max-w-[960px] mx-auto px-md sm:px-lg py-8 sm:py-12 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
         <p className="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.18em] text-[var(--landing-faint)] mb-6">
           Your Space Path Assessment
         </p>
-        <AssessmentReportView view={view} />
+        <AssessmentReportView view={view} showWrittenReviewCta />
       </main>
     </div>
   );

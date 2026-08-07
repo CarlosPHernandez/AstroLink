@@ -11,6 +11,7 @@ export type MentorDashboardTab =
   | 'overview'
   | 'sessions'
   | 'videos'
+  | 'reports'
   | 'earnings'
   | 'profile'
   | 'settings';
@@ -18,13 +19,14 @@ export type MentorDashboardTab =
 type NavItem = {
   id: MentorDashboardTab;
   label: string;
-  icon: 'home' | 'sessions' | 'videos' | 'earnings' | 'listing' | 'settings';
+  icon: 'home' | 'sessions' | 'videos' | 'reports' | 'earnings' | 'listing' | 'settings';
 };
 
 const PRIMARY_NAV: NavItem[] = [
   { id: 'overview', label: 'Overview', icon: 'home' },
   { id: 'sessions', label: 'Sessions', icon: 'sessions' },
   { id: 'videos', label: 'Videos', icon: 'videos' },
+  { id: 'reports', label: 'Report reviews', icon: 'reports' },
   { id: 'earnings', label: 'Earnings', icon: 'earnings' },
   { id: 'profile', label: 'Listing', icon: 'listing' },
 ];
@@ -94,6 +96,18 @@ function NavIcon({ name, className }: { name: NavItem['icon']; className?: strin
             strokeWidth="1.25"
             strokeLinejoin="round"
           />
+        </svg>
+      );
+    case 'reports':
+      return (
+        <svg {...common}>
+          <path
+            d="M4 2.5h6.5L13.5 5.5V13a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 13V4A1.5 1.5 0 0 1 4 2.5Z"
+            stroke="currentColor"
+            strokeWidth="1.25"
+            strokeLinejoin="round"
+          />
+          <path d="M5 8h6M5 10.5h4" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
         </svg>
       );
     case 'earnings':

@@ -517,6 +517,7 @@ export type Database = {
           video_request_price_cents: number
           video_request_sla_days: number
           video_requests_enabled: boolean
+          written_report_reviews_enabled: boolean
         }
         Insert: {
           activated_at?: string | null
@@ -545,6 +546,7 @@ export type Database = {
           video_request_price_cents?: number
           video_request_sla_days?: number
           video_requests_enabled?: boolean
+          written_report_reviews_enabled?: boolean
         }
         Update: {
           activated_at?: string | null
@@ -573,8 +575,78 @@ export type Database = {
           video_request_price_cents?: number
           video_request_sla_days?: number
           video_requests_enabled?: boolean
+          written_report_reviews_enabled?: boolean
         }
         Relationships: []
+      }
+      path_assessment_reviews: {
+        Row: {
+          amount_cents: number
+          buyer_email: string
+          buyer_name: string
+          created_at: string
+          delivered_at: string | null
+          due_at: string | null
+          id: string
+          mentor_id: string
+          paid_at: string | null
+          path_assessment_id: string
+          public_token: string
+          status: Database["public"]["Enums"]["path_assessment_review_status"]
+          stripe_payment_intent_id: string
+          updated_at: string
+          written_response: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          buyer_email: string
+          buyer_name?: string
+          created_at?: string
+          delivered_at?: string | null
+          due_at?: string | null
+          id?: string
+          mentor_id: string
+          paid_at?: string | null
+          path_assessment_id: string
+          public_token: string
+          status?: Database["public"]["Enums"]["path_assessment_review_status"]
+          stripe_payment_intent_id: string
+          updated_at?: string
+          written_response?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          buyer_email?: string
+          buyer_name?: string
+          created_at?: string
+          delivered_at?: string | null
+          due_at?: string | null
+          id?: string
+          mentor_id?: string
+          paid_at?: string | null
+          path_assessment_id?: string
+          public_token?: string
+          status?: Database["public"]["Enums"]["path_assessment_review_status"]
+          stripe_payment_intent_id?: string
+          updated_at?: string
+          written_response?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "path_assessment_reviews_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "mentors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "path_assessment_reviews_path_assessment_id_fkey"
+            columns: ["path_assessment_id"]
+            isOneToOne: false
+            referencedRelation: "path_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       video_requests: {
         Row: {
@@ -1086,7 +1158,15 @@ export type Database = {
         | "APX-08"
         | "APX-09"
         | "APX-10"
+        | "APX-11"
       bio_risk_rating: "low" | "medium" | "high"
+      path_assessment_review_status:
+        | "pending_payment"
+        | "paid"
+        | "in_progress"
+        | "delivered"
+        | "refunded"
+        | "expired"
       booking_status:
         | "pending_payment"
         | "confirmed"
@@ -1239,6 +1319,15 @@ export const Constants = {
         "APX-08",
         "APX-09",
         "APX-10",
+        "APX-11",
+      ],
+      path_assessment_review_status: [
+        "pending_payment",
+        "paid",
+        "in_progress",
+        "delivered",
+        "refunded",
+        "expired",
       ],
       bio_risk_rating: ["low", "medium", "high"],
       booking_status: [
