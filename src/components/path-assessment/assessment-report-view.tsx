@@ -103,10 +103,11 @@ export function AssessmentLiveCta({ token }: { token: string }) {
       </p>
       <Link
         href={href}
-        className="mt-5 inline-flex min-h-11 w-full sm:w-auto touch-manipulation items-center justify-center rounded-full bg-[var(--landing-ink)] px-6 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2"
+        className="mt-5 inline-flex min-h-11 w-full sm:w-auto touch-manipulation items-center justify-center rounded-full bg-[var(--landing-ink)] px-5 sm:px-6 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2"
         data-testid="path-assessment-book-live"
       >
-        Book live expert review with my report
+        <span className="sm:hidden">Book live expert review</span>
+        <span className="hidden sm:inline">Book live expert review with my report</span>
       </Link>
     </aside>
   );
@@ -131,10 +132,11 @@ export function AssessmentWrittenReviewCta({ token }: { token: string }) {
       </p>
       <Link
         href={href}
-        className="mt-4 inline-flex min-h-11 w-full sm:w-auto touch-manipulation items-center justify-center rounded-full border-2 border-[var(--landing-ink)] bg-transparent px-6 text-sm font-semibold text-[var(--landing-ink)] hover:bg-[var(--landing-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2"
+        className="mt-4 inline-flex min-h-11 w-full sm:w-auto touch-manipulation items-center justify-center rounded-full border-2 border-[var(--landing-ink)] bg-transparent px-5 sm:px-6 text-sm font-semibold text-[var(--landing-ink)] hover:bg-[var(--landing-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2"
         data-testid="path-assessment-book-written"
       >
-        Get a written expert review — ${dollars}
+        <span className="sm:hidden">Written review · ${dollars}</span>
+        <span className="hidden sm:inline">Get a written expert review — ${dollars}</span>
       </Link>
     </aside>
   );

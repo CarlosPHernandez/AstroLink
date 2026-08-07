@@ -538,7 +538,7 @@ export function AssessmentForm() {
                 className="inline-flex min-h-11 touch-manipulation items-center justify-center rounded-full bg-[var(--landing-ink)] px-8 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 disabled:opacity-60 sm:min-w-[200px]"
                 data-testid="path-assessment-submit"
               >
-                {submitting ? 'Generating your report…' : 'Get my free assessment'}
+                {submitting ? 'Generating report…' : 'Get free report'}
               </button>
             )}
           </div>

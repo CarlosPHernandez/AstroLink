@@ -9,7 +9,10 @@ import {
   PATH_ASSESSMENT_REPORT_SCHEMA,
   PATH_ASSESSMENT_SYSTEM_INSTRUCTION,
 } from '@/lib/path-assessment/prompts';
-import { pathAssessmentBookingUrl } from '@/lib/path-assessment/public-url.server';
+import {
+  pathAssessmentBookingUrl,
+  pathAssessmentWrittenReviewUrl,
+} from '@/lib/path-assessment/public-url.server';
 import {
   coercePathAssessmentReport,
   renderPathAssessmentReportHtml,
@@ -62,7 +65,8 @@ export class PathAssessmentAgent {
 
     await this.logAudit('PATH_ASSESSMENT_CREATED', row.id, {
       public_token: publicToken,
-      email: params.answers.email,
+      // Avoid storing raw email in audit payload (PII).
+      has_email: Boolean(params.answers.email),
     });
 
     const { report, usedFallback, llmError } = await this.generateReport(
@@ -73,7 +77,9 @@ export class PathAssessmentAgent {
     const reportHtml = renderPathAssessmentReportHtml(report, {
       firstName: params.answers.firstName,
       bookingUrl: pathAssessmentBookingUrl(publicToken),
+      writtenReviewUrl: pathAssessmentWrittenReviewUrl(publicToken),
       includeLiveCta: true,
+      includeWrittenCta: true,
     });
 
     // Prefer status ready even when LLM failed so UX never dead-ends.
