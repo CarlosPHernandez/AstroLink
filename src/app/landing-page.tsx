@@ -1,27 +1,32 @@
 import LandingHero from '@/components/landing/landing-hero';
 import { LandingAssessmentBar } from '@/components/landing/landing-assessment-bar';
-import { LandingAssessmentOffer } from '@/components/landing/landing-assessment-offer';
+import { LandingHowPath } from '@/components/landing/landing-how-path';
 import { LandingBenefits } from '@/components/landing/landing-benefits';
 import { LandingParticipation } from '@/components/landing/landing-participation';
-import { LandingTrust } from '@/components/landing/landing-trust';
-import { LandingStory } from '@/components/landing/landing-story';
+import { LandingReviews } from '@/components/landing/landing-reviews';
 import ExpertDirectory from '@/components/landing/expert-directory';
 import { LandingHeader } from '@/components/landing/landing-header';
+import type { LandingPublicReview } from '@/lib/expert-reviews/get-landing-public-reviews';
 import Link from 'next/link';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
-export default function LandingPage({ experts }: { experts: ListedExpert[] }) {
+export default function LandingPage({
+  experts,
+  reviews,
+}: {
+  experts: ListedExpert[];
+  reviews: LandingPublicReview[];
+}) {
   return (
     <div className="landing-mission min-h-screen overflow-x-hidden bg-[var(--landing-canvas)] text-[var(--landing-text)] font-landing-body selection:bg-[color:var(--landing-accent)]/20">
       <LandingAssessmentBar />
       <LandingHeader />
       <main>
         <LandingHero experts={experts} />
+        <LandingReviews reviews={reviews} />
+        <LandingHowPath />
         <LandingParticipation />
-        <LandingAssessmentOffer />
         <LandingBenefits />
-        <LandingTrust />
-        <LandingStory experts={experts} />
         <ExpertDirectory experts={experts} variant="mission" />
       </main>
 
@@ -29,6 +34,12 @@ export default function LandingPage({ experts }: { experts: ListedExpert[] }) {
         <div className="max-w-[1200px] mx-auto px-md sm:px-lg flex flex-col sm:flex-row justify-between items-center gap-5 sm:gap-6">
           <span className="font-landing-wordmark text-sm text-[var(--landing-text)]">AstroLink</span>
           <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 text-[var(--landing-muted)] text-xs">
+            <Link
+              href="/assessment"
+              className="inline-flex min-h-10 touch-manipulation items-center px-2.5 hover:text-[var(--landing-text)] transition-colors sm:min-h-0"
+            >
+              Free assessment
+            </Link>
             <Link
               href="/experts"
               className="inline-flex min-h-10 touch-manipulation items-center px-2.5 hover:text-[var(--landing-text)] transition-colors sm:min-h-0"

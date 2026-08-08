@@ -13,7 +13,7 @@ export function LandingParticipation() {
   return (
     <section
       id="participation"
-      className="border-t border-[var(--landing-border)] bg-white py-12 sm:py-16"
+      className="border-t border-[var(--landing-border)] bg-white py-8 sm:py-10"
       data-testid="landing-participation"
       aria-label="Competition participation"
     >
@@ -31,7 +31,7 @@ export function LandingParticipation() {
             href={GEMINI_XPRIZE_HREF}
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex flex-wrap items-center justify-center gap-x-8 gap-y-6 sm:gap-x-12 rounded-sm px-2 py-1 transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+            className="group inline-flex flex-wrap items-center justify-center gap-x-6 gap-y-4 sm:gap-x-10 rounded-sm px-2 py-1 transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
             data-testid="landing-participation-link"
           >
             <Image
@@ -39,13 +39,13 @@ export function LandingParticipation() {
               alt="Gemini"
               width={640}
               height={180}
-              className="h-16 w-auto max-w-[min(100%,280px)] sm:h-24 sm:max-w-[360px] md:h-28 md:max-w-[420px] object-contain object-center"
-              sizes="(max-width: 640px) 280px, (max-width: 768px) 360px, 420px"
+              className="h-10 w-auto max-w-[min(100%,160px)] sm:h-14 sm:max-w-[220px] object-contain object-center"
+              sizes="(max-width: 640px) 160px, 220px"
               priority={false}
             />
 
             <span
-              className="h-12 w-px shrink-0 bg-[var(--landing-border)] sm:h-16 md:h-20"
+              className="h-8 w-px shrink-0 bg-[var(--landing-border)] sm:h-10"
               aria-hidden
             />
 
@@ -54,8 +54,8 @@ export function LandingParticipation() {
               alt="XPRIZE"
               width={720}
               height={180}
-              className="h-16 w-auto max-w-[min(100%,300px)] sm:h-24 sm:max-w-[400px] md:h-28 md:max-w-[460px] object-contain object-center"
-              sizes="(max-width: 640px) 300px, (max-width: 768px) 400px, 460px"
+              className="h-10 w-auto max-w-[min(100%,170px)] sm:h-14 sm:max-w-[240px] object-contain object-center"
+              sizes="(max-width: 640px) 170px, 240px"
               priority={false}
             />
           </a>

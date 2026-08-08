@@ -13,10 +13,10 @@ export function LandingBenefits() {
   return (
     <section
       id="pipeline"
-      className="scroll-mt-20 border-t border-[var(--landing-border)] py-11 sm:py-24 lg:py-28"
+      className="scroll-mt-20 border-t border-[var(--landing-border)] py-10 sm:py-14 lg:py-16"
     >
       <div className="max-w-[1200px] mx-auto px-md sm:px-lg">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-7 md:gap-8 lg:gap-12 text-center md:text-left items-start md:items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6 lg:gap-10 text-left items-start">
           {BENEFITS.map((benefit, index) => (
             <LandingScrollReveal
               key={benefit.line1}
@@ -25,7 +25,7 @@ export function LandingBenefits() {
               variant="up"
               className="m-0"
             >
-              <span className="font-landing-display text-[1.35rem] sm:text-[1.875rem] lg:text-[2.125rem] font-semibold tracking-tight text-[var(--landing-text)] leading-[1.14] block">
+              <span className="font-landing-display text-[1.125rem] sm:text-[1.25rem] lg:text-[1.375rem] font-semibold tracking-tight text-[var(--landing-text)] leading-[1.25] block">
                 {benefit.line1}
                 <br />
                 <span className="text-[var(--landing-muted)] font-medium">{benefit.line2}</span>
@@ -38,7 +38,7 @@ export function LandingBenefits() {
           as="p"
           delay={120}
           variant="up"
-          className="mt-10 sm:mt-20 text-center text-sm sm:text-base text-[var(--landing-muted)] max-w-[var(--max-width-prose)] mx-auto leading-relaxed"
+          className="mt-7 sm:mt-10 text-left sm:text-center text-sm sm:text-base text-[var(--landing-muted)] max-w-[var(--max-width-prose)] sm:mx-auto leading-relaxed"
         >
           AstroLink is for students, career-switchers, teams, and curious people who want real
           conversations with people who have worked, flown, built, and trained in space.
@@ -47,7 +47,7 @@ export function LandingBenefits() {
         <LandingScrollReveal
           delay={180}
           variant="up"
-          className="mt-7 sm:mt-10 flex justify-center text-sm text-[var(--landing-faint)]"
+          className="mt-5 sm:mt-7 flex sm:justify-center text-sm text-[var(--landing-faint)]"
         >
           <Link
             href="/experts"
