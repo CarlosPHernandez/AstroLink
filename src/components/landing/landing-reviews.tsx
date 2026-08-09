@@ -12,7 +12,7 @@ function StarRow({ rating }: { rating: number }) {
             key={i}
             name={filled ? 'star' : 'star_border'}
             size={18}
-            className={filled ? 'text-[var(--landing-ink)]' : 'text-[var(--landing-border)]'}
+            className={filled ? 'text-[var(--landing-accent)]' : 'text-[var(--landing-border)]'}
             aria-hidden
           />
         );
@@ -32,7 +32,7 @@ function ReviewCard({
     <article
       className={
         featured
-          ? 'rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-surface)] p-5 sm:p-8 shadow-[0_16px_48px_-32px_rgba(14,20,32,0.2)]'
+          ? 'rounded-2xl border border-[var(--landing-accent-border)] bg-[var(--landing-surface)] p-5 sm:p-8 shadow-[0_16px_48px_-32px_rgba(14,20,32,0.2)]'
           : 'rounded-xl border border-[var(--landing-border)] bg-[var(--landing-surface)] p-4 sm:p-5'
       }
       data-testid="landing-review-card"
@@ -62,7 +62,7 @@ function ReviewCard({
             review.expertSlug ? (
               <Link
                 href={`/experts/${review.expertSlug}`}
-                className="underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
+                className="text-[var(--landing-accent)] underline-offset-2 hover:text-[var(--landing-accent-hover)] hover:underline"
               >
                 with {review.expertName}
               </Link>
@@ -100,7 +100,7 @@ export function LandingReviews({ reviews }: { reviews: LandingPublicReview[] }) 
     >
       <div className="max-w-[1200px] mx-auto px-md sm:px-lg">
         <div className="max-w-[36rem]">
-          <p className="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.18em] text-[var(--landing-faint)]">
+          <p className="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.18em] text-[var(--landing-accent)]">
             Session feedback
           </p>
           <h2

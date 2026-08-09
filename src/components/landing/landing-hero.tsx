@@ -137,7 +137,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-7 sm:gap-8 lg:gap-12 lg:items-center">
           <div className="min-w-0 text-center lg:text-left">
             <p
-              className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.18em] text-[var(--landing-faint)]"
+              className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.18em] text-[var(--landing-accent)]"
               data-testid="landing-hero-eyebrow"
             >
               <span
@@ -170,7 +170,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
                   trackSpaOfferClick();
                   trackSpaHeroLinkClick();
                 }}
-                className="inline-flex min-h-11 sm:min-h-12 w-full sm:w-auto touch-manipulation items-center justify-center gap-1.5 rounded-full bg-[var(--landing-ink)] px-5 sm:px-6 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2"
+                className="inline-flex min-h-11 sm:min-h-12 w-full sm:w-auto touch-manipulation items-center justify-center gap-1.5 rounded-full bg-[var(--landing-ink)] px-5 sm:px-6 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-accent)] focus-visible:ring-offset-2"
                 data-testid="landing-hero-assessment-cta"
               >
                 Start free assessment
@@ -178,7 +178,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
               </Link>
               <Link
                 href={EXPERTS_HREF}
-                className="inline-flex min-h-11 sm:min-h-12 w-full sm:w-auto touch-manipulation items-center justify-center rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)] px-5 sm:px-6 text-sm font-medium text-[var(--landing-text)] hover:bg-[var(--landing-surface-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2"
+                className="inline-flex min-h-11 sm:min-h-12 w-full sm:w-auto touch-manipulation items-center justify-center rounded-full border border-[var(--landing-accent-border)] bg-[var(--landing-surface)] px-5 sm:px-6 text-sm font-medium text-[var(--landing-text)] hover:border-[var(--landing-accent)] hover:bg-[var(--landing-accent-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-accent)] focus-visible:ring-offset-2"
                 data-testid="landing-hero-experts-cta"
               >
                 Browse experts
@@ -202,7 +202,7 @@ export default function LandingHero({ experts }: LandingHeroProps) {
               key={step.title}
               className="flex gap-3 rounded-xl border border-[var(--landing-border)] bg-[var(--landing-surface)] px-3.5 py-3 sm:flex-col sm:gap-2 sm:px-4 sm:py-4 text-left min-w-0"
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--landing-ink)] text-[11px] font-semibold text-white sm:h-8 sm:w-8 sm:text-xs">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--landing-accent-tint)] text-[11px] font-semibold text-[var(--landing-accent)] sm:h-8 sm:w-8 sm:text-xs ring-1 ring-[var(--landing-accent-border)]">
                 {index + 1}
               </span>
               <div className="min-w-0">

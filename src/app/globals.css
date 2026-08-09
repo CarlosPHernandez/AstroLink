@@ -352,6 +352,10 @@ body {
   --landing-faint: #9aa3ae;
   --landing-accent: #1859d4;
   --landing-accent-hover: #1247ae;
+  /* Soft wash (~6% accent on soft surface) — max one mid-page strip */
+  --landing-accent-soft: color-mix(in srgb, #1859d4 7%, #f1f3f6);
+  --landing-accent-tint: color-mix(in srgb, #1859d4 12%, #ffffff);
+  --landing-accent-border: color-mix(in srgb, #1859d4 28%, #dde2ea);
   --landing-ink: #0e1420;
   --landing-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --landing-duration-fast: 300ms;

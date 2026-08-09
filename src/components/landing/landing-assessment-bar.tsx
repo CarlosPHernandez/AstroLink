@@ -6,17 +6,17 @@ import { trackSpaBarClick } from '@/lib/path-assessment/path-assessment-analytic
 
 /**
  * Compact Space Path Assessment strip above the landing header.
- * Mobile: short copy + compact CTA; desktop: fuller line.
+ * Accent used for Free chip + CTA (secondary accent path; ink stays primary elsewhere).
  */
 export function LandingAssessmentBar() {
   return (
     <div
-      className="border-b border-[var(--landing-border)] bg-[var(--landing-surface)]"
+      className="border-b border-[var(--landing-accent-border)] bg-[var(--landing-accent-soft)]"
       data-testid="landing-assessment-bar"
     >
       <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-2 px-md py-1.5 sm:gap-3 sm:px-lg sm:py-2">
         <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2.5">
-          <span className="inline-flex shrink-0 items-center rounded-full bg-[var(--landing-ink)] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-white font-mono leading-none sm:px-2 sm:text-[10px]">
+          <span className="inline-flex shrink-0 items-center rounded-full bg-[var(--landing-accent)] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-white font-mono leading-none sm:px-2 sm:text-[10px]">
             Free
           </span>
           <p className="min-w-0 truncate text-[11px] leading-snug text-[var(--landing-text)] sm:text-[13px] sm:overflow-visible sm:whitespace-normal">
