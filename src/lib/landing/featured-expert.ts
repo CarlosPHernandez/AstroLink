@@ -93,6 +93,71 @@ export type LandingHeroStripPortrait = {
 export const LANDING_HERO_STRIP_MAX = 3;
 
 /**
+ * Hero visual rotation order (homepage assessment magnet).
+ * Overrides the older DESIGN.md “single Chris billboard only” shipping note —
+ * founder request 2026-08-08: rotate Chris → Priya → Eiman on the hero card.
+ */
+export const LANDING_HERO_ROTATION_SLUGS = [
+  'chris-sembroski',
+  'priya-abiram',
+  'eiman-jahangir',
+] as const;
+
+const HERO_ROTATION_LOCAL_FALLBACKS: Partial<
+  Record<(typeof LANDING_HERO_ROTATION_SLUGS)[number], { name: string; src: string }>
+> = {
+  'chris-sembroski': { name: 'Chris Sembroski', src: CHRIS_PORTRAIT },
+  'eiman-jahangir': { name: EIMAN_JAHANGIR_NAME, src: EIMAN_PORTRAIT_FALLBACK },
+  // Priya has no local asset — require roster image_url when present.
+};
+
+/**
+ * Portraits for the hero card rotation (Chris → Priya → Eiman).
+ * Prefer live roster media; Chris/Eiman fall back to local assets if missing.
+ */
+export function landingHeroRotationPortraits(
+  experts: ListedExpert[],
+): LandingHeroStripPortrait[] {
+  const out: LandingHeroStripPortrait[] = [];
+
+  for (const slug of LANDING_HERO_ROTATION_SLUGS) {
+    const fromRoster = experts.find((e) => e.slug === slug);
+    if (fromRoster) {
+      const relay = listedExpertToRelay(fromRoster);
+      out.push({
+        slug: fromRoster.slug,
+        name: fromRoster.name,
+        src: relay.portraitSrc,
+        alt: fromRoster.name,
+      });
+      continue;
+    }
+    const fallback = HERO_ROTATION_LOCAL_FALLBACKS[slug];
+    if (fallback) {
+      out.push({
+        slug,
+        name: fallback.name,
+        src: fallback.src,
+        alt: fallback.name,
+      });
+    }
+  }
+
+  if (out.length === 0) {
+    return [
+      {
+        slug: LANDING_HERO_EXPERT_SLUG,
+        name: 'Chris Sembroski',
+        src: CHRIS_PORTRAIT,
+        alt: 'Chris Sembroski, verified aerospace expert',
+      },
+    ];
+  }
+
+  return out;
+}
+
+/**
  * Ordered portraits (Chris first, then roster). Used for multi-expert experiments;
  * homepage hero ships single-face via landingHeroPortrait. Empty roster → Chris fallback.
  */

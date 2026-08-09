@@ -2,13 +2,21 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import { MaterialIcon } from '@/components/ui/material-icon';
-import { landingHeroPortrait } from '@/lib/landing/featured-expert';
-import { trackSpaHeroLinkClick, trackSpaOfferClick } from '@/lib/path-assessment/path-assessment-analytics';
+import {
+  landingHeroRotationPortraits,
+  type LandingHeroStripPortrait,
+} from '@/lib/landing/featured-expert';
+import {
+  trackSpaHeroLinkClick,
+  trackSpaOfferClick,
+} from '@/lib/path-assessment/path-assessment-analytics';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 const ASSESSMENT_HREF = '/assessment';
 const EXPERTS_HREF = '/experts';
+const ROTATION_MS = 4200;
 
 const STEPS = [
   { title: 'Answer a few questions', body: 'Stage, goals, and obstacles — about 2–3 minutes.' },
@@ -20,13 +28,104 @@ type LandingHeroProps = {
   experts: ListedExpert[];
 };
 
+function HeroPortraitCard({ portraits }: { portraits: LandingHeroStripPortrait[] }) {
+  const [index, setIndex] = useState(0);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReducedMotion(mq.matches);
+    const onChange = () => setReducedMotion(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  useEffect(() => {
+    if (reducedMotion || portraits.length < 2) return;
+    const id = window.setInterval(() => {
+      setIndex((current) => (current + 1) % portraits.length);
+    }, ROTATION_MS);
+    return () => window.clearInterval(id);
+  }, [portraits.length, reducedMotion]);
+
+  const active = portraits[index] ?? portraits[0];
+  if (!active) return null;
+
+  return (
+    <div className="min-w-0 w-full max-w-[22rem] sm:max-w-[26rem] mx-auto lg:max-w-none lg:mx-0">
+      <div
+        className="relative overflow-hidden rounded-xl border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_16px_40px_-28px_rgba(14,20,32,0.22)]"
+        data-testid="landing-hero-visual"
+      >
+        <div className="relative aspect-[4/3] sm:aspect-[5/4] max-h-[220px] sm:max-h-[280px] lg:max-h-[320px] w-full">
+          {portraits.map((portrait, i) => {
+            const isActive = i === index;
+            return (
+              <Image
+                key={portrait.slug}
+                src={portrait.src}
+                alt={portrait.alt}
+                fill
+                priority={i === 0}
+                className={`object-cover object-top transition-opacity duration-700 ease-out ${
+                  isActive ? 'opacity-100' : 'opacity-0'
+                }`}
+                sizes="(max-width: 1024px) 90vw, 420px"
+                aria-hidden={!isActive}
+              />
+            );
+          })}
+          <div
+            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--landing-ink)]/60 via-transparent to-transparent"
+            aria-hidden
+          />
+          <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4 text-left">
+            <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-white/75">
+              Then talk live with
+            </p>
+            <p
+              className="mt-0.5 text-sm sm:text-base font-semibold text-white"
+              data-testid="landing-hero-rotation-name"
+            >
+              {active.name}
+            </p>
+          </div>
+        </div>
+        {portraits.length > 1 ? (
+          <div
+            className="absolute top-3 right-3 flex gap-1.5"
+            role="tablist"
+            aria-label="Featured experts"
+          >
+            {portraits.map((portrait, i) => (
+              <button
+                key={portrait.slug}
+                type="button"
+                role="tab"
+                aria-selected={i === index}
+                aria-label={`Show ${portrait.name}`}
+                onClick={() => setIndex(i)}
+                className={`h-1.5 w-1.5 rounded-full transition-colors touch-manipulation ${
+                  i === index ? 'bg-white' : 'bg-white/40 hover:bg-white/70'
+                }`}
+                data-testid={`landing-hero-rotation-dot-${portrait.slug}`}
+              />
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Assessment-first marketing hero.
  * Primary CTA is the free Space Path Assessment (the working magnet).
  * Compact on mobile: no tall portrait + phone stack.
+ * Hero card rotates Chris → Priya → Eiman.
  */
 export default function LandingHero({ experts }: LandingHeroProps) {
-  const { src: heroImage, alt: heroAlt } = landingHeroPortrait(experts);
+  const portraits = useMemo(() => landingHeroRotationPortraits(experts), [experts]);
 
   return (
     <section
@@ -35,10 +134,6 @@ export default function LandingHero({ experts }: LandingHeroProps) {
       aria-labelledby="landing-hero-title"
     >
       <div className="max-w-[1200px] mx-auto px-md sm:px-lg">
-        {/*
-          Mobile: single short column (copy → CTA → steps).
-          Desktop: copy + compact portrait card — not a full-viewport portrait stack.
-        */}
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-7 sm:gap-8 lg:gap-12 lg:items-center">
           <div className="min-w-0 text-center lg:text-left">
             <p
@@ -95,39 +190,9 @@ export default function LandingHero({ experts }: LandingHeroProps) {
             </p>
           </div>
 
-          {/* Compact visual — constrained height on all breakpoints */}
-          <div className="min-w-0 w-full max-w-[22rem] sm:max-w-[26rem] mx-auto lg:max-w-none lg:mx-0">
-            <div
-              className="relative overflow-hidden rounded-xl border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_16px_40px_-28px_rgba(14,20,32,0.22)]"
-              data-testid="landing-hero-visual"
-            >
-              <div className="relative aspect-[4/3] sm:aspect-[5/4] max-h-[220px] sm:max-h-[280px] lg:max-h-[320px] w-full">
-                <Image
-                  src={heroImage}
-                  alt={heroAlt}
-                  fill
-                  priority
-                  className="object-cover object-top"
-                  sizes="(max-width: 1024px) 90vw, 420px"
-                />
-                <div
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--landing-ink)]/55 via-transparent to-transparent"
-                  aria-hidden
-                />
-                <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4 text-left">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-white/75">
-                    Then talk live with
-                  </p>
-                  <p className="mt-0.5 text-sm sm:text-base font-semibold text-white">
-                    Verified aerospace experts
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <HeroPortraitCard portraits={portraits} />
         </div>
 
-        {/* How it works — 3-up from sm; short cards on mobile, not full-viewport blocks */}
         <ol
           className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3"
           data-testid="landing-hero-steps"

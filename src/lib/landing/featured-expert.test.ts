@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import {
   LANDING_FEATURED_EXPERT_SLUG,
+  LANDING_HERO_ROTATION_SLUGS,
   findLandingFeaturedExpert,
   landingFeaturedPortrait,
   landingHeroPortrait,
   landingHeroPortraitStrip,
+  landingHeroRotationPortraits,
   orderLandingExperts,
   pickLandingRelayExpert,
 } from '@/lib/landing/featured-expert';
@@ -71,6 +73,19 @@ describe('landing-featured-expert', () => {
     expect(portrait.src).toBe('/chris_sembroski.webp');
     expect(portrait.alt).toBe('Chris Sembroski');
     expect(portrait.href).toBe('/experts/chris-sembroski');
+  });
+
+  it('builds hero rotation as Chris → Priya → Eiman from roster', () => {
+    const rotation = landingHeroRotationPortraits([
+      expert('other', 'Other'),
+      expert(LANDING_FEATURED_EXPERT_SLUG, 'Eiman Jahangir', EIMAN_SUPABASE_IMAGE),
+      expert('priya-abiram', 'Priya Abiram', '/priya.webp'),
+      expert('chris-sembroski', 'Chris Sembroski'),
+    ]);
+    expect(rotation.map((p) => p.slug)).toEqual([...LANDING_HERO_ROTATION_SLUGS]);
+    expect(rotation[0]?.src).toBe('/chris_sembroski.webp');
+    expect(rotation[1]?.src).toBe('/priya.webp');
+    expect(rotation[2]?.src).toBe(EIMAN_SUPABASE_IMAGE);
   });
 
   it('builds a hero strip with Chris first and caps length', () => {

@@ -74,9 +74,11 @@
 | Seamless crossfade stage | Rejected |
 | Availability-bar −20° portrait segments | Rejected |
 
-**Shipping hero:** single featured portrait (Chris via `landingHeroPortrait`) + phone relay. Multi-expert roster remains in directory / lower landing.
+**Shipping hero (updated 2026-08-08):** assessment-magnet hero. Visual card rotates **Chris → Priya → Eiman** via `landingHeroRotationPortraits` (single frame at a time — not a multi-face strip/bench). No goal-form phone relay.
 
-**Do not re-implement multi-expert in the hero without a new approved visual reference (mock or screenshot the founder likes).** Helper `landingHeroPortraitStrip` may remain for future use.
+**Still rejected:** continuous face strip, hard skew panels, multi-face press bench, diagonal segments. Rotation is a single portrait crossfade, not those patterns.
+
+**Mid-page assessment strip:** must stay a **horizontal CTA bar** (label + short title + CTA). Do **not** use `max-w-xl` / stacked eyebrow + long h2 + body paragraph — that recreates the tall one-column prose issue.
 
 ## Motion
 
