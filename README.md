@@ -41,6 +41,7 @@ Structured decision logs for judges: [T8 in D1 plan](docs/d1-implementation-plan
 
 - [Devpost — rules, categories, submission checklist](https://xprize.devpost.com/)
 - [geminixprize.com](https://www.geminixprize.com/)
+- [docs/xprize/](docs/xprize/README.md) — internal submission checklist and evidence package (source of truth for this repo)
 
 ## Supabase setup
 
@@ -67,7 +68,7 @@ Structured decision logs for judges: [T8 in D1 plan](docs/d1-implementation-plan
 
 1. Set in `.env.local`: Supabase keys, `GEMINI_API_KEY` (`LLM_PROVIDER=gemini`), `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `DAILY_API_KEY`, and `SKIP_STRIPE_PAYMENTS=true` for local booking without Stripe.
 2. Run `npm run dev`, sign in as **Carlos** (`carlos@astrolink.ai` on `/auth` with demo auth enabled).
-3. Landing shows a six-card expert teaser; open the full roster at [`/experts`](http://localhost:3000/experts) (category filters, card grid, inline preview — desktop modal or mobile sheet). Click a name for the profile page (`/experts/[slug]`) or use **Book session** on a card for the fast path.
+3. Landing hero search ("Talk to flight controllers...") jumps to [`/experts?q=`](http://localhost:3000/experts) (category filters, name/role/expertise search, card grid, inline preview — desktop modal or mobile sheet); the landing page also shows a fixed five-expert directory grid (Eiman, Chris, Priya, Jenni, Andrew). Click a name for the profile page (`/experts/[slug]`) or use **Book session** on a card for the fast path.
 4. Profile or card → **Book** → `/booking?mentor=chris-sembroski` → pay with Stripe test card `4242…`.
 4. After authorize, either:
    - Forward webhooks: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`, or
