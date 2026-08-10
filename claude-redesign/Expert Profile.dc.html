@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="./image-slot.js"></script>
+  <style>
+    body { margin: 0; text-wrap: pretty; }
+    a { color: var(--al-accent); text-decoration: none; }
+    a:hover { color: var(--al-text); text-decoration: underline; }
+  </style>
+</helmet>
+
+<div style="--al-canvas:#FFFFFF;--al-surface:#FFFFFF;--al-surface-soft:#F1F3F6;--al-border:#DDE2EA;--al-text:#171A1F;--al-muted:#66717F;--al-faint:#9AA3AE;--al-ink:#0E1420;--al-accent:#1859D4;font-family:'Montserrat',system-ui,sans-serif;background:var(--al-canvas);color:var(--al-text);min-height:100%">
+
+  <nav style="max-width:1200px;margin:0 auto;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+    <div style="display:flex;align-items:center;gap:24px">
+      <span style="font-weight:800;font-size:20px;letter-spacing:-0.01em">AstroLink</span>
+      <a href="#directory" style="color:var(--al-muted);font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Directory
+      </a>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <a href="#book" style="color:var(--al-muted);font-size:14px;font-weight:500">Sign in</a>
+      <a href="#book" style="background:var(--al-ink);color:#fff;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:600">Book session</a>
+    </div>
+  </nav>
+
+  <div style="max-width:1200px;margin:0 auto;padding:0 24px">
+    <div style="position:relative;border-radius:24px;overflow:hidden;aspect-ratio:16/7;background:var(--al-surface-soft)">
+      <image-slot id="profile-portrait" shape="rect" src="uploads/Image 6.jpeg" placeholder="Expert cover photo" style="width:100%;height:100%"></image-slot>
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(14,20,32,0.82) 0%,rgba(14,20,32,0.15) 45%,transparent 70%);pointer-events:none"></div>
+      <button type="button" aria-label="Play intro video" style="position:absolute;top:24px;right:24px;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.92);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,0.25)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--al-ink)"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <div style="position:absolute;left:32px;bottom:28px;right:32px;color:#fff">
+        <span style="font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.35);border-radius:999px;padding:4px 12px;display:inline-block;margin-bottom:12px">Verified AstroLink expert</span>
+        <h1 style="font-size:clamp(28px,4vw,42px);font-weight:800;letter-spacing:-0.01em;margin:0 0 6px">{{ expertName }}</h1>
+        <p style="font-size:16px;margin:0;opacity:0.9">{{ expertRole }} · {{ expertEmployer }}</p>
+      </div>
+    </div>
+  </div>
+
+  <section style="max-width:1200px;margin:0 auto;padding:0 24px clamp(48px,6vw,72px);display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,360px);gap:clamp(28px,4vw,56px);align-items:start;margin-top:-40px">
+
+    <div style="padding-top:64px">
+      <p style="font-size:16px;line-height:1.7;color:var(--al-muted);max-width:56ch;margin:0 0 32px">A private session with someone who has done the work — prepared on your goals, without the conference circuit.</p>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px">
+        <span style="font-size:12px;font-weight:500;color:var(--al-muted);border:1px solid var(--al-border);border-radius:999px;padding:6px 14px">Astronaut</span>
+        <span style="font-size:12px;font-weight:500;color:var(--al-muted);border:1px solid var(--al-border);border-radius:999px;padding:6px 14px">Aerospace engineering</span>
+        <span style="font-size:12px;font-weight:500;color:var(--al-muted);border:1px solid var(--al-border);border-radius:999px;padding:6px 14px">Career transition</span>
+      </div>
+
+      <p style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--al-faint);margin:0 0 12px">What you can ask about</p>
+      <ul style="margin:0 0 32px;padding-left:1.1em;font-size:15px;line-height:2;color:var(--al-text)">
+        <li>Breaking into aerospace without a traditional background</li>
+        <li>What flight training and mission prep actually involve</li>
+        <li>Realistic timelines for a career pivot into space</li>
+      </ul>
+
+      <p style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--al-faint);margin:0 0 12px">Bio</p>
+      <p style="font-size:15px;line-height:1.7;color:var(--al-muted);font-style:italic;max-width:56ch;margin:0">Two or three sentences on background, flight experience, and what a session with them can help with. Pull the real bio from the mentor's profile before publishing.</p>
+    </div>
+
+    <div style="background:var(--al-surface);border:1px solid var(--al-border);border-radius:20px;padding:28px;box-shadow:0 24px 56px -24px rgba(14,20,32,0.22);position:sticky;top:24px">
+      <p style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--al-faint);margin:0 0 14px">Session length</p>
+
+      <div style="display:flex;gap:4px;margin-bottom:18px">
+        <sc-for list="{{ segments }}" as="seg" hint-placeholder-count="10">
+          <div style="flex:1;height:8px;border-radius:3px;background:{{ seg.color }};transition:background .2s"></div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:6px">
+        <button type="button" onClick="{{ decMinutes }}" aria-label="Decrease" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--al-border);background:var(--al-canvas);font-size:18px;color:var(--al-text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">−</button>
+        <div style="text-align:center;min-width:64px">
+          <p style="font-size:30px;font-weight:800;margin:0;letter-spacing:-0.01em">{{ minutes }}</p>
+          <p style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--al-faint);margin:0">minutes</p>
+        </div>
+        <button type="button" onClick="{{ incMinutes }}" aria-label="Increase" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--al-border);background:var(--al-canvas);font-size:18px;color:var(--al-text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">+</button>
+      </div>
+      <p style="font-size:12px;color:var(--al-faint);text-align:center;margin:0 0 24px">15 min minimum · 15 min steps · up to 60 min</p>
+
+      <div style="border-top:1px solid var(--al-border);padding-top:20px;margin-bottom:20px">
+        <p style="font-size:30px;font-weight:800;letter-spacing:-0.01em;margin:0 0 4px">${{ price }} <span style="font-size:14px;font-weight:500;color:var(--al-faint)">session</span></p>
+        <p style="font-size:13px;color:var(--al-faint);margin:0">${{ rate }}/hr · prorated to {{ minutes }} min</p>
+      </div>
+
+      <button type="button" id="book" style="width:100%;background:var(--al-ink);color:#fff;border:none;border-radius:999px;padding:16px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:10px">Book {{ minutes }} min · ${{ price }}</button>
+      <p style="font-size:12px;color:var(--al-faint);text-align:center;margin:0 0 16px">Encrypted video · AI briefing included · Refundable up to 24 hours before start</p>
+
+      <button type="button" style="width:100%;background:var(--al-canvas);color:var(--al-text);border:1px solid var(--al-border);border-radius:999px;padding:14px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer">Get a personalized video</button>
+    </div>
+  </section>
+
+  <section style="border-top:1px solid var(--al-border);background:var(--al-surface-soft);padding:clamp(40px,5vw,64px) 24px">
+    <div style="max-width:1200px;margin:0 auto">
+      <p style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--al-faint);margin:0 0 8px">Session feedback</p>
+      <p style="font-size:11px;color:var(--al-faint);margin:0 0 20px;font-style:italic">Example layout — replace with real session feedback once available</p>
+
+      <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:32px">
+        <span style="font-size:42px;font-weight:800;letter-spacing:-0.01em">4.9</span>
+        <div>
+          <div style="display:flex;gap:2px;margin-bottom:4px">
+            <sc-for list="{{ ratingStars }}" as="s" hint-placeholder-count="5">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="{{ s.fill }}" stroke="{{ s.fill }}" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+            </sc-for>
+          </div>
+          <p style="font-size:13px;color:var(--al-muted);margin:0">Based on 12 completed sessions</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px">
+        <div style="background:var(--al-surface);border:1px solid var(--al-border);border-radius:16px;padding:22px">
+          <div style="display:flex;gap:2px;margin-bottom:10px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0E1420"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0E1420"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0E1420"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0E1420"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0E1420"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+          </div>
+          <p style="font-size:14px;line-height:1.6;color:var(--al-text);margin:0 0 14px">"Placeholder quote — what the session was like and what they got out of it, in the guest's own words."</p>
+          <p style="font-size:13px;font-weight:600;margin:0">AstroLink member</p>
+          <p style="font-size:12px;color:var(--al-accent);margin:2px 0 0;display:flex;align-items:center;gap:4px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>
+            Verified session
+          </p>
+        </div>
+        <div style="background:var(--al-surface);border:1px solid var(--al-border);border-radius:16px;padding:22px">
+          <div style="display:flex;gap:2px;margin-bottom:10px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0E1420"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0E1420"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0E1420"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0E1420"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0E1420" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+          </div>
+          <p style="font-size:14px;line-height:1.6;color:var(--al-text);margin:0 0 14px">"Placeholder quote — another example of the kind of specific, credible feedback a completed session would generate."</p>
+          <p style="font-size:13px;font-weight:600;margin:0">AstroLink member</p>
+          <p style="font-size:12px;color:var(--al-accent);margin:2px 0 0;display:flex;align-items:center;gap:4px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>
+            Verified session
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="border-top:1px solid var(--al-border);padding:40px 24px;font-size:13px;color:var(--al-muted)">
+    <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px">
+      <div>
+        <p style="font-weight:700;color:var(--al-text);margin:0 0 4px">AstroLink</p>
+        <p style="margin:0">Entrant in Build with Gemini XPRIZE — <a href="https://xprize.devpost.com/" target="_blank" rel="noopener noreferrer">Learn more</a></p>
+      </div>
+      <div style="display:flex;gap:20px">
+        <a href="#directory">Experts</a>
+        <a href="#press">Press</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#book">Sign in</a>
+      </div>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;expertName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Chris Sembroski&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;expertRole&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Inspiration4 Astronaut &amp; Aerospace Engineer&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;expertEmployer&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Inspiration4 / Lockheed Martin / Starfish Space&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;expertRate&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:250,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:50,&quot;max&quot;:1000,&quot;step&quot;:10,&quot;unit&quot;:&quot;$/hr&quot;}}">
+const SEGMENT_COUNT = 10;
+
+class Component extends DCLogic {
+  state = { minutes: 30 };
+
+  clamp(v) {
+    const min = 15, max = 60;
+    return Math.min(max, Math.max(min, v));
+  }
+
+  renderVals() {
+    const rate = this.props.expertRate ?? 250;
+    const minutes = this.state.minutes;
+    const max = 60;
+    const price = ((rate / 60) * minutes).toFixed(2);
+    const filled = Math.round((minutes / max) * SEGMENT_COUNT);
+    const segments = Array.from({ length: SEGMENT_COUNT }, (_, i) => ({
+      color: i < filled ? '#0E1420' : '#E5E7EB',
+    }));
+
+    return {
+      expertName: this.props.expertName ?? 'Chris Sembroski',
+      expertRole: this.props.expertRole ?? 'Inspiration4 Astronaut & Aerospace Engineer',
+      expertEmployer: this.props.expertEmployer ?? 'Inspiration4 / Lockheed Martin / Starfish Space',
+      rate,
+      minutes,
+      price,
+      segments,
+      ratingStars: Array.from({ length: 5 }, (_, i) => ({ fill: i < 5 ? '#0E1420' : 'none' })),
+      decMinutes: () => this.setState((s) => ({ minutes: this.clamp(s.minutes - 15) })),
+      incMinutes: () => this.setState((s) => ({ minutes: this.clamp(s.minutes + 15) })),
+    };
+  }
+}
+</script>
+</body>
+</html>
