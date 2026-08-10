@@ -5,42 +5,37 @@ import { MaterialIcon } from '@/components/ui/material-icon';
 import { trackSpaOfferClick } from '@/lib/path-assessment/path-assessment-analytics';
 
 /**
- * Mid-page assessment reinforce — horizontal CTA strip.
- * DESIGN.md: the single allowed soft accent wash strip.
+ * Free assessment CTA — centered bordered card (2026-08 redesign).
  */
 export function LandingHowPath() {
   return (
     <section
       id="space-path-assessment"
-      className="scroll-mt-20 border-t border-[var(--landing-accent-border)] bg-[var(--landing-accent-soft)] py-4 sm:py-5"
-      data-testid="landing-assessment-offer"
+      className="scroll-mt-20 py-10 sm:py-16 lg:py-20"
       aria-labelledby="landing-how-path-heading"
     >
-      <div className="max-w-[1200px] mx-auto px-md sm:px-lg">
-        <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
-            <span className="inline-flex shrink-0 items-center rounded-full bg-[var(--landing-accent)] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-white font-mono leading-none">
-              Free
-            </span>
-            <h2
-              id="landing-how-path-heading"
-              className="font-landing-display text-sm sm:text-base font-semibold tracking-tight text-[var(--landing-text)] leading-none"
-            >
-              Space Path Assessment
-            </h2>
-            <span
-              className="hidden h-3.5 w-px shrink-0 bg-[var(--landing-accent-border)] sm:block"
-              aria-hidden
-            />
-            <p className="text-xs sm:text-sm text-[var(--landing-muted)] leading-none">
-              2–3 min · report by email · no account
-            </p>
-          </div>
-
+      <div className="max-w-[720px] mx-auto px-md sm:px-lg text-center">
+        <div
+          className="rounded-3xl border border-[var(--landing-border)] bg-[var(--landing-surface)] px-7 py-10 sm:px-12 sm:py-14 shadow-[0_20px_52px_-30px_rgba(14,20,32,0.18)]"
+          data-testid="landing-assessment-offer"
+        >
+          <p className="text-[11px] font-mono font-semibold uppercase tracking-[0.14em] text-[var(--landing-accent)] mb-2.5">
+            Free readiness report
+          </p>
+          <h2
+            id="landing-how-path-heading"
+            className="font-landing-display text-xl sm:text-2xl font-bold tracking-tight text-[var(--landing-text)] mb-3"
+          >
+            Find out where you stand.
+          </h2>
+          <p className="text-sm sm:text-base text-[var(--landing-muted)] max-w-[50ch] mx-auto mb-7">
+            Answer a few questions about your goals and get a personalized readiness report in
+            under three minutes — free, no account required.
+          </p>
           <Link
             href="/assessment"
             onClick={() => trackSpaOfferClick()}
-            className="inline-flex min-h-10 sm:min-h-9 w-full sm:w-auto touch-manipulation items-center justify-center gap-1 rounded-full bg-[var(--landing-accent)] px-4 text-sm font-semibold text-white transition-colors hover:bg-[var(--landing-accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-accent)] focus-visible:ring-offset-2"
+            className="inline-flex min-h-12 touch-manipulation items-center justify-center gap-1.5 rounded-full bg-[var(--landing-ink)] px-7 text-sm font-semibold text-white transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-accent)] focus-visible:ring-offset-2"
             data-testid="landing-assessment-offer-cta"
           >
             Start free assessment

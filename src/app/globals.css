@@ -374,7 +374,7 @@ body {
 
 .landing-mission .font-landing-wordmark {
   font-family: var(--font-montserrat), ui-sans-serif, sans-serif;
-  font-weight: 600;
+  font-weight: 800;
   letter-spacing: 0.06em;
 }
 
@@ -992,8 +992,34 @@ body {
 
 .experts-dir-filters {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
+  gap: 0.75rem;
   padding: 0 1.25rem 2.25rem;
+}
+
+.experts-dir-search {
+  min-height: 40px;
+  width: 100%;
+  max-width: 20rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--landing-border);
+  background: var(--landing-surface);
+  color: var(--landing-text);
+  font-family: var(--font-landing-body);
+  font-size: 0.8125rem;
+}
+
+.experts-dir-search::placeholder {
+  color: var(--landing-faint);
+}
+
+.experts-dir-search:focus {
+  outline: none;
+  border-color: var(--landing-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--landing-accent) 20%, transparent);
 }
 
 .experts-dir-filter-group {
@@ -1183,6 +1209,252 @@ body {
   color: #fff;
   font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
   padding-bottom: 5.5rem;
+}
+
+/*
+ * Light re-theme (2026-08 redesign) — scoped modifier, not a base-rule edit.
+ * Rules above that read colors purely via var(--pro-*) auto-inherit the light
+ * values below; only rules with hardcoded literal dark/white colors need an
+ * explicit override here. This keeps /experts/[slug]/video-request (which
+ * shares .experts-profile and many .experts-pro-* classes) untouched — it
+ * never receives the --light modifier class.
+ */
+.experts-profile--light {
+  --pro-bg: var(--landing-canvas, #f7f8fa);
+  --pro-surface: var(--landing-surface, #ffffff);
+  --pro-muted: var(--landing-muted, #66717f);
+  --pro-faint: var(--landing-faint, #9aa3ae);
+  --pro-border: var(--landing-border, #dde2ea);
+  --pro-accent: var(--landing-accent, #1859d4);
+  --pro-ink: var(--landing-ink, #0e1420);
+  --pro-text: #171a1f;
+  background: var(--pro-bg);
+  color: var(--pro-text);
+  font-family: var(--font-montserrat), ui-sans-serif, sans-serif;
+}
+
+.experts-profile--light .experts-pro-logo,
+.experts-profile--light .experts-pro-dir-link:hover,
+.experts-profile--light .experts-pro-text-link:hover {
+  color: var(--pro-text);
+}
+
+.experts-profile--light .experts-pro-header-cta {
+  background: var(--pro-ink);
+  color: #fff;
+}
+
+.experts-profile--light .experts-pro-header-cta:hover {
+  background: #000;
+}
+
+.experts-profile--light .experts-pro-media {
+  border-color: var(--pro-border) !important;
+  background: var(--landing-surface-soft, #f1f3f6) !important;
+}
+
+.experts-profile--light .experts-pro-role {
+  color: var(--pro-text);
+}
+
+.experts-profile--light .experts-duration__segs {
+  color: var(--pro-text);
+}
+
+.experts-profile--light .experts-duration__segs span.is-empty {
+  background: transparent;
+  border: 1px solid var(--pro-border);
+}
+
+.experts-profile--light .experts-duration__segs span.is-filled {
+  background: var(--pro-ink);
+  border: 1px solid var(--pro-ink);
+  box-shadow: none;
+}
+
+.experts-profile--light .experts-duration__step-btn {
+  border: 1px solid var(--pro-border);
+  background: var(--pro-surface);
+  color: var(--pro-text);
+}
+
+.experts-profile--light .experts-duration__step-btn:hover:not(:disabled) {
+  background: var(--landing-surface-soft, #f1f3f6);
+  border-color: var(--pro-muted);
+}
+
+.experts-profile--light .experts-pro-book-cta {
+  background: var(--pro-ink);
+  color: #fff;
+}
+
+.experts-profile--light .experts-pro-book-cta:hover {
+  background: #000;
+}
+
+.experts-profile--light .experts-pro-video-cta {
+  border: 1px solid var(--pro-border);
+  color: var(--pro-text);
+}
+
+.experts-profile--light .experts-pro-video-cta:hover {
+  background: var(--landing-surface-soft, #f1f3f6);
+  border-color: var(--pro-muted);
+}
+
+/* ─── New markup for the 2026-08 redesign: full-bleed cover + sticky booking card ─── */
+
+.experts-pro-cover {
+  position: relative;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  aspect-ratio: 16 / 8;
+  background: var(--landing-surface-soft, #f1f3f6);
+}
+
+@media (max-width: 899px) {
+  .experts-pro-cover {
+    aspect-ratio: 4 / 5;
+  }
+}
+
+.experts-pro-cover .experts-pro-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.experts-pro-cover-gradient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(14, 20, 32, 0.82) 0%,
+    rgba(14, 20, 32, 0.18) 45%,
+    transparent 70%
+  );
+}
+
+.experts-pro-cover-overlay {
+  position: absolute;
+  left: 1.75rem;
+  right: 1.75rem;
+  bottom: 1.5rem;
+  color: #fff;
+}
+
+.experts-pro-cover-badge {
+  display: inline-block;
+  margin: 0 0 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.16);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.experts-pro-cover-overlay h1 {
+  margin: 0 0 0.3rem;
+  font-size: clamp(1.5rem, 4vw, 2.35rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.experts-pro-cover-overlay p {
+  margin: 0;
+  font-size: 0.9375rem;
+  opacity: 0.92;
+}
+
+.experts-pro-body {
+  display: grid;
+  gap: 2rem;
+  margin-top: 1.75rem;
+}
+
+@media (min-width: 900px) {
+  .experts-pro-body {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+    gap: 3rem;
+    align-items: start;
+  }
+}
+
+.experts-pro-intro {
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--pro-muted);
+  max-width: 40rem;
+}
+
+.experts-pro-ask-list {
+  margin: 0.75rem 0 0;
+  padding-left: 1.1em;
+  font-size: 0.9rem;
+  line-height: 1.85;
+  color: var(--pro-text, inherit);
+}
+
+.experts-pro-tags {
+  margin-bottom: 1.75rem;
+}
+
+.experts-pro-booking-card {
+  border-radius: 1.25rem;
+  border: 1px solid var(--pro-border);
+  background: var(--pro-surface);
+  padding: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .experts-pro-booking-card {
+    position: sticky;
+    top: 1.5rem;
+    box-shadow: 0 24px 56px -24px rgba(14, 20, 32, 0.22);
+  }
+}
+
+.experts-pro-rating-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+}
+
+.experts-pro-rating-score {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.experts-pro-rating-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.experts-pro-rating-stars-row {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.experts-pro-rating-count {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--pro-muted);
 }
 
 .experts-pro-input {
