@@ -1,7 +1,7 @@
 import { MaterialIcon } from '@/components/ui/material-icon';
 import type { PublicExpertReview } from '@/lib/expert-reviews/types';
 
-function StarRow({ rating }: { rating: number }) {
+function StarRow({ rating, size = 16 }: { rating: number; size?: number }) {
   return (
     <div
       className="experts-pro-review-stars"
@@ -14,7 +14,7 @@ function StarRow({ rating }: { rating: number }) {
           <MaterialIcon
             key={i}
             name={filled ? 'star' : 'star_border'}
-            size={16}
+            size={size}
             className={filled ? 'experts-pro-review-star--filled' : 'experts-pro-review-star--empty'}
             aria-hidden
           />
@@ -22,6 +22,14 @@ function StarRow({ rating }: { rating: number }) {
       })}
     </div>
   );
+}
+
+/** Real average from the already-fetched review rows — never fabricated. */
+function averageRating(reviews: PublicExpertReview[]): { average: number; count: number } {
+  const count = reviews.length;
+  if (count === 0) return { average: 0, count: 0 };
+  const total = reviews.reduce((sum, review) => sum + review.rating, 0);
+  return { average: Math.round((total / count) * 10) / 10, count };
 }
 
 /**
@@ -37,6 +45,7 @@ export function ExpertReviews({ reviews }: { reviews: PublicExpertReview[] }) {
     reviews.length === 1
       ? 'What a recent session guest said'
       : 'What session guests are saying';
+  const { average, count } = averageRating(reviews);
 
   return (
     <section
@@ -46,6 +55,18 @@ export function ExpertReviews({ reviews }: { reviews: PublicExpertReview[] }) {
     >
       <p className="experts-pro-section-label">Session feedback</p>
       <h2>{heading}</h2>
+
+      <div className="experts-pro-rating-summary" data-testid="expert-profile-rating-summary">
+        <span className="experts-pro-rating-score">{average.toFixed(1)}</span>
+        <div className="experts-pro-rating-meta">
+          <div className="experts-pro-rating-stars-row">
+            <StarRow rating={Math.round(average)} size={16} />
+          </div>
+          <p className="experts-pro-rating-count">
+            Based on {count} completed {count === 1 ? 'session' : 'sessions'}
+          </p>
+        </div>
+      </div>
 
       <ul className="experts-pro-reviews-list">
         {reviews.map((review) => (

@@ -15,6 +15,8 @@ type ExpertIntroMediaProps = {
   autoPlayMuted?: boolean;
   /** Waitlist/marketing: softer play affordance without mono badge. */
   overlayVariant?: 'default' | 'minimal';
+  /** Suppress the "Watch intro"/"Intro portrait" chip entirely (e.g. when wrapped in a cover treatment with its own overlay copy). */
+  hideLabel?: boolean;
   /** Fired when the user explicitly starts playback (not muted directory autoplay). */
   onUserPlay?: () => void;
   /** Fired whenever playback state changes (play / pause / end). */
@@ -34,6 +36,7 @@ export function ExpertIntroMedia({
   priority = false,
   autoPlayMuted = false,
   overlayVariant = 'default',
+  hideLabel = false,
   onUserPlay,
   onPlayingChange,
 }: ExpertIntroMediaProps) {
@@ -125,7 +128,7 @@ export function ExpertIntroMedia({
                       fill
                     />
                   </div>
-                  {overlayVariant === 'default' ? (
+                  {overlayVariant === 'default' && !hideLabel ? (
                     <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-lg border border-white/20 bg-black/50 px-4 py-2 backdrop-blur-md">
                       <span className="font-mono text-[10px] uppercase tracking-widest text-white/90">
                         Watch intro
@@ -149,12 +152,14 @@ export function ExpertIntroMedia({
             priority={priority}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10" />
-          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3 rounded-lg border border-white/20 bg-black/40 px-4 py-2 backdrop-blur-md">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-white/90">
-              Intro portrait
-            </span>
-            <MaterialIcon name="person" className="text-white/80" size={20} />
-          </div>
+          {!hideLabel ? (
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3 rounded-lg border border-white/20 bg-black/40 px-4 py-2 backdrop-blur-md">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-white/90">
+                Intro portrait
+              </span>
+              <MaterialIcon name="person" className="text-white/80" size={20} />
+            </div>
+          ) : null}
         </>
       )}
     </div>
