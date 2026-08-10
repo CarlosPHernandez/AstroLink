@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import {
   LANDING_FEATURED_EXPERT_SLUG,
+  LANDING_HERO_ROTATION_SLUGS,
   findLandingFeaturedExpert,
   landingFeaturedPortrait,
   landingHeroPortrait,
   landingHeroPortraitStrip,
+  landingHeroRotationPortraits,
+  orderLandingDirectoryExperts,
   orderLandingExperts,
   pickLandingRelayExpert,
 } from '@/lib/landing/featured-expert';
@@ -73,6 +76,19 @@ describe('landing-featured-expert', () => {
     expect(portrait.href).toBe('/experts/chris-sembroski');
   });
 
+  it('builds hero rotation as Chris → Priya → Eiman from roster', () => {
+    const rotation = landingHeroRotationPortraits([
+      expert('other', 'Other'),
+      expert(LANDING_FEATURED_EXPERT_SLUG, 'Eiman Jahangir', EIMAN_SUPABASE_IMAGE),
+      expert('priya-abiram', 'Priya Abiram', '/priya.webp'),
+      expert('chris-sembroski', 'Chris Sembroski'),
+    ]);
+    expect(rotation.map((p) => p.slug)).toEqual([...LANDING_HERO_ROTATION_SLUGS]);
+    expect(rotation[0]?.src).toBe('/chris_sembroski.webp');
+    expect(rotation[1]?.src).toBe('/priya.webp');
+    expect(rotation[2]?.src).toBe(EIMAN_SUPABASE_IMAGE);
+  });
+
   it('builds a hero strip with Chris first and caps length', () => {
     const strip = landingHeroPortraitStrip(
       [
@@ -130,5 +146,56 @@ describe('landing-featured-expert', () => {
     const matched = pickLandingRelayExpert('How do I become an astronaut?', roster);
     expect(matched.slug).toBe('chris-sembroski');
     expect(matched.portraitSrc).toBe('/chris_sembroski.webp');
+  });
+});
+
+describe('orderLandingDirectoryExperts', () => {
+  it('orders experts Eiman, Chris, Priya, Jenni, Andrew regardless of input order', () => {
+    const ordered = orderLandingDirectoryExperts([
+      expert('andrew-parris', 'Andrew Parris'),
+      expert('priya-abiram', 'Priya Abiram'),
+      expert('chris-sembroski', 'Chris Sembroski'),
+      expert(LANDING_FEATURED_EXPERT_SLUG, 'Eiman Jahangir', EIMAN_SUPABASE_IMAGE),
+      expert('jenni-doe', 'Jenni Doe'),
+    ]);
+    expect(ordered.map((e) => e.slug)).toEqual([
+      LANDING_FEATURED_EXPERT_SLUG,
+      'chris-sembroski',
+      'priya-abiram',
+      'jenni-doe',
+      'andrew-parris',
+    ]);
+  });
+
+  it('gracefully degrades when part of the fixed roster is missing', () => {
+    const ordered = orderLandingDirectoryExperts([
+      expert('chris-sembroski', 'Chris Sembroski'),
+      expert('priya-abiram', 'Priya Abiram'),
+    ]);
+    expect(ordered.map((e) => e.slug)).toEqual(['chris-sembroski', 'priya-abiram']);
+  });
+
+  it('excludes roster experts who are not in the fixed name list', () => {
+    const ordered = orderLandingDirectoryExperts([
+      expert('chris-sembroski', 'Chris Sembroski'),
+      expert('random-1', 'Random One'),
+    ]);
+    expect(ordered.map((e) => e.slug)).toEqual(['chris-sembroski']);
+  });
+
+  it('returns an empty array for an empty roster', () => {
+    expect(orderLandingDirectoryExperts([])).toEqual([]);
+  });
+
+  it('matches names case-insensitively', () => {
+    const ordered = orderLandingDirectoryExperts([expert('chris-id', 'CHRIS SEMBROSKI')]);
+    expect(ordered.map((e) => e.slug)).toEqual(['chris-id']);
+  });
+
+  it('does not list the same expert twice when their name matches multiple keys', () => {
+    // Name contains both "chris" and "priya" substrings — should only be placed once,
+    // at the first key it matches ("chris"), not duplicated at "priya" too.
+    const ordered = orderLandingDirectoryExperts([expert('chris-priyanka', 'Chris Priyanka')]);
+    expect(ordered.map((e) => e.slug)).toEqual(['chris-priyanka']);
   });
 });

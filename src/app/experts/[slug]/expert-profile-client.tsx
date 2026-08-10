@@ -69,9 +69,10 @@ export default function ExpertProfileClient({
   const paragraphs = expert.bio.split('\n').filter(Boolean);
   const COLLAPSE_AT = 3;
   const visibleParas = bioExpanded ? paragraphs : paragraphs.slice(0, COLLAPSE_AT);
+  const topicTags = expert.expertise.slice(0, 3);
 
   return (
-    <div className="experts-profile min-h-screen">
+    <div className="experts-profile experts-profile--light min-h-screen">
       <header className="experts-pro-header">
         <div className="experts-pro-header__inner">
           <Link href="/" className="experts-pro-logo">
@@ -115,118 +116,138 @@ export default function ExpertProfileClient({
       </header>
 
       <main className="experts-pro-main">
-        <div className="experts-pro-hero">
-          <div className="experts-pro-portrait">
-            <ExpertIntroMedia
-              name={expert.name}
-              imageUrl={expert.imageUrl}
-              introVideoUrl={expert.introVideoUrl}
-              className="experts-pro-media"
-              priority
-              overlayVariant="minimal"
-            />
-          </div>
-
-          <div className="experts-pro-copy">
-            <p className="experts-pro-eyebrow">AstroLink expert</p>
+        <div className="experts-pro-cover">
+          <ExpertIntroMedia
+            name={expert.name}
+            imageUrl={expert.imageUrl}
+            introVideoUrl={expert.introVideoUrl}
+            className="experts-pro-media"
+            priority
+            overlayVariant="minimal"
+            hideLabel
+          />
+          <div className="experts-pro-cover-gradient" aria-hidden />
+          <div className="experts-pro-cover-overlay">
+            <span className="experts-pro-cover-badge">Verified AstroLink expert</span>
             <h1 data-testid="expert-profile-name">{expert.name}</h1>
-            <p className="experts-pro-role">{expert.role}</p>
-            <p className="experts-pro-employer">{expert.employer}</p>
-            <p className="experts-pro-lede">
+            <p>
+              {expert.role} · {expert.employer}
+            </p>
+          </div>
+        </div>
+
+        <div className="experts-pro-body">
+          <div className="experts-pro-left">
+            <p className="experts-pro-intro">
               A private session with someone who has done the work — prepared on your goals,
               without the conference circuit.
             </p>
 
-            <div className="experts-pro-book" id="book">
-              {!isWaitlist ? (
-                <>
-                  <DurationStepper value={durationMinutes} onChange={setDurationMinutes} />
+            {topicTags.length > 0 ? (
+              <div className="experts-pro-chips experts-pro-tags">
+                {topicTags.map((tag) => (
+                  <span key={tag}>{tag}</span>
+                ))}
+              </div>
+            ) : null}
 
-                  <div className="experts-pro-price">
-                    <p className="experts-pro-price__total">
-                      {priceLabel}
-                      <span>session</span>
-                    </p>
-                    <p className="experts-pro-price__rate">
-                      ${expert.rate}/hr · prorated to {durationMinutes} min
-                    </p>
-                  </div>
-                </>
+            <p className="experts-pro-section-label">What you can ask about</p>
+            <ul className="experts-pro-ask-list">
+              <li>Breaking into aerospace without a traditional background</li>
+              <li>What flight training and mission prep actually involve</li>
+              <li>Realistic timelines for a career pivot into space</li>
+            </ul>
+
+            <section className="experts-pro-bio">
+              <p className="experts-pro-section-label">The pedigree</p>
+              <h2>About {firstName}</h2>
+              <div className="experts-pro-bio-body">
+                {visibleParas.map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
+              </div>
+              {paragraphs.length > COLLAPSE_AT ? (
+                <button
+                  type="button"
+                  onClick={() => setBioExpanded((v) => !v)}
+                  className="experts-pro-bio-toggle"
+                >
+                  <MaterialIcon name={bioExpanded ? 'expand_less' : 'expand_more'} size={16} />
+                  {bioExpanded ? 'Read less' : 'Read more'}
+                </button>
               ) : null}
+            </section>
 
-              <Link href={bookHref} className="experts-pro-book-cta" data-testid="expert-profile-book-cta">
-                {primaryCtaLabel}
-              </Link>
-
-              <p className="experts-pro-book-note">
-                Encrypted video · AI briefing included · Refundable up to 24 hours before start
-              </p>
-
-              {videoOfferActive ? (
-                <div className="experts-pro-video-offer" data-testid="expert-profile-video-offer">
-                  <Link
-                    href={videoHref}
-                    data-testid="expert-profile-video-cta"
-                    className="experts-pro-book-cta"
-                    style={{ marginTop: '0.85rem' }}
-                  >
-                    {videoCtaLabel}
-                  </Link>
+            {expert.expertise.length > 0 ? (
+              <section className="experts-pro-disciplines">
+                <h2>Core disciplines</h2>
+                <div className="experts-pro-chips">
+                  {expert.expertise.map((item) => (
+                    <span key={item}>{item}</span>
+                  ))}
                 </div>
-              ) : null}
-            </div>
+              </section>
+            ) : null}
+
+            <ExpertReviews reviews={reviews} />
+
+            <section className="experts-pro-trust">
+              <p className="experts-pro-section-label">The AstroLink standard</p>
+              <h2>What you get with every session</h2>
+              <ul>
+                {[
+                  'Payment collected when you book; full refund when cancelled at least 24 hours before start',
+                  'AI-generated pre-call briefing tailored to your goals and the expert’s background',
+                  'Private, encrypted Daily video room with per-participant tokens',
+                ].map((text) => (
+                  <li key={text}>
+                    <MaterialIcon name="check_circle" size={18} className="experts-pro-trust-icon" />
+                    <span>{text}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+
+          <div className="experts-pro-booking-card" id="book">
+            {!isWaitlist ? (
+              <>
+                <DurationStepper value={durationMinutes} onChange={setDurationMinutes} />
+
+                <div className="experts-pro-price">
+                  <p className="experts-pro-price__total">
+                    {priceLabel}
+                    <span>session</span>
+                  </p>
+                  <p className="experts-pro-price__rate">
+                    ${expert.rate}/hr · prorated to {durationMinutes} min
+                  </p>
+                </div>
+              </>
+            ) : null}
+
+            <Link href={bookHref} className="experts-pro-book-cta" data-testid="expert-profile-book-cta">
+              {primaryCtaLabel}
+            </Link>
+
+            <p className="experts-pro-book-note">
+              Encrypted video · AI briefing included · Refundable up to 24 hours before start
+            </p>
+
+            {videoOfferActive ? (
+              <div className="experts-pro-video-offer" data-testid="expert-profile-video-offer">
+                <Link
+                  href={videoHref}
+                  data-testid="expert-profile-video-cta"
+                  className="experts-pro-video-cta"
+                  style={{ marginTop: '0.85rem' }}
+                >
+                  {videoCtaLabel}
+                </Link>
+              </div>
+            ) : null}
           </div>
         </div>
-
-        <section className="experts-pro-bio">
-          <p className="experts-pro-section-label">The pedigree</p>
-          <h2>About {firstName}</h2>
-          <div lang="es" className="experts-pro-bio-body">
-            {visibleParas.map((para, i) => (
-              <p key={i}>{para}</p>
-            ))}
-          </div>
-          {paragraphs.length > COLLAPSE_AT ? (
-            <button
-              type="button"
-              onClick={() => setBioExpanded((v) => !v)}
-              className="experts-pro-bio-toggle"
-            >
-              <MaterialIcon name={bioExpanded ? 'expand_less' : 'expand_more'} size={16} />
-              {bioExpanded ? 'Read less' : 'Read more'}
-            </button>
-          ) : null}
-        </section>
-
-        {expert.expertise.length > 0 ? (
-          <section className="experts-pro-disciplines">
-            <h2>Core disciplines</h2>
-            <div className="experts-pro-chips">
-              {expert.expertise.map((item) => (
-                <span key={item}>{item}</span>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        <ExpertReviews reviews={reviews} />
-
-        <section className="experts-pro-trust">
-          <p className="experts-pro-section-label">The AstroLink standard</p>
-          <h2>What you get with every session</h2>
-          <ul>
-            {[
-              'Payment collected when you book; full refund when cancelled at least 24 hours before start',
-              'AI-generated pre-call briefing tailored to your goals and the expert’s background',
-              'Private, encrypted Daily video room with per-participant tokens',
-            ].map((text) => (
-              <li key={text}>
-                <MaterialIcon name="check_circle" size={18} className="experts-pro-trust-icon" />
-                <span>{text}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
       </main>
 
       <div className="experts-pro-sticky-bar">

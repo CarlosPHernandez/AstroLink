@@ -1,11 +1,12 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ExpertCategoryFilter } from '@/components/booking/expert-category-filter';
 import { ExpertCard } from '@/components/experts/expert-card';
 import { PublicSiteHeader } from '@/components/landing/public-site-header';
-import { filterExpertsByCategory } from '@/lib/expert-categories';
+import { filterExpertsByCategory, filterExpertsByQuery } from '@/lib/expert-categories';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 const ExpertDetailPanel = dynamic(
@@ -29,10 +30,22 @@ export default function ExpertsDirectoryClient({
   isSignedIn: boolean;
   waitlistMode: boolean;
 }) {
+  const searchParams = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
+  const urlQuery = searchParams.get('q');
+  const [searchQuery, setSearchQuery] = useState(() => urlQuery ?? '');
+  const [syncedUrlQuery, setSyncedUrlQuery] = useState(() => urlQuery);
+
+  // Re-seed the search box from the URL when ?q= changes on the same mounted
+  // route (e.g. a second hero search) — render-time adjustment, not an effect,
+  // so the user's own edits to the box aren't clobbered on every render.
+  if (urlQuery !== syncedUrlQuery) {
+    setSyncedUrlQuery(urlQuery);
+    setSearchQuery(urlQuery ?? '');
+  }
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -43,8 +56,8 @@ export default function ExpertsDirectoryClient({
   }, []);
 
   const filteredExperts = useMemo(
-    () => filterExpertsByCategory(experts, selectedCategory),
-    [experts, selectedCategory],
+    () => filterExpertsByQuery(filterExpertsByCategory(experts, selectedCategory), searchQuery),
+    [experts, selectedCategory, searchQuery],
   );
 
   const selectedExpert = useMemo(
@@ -85,10 +98,22 @@ export default function ExpertsDirectoryClient({
             onCategoryChange={handleCategoryChange}
             variant="underline"
           />
+          <input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search by name, role, or expertise"
+            aria-label="Search experts"
+            data-testid="experts-dir-search"
+            className="experts-dir-search"
+          />
         </div>
 
         {filteredExperts.length === 0 ? (
-          <p className="experts-dir-empty">No listed experts in this category right now.</p>
+          <p className="experts-dir-empty">
+            {searchQuery.trim()
+              ? `No experts match "${searchQuery.trim()}".`
+              : 'No listed experts in this category right now.'}
+          </p>
         ) : (
           <div className="experts-dir-grid">
             {filteredExperts.map((expert, index) => (

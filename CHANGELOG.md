@@ -2,7 +2,29 @@
 
 All notable changes to AstroLink are documented in this file.
 
-## [0.12.0.0] - 2026-08-07
+## [0.13.0.0] - 2026-08-10
+
+### Added
+- Search-first landing hero: type what you want to learn and jump straight into a filtered expert directory (`/experts?q=`), plus three one-tap audience shortcuts (Student / Career switcher / Team).
+- Rotating expert chat-preview card on the hero showing a sample question and answer from a different verified expert every few seconds.
+- Hackathon participation section (Gemini XPRIZE) with a live capability grid (booking, briefing, session synthesis, translation, notifications, compliance).
+- "Do the math" cost comparison: conference-attendance cost vs. one AstroLink session, side by side.
+- "What you get" feature grid and a three-step "how it works" intro grid.
+- Bottom expert directory now shows a fixed five-person lineup (Eiman, Chris, Priya, Jenni, Andrew) in that order.
+
+### Changed
+- Landing page background is now a single flat white with no section-to-section color banding.
+- Top "Free Space Path Assessment" bar is condensed to one line on mobile instead of stacking into three rows.
+- Sticky site header background now matches the flattened white page instead of showing a mismatched grey wash on scroll.
+- Expert profile pages re-themed from the old dark "prototype C" look to the light landing palette (booking flow at `/experts/[slug]/video-request` intentionally kept on the dark theme).
+- "Browse all experts" directory CTA and one avatar accent color brought back in line with the documented design system (ink-fill primary button, no off-palette blue).
+- Expert search on `/experts` now stays in sync if the `?q=` URL parameter changes after the page has already loaded.
+
+### Removed
+- Mid-page prose strip and the before/after comparison slider dropped from the landing page; the standalone hero goal-relay chat experiment replaced by the direct search flow.
+
+### Fixed
+- Fixed a bug where the `/experts` search box could show a stale query after a second search from the landing hero without a full page reload.
 
 ### Added
 - **Space Path Assessment:** free multi-step readiness quiz; Gemini-powered personalized report on-page and by email (no account required).

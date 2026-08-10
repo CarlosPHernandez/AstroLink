@@ -89,7 +89,7 @@ export function PublicSiteHeader({ variant = 'landing' }: PublicSiteHeaderProps)
   }, []);
 
   const shell = isLanding
-    ? 'bg-[color:var(--landing-canvas)]/85 backdrop-blur-md'
+    ? 'bg-[color:var(--landing-surface)]/85 backdrop-blur-md'
     : 'bg-background/80 backdrop-blur-lg border-b border-outline-variant';
 
   const wordmark = isLanding
@@ -113,7 +113,7 @@ export function PublicSiteHeader({ variant = 'landing' }: PublicSiteHeaderProps)
     : 'border-outline-variant bg-surface-container-lowest text-on-surface hover:border-outline';
 
   const panel = isLanding
-    ? 'border-[var(--landing-border)] bg-[var(--landing-canvas)]'
+    ? 'border-[var(--landing-border)] bg-[var(--landing-surface)]'
     : 'border-outline-variant bg-background';
 
   const panelLink = isLanding

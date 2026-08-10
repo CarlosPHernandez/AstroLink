@@ -1,10 +1,11 @@
 import LandingHero from '@/components/landing/landing-hero';
 import { LandingAssessmentBar } from '@/components/landing/landing-assessment-bar';
-import { LandingAssessmentOffer } from '@/components/landing/landing-assessment-offer';
-import { LandingBenefits } from '@/components/landing/landing-benefits';
+import { LandingExpertChatPreview } from '@/components/landing/landing-expert-chat-preview';
 import { LandingParticipation } from '@/components/landing/landing-participation';
-import { LandingTrust } from '@/components/landing/landing-trust';
-import { LandingStory } from '@/components/landing/landing-story';
+import { LandingIntroGrid } from '@/components/landing/landing-intro-grid';
+import { LandingCostComparison } from '@/components/landing/landing-cost-comparison';
+import { LandingFeaturesGrid } from '@/components/landing/landing-features-grid';
+import { LandingHowPath } from '@/components/landing/landing-how-path';
 import ExpertDirectory from '@/components/landing/expert-directory';
 import { LandingHeader } from '@/components/landing/landing-header';
 import Link from 'next/link';
@@ -12,23 +13,30 @@ import type { ListedExpert } from '@/lib/mentor-directory';
 
 export default function LandingPage({ experts }: { experts: ListedExpert[] }) {
   return (
-    <div className="landing-mission min-h-screen overflow-x-hidden bg-[var(--landing-canvas)] text-[var(--landing-text)] font-landing-body selection:bg-[color:var(--landing-accent)]/20">
+    <div className="landing-mission min-h-screen overflow-x-hidden bg-[var(--landing-surface)] text-[var(--landing-text)] font-landing-body selection:bg-[color:var(--landing-accent)]/20">
       <LandingAssessmentBar />
       <LandingHeader />
       <main>
-        <LandingHero experts={experts} />
+        <LandingHero />
+        <LandingExpertChatPreview experts={experts} />
         <LandingParticipation />
-        <LandingAssessmentOffer />
-        <LandingBenefits />
-        <LandingTrust />
-        <LandingStory experts={experts} />
-        <ExpertDirectory experts={experts} variant="mission" />
+        <LandingIntroGrid />
+        <LandingCostComparison />
+        <LandingFeaturesGrid />
+        <ExpertDirectory experts={experts} variant="grid" />
+        <LandingHowPath />
       </main>
 
       <footer className="border-t border-[color:var(--landing-border)] py-10 sm:py-16 pb-[max(2.5rem,env(safe-area-inset-bottom))] sm:pb-16">
         <div className="max-w-[1200px] mx-auto px-md sm:px-lg flex flex-col sm:flex-row justify-between items-center gap-5 sm:gap-6">
           <span className="font-landing-wordmark text-sm text-[var(--landing-text)]">AstroLink</span>
           <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 text-[var(--landing-muted)] text-xs">
+            <Link
+              href="/assessment"
+              className="inline-flex min-h-10 touch-manipulation items-center px-2.5 hover:text-[var(--landing-text)] transition-colors sm:min-h-0"
+            >
+              Free assessment
+            </Link>
             <Link
               href="/experts"
               className="inline-flex min-h-10 touch-manipulation items-center px-2.5 hover:text-[var(--landing-text)] transition-colors sm:min-h-0"
