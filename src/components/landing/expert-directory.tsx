@@ -1,30 +1,28 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import { LandingScrollReveal } from '@/components/landing/landing-scroll-reveal';
-import { landingFeaturedPortrait, orderLandingExperts } from '@/lib/landing/featured-expert';
-import { toOptimizedImageUrl } from '@/lib/public-images';
+import {
+  landingFeaturedPortrait,
+  orderLandingDirectoryExperts,
+  orderLandingExperts,
+} from '@/lib/landing/featured-expert';
 
 const TEASER_COUNT = 6;
 
 type ExpertDirectoryProps = {
   experts: ListedExpert[];
-  variant?: 'default' | 'mission';
+  variant?: 'grid' | 'mission';
 };
 
-export default function ExpertDirectory({ experts, variant = 'default' }: ExpertDirectoryProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-
-  const filteredExperts =
-    selectedCategory === 'all'
-      ? experts
-      : experts.filter((e) => e.category === selectedCategory);
-
-  const teaserExperts = orderLandingExperts(filteredExperts).slice(0, TEASER_COUNT);
+export default function ExpertDirectory({ experts, variant = 'grid' }: ExpertDirectoryProps) {
+  const teaserExperts =
+    variant === 'grid'
+      ? orderLandingDirectoryExperts(experts)
+      : orderLandingExperts(experts).slice(0, TEASER_COUNT);
 
   if (variant === 'mission') {
     return (
@@ -140,89 +138,76 @@ export default function ExpertDirectory({ experts, variant = 'default' }: Expert
   }
 
   return (
-    <section
-      id="directory"
-      className="border-t border-outline-variant/30 bg-surface-container-low py-20 px-0 md:px-6 scroll-mt-20"
-    >
-      <div className="max-w-[1200px] mx-auto px-lg">
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-on-surface uppercase">
-              Verified Directories
-            </h2>
-            <p className="text-on-surface-variant text-xs mt-1">
-              Featured experts — browse the full directory to watch intros and book sessions.
-            </p>
-          </div>
-
-          <div
-            className="flex flex-wrap gap-2"
-            role="group"
-            aria-label="Filter featured experts by category"
-          >
-            {['all', 'systems', 'propulsion', 'spacecraft', 'policy'].map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                aria-pressed={selectedCategory === cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`touch-manipulation px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border rounded-md transition-all cursor-pointer ${
-                  selectedCategory === cat
-                    ? 'bg-primary text-white border-primary'
-                    : 'border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:border-outline'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+    <section id="directory" className="border-t border-[var(--landing-border)] py-10 sm:py-16 lg:py-20 scroll-mt-20">
+      <div className="max-w-[1100px] mx-auto px-md sm:px-lg">
+        <header className="mb-8 sm:mb-9">
+          <p className="text-[11px] font-mono font-semibold uppercase tracking-[0.14em] text-[var(--landing-accent)] mb-2">
+            Verified expert network
+          </p>
+          <h2 className="font-landing-display text-xl sm:text-2xl font-bold tracking-tight text-[var(--landing-text)] mb-2">
+            Browse real people. Book a live 1:1.
+          </h2>
+          <p className="text-sm sm:text-base text-[var(--landing-muted)] max-w-[60ch]">
+            Faces and names up front. Open a profile to watch an intro, then book when
+            you&apos;re ready.
+          </p>
         </header>
 
         {teaserExperts.length === 0 ? (
-          <p className="text-sm text-on-surface-variant font-light px-2 py-8">
+          <p className="text-sm text-[var(--landing-muted)] py-8">
             No listed experts right now. Check Supabase seed data and that mentors are approved and
             listed.
           </p>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            {teaserExperts.map((expert, index) => (
-              <Link
-                key={expert.id}
-                href={`/experts/${expert.slug}`}
-                data-testid={`expert-card-${expert.slug}`}
-                className="group flex flex-col overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest hover:border-outline hover:shadow-md transition-all duration-300"
-              >
-                <div className="relative aspect-[3/4] w-full overflow-hidden bg-surface-container-low">
-                  <Image
-                    src={toOptimizedImageUrl(expert.imageUrl)}
-                    alt={expert.name}
-                    fill
-                    priority={index === 0}
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 768px) 45vw, 220px"
-                  />
-                </div>
-                <div className="p-4 border-t border-outline-variant/50">
-                  <p className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors truncate">
-                    {expert.name}
-                  </p>
-                  <p className="text-label-sm text-on-surface-variant truncate mt-0.5 tabular-nums">
-                    ${expert.rate}/hr
-                  </p>
-                </div>
-              </Link>
-            ))}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-9">
+            {teaserExperts.map((expert, index) => {
+              const portrait = landingFeaturedPortrait(expert);
+              return (
+                <Link
+                  key={expert.id}
+                  href={`/experts/${expert.slug}`}
+                  data-testid={`expert-card-${expert.slug}`}
+                  className="group overflow-hidden rounded-[14px] border border-[var(--landing-border)] bg-[var(--landing-surface)] transition-[box-shadow,border-color] duration-200 hover:shadow-[0_12px_32px_-18px_rgba(14,20,32,0.18)] hover:border-[var(--landing-muted)]"
+                >
+                  <div className="relative aspect-[3/4] w-full overflow-hidden bg-[var(--landing-surface-soft)]">
+                    <Image
+                      src={portrait.src}
+                      alt={portrait.alt}
+                      fill
+                      priority={index === 0}
+                      className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+                      sizes="(max-width: 768px) 45vw, 220px"
+                    />
+                  </div>
+                  <div className="p-3.5">
+                    <span className="inline-block rounded-full bg-[var(--landing-accent-tint)] px-2 py-0.5 text-[9px] font-bold tracking-[0.06em] text-[var(--landing-accent)] mb-2">
+                      VERIFIED
+                    </span>
+                    <p className="text-sm font-semibold text-[var(--landing-text)] truncate">{expert.name}</p>
+                    <p className="text-xs text-[var(--landing-faint)] truncate">
+                      {expert.role} · {expert.employer}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
 
-        <div className="mt-10 flex justify-center">
+        <div className="flex flex-wrap items-center gap-6">
           <Link
             href="/experts"
             data-testid="view-all-experts"
-            className="inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-on-surface hover:border-primary hover:text-primary transition-colors"
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--landing-ink)] px-6 py-3 text-sm font-semibold text-white transition-colors hover:opacity-90"
           >
-            View all experts
+            Browse all experts
             <MaterialIcon name="arrow_forward" size={18} />
+          </Link>
+          <Link
+            href="/auth?mode=signup&redirect=%2Fbooking"
+            className="text-sm text-[var(--landing-muted)] underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
+          >
+            Create a free account to book a session
           </Link>
         </div>
       </div>

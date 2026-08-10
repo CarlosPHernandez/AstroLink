@@ -53,6 +53,24 @@ export function orderLandingExperts(experts: ListedExpert[]): ListedExpert[] {
   return [featured, ...experts.filter((expert) => expert.id !== featured.id)];
 }
 
+/** Fixed roster + order for the landing page's bottom expert directory grid. */
+const LANDING_DIRECTORY_NAME_ORDER = ['eiman', 'chris', 'priya', 'jenni', 'andrew'] as const;
+
+export function orderLandingDirectoryExperts(experts: ListedExpert[]): ListedExpert[] {
+  const used = new Set<string>();
+  const ordered: ListedExpert[] = [];
+  for (const key of LANDING_DIRECTORY_NAME_ORDER) {
+    const match = experts.find(
+      (expert) => !used.has(expert.id) && expert.name.toLowerCase().includes(key),
+    );
+    if (match) {
+      ordered.push(match);
+      used.add(match.id);
+    }
+  }
+  return ordered;
+}
+
 export function landingHeroPortrait(experts: ListedExpert[]): {
   src: string;
   alt: string;
