@@ -12,11 +12,11 @@ export function EducatorsDemoSection() {
           <div className="lg:col-span-5">
             <div className="relative mb-6 aspect-[16/10] overflow-hidden rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-surface-soft)] lg:max-w-[380px]">
               <Image
-                src="/educators/orbital-missions-v2.jpg"
+                src="/educators/orbital-missions.jpg"
                 alt="Students inspired by an orbital Earth view in a modern classroom"
                 fill
                 sizes="380px"
-                className="object-cover object-[center_40%]"
+                className="object-cover object-[center_30%]"
               />
             </div>
             <h2 className="font-landing-display text-2xl sm:text-3xl lg:text-[2.15rem] font-extrabold tracking-tight text-[var(--landing-text)] text-balance leading-[1.15]">
