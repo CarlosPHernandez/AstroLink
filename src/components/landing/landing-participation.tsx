@@ -4,8 +4,6 @@ import { LandingScrollReveal } from '@/components/landing/landing-scroll-reveal'
 const GEMINI_XPRIZE_HREF = 'https://www.geminixprize.com/';
 const DEVPOST_HREF = 'https://xprize.devpost.com/';
 
-const STATUS_PILLS = ['Professional Services Access', '$2M prize pool', 'Deadline Aug 17, 2026'] as const;
-
 const APX_TILES = [
   { id: 'APX-01', label: 'Booking', body: 'Expert matching from buyer goals and roster' },
   { id: 'APX-02', label: 'Briefing', body: 'Dual pre-session briefs for mentee and expert' },
@@ -78,21 +76,6 @@ export function LandingParticipation() {
           delay={90}
           className="mt-8 sm:mt-10 mx-auto max-w-[820px] overflow-hidden rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_20px_48px_-30px_rgba(14,20,32,0.16)]"
         >
-          <div className="flex flex-wrap gap-2.5 border-b border-[var(--landing-border)] px-6 sm:px-7 py-5">
-            {STATUS_PILLS.map((pill, i) => (
-              <span
-                key={pill}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                  i === 0
-                    ? 'bg-[var(--landing-accent-tint)] text-[var(--landing-accent)]'
-                    : 'bg-[var(--landing-surface-soft)] text-[var(--landing-text)]'
-                }`}
-              >
-                {pill}
-              </span>
-            ))}
-          </div>
-
           <div className="px-6 sm:px-7 py-7 sm:py-8 text-left">
             <h2 className="font-landing-display text-lg sm:text-xl font-bold tracking-tight text-[var(--landing-text)] mb-3">
               An expert network with Gemini doing the operational work
