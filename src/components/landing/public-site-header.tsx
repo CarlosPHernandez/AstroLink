@@ -16,6 +16,7 @@ const UNLOCK_HREF = '/auth?mode=signup&redirect=%2Fexperts';
 
 const NAV_LINKS = [
   { href: '/experts', label: 'Experts' },
+  { href: '/for-educators', label: 'For Educators' },
   { href: '/press', label: 'Press' },
 ] as const;
 

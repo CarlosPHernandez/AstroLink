@@ -145,6 +145,48 @@ export type Database = {
         }
         Relationships: []
       }
+      educator_demo_requests: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          ip_hash: string | null
+          message: string | null
+          referrer: string | null
+          role: string
+          school_name: string
+          student_population: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          ip_hash?: string | null
+          message?: string | null
+          referrer?: string | null
+          role: string
+          school_name: string
+          student_population?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          ip_hash?: string | null
+          message?: string | null
+          referrer?: string | null
+          role?: string
+          school_name?: string
+          student_population?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       early_access_signups: {
         Row: {
           created_at: string
