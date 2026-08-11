@@ -52,7 +52,7 @@ export function EducatorsHero() {
             <p className="mt-6 text-sm text-[var(--landing-muted)]">
               <Link
                 href="/experts"
-                className="font-semibold text-[var(--landing-accent)] hover:text-[var(--landing-accent-hover)] underline-offset-2 hover:underline"
+                className="inline-flex min-h-11 touch-manipulation items-center sm:min-h-0 font-semibold text-[var(--landing-accent)] hover:text-[var(--landing-accent-hover)] underline-offset-2 hover:underline"
               >
                 Browse experts your class can book
               </Link>
