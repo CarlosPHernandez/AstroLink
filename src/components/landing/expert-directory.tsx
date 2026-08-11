@@ -198,7 +198,7 @@ export default function ExpertDirectory({
                     </span>
                     <p className="text-sm font-semibold text-[var(--landing-text)] truncate">{expert.name}</p>
                     <p className="text-xs text-[var(--landing-faint)] truncate">
-                      {expert.role} · {expert.employer}
+                      {[expert.role, expert.employer].filter(Boolean).join(' · ')}
                     </p>
                   </div>
                 </Link>
