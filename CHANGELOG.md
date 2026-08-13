@@ -2,6 +2,17 @@
 
 All notable changes to AstroLink are documented in this file.
 
+
+## [0.14.0.0] - 2026-08-13
+
+### Added
+- **/for-educators** B2B landing for schools: hero, photo value bento (student success, ESL, access, orbital pathways), cost comparison table, expert roster, how-it-works, and demo request form.
+- `POST /api/educator-demo` stores leads in `educator_demo_requests` (migration included) and optionally emails `EDUCATOR_LEADS_EMAIL`.
+- Nav + sitemap entry for For Educators; Imagine-generated classroom imagery under `public/educators/`.
+
+### Changed
+- Expert directory header accepts optional eyebrow/title/description overrides for contextual pages.
+
 ## [0.13.0.0] - 2026-08-10
 
 ### Added

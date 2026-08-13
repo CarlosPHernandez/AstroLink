@@ -16,9 +16,19 @@ const TEASER_COUNT = 6;
 type ExpertDirectoryProps = {
   experts: ListedExpert[];
   variant?: 'grid' | 'mission';
+  /** Optional overrides for the grid variant header */
+  eyebrow?: string;
+  title?: string;
+  description?: string;
 };
 
-export default function ExpertDirectory({ experts, variant = 'grid' }: ExpertDirectoryProps) {
+export default function ExpertDirectory({
+  experts,
+  variant = 'grid',
+  eyebrow,
+  title,
+  description,
+}: ExpertDirectoryProps) {
   const teaserExperts =
     variant === 'grid'
       ? orderLandingDirectoryExperts(experts)
@@ -138,18 +148,21 @@ export default function ExpertDirectory({ experts, variant = 'grid' }: ExpertDir
   }
 
   return (
-    <section id="directory" className="border-t border-[var(--landing-border)] py-10 sm:py-16 lg:py-20 scroll-mt-20">
+    <section
+      id="directory"
+      className="border-t border-[var(--landing-border)] py-10 sm:py-16 lg:py-20 scroll-mt-20"
+    >
       <div className="max-w-[1100px] mx-auto px-md sm:px-lg">
         <header className="mb-8 sm:mb-9">
           <p className="text-[11px] font-mono font-semibold uppercase tracking-[0.14em] text-[var(--landing-accent)] mb-2">
-            Verified expert network
+            {eyebrow ?? 'Verified expert network'}
           </p>
           <h2 className="font-landing-display text-xl sm:text-2xl font-bold tracking-tight text-[var(--landing-text)] mb-2">
-            Browse real people. Book a live 1:1.
+            {title ?? 'Browse real people. Book a live 1:1.'}
           </h2>
           <p className="text-sm sm:text-base text-[var(--landing-muted)] max-w-[60ch]">
-            Faces and names up front. Open a profile to watch an intro, then book when
-            you&apos;re ready.
+            {description ??
+              "Faces and names up front. Open a profile to watch an intro, then book when you're ready."}
           </p>
         </header>
 
@@ -185,7 +198,7 @@ export default function ExpertDirectory({ experts, variant = 'grid' }: ExpertDir
                     </span>
                     <p className="text-sm font-semibold text-[var(--landing-text)] truncate">{expert.name}</p>
                     <p className="text-xs text-[var(--landing-faint)] truncate">
-                      {expert.role} · {expert.employer}
+                      {[expert.role, expert.employer].filter(Boolean).join(' · ')}
                     </p>
                   </div>
                 </Link>

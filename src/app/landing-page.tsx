@@ -44,6 +44,12 @@ export default function LandingPage({ experts }: { experts: ListedExpert[] }) {
               Experts
             </Link>
             <Link
+              href="/for-educators"
+              className="inline-flex min-h-10 touch-manipulation items-center px-2.5 hover:text-[var(--landing-text)] transition-colors sm:min-h-0"
+            >
+              For Educators
+            </Link>
+            <Link
               href="/press"
               className="inline-flex min-h-10 touch-manipulation items-center px-2.5 hover:text-[var(--landing-text)] transition-colors sm:min-h-0"
             >

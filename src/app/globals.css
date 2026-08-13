@@ -2528,3 +2528,23 @@ body {
   }
 }
 
+/* Educators page — subtle Ken Burns on hero still (video gen unavailable) */
+@keyframes educators-hero-kenburns {
+  0% {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  100% {
+    transform: scale(1.06) translate3d(-1.2%, -0.6%, 0);
+  }
+}
+
+.educators-hero-kenburns {
+  animation: educators-hero-kenburns 18s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .educators-hero-kenburns {
+    animation: none;
+  }
+}
+
