@@ -79,6 +79,13 @@ Cursor canvas: `mentor-dashboard-ops` — CTO → CEO → mentor language for al
 
 These are design/planning artifacts — not canonical runbooks. Prefer `how-to/` and `reference/` for ops.
 
+## Gemini XPRIZE submission
+
+| Doc | Notes |
+|-----|--------|
+| [xprize/README.md](./xprize/README.md) | Submission materials index |
+| [xprize/submission-package-checklist.md](./xprize/submission-package-checklist.md) | Master Devpost + evidence checklist (source of truth) |
+
 ## Other
 
 | Doc | Notes |
