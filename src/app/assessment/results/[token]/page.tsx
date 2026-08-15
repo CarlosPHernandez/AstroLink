@@ -4,11 +4,10 @@ import { notFound } from 'next/navigation';
 import { AssessmentReportView } from '@/components/path-assessment/assessment-report-view';
 import { SpaResultsViewTracker } from '@/components/path-assessment/spa-analytics-effects';
 import {
-  PathAssessmentAnswersSchema,
-  PathAssessmentReportSchema,
-  type PathAssessmentPublicView,
-  type PathAssessmentStatus,
-} from '@/lib/path-assessment/schema';
+  mapPathAssessmentPublicView,
+  PATH_ASSESSMENT_PUBLIC_SELECT,
+} from '@/lib/path-assessment/public-view';
+import type { PathAssessmentPublicView } from '@/lib/path-assessment/schema';
 import { isValidPathAssessmentToken } from '@/lib/path-assessment/tokens';
 import { countWrittenReviewMentors } from '@/lib/path-assessment/written-review-mentors';
 import { supabaseAdmin } from '@/lib/supabase';
@@ -25,9 +24,7 @@ async function loadAssessment(token: string): Promise<PathAssessmentPublicView |
 
   const { data, error } = await supabaseAdmin
     .from('path_assessments')
-    .select(
-      'public_token, status, first_name, answers_json, report_json, report_html, created_at',
-    )
+    .select(PATH_ASSESSMENT_PUBLIC_SELECT)
     .eq('public_token', token)
     .maybeSingle();
 
@@ -35,32 +32,7 @@ async function loadAssessment(token: string): Promise<PathAssessmentPublicView |
     return null;
   }
 
-  const answersParsed = PathAssessmentAnswersSchema.safeParse(data.answers_json);
-  if (!answersParsed.success) {
-    return null;
-  }
-
-  let report = null;
-  if (data.report_json) {
-    const reportParsed = PathAssessmentReportSchema.safeParse(data.report_json);
-    if (reportParsed.success) {
-      report = reportParsed.data;
-    }
-  }
-
-  const status = (['pending', 'ready', 'failed'].includes(data.status)
-    ? data.status
-    : 'pending') as PathAssessmentStatus;
-
-  return {
-    token: data.public_token,
-    status,
-    firstName: data.first_name,
-    answers: answersParsed.data,
-    report,
-    reportHtml: data.report_html,
-    createdAt: data.created_at,
-  };
+  return mapPathAssessmentPublicView(data as Parameters<typeof mapPathAssessmentPublicView>[0]);
 }
 
 export default async function AssessmentResultsPage({

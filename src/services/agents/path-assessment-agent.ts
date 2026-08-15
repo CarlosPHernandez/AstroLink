@@ -74,9 +74,13 @@ export class PathAssessmentAgent {
       row.id,
     );
 
+    const demandMatch = usedFallback
+      ? null
+      : await this.matchDemand(params.answers, row.id);
+
     const reportHtml = renderPathAssessmentReportHtml(report, {
       firstName: params.answers.firstName,
-      bookingUrl: pathAssessmentBookingUrl(publicToken),
+      bookingUrl: pathAssessmentBookingUrl(publicToken, demandMatch?.slug),
       writtenReviewUrl: pathAssessmentWrittenReviewUrl(publicToken),
       includeLiveCta: true,
       includeWrittenCta: true,
@@ -92,6 +96,10 @@ export class PathAssessmentAgent {
         report_html: reportHtml,
         status,
         llm_error: usedFallback ? llmError ?? 'llm_fallback' : null,
+        recommended_mentor_id: demandMatch?.mentorId ?? null,
+        match_score: demandMatch?.matchScore ?? null,
+        match_reason: demandMatch?.matchReason ?? null,
+        matched_at: demandMatch ? new Date().toISOString() : null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', row.id);
@@ -120,6 +128,45 @@ export class PathAssessmentAgent {
     }
 
     return { token: publicToken, status, assessmentId: row.id };
+  }
+
+  private async matchDemand(
+    answers: PathAssessmentAnswers,
+    assessmentId: string,
+  ): Promise<{
+    mentorId: string;
+    slug: string | null;
+    matchScore: number;
+    matchReason: string;
+  } | null> {
+    try {
+      const { matchListedMentor, loadListedMentorPool } = await import('@/lib/expert-match');
+      const pool = await loadListedMentorPool();
+      const result = await matchListedMentor({
+        menteeGoals: `${answers.primaryGoal}\n\nObstacle: ${answers.obstacle}`,
+        menteeBackground: `${answers.stage}. Network: ${answers.network}. ${answers.experience}`,
+        serviceType: 'session_1on1',
+        rateLimitKey: `path-assessment-match:${assessmentId}`,
+        agentId: this.agentId,
+        operation: 'demand_match',
+        refId: assessmentId,
+        mentors: pool,
+      });
+      const mentor = pool.find((row) => row.id === result.mentor_id);
+      return {
+        mentorId: result.mentor_id,
+        slug: mentor?.slug ?? null,
+        matchScore: result.match_score,
+        matchReason: result.match_reason,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'match failed';
+      console.warn('[path-assessment] demand match skipped', message);
+      await this.logAudit('PATH_ASSESSMENT_MATCH_SKIPPED', assessmentId, {
+        reason: message.slice(0, 280),
+      });
+      return null;
+    }
   }
 
   private async generateReport(

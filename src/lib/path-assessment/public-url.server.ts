@@ -12,8 +12,11 @@ export function pathAssessmentResultsUrl(token: string): string {
   return `${getAppBaseUrl()}${pathAssessmentResultsPath(token)}`;
 }
 
-export function pathAssessmentBookingUrl(token: string): string {
-  return `${getAppBaseUrl()}${pathAssessmentBookingPath(token)}`;
+export function pathAssessmentBookingUrl(
+  token: string,
+  mentorSlug?: string | null,
+): string {
+  return `${getAppBaseUrl()}${pathAssessmentBookingPath(token, mentorSlug)}`;
 }
 
 export function pathAssessmentWrittenReviewUrl(assessmentToken: string): string {

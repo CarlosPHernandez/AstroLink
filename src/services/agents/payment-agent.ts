@@ -1,4 +1,8 @@
 import type { Json } from '@/lib/database.types';
+import {
+  releaseChrisCampaignSlot,
+  shouldReleaseChrisCampaignSlotForStatus,
+} from '@/lib/chris-campaign/chris-campaign-slots';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export class PaymentAgent {
@@ -131,16 +135,47 @@ export class PaymentAgent {
    * Handles Stripe payment failed webhook events.
    */
   async handlePaymentFailed(bookingId: string) {
+    const { data: booking } = await (
+      supabaseAdmin.from('bookings') as unknown as {
+        select: (cols: string) => {
+          eq: (
+            col: string,
+            val: string,
+          ) => {
+            maybeSingle: () => Promise<{
+              data: { id: string; campaign_id: string | null; status: string } | null;
+              error: { message: string } | null;
+            }>;
+          };
+        };
+      }
+    )
+      .select('id, campaign_id, status')
+      .eq('id', bookingId)
+      .maybeSingle();
+
     await supabaseAdmin
       .from('bookings')
       .update({ status: 'payment_failed' })
       .eq('id', bookingId);
 
-    // Update transactions status to failed
     await supabaseAdmin
       .from('transactions')
       .update({ status: 'failed' })
       .eq('booking_id', bookingId);
+
+    const campaignId = booking?.campaign_id;
+    if (shouldReleaseChrisCampaignSlotForStatus(booking?.status ?? 'pending_payment', campaignId)) {
+      try {
+        await releaseChrisCampaignSlot(campaignId);
+        await this.logAudit('CHRIS_CAMPAIGN_SLOT_RELEASED', bookingId, {
+          campaign_id: campaignId,
+          reason: 'payment_failed',
+        });
+      } catch (error) {
+        console.error('[payment-agent] failed to release Chris slot after payment_failed', error);
+      }
+    }
 
     await this.logAudit('PAYMENT_FAILED_RECONCILED', bookingId, {});
   }

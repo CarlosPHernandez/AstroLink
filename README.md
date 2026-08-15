@@ -28,12 +28,12 @@ Gemini (and OpenAI fallback via `src/lib/llm.ts`) runs key decisions in the live
 
 | Agent | Role |
 |-------|------|
-| **APX-01** Booking | Expert matching from buyer goals + roster |
+| **APX-10** Path Assessment | Free readiness report; Gemini matches a listed expert when the model succeeds |
 | **APX-02** Briefing | Dual pre-session briefs for mentee + expert (`briefing_json` v2 bundle) |
-| **APX-03** Session | Post-call summary and action items from transcript |
+| **APX-12** Settlement | After hang-up, decides completed / no-show / hold and payout eligibility |
+| **APX-03** Session | Post-call summary only when a stored transcript exists |
 | **APX-06** Translation | Live captions and localized recap (aerospace glossary) |
-| **APX-08** Notifications | Booking confirmation email + calendar invite (Resend) |
-| **APX-04** Compliance | Intake and transcript flags for ops review (ITAR-adjacent keywords) |
+| **APX-09** Reviews | Screens consented quotes; auto-publishes only when policy-clear |
 
 Structured decision logs for judges: [T8 in D1 plan](docs/d1-implementation-plan.md) (export from `audit_log`).
 

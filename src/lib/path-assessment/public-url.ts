@@ -4,8 +4,15 @@ export function pathAssessmentResultsPath(token: string): string {
   return `/assessment/results/${encodeURIComponent(token)}`;
 }
 
-export function pathAssessmentBookingPath(token: string): string {
-  return `/booking?assessment=${encodeURIComponent(token)}`;
+export function pathAssessmentBookingPath(
+  token: string,
+  mentorSlug?: string | null,
+): string {
+  const params = new URLSearchParams({ assessment: token });
+  if (mentorSlug?.trim()) {
+    params.set('mentor', mentorSlug.trim());
+  }
+  return `/booking?${params.toString()}`;
 }
 
 /** Checkout for $50 written expert review of an existing assessment. */

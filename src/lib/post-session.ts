@@ -23,6 +23,7 @@ import {
 } from '@/lib/transcript-translation/types';
 import { parsePostSessionOutput } from '@/lib/transcript-translation/recap-locale';
 import { SessionAgent } from '@/services/agents/session-agent';
+import { SettlementAgent } from '@/services/agents/settlement-agent';
 import { TranslationAgent } from '@/services/agents/translation-agent';
 
 export type MeetingEndedPayload = {
@@ -39,6 +40,7 @@ type BookingRow = {
   daily_room_url: string | null;
   mentee_id: string;
   mentor_id: string;
+  duration_minutes: number | null;
 };
 
 type SessionTranscriptRow = {
@@ -68,7 +70,7 @@ async function findBookingByDailyRoom(roomName: string): Promise<BookingRow | nu
 
   const { data: booking, error } = await supabaseAdmin
     .from('bookings')
-    .select('id, status, stripe_payment_intent_id, daily_room_url, mentee_id, mentor_id')
+    .select('id, status, stripe_payment_intent_id, daily_room_url, mentee_id, mentor_id, duration_minutes')
     .ilike('daily_room_url', `%/${normalizedRoom}`)
     .maybeSingle();
 
@@ -364,25 +366,10 @@ async function fulfillBookingAfterMeetingEndedForRow(
   const alreadyCompleted = booking.status === 'completed';
 
   if (!alreadyCompleted) {
-    if (!isDailyTranscriptionEnabled()) {
-      await runSessionSynthesisIfNeeded({
-        bookingId: booking.id,
-        transcriptText: '',
-        durationMinutes,
-      });
-      await maybeRunTranslationIfNeeded(booking.id);
-    }
-
     await captureOrCompleteBooking(booking);
-  } else if (!isDailyTranscriptionEnabled()) {
-    // Idempotent retry: booking may be completed without recap (e.g. prior partial run).
-    await runSessionSynthesisIfNeeded({
-      bookingId: booking.id,
-      transcriptText: '',
-      durationMinutes,
-    });
-    await maybeRunTranslationIfNeeded(booking.id);
   }
+
+  await settleBookingBestEffort(booking, durationMinutes);
 
   const gateResult = isDailyTranscriptionEnabled()
     ? await maybeRunSynthesisGate({ bookingId: booking.id, durationMinutes })
@@ -397,9 +384,35 @@ async function fulfillBookingAfterMeetingEndedForRow(
   };
 }
 
+async function settleBookingBestEffort(booking: BookingRow, actualDurationMinutes: number) {
+  try {
+    const { data: tx } = await supabaseAdmin
+      .from('transactions')
+      .select('gross_amount_cents')
+      .eq('booking_id', booking.id)
+      .maybeSingle();
+
+    const agent = new SettlementAgent();
+    await agent.settleFromFacts(booking.id, {
+      bookedDurationMinutes: booking.duration_minutes ?? actualDurationMinutes,
+      actualDurationMinutes,
+      menteeJoined: null,
+      mentorJoined: null,
+      transcriptAvailable: false,
+      utteranceCount: 0,
+      amountCents: tx?.gross_amount_cents ?? 0,
+    });
+  } catch (error) {
+    console.error('[post-session] settlement failed (non-fatal)', {
+      bookingId: booking.id,
+      error,
+    });
+  }
+}
+
 /**
  * Idempotent D1 fulfillment after Daily reports meeting.ended:
- * session completion only (capture is immediate at booking time). APX-03 runs here only when transcription is disabled.
+ * session completion + Gemini settlement. Recap synthesis waits for a stored transcript.
  */
 export async function fulfillBookingAfterMeetingEnded(payload: MeetingEndedPayload) {
   const roomName = payload.room.trim();
@@ -422,7 +435,7 @@ export async function fulfillBookingAfterMeetingEndedForBooking(
 ) {
   const { data: booking, error } = await supabaseAdmin
     .from('bookings')
-    .select('id, status, stripe_payment_intent_id, daily_room_url, mentee_id, mentor_id')
+    .select('id, status, stripe_payment_intent_id, daily_room_url, mentee_id, mentor_id, duration_minutes')
     .eq('id', bookingId)
     .single();
 

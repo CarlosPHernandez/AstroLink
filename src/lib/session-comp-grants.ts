@@ -111,6 +111,7 @@ export async function redeemGrantForBooking(params: {
     .eq('id', params.grantId)
     .eq('user_id', params.userId)
     .eq('status', 'available')
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
     .select('id');
 
   if (error) {

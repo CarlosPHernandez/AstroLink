@@ -83,6 +83,12 @@ vi.mock('@/services/agents/session-agent', () => ({
   })),
 }));
 
+vi.mock('@/services/agents/settlement-agent', () => ({
+  SettlementAgent: vi.fn(() => ({
+    settleFromFacts: vi.fn().mockResolvedValue({ skipped: false, decision: 'completed' }),
+  })),
+}));
+
 vi.mock('@/services/agents/translation-agent', () => ({
   TranslationAgent: vi.fn(() => ({
     translateSessionRecap: mockTranslateSessionRecap,
@@ -122,6 +128,7 @@ const bookingRow = {
   daily_room_url: 'https://astrolink.daily.co/astrolink-booking1',
   mentee_id: 'mentee-1',
   mentor_id: 'mentor-1',
+  duration_minutes: 45,
 };
 
 describe('assertBookingEligibleForPostSession', () => {
@@ -469,7 +476,7 @@ describe('fulfillBookingAfterMeetingEnded transcription disabled', () => {
     vi.mocked(isDailyTranscriptionEnabled).mockReturnValue(false);
   });
 
-  it('runs translation after synthesis when transcription is disabled (D16)', async () => {
+  it('does not invent a recap or translation when transcription is disabled', async () => {
     mockBookingMaybeSingle.mockResolvedValueOnce({ data: bookingRow, error: null });
 
     await fulfillBookingAfterMeetingEnded({
@@ -478,7 +485,7 @@ describe('fulfillBookingAfterMeetingEnded transcription disabled', () => {
       end_ts: 1900,
     });
 
-    expect(mockSynthesizeSession).toHaveBeenCalled();
-    expect(mockTranslateSessionRecap).toHaveBeenCalledWith('booking-1', 'pt-BR');
+    expect(mockSynthesizeSession).not.toHaveBeenCalled();
+    expect(mockTranslateSessionRecap).not.toHaveBeenCalled();
   });
 });

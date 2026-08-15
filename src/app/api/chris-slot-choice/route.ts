@@ -8,6 +8,7 @@ import {
 import { getChrisCampaignId } from '@/lib/chris-campaign/chris-campaign-config';
 import { CHRIS_SESSION_DURATION_MINUTES } from '@/lib/chris-campaign/chris-campaign-constants';
 import { verifyChrisSlotToken } from '@/lib/chris-campaign/chris-slot-choice-token';
+import { extractDailyRoomNameFromUrl, updateDailyRoomSchedule } from '@/lib/daily';
 import { sendEmail } from '@/lib/email/resend-client';
 import { getSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
@@ -32,6 +33,7 @@ type BookingRow = {
   mentee_id: string;
   campaign_id: string | null;
   duration_minutes: number | null;
+  daily_room_url: string | null;
   users: { email: string; full_name: string | null } | null;
 };
 
@@ -87,7 +89,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .select(
-      'id, status, scheduled_at, mentee_id, campaign_id, duration_minutes, users(email, full_name)',
+      'id, status, scheduled_at, mentee_id, campaign_id, duration_minutes, daily_room_url, users(email, full_name)',
     )
     .eq('id', payload.bookingId)
     .single();
@@ -129,11 +131,11 @@ export async function POST(request: Request) {
   }
 
   const previousScheduledAt = booking.scheduled_at;
+  const durationMinutes = booking.duration_minutes ?? CHRIS_SESSION_DURATION_MINUTES;
   const { error: updateError } = await supabaseAdmin
     .from('bookings')
     .update({
       scheduled_at: slot.startUtcIso,
-      duration_minutes: CHRIS_SESSION_DURATION_MINUTES,
     })
     .eq('id', booking.id);
 
@@ -148,15 +150,22 @@ export async function POST(request: Request) {
     );
   }
 
-  if (previousScheduledAt !== slot.startUtcIso) {
-    console.warn(
-      '[chris-slot-choice] scheduled_at changed — re-check Daily room expiry if provisioned',
-      {
-        bookingId: booking.id,
-        previousScheduledAt,
-        nextScheduledAt: slot.startUtcIso,
-      },
-    );
+  if (previousScheduledAt !== slot.startUtcIso && booking.daily_room_url) {
+    const roomName = extractDailyRoomNameFromUrl(booking.daily_room_url);
+    if (roomName) {
+      try {
+        await updateDailyRoomSchedule({
+          roomName,
+          scheduledAt: slot.startUtcIso,
+          durationMinutes,
+        });
+      } catch (error) {
+        console.error('[chris-slot-choice] Daily room update failed', {
+          bookingId: booking.id,
+          error,
+        });
+      }
+    }
   }
 
   const opsSubject = `[Chris slot] ${menteeEmail || payload.email} → ${slot.label}`;

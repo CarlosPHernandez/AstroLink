@@ -52,6 +52,8 @@ export type Database = {
           duration_minutes: number
           intake_background: string | null
           match_reason: string | null
+          ai_match_reason: string | null
+          payout_eligible: boolean | null
           mentee_id: string
           mentee_token: string | null
           mentor_id: string
@@ -71,6 +73,8 @@ export type Database = {
           duration_minutes?: number
           intake_background?: string | null
           match_reason?: string | null
+          ai_match_reason?: string | null
+          payout_eligible?: boolean | null
           mentee_id: string
           mentee_token?: string | null
           mentor_id: string
@@ -90,6 +94,8 @@ export type Database = {
           duration_minutes?: number
           intake_background?: string | null
           match_reason?: string | null
+          ai_match_reason?: string | null
+          payout_eligible?: boolean | null
           mentee_id?: string
           mentee_token?: string | null
           mentor_id?: string
@@ -271,6 +277,10 @@ export type Database = {
           first_name: string
           id: string
           llm_error: string | null
+          recommended_mentor_id: string | null
+          match_score: number | null
+          match_reason: string | null
+          matched_at: string | null
           public_token: string
           report_html: string | null
           report_json: Json | null
@@ -287,6 +297,10 @@ export type Database = {
           first_name?: string
           id?: string
           llm_error?: string | null
+          recommended_mentor_id?: string | null
+          match_score?: number | null
+          match_reason?: string | null
+          matched_at?: string | null
           public_token: string
           report_html?: string | null
           report_json?: Json | null
@@ -303,6 +317,10 @@ export type Database = {
           first_name?: string
           id?: string
           llm_error?: string | null
+          recommended_mentor_id?: string | null
+          match_score?: number | null
+          match_reason?: string | null
+          matched_at?: string | null
           public_token?: string
           report_html?: string | null
           report_json?: Json | null
@@ -316,6 +334,60 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "path_assessments_recommended_mentor_id_fkey"
+            columns: ["recommended_mentor_id"]
+            isOneToOne: false
+            referencedRelation: "mentors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_settlements: {
+        Row: {
+          booking_id: string
+          confidence: number | null
+          created_at: string
+          decision: string
+          id: string
+          model: string | null
+          payout_eligible: boolean
+          provider: string | null
+          rationale: string | null
+          refund_recommended: boolean
+        }
+        Insert: {
+          booking_id: string
+          confidence?: number | null
+          created_at?: string
+          decision: string
+          id?: string
+          model?: string | null
+          payout_eligible: boolean
+          provider?: string | null
+          rationale?: string | null
+          refund_recommended: boolean
+        }
+        Update: {
+          booking_id?: string
+          confidence?: number | null
+          created_at?: string
+          decision?: string
+          id?: string
+          model?: string | null
+          payout_eligible?: boolean
+          provider?: string | null
+          rationale?: string | null
+          refund_recommended?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_settlements_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
         ]
@@ -1201,6 +1273,7 @@ export type Database = {
         | "APX-09"
         | "APX-10"
         | "APX-11"
+        | "APX-12"
       bio_risk_rating: "low" | "medium" | "high"
       path_assessment_review_status:
         | "pending_payment"
@@ -1362,6 +1435,7 @@ export const Constants = {
         "APX-09",
         "APX-10",
         "APX-11",
+        "APX-12",
       ],
       path_assessment_review_status: [
         "pending_payment",

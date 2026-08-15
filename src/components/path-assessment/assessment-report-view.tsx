@@ -10,7 +10,11 @@ import {
   pathAssessmentWrittenReviewPath,
 } from '@/lib/path-assessment/public-url';
 import { WRITTEN_REPORT_REVIEW_CENTS } from '@/lib/path-assessment/written-review-pricing';
-import type { PathAssessmentPublicView, PathAssessmentReport } from '@/lib/path-assessment/schema';
+import type {
+  PathAssessmentPublicView,
+  PathAssessmentRecommendedMentor,
+  PathAssessmentReport,
+} from '@/lib/path-assessment/schema';
 
 function ReportBody({ report }: { report: PathAssessmentReport }) {
   return (
@@ -91,8 +95,14 @@ function ReportBody({ report }: { report: PathAssessmentReport }) {
   );
 }
 
-export function AssessmentLiveCta({ token }: { token: string }) {
-  const href = pathAssessmentBookingPath(token);
+export function AssessmentLiveCta({
+  token,
+  recommendedMentor,
+}: {
+  token: string;
+  recommendedMentor?: PathAssessmentRecommendedMentor | null;
+}) {
+  const href = pathAssessmentBookingPath(token, recommendedMentor?.slug);
   return (
     <aside
       className="rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-surface)] p-5 sm:p-6 shadow-[0_8px_28px_-20px_rgba(14,20,32,0.25)]"
@@ -101,6 +111,19 @@ export function AssessmentLiveCta({ token }: { token: string }) {
       <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--landing-faint)]">
         Recommended next step
       </p>
+      {recommendedMentor ? (
+        <div
+          className="mt-3 rounded-xl border border-[var(--landing-border)] bg-[var(--landing-surface-soft)] px-4 py-3"
+          data-testid="path-assessment-gemini-match"
+        >
+          <p className="text-xs font-semibold text-[var(--landing-text)]">
+            Gemini matched you to {recommendedMentor.fullName}
+          </p>
+          <p className="mt-1 text-sm text-[var(--landing-muted)] leading-relaxed">
+            {recommendedMentor.matchReason}
+          </p>
+        </div>
+      ) : null}
       <h2 className="mt-2 font-landing-display text-lg sm:text-xl font-semibold text-[var(--landing-text)] tracking-tight">
         Want a verified expert to review this report with you live?
       </h2>
@@ -170,6 +193,15 @@ export function AssessmentReportView({
 
   return (
     <div className="space-y-10">
+      {view.usedFallback ? (
+        <p
+          className="rounded-xl border border-[var(--landing-border)] bg-[var(--landing-surface-soft)] px-4 py-3 text-sm text-[var(--landing-muted)]"
+          data-testid="path-assessment-fallback-banner"
+        >
+          Gemini was unavailable, so this is a template report — not a personalized model
+          decision. Try again later for a Gemini-written assessment.
+        </p>
+      ) : null}
       {view.firstName ? (
         <p className="text-sm text-[var(--landing-muted)]">
           Personalized for{' '}
@@ -178,7 +210,7 @@ export function AssessmentReportView({
       ) : null}
       <ReportBody report={view.report} />
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.9fr] gap-4 sm:gap-5">
-        <AssessmentLiveCta token={view.token} />
+        <AssessmentLiveCta token={view.token} recommendedMentor={view.recommendedMentor} />
         {showWrittenReviewCta ? <AssessmentWrittenReviewCta token={view.token} /> : null}
       </div>
     </div>

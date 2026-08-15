@@ -114,7 +114,7 @@ export default function OnboardClient({ session }: { session: SessionData }) {
                   NASA Form NF-1860 (Outside Employment Approval)
                 </label>
                 <p className="text-[10px] text-on-surface-variant leading-relaxed font-light">
-                  Upload a scanned PDF copy of your approved NF-1860 document. ComplianceAgent will audit signatures and expiration dates.
+                  Upload a scanned PDF copy of your approved NF-1860 document. AstroLink staff reviews civil-servant paperwork before listing.
                 </p>
                 <input
                   type="file"

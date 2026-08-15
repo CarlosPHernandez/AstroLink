@@ -93,6 +93,13 @@ export type PathAssessmentNextAction = z.infer<typeof PathAssessmentNextActionSc
 export type PathAssessmentStatus = 'pending' | 'ready' | 'failed';
 
 /** Public GET payload (no internal UUID). */
+export type PathAssessmentRecommendedMentor = {
+  id: string;
+  slug: string | null;
+  fullName: string;
+  matchReason: string;
+};
+
 export type PathAssessmentPublicView = {
   token: string;
   status: PathAssessmentStatus;
@@ -101,4 +108,6 @@ export type PathAssessmentPublicView = {
   report: PathAssessmentReport | null;
   reportHtml: string | null;
   createdAt: string;
+  usedFallback: boolean;
+  recommendedMentor: PathAssessmentRecommendedMentor | null;
 };
