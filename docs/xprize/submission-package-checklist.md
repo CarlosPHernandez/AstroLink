@@ -136,7 +136,7 @@ Official requirements:
 
 | Item | Required | Status | Source |
 |------|----------|--------|--------|
-| Number of individual users | Yes | TODO | Supabase `users` / auth counts; early-access signups; waitlist |
+| Number of individual users | Yes | PARTIAL | 36 registered early-access users; 1 Path Assessment; 1 paying customer; 1 consented review |
 | High-level breakdown of who users are | Yes | TODO | Students, operators, analysts, career switchers, geo |
 | Testimonials / feedback | Yes | TODO | Session reviews, emails, Path Assessment feedback (consented) |
 | Related-party users noted | Yes | TODO | Seed/demo accounts not counted as customers |
@@ -170,7 +170,7 @@ Official requirements:
 
 | Item | Required | Status | Notes |
 |------|----------|--------|-------|
-| Entrant type (individual / team / org <25 employees) | Yes | TODO | Confirm eligibility |
+| Entrant type (individual / team / org <25 employees) | Yes | DONE | Small team of 3; one full-time |
 | Representative authorized | Yes | TODO | One Devpost submitter |
 | Corporate ID (if organization) | If org | TODO | EIN / registration doc as required |
 | Team member names | Recommended | TODO | Credit builders for publicity |
@@ -265,7 +265,7 @@ Sustainability narrative (honest): platform captures payment at launch; mentor C
 
 | Check | Status | Action |
 |-------|--------|--------|
-| `LLM_PROVIDER=gemini` on Vercel **Production** | TODO | Verify in Vercel env; avoid OpenAI default if `OPENAI_API_KEY` set without explicit provider |
+| `LLM_PROVIDER=gemini` on Vercel **Production** | TODO | Currently **openai** until Vertex/Gemini billing is set. Guard now fails only the silent OpenAI default. |
 | `GEMINI_API_KEY` present in Production | TODO | |
 | `E2E_STUB_LLM` not true in Production | TODO | Stubs invalidate evidence |
 | `SKIP_STRIPE_PAYMENTS` false / unset in Production | TODO | Hard-disabled in prod builds by design — still verify |
@@ -324,23 +324,24 @@ Optional B-roll: directory, Stripe success, mentor dashboard, review moderation 
 
 | Month | Arms-length revenue (USD) | Related-party (USD) | Paying customers (count) | Notes |
 |-------|---------------------------:|--------------------:|-------------------------:|-------|
-| May 2026 (from May 19) | | | | |
-| June 2026 | | | | |
-| July 2026 | | | | |
-| August 2026 (through Aug 17) | | | | |
-| **Total** | | | | |
+| May 2026 (from May 19) | 0 | 0 | 0 | |
+| June 2026 | 0 | 0 | 0 | |
+| July 2026 | | 0 | | Confirm month of the $144 live charge |
+| August 2026 (through Aug 17) | | 0 | | Confirm month of the $144 live charge |
+| **Total** | **144** | **0** | **1** | Arms-length; live Stripe; no test/$1 charges |
 
 | Cost category | Amount (USD) | Description |
 |---------------|-------------:|-------------|
-| Hosting (Vercel, etc.) | | |
-| Supabase | | |
+| Hosting (Vercel, etc.) | | Vercel Pro |
+| Supabase | | Supabase Pro |
 | Daily | | |
-| Gemini / LLM API | | |
-| Stripe fees | | |
+| Gemini / LLM API | | OpenAI until Vertex/Gemini billing is live |
+| Stripe fees | | Standard Stripe fee on $144 |
 | Email (Resend) | | |
 | Contractors / tools | | |
-| **Total costs (excl. marketing)** | | |
-| Marketing & CAC | | Even if $0 |
+| Expert settlement | 80% of session | Expert keeps 80%; platform 20% |
+| **Total costs (excl. marketing)** | | Fill dollar amounts from invoices |
+| Marketing & CAC | **0** | No paid advertising |
 
 ## 5.2 Unit economics (short narrative)
 

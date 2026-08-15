@@ -28,6 +28,7 @@ type TransactionRow = {
   bookings: {
     scheduled_at: string;
     status: BookingStatus;
+    payout_eligible: boolean | null;
     users: { full_name: string } | null;
   } | null;
 };
@@ -81,6 +82,10 @@ export function mapTransactionToEarningRow(
   }
 
   const isTransferred = paidTransactionIds.has(row.id);
+  const transferStatus =
+    row.bookings.payout_eligible === false
+      ? 'not_applicable'
+      : resolveTransferStatus(row.status, isTransferred);
 
   return {
     id: row.id,
@@ -92,7 +97,7 @@ export function mapTransactionToEarningRow(
     platformFeeCents: row.platform_fee_cents,
     mentorPayoutCents: row.mentor_payout_cents,
     status: row.status,
-    transferStatus: resolveTransferStatus(row.status, isTransferred),
+    transferStatus,
     createdAt: row.created_at,
   };
 }
@@ -118,6 +123,7 @@ export async function listMentorEarnings(mentorId: string): Promise<{
         scheduled_at,
         status,
         mentor_id,
+        payout_eligible,
         users ( full_name )
       )
     `,

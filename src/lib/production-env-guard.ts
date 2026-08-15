@@ -17,4 +17,16 @@ export function assertProductionEnvSafety(): void {
   if (!process.env.ENCRYPTION_KEY?.trim()) {
     throw new Error('ENCRYPTION_KEY is required on Vercel Production.');
   }
+
+  const stubLlm = process.env.E2E_STUB_LLM?.trim().toLowerCase();
+  if (stubLlm === 'true' || stubLlm === '1') {
+    throw new Error('E2E_STUB_LLM must not be true on Vercel Production.');
+  }
+
+  const explicit = process.env.LLM_PROVIDER?.trim().toLowerCase();
+  if (!explicit && process.env.OPENAI_API_KEY?.trim()) {
+    throw new Error(
+      'LLM_PROVIDER must be set on Vercel Production when OPENAI_API_KEY is present. Unset provider silently routes to OpenAI.',
+    );
+  }
 }

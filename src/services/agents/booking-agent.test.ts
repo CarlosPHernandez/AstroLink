@@ -337,9 +337,9 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     );
     expect(paymentIntentParams.metadata).not.toHaveProperty('discount_label');
     expect(paymentIntentParams).not.toHaveProperty('discounts');
-    expect(requestOptions).toEqual({
-      idempotencyKey: 'astrolink_book_mentee-1_mentor-1_2030-01-01T18:00:00.000Z',
-    });
+    expect(requestOptions.idempotencyKey).toMatch(
+      /^astrolink_book_mentee-1_mentor-1_2030-01-01T18:00:00\.000Z_/,
+    );
   });
 
   it('creates Chris campaign PaymentIntent at $170 early-access/45-min for early-signups ref', async () => {

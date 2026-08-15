@@ -3,6 +3,23 @@
 All notable changes to AstroLink are documented in this file.
 
 
+## [0.14.1.0] - 2026-08-15
+
+### Added
+- Path Assessment demand match: when the report model succeeds, Gemini/OpenAI picks a listed expert and the results page books that person.
+- Session settlement after hang-up: decide completed / no-show / hold and whether the expert is payout-eligible (refunds stay human-queued).
+- Vertex AI path for Gemini (`GOOGLE_CLOUD_PROJECT`) so Production can bill through Google Cloud.
+
+### Changed
+- Landing and onboard copy no longer claim unused matching or NF-1860 auto-audit.
+- Recap only appears when a stored transcript exists.
+
+### Fixed
+- Chris campaign slots are released on failed payment.
+- Cancel no longer calls Stripe for complimentary or pending bookings.
+- Complimentary grants redeem before the free booking is confirmed.
+- Chris reschedule keeps the paid duration and updates the Daily room end time.
+
 ## [0.14.0.0] - 2026-08-13
 
 ### Added

@@ -26,7 +26,8 @@ import {
   createFreeSessionPaymentIntentId,
   isStripePaymentsSkipped,
 } from '@/lib/booking-payments';
-import { callLlmWithBackoff, generateStructuredJson, llmFlashModel } from '@/lib/llm';
+import { resolveBookingMatchFields } from '@/lib/booking-match-fields';
+import { matchListedMentor } from '@/lib/expert-match';
 import { confirmBookingWithoutPayment } from '@/lib/post-payment';
 import {
   assertGrantApplicable,
@@ -60,8 +61,14 @@ export class BookingAgent {
     /** Space Path Assessment public token — sets bookings.path_assessment_id when valid. */
     assessmentToken?: string;
   }) {
-    // 1. Audit Log: BOOKING_INITIATED
-    await this.logAudit('BOOKING_INITIATED', null, { params });
+    await this.logAudit('BOOKING_INITIATED', null, {
+      mentee_id: params.menteeId,
+      mentor_id: params.mentorId ?? null,
+      service_type: params.serviceType,
+      scheduled_at: params.scheduledAt,
+      has_goals: Boolean(params.menteeGoals?.trim()),
+      has_background: Boolean(params.menteeBackground?.trim()),
+    });
 
     // Defense-in-depth: same 2-day lead as BookBodySchema (covers callers that skip schema).
     if (!isScheduledAtOnOrAfterEarliestBookable(params.scheduledAt)) {
@@ -116,6 +123,7 @@ export class BookingAgent {
   ) {
     let finalMentorId = params.mentorId;
     let matchReason = 'User selected mentor directly.';
+    let didRunMatcher = false;
     let appliedCompGrantId: string | null = null;
     let pathAssessmentId: string | null = null;
 
@@ -141,6 +149,7 @@ export class BookingAgent {
       });
       finalMentorId = matchResult.mentor_id;
       matchReason = matchResult.match_reason;
+      didRunMatcher = true;
     }
 
     if (!finalMentorId) {
@@ -226,7 +235,7 @@ export class BookingAgent {
     } else {
       const stripeCustomerId = await getOrCreateStripeCustomerForMentee(params.menteeId);
 
-      const idempotencyKey = `astrolink_book_${params.menteeId}_${finalMentorId}_${params.scheduledAt}`;
+      const idempotencyKey = `astrolink_book_${params.menteeId}_${finalMentorId}_${params.scheduledAt}_${crypto.randomUUID()}`;
 
       const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
         amount: stripeAmountCents,
@@ -272,6 +281,12 @@ export class BookingAgent {
       stripeClientSecret = paymentIntent.client_secret;
     }
 
+    const matchFields = resolveBookingMatchFields({
+      menteeGoals: params.menteeGoals,
+      llmMatchReason: matchReason,
+      didRunMatcher,
+    });
+
     const bookingInsert = {
       mentee_id: params.menteeId,
       mentor_id: finalMentorId,
@@ -280,7 +295,8 @@ export class BookingAgent {
       status: 'pending_payment' as const,
       scheduled_at: params.scheduledAt,
       stripe_payment_intent_id: paymentIntentId,
-      match_reason: params.menteeGoals || matchReason,
+      match_reason: matchFields.buyerGoals,
+      ai_match_reason: matchFields.aiMatchReason,
       intake_background: params.menteeBackground || null,
       // Persist chosen duration for variable sessions (prorated price already used for PI).
       // Defaults via migration for legacy rows; new bookings always provide from slider.
@@ -316,8 +332,6 @@ export class BookingAgent {
         comp_grant_id: appliedCompGrantId,
       });
 
-      await confirmBookingWithoutPayment(booking.id);
-
       if (appliedCompGrantId) {
         const redeemed = await redeemGrantForBooking({
           grantId: appliedCompGrantId,
@@ -325,26 +339,27 @@ export class BookingAgent {
           bookingId: booking.id,
         });
         if (!redeemed) {
-          console.error('[booking-agent] comp grant redeem failed after free confirm', {
-            grantId: appliedCompGrantId,
-            bookingId: booking.id,
-            menteeId: params.menteeId,
-          });
+          await supabaseAdmin
+            .from('bookings')
+            .update({ status: 'cancelled' })
+            .eq('id', booking.id);
           await this.logAudit('COMP_GRANT_REDEEM_FAILED', booking.id, {
             grant_id: appliedCompGrantId,
           });
-        } else {
-          await this.logAudit('COMP_GRANT_REDEEMED', booking.id, {
-            grant_id: appliedCompGrantId,
-          });
+          throw new Error('Complimentary session could not be applied.');
         }
+        await this.logAudit('COMP_GRANT_REDEEMED', booking.id, {
+          grant_id: appliedCompGrantId,
+        });
       }
+
+      await confirmBookingWithoutPayment(booking.id);
 
       return {
         bookingId: booking.id,
         stripeClientSecret: null,
         skipPayment: true,
-        matchReason: params.menteeGoals || matchReason,
+        matchReason: matchFields.buyerGoals,
         amountCents: displayAmountCents,
       };
     }
@@ -368,7 +383,7 @@ export class BookingAgent {
       bookingId: booking.id,
       stripeClientSecret,
       skipPayment: false,
-      matchReason: params.menteeGoals || matchReason,
+      matchReason: matchFields.buyerGoals,
       amountCents: displayAmountCents,
     };
   }
@@ -382,63 +397,14 @@ export class BookingAgent {
     menteeBackground: string;
     serviceType: string;
   }): Promise<MatchingOutput> {
-    // Retrieve mentor pool from database
-    const { data: mentors } = await supabaseAdmin
-      .from('mentors')
-      .select('id, full_name, employer, expertise, bio')
-      .eq('compliance_status', 'approved')
-      .eq('is_listed', true);
-
-    if (!mentors || mentors.length === 0) {
-      throw new Error('No approved mentors available in the pool.');
-    }
-
-    const matchingSystemInstruction = `
-      You are AstroLink's expert-matching engine for paid aerospace expert sessions (GLG/Minnect-style, not job placement).
-      Match the buyer's goals and background to the single best expert in the pool for their booked session type.
-      Strict constraints:
-      - Return valid JSON matching the schema precisely.
-      - Optimize for topical fit, credibility, and session value — not hiring fit or resume screening.
-    `;
-
-    const prompt = `
-      Buyer goals: ${input.menteeGoals}
-      Buyer background: ${input.menteeBackground}
-      Session type: ${input.serviceType}
-
-      Expert pool:
-      ${JSON.stringify(mentors, null, 2)}
-    `;
-
-    const result = await callLlmWithBackoff(() =>
-      generateStructuredJson<MatchingOutput>({
-        model: llmFlashModel,
-        rateLimitKey: input.menteeId,
-        systemInstruction: matchingSystemInstruction,
-        prompt,
-        audit: {
-          agentId: this.agentId,
-          operation: 'expert_match',
-          refId: null,
-        },
-        schema: {
-          type: 'OBJECT',
-          properties: {
-            mentor_id: { type: 'STRING' },
-            match_score: { type: 'NUMBER' },
-            match_reason: { type: 'STRING' },
-          },
-          required: ['mentor_id', 'match_score', 'match_reason'],
-        },
-      }),
-    );
-
-    const mentorInPool = mentors.some((mentor) => mentor.id === result.mentor_id);
-    if (!mentorInPool) {
-      throw new Error('Matching engine returned an unknown expert');
-    }
-
-    return result;
+    return matchListedMentor({
+      menteeGoals: input.menteeGoals,
+      menteeBackground: input.menteeBackground,
+      serviceType: input.serviceType,
+      rateLimitKey: input.menteeId,
+      agentId: this.agentId,
+      operation: 'expert_match',
+    });
   }
 
   private async logAudit(event: string, refId: string | null, payload: Record<string, unknown>) {

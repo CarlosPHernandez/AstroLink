@@ -112,9 +112,18 @@ function getGeminiApiKey(): string {
 }
 
 function getGenAI(): GoogleGenAI {
-  const apiKey = getGeminiApiKey();
   if (!genaiClient) {
-    genaiClient = new GoogleGenAI({ apiKey });
+    const project = process.env.GOOGLE_CLOUD_PROJECT?.trim();
+    const location = process.env.GOOGLE_CLOUD_LOCATION?.trim() || 'us-central1';
+    if (project) {
+      genaiClient = new GoogleGenAI({
+        vertexai: true,
+        project,
+        location,
+      });
+    } else {
+      genaiClient = new GoogleGenAI({ apiKey: getGeminiApiKey() });
+    }
   }
   return genaiClient;
 }

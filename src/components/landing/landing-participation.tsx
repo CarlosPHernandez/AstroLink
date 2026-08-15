@@ -5,12 +5,12 @@ const GEMINI_XPRIZE_HREF = 'https://www.geminixprize.com/';
 const DEVPOST_HREF = 'https://xprize.devpost.com/';
 
 const APX_TILES = [
-  { id: 'APX-01', label: 'Booking', body: 'Expert matching from buyer goals and roster' },
-  { id: 'APX-02', label: 'Briefing', body: 'Dual pre-session briefs for mentee and expert' },
-  { id: 'APX-03', label: 'Session', body: 'Post-call summary and action items from the transcript' },
-  { id: 'APX-06', label: 'Translation', body: 'Live captions and localized recap' },
-  { id: 'APX-08', label: 'Notifications', body: 'Booking confirmation and calendar invite' },
-  { id: 'APX-04', label: 'Compliance', body: 'Intake and transcript flags for ops review' },
+  { id: 'APX-10', label: 'Path Assessment', body: 'Free readiness report; Gemini picks a listed expert when the model succeeds' },
+  { id: 'APX-02', label: 'Briefing', body: 'Dual pre-session briefs for mentee and expert after payment' },
+  { id: 'APX-12', label: 'Settlement', body: 'After hang-up, Gemini decides completed / no-show / hold and payout eligibility' },
+  { id: 'APX-03', label: 'Session recap', body: 'Summary and action items only when a stored transcript exists' },
+  { id: 'APX-06', label: 'Translation', body: 'Live captions and localized recap when the buyer is not in English' },
+  { id: 'APX-09', label: 'Reviews', body: 'Screens consented quotes; auto-publishes only when policy-clear' },
 ] as const;
 
 /**
@@ -78,14 +78,14 @@ export function LandingParticipation() {
         >
           <div className="px-6 sm:px-7 py-7 sm:py-8 text-left">
             <h2 className="font-landing-display text-lg sm:text-xl font-bold tracking-tight text-[var(--landing-text)] mb-3">
-              An expert network with Gemini doing the operational work
+              An expert network where Gemini allocates demand and settles sessions
             </h2>
             <p className="text-sm leading-relaxed text-[var(--landing-muted)] mb-6">
               High-stakes aerospace knowledge is locked behind personal networks and consulting
               firms most people can&apos;t access. AstroLink is a marketplace where anyone can
-              discover, book, and learn from a verified expert — with Gemini running match,
-              briefing, session synthesis, translation, and compliance triage in production, not
-              as a demo.
+              discover, book, and learn from a verified expert. Gemini writes the free Path
+              Assessment, matches that inbound to a listed expert, writes both pre-session
+              briefs, and settles whether the session counts for payout.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-px overflow-hidden rounded-xl bg-[var(--landing-border)]">

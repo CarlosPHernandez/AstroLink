@@ -13,6 +13,7 @@ import {
   isBookingRateLimitError,
 } from '@/lib/booking-rate-limit';
 import { computeCancellationRefund } from '@/lib/refunds';
+import { shouldCreateStripeRefund } from '@/lib/stripe-refundable';
 
 /** Includes campaign_id once 20260627120000_booking_campaigns.sql is applied (types lag migration). */
 type BookingCancelRow = {
@@ -88,7 +89,13 @@ export async function POST(
     const policy = computeCancellationRefund(booking.scheduled_at);
 
     let refundId: string | null = null;
-    if (policy.refundable && !booking.stripe_payment_intent_id.startsWith('dev_skip_')) {
+    if (
+      shouldCreateStripeRefund({
+        refundableByPolicy: policy.refundable,
+        bookingStatus: booking.status,
+        paymentIntentId: booking.stripe_payment_intent_id,
+      })
+    ) {
       // Create refund via Stripe (immediate capture model → refunds the captured charge)
       const refund = await stripe.refunds.create({
         payment_intent: booking.stripe_payment_intent_id,

@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import {
-  PathAssessmentAnswersSchema,
-  PathAssessmentReportSchema,
-  type PathAssessmentPublicView,
-  type PathAssessmentStatus,
-} from '@/lib/path-assessment/schema';
+  mapPathAssessmentPublicView,
+  PATH_ASSESSMENT_PUBLIC_SELECT,
+} from '@/lib/path-assessment/public-view';
+import type { PathAssessmentPublicView } from '@/lib/path-assessment/schema';
 import { isValidPathAssessmentToken } from '@/lib/path-assessment/tokens';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -27,9 +26,7 @@ export async function GET(
 
   const { data, error } = await supabaseAdmin
     .from('path_assessments')
-    .select(
-      'public_token, status, first_name, answers_json, report_json, report_html, created_at',
-    )
+    .select(PATH_ASSESSMENT_PUBLIC_SELECT)
     .eq('public_token', token)
     .maybeSingle();
 
@@ -42,32 +39,12 @@ export async function GET(
     return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
   }
 
-  const answersParsed = PathAssessmentAnswersSchema.safeParse(data.answers_json);
-  if (!answersParsed.success) {
+  const view: PathAssessmentPublicView | null = mapPathAssessmentPublicView(
+    data as Parameters<typeof mapPathAssessmentPublicView>[0],
+  );
+  if (!view) {
     return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
   }
-
-  let report = null;
-  if (data.report_json) {
-    const reportParsed = PathAssessmentReportSchema.safeParse(data.report_json);
-    if (reportParsed.success) {
-      report = reportParsed.data;
-    }
-  }
-
-  const status = (['pending', 'ready', 'failed'].includes(data.status)
-    ? data.status
-    : 'pending') as PathAssessmentStatus;
-
-  const view: PathAssessmentPublicView = {
-    token: data.public_token,
-    status,
-    firstName: data.first_name,
-    answers: answersParsed.data,
-    report,
-    reportHtml: data.report_html,
-    createdAt: data.created_at,
-  };
 
   return NextResponse.json({ success: true, data: view });
 }

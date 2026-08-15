@@ -15,6 +15,7 @@ import {
   MEDIA_ORIGIN_SERVER_SNAPSHOT,
   subscribeMediaOrigin,
 } from '@/lib/media-origin';
+import { resolveRecapDisplay } from '@/lib/session-recap-honesty-display';
 
 const PROVISION_POLL_MS = 5000;
 const PROVISION_TIMEOUT_MS = 120_000;
@@ -35,6 +36,8 @@ function SessionRecapPanel({ bookingId }: { bookingId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [translationPending, setTranslationPending] = useState(false);
   const [translationFailed, setTranslationFailed] = useState(false);
+  const [transcriptAvailable, setTranscriptAvailable] = useState(false);
+  const [ungroundedRecap, setUngroundedRecap] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,15 +62,30 @@ function SessionRecapPanel({ bookingId }: { bookingId: string }) {
         }
         setTranslationPending(Boolean(data.translationPending));
         setTranslationFailed(Boolean(data.translationFailed));
+        setTranscriptAvailable(Boolean(data.transcriptAvailable));
 
-        if (data.ready && data.recap) {
+        const display = resolveRecapDisplay({
+          hasRecap: Boolean(data.ready && data.recap),
+          transcriptAvailable: Boolean(data.transcriptAvailable),
+        });
+
+        if (display.showRecap && data.recap) {
           setRecap(data.recap);
+          setUngroundedRecap(false);
           setState('ready');
           if (!data.translationPending) {
             stopPolling();
           }
           return;
         }
+        if (data.ready && data.recap && !display.showRecap) {
+          setRecap(null);
+          setUngroundedRecap(true);
+          setState('pending');
+          stopPolling();
+          return;
+        }
+        setUngroundedRecap(false);
         setState('pending');
       } catch (err: unknown) {
         if (cancelled) {
@@ -95,7 +113,12 @@ function SessionRecapPanel({ bookingId }: { bookingId: string }) {
         ? 'Loading your recap…'
         : translationPending
           ? 'Translating recap… This refreshes automatically.'
-          : 'Recap is still generating. This refreshes automatically.';
+          : ungroundedRecap
+            ? resolveRecapDisplay({
+                hasRecap: true,
+                transcriptAvailable,
+              }).banner ?? 'Recap is still generating. This refreshes automatically.'
+            : 'Recap is still generating. This refreshes automatically.';
 
     return (
       <p className="text-body-md text-on-surface-variant mb-6" data-testid="session-recap-pending">

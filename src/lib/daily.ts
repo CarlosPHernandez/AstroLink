@@ -258,6 +258,39 @@ export async function createDailyRoomForBooking(
   };
 }
 
+export async function updateDailyRoomSchedule(params: {
+  roomName: string;
+  scheduledAt: string;
+  durationMinutes: number;
+}): Promise<void> {
+  const apiKey = getDailyApiKey();
+  const exp = roomExpiryUnix(params.scheduledAt, {
+    durationMinutes: params.durationMinutes,
+  });
+  const ejectAfterElapsed = resolveEjectAfterElapsedSeconds(params.durationMinutes);
+
+  const response = await fetch(`https://api.daily.co/v1/rooms/${encodeURIComponent(params.roomName)}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      properties: {
+        exp,
+        eject_after_elapsed: ejectAfterElapsed,
+        eject_at_room_exp: true,
+        enable_transcription_storage: true,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Daily room update failed: ${response.status} ${body}`);
+  }
+}
+
 export async function createMeetingToken(params: {
   roomName: string;
   userId: string;

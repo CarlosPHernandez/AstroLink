@@ -11,7 +11,8 @@ export type LlmAuditAgentId =
   | 'APX-04'
   | 'APX-06'
   | 'APX-09'
-  | 'APX-10';
+  | 'APX-10'
+  | 'APX-12';
 
 export type LlmAuditContext = {
   agentId: LlmAuditAgentId;

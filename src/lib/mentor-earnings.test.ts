@@ -139,6 +139,7 @@ describe('mapTransactionToEarningRow', () => {
         bookings: {
           scheduled_at: '2026-06-05T15:00:00Z',
           status: 'completed',
+          payout_eligible: null,
           users: { full_name: 'Carlos Hernandez' },
         },
       },
@@ -151,6 +152,28 @@ describe('mapTransactionToEarningRow', () => {
       status: 'completed',
       transferStatus: 'transferred',
     });
+  });
+
+  it('does not mark a settled ineligible session as awaiting payout', () => {
+    const row = mapTransactionToEarningRow(
+      {
+        id: 'tx-hold',
+        booking_id: 'bk-hold',
+        gross_amount_cents: 14400,
+        platform_fee_cents: 2880,
+        mentor_payout_cents: 11520,
+        status: 'completed',
+        created_at: '2026-08-15T08:00:00Z',
+        bookings: {
+          scheduled_at: '2026-08-15T15:00:00Z',
+          status: 'completed',
+          payout_eligible: false,
+          users: { full_name: 'Buyer' },
+        },
+      },
+      new Set(),
+    );
+    expect(row?.transferStatus).toBe('not_applicable');
   });
 
   it('returns null when booking join is missing', () => {

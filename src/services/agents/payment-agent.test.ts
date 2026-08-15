@@ -21,6 +21,14 @@ vi.mock('@/lib/supabase', () => ({
       }
       if (table === 'bookings') {
         return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { id: 'booking-1', campaign_id: null, status: 'pending_payment' },
+                error: null,
+              }),
+            })),
+          })),
           update: vi.fn(() => ({
             eq: mockBookingUpdateEq,
           })),
