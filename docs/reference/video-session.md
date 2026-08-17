@@ -66,6 +66,20 @@ curl -sS -H "Authorization: Bearer $DAILY_API_KEY" https://api.daily.co/v1/ \
 
 Anyone else gets `forbidden: true` (redirect to dashboard).
 
+## In-call remaining-time countdown
+
+While `gate === 'ready'`, the session UI shows remaining time until the booked end
+(`scheduled_at` + `duration_minutes`, same window as Daily join/token expiry):
+
+| Surface | Component | Notes |
+|---------|-----------|--------|
+| Session header chip | `SessionCallTimer` `variant="header"` | Visible once the room is joinable (including caption-language gate) |
+| Video stage overlay | `SessionCallTimer` `variant="call"` | Top-right of `DailyCallRoom` |
+
+Urgency: normal → wrap up at ≤5 minutes → ending soon at ≤1 minute → time up at 0.
+Display-only; Daily still hard-ends via `eject_after_elapsed` / token `exp`.
+Helpers: `src/lib/session-call-timer.ts`.
+
 ## HTTP routes
 
 ### `GET /session/[bookingId]`
