@@ -28,6 +28,7 @@ Gemini (and OpenAI fallback via `src/lib/llm.ts`) runs key decisions in the live
 
 | Agent | Role |
 |-------|------|
+| **APX-01** Match | Default `/booking` path: the configured LLM picks a listed expert from goals (browse is optional) |
 | **APX-10** Path Assessment | Free readiness report; Gemini matches a listed expert when the model succeeds |
 | **APX-02** Briefing | Dual pre-session briefs for mentee + expert (`briefing_json` v2 bundle) |
 | **APX-12** Settlement | After hang-up, decides completed / no-show / hold and payout eligibility |
@@ -69,7 +70,7 @@ Structured decision logs for judges: [T8 in D1 plan](docs/d1-implementation-plan
 1. Set in `.env.local`: Supabase keys, `GEMINI_API_KEY` (`LLM_PROVIDER=gemini`), `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `DAILY_API_KEY`, and `SKIP_STRIPE_PAYMENTS=true` for local booking without Stripe.
 2. Run `npm run dev`, sign in as **Carlos** (`carlos@astrolink.ai` on `/auth` with demo auth enabled).
 3. Landing hero search ("Talk to flight controllers...") jumps to [`/experts?q=`](http://localhost:3000/experts) (category filters, name/role/expertise search, card grid, inline preview — desktop modal or mobile sheet); the landing page also shows a fixed five-expert directory grid (Eiman, Chris, Priya, Jenni, Andrew). Click a name for the profile page (`/experts/[slug]`) or use **Book session** on a card for the fast path.
-4. Profile or card → **Book** → `/booking?mentor=chris-sembroski` → pay with Stripe test card `4242…`.
+4. Profile or card → **Book** → `/booking?mentor=chris-sembroski` still books that expert. Bare `/booking` (no mentor) is the Gemini match path: goals → APX-01 → listed expert. Pay with Stripe test card `4242…`.
 4. After authorize, either:
    - Forward webhooks: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`, or
    - Dev fulfill: `POST /api/book/fulfill` with `{ "bookingId": "<uuid>" }` (development only).

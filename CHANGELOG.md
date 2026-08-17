@@ -3,6 +3,16 @@
 All notable changes to AstroLink are documented in this file.
 
 
+## [0.14.2.0] - 2026-08-16
+
+### Changed
+- Booking without a picked expert is now the match path: write goals, then the configured LLM picks a listed expert. Browse is optional.
+- Path Assessment live CTA says **Book {Name}** when a listed expert was recommended.
+
+### Fixed
+- LLM rate limits on match stay a 429, not a fake “no match.”
+- Match submit copy no longer says you are charged after the session.
+
 ## [0.14.1.0] - 2026-08-15
 
 ### Added

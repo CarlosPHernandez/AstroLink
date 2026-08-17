@@ -211,7 +211,7 @@ Be precise in the video: **LLM decision agents** vs **workflow agents**.
 
 | Agent | Role | LLM? | Key decision for judges |
 |-------|------|------|-------------------------|
-| APX-01 Booking | Match expert from goals when mentor not preselected; orchestrates book | Yes (match) | Expert selection |
+| APX-01 Booking | Default book path: match a listed expert from goals; browse is optional | Yes (match) | Who you talk to |
 | APX-02 Briefing | Dual mentee + expert pre-session briefs | Yes | Prep both sides |
 | APX-03 Session | Post-call summary + actions from transcript | Yes | Capture session value |
 | APX-04 Compliance | Intake / transcript flags (ITAR-adjacent keywords) | Yes | Trust triage |
@@ -250,7 +250,7 @@ Sustainability narrative (honest): platform captures payment at launch; mentor C
 | `/experts` | Full directory |
 | `/experts/[slug]` | Profile, book, video request |
 | `/assessment` | Space Path Assessment funnel |
-| `/booking` | Checkout / session booking |
+| `/booking` | Default: Gemini match from goals; `?mentor=` is explicit pick |
 | `/talk-with-chris` | Named expert campaign landing |
 | `/dashboard/mentee` | Briefs, join, recaps |
 | `/dashboard/mentor` | Sessions, earnings, listing |
