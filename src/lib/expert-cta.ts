@@ -1,3 +1,4 @@
+import { formatFifteenMinuteRate } from '@/lib/booking-pricing';
 import { getExpertBookHref } from '@/lib/expert-book-href';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { WAITLIST_PUBLIC_LANDING_PATH } from '@/lib/waitlist/waitlist-landing';
@@ -43,7 +44,7 @@ export function expertCtaPrimaryLabel(
   if (variant === 'waitlist') {
     return 'Get early access';
   }
-  return `Book live 1:1 with ${firstName} · $${rate}/hr`;
+  return `Book live 1:1 with ${firstName} · ${formatFifteenMinuteRate(rate * 100)}`;
 }
 
 export function expertCtaShortLabel(
@@ -55,5 +56,5 @@ export function expertCtaShortLabel(
   if (variant === 'waitlist') {
     return 'Get early access';
   }
-  return `${availability === 'Available Now' ? 'Book session' : 'Schedule'} · $${rate}/hr`;
+  return `${availability === 'Available Now' ? 'Book session' : 'Schedule'} · ${formatFifteenMinuteRate(rate * 100)}`;
 }
