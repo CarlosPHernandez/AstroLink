@@ -286,7 +286,7 @@ function CheckoutSummary({
 
           {isLive && !mentor ? (
             <p className="pt-4 border-t border-outline-variant text-label-sm text-on-surface-variant">
-              Select an expert to see your estimated total.
+              Gemini matches you after you submit. Price is confirmed then.
             </p>
           ) : (
             <div className="pt-4 border-t border-outline-variant flex justify-between items-baseline">
@@ -352,7 +352,8 @@ export default function BookingClient({
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [pendingSlug, setPendingSlug] = useState<string | null>(mentor?.slug ?? null);
-  const [showPicker, setShowPicker] = useState(!mentor);
+  const [showPicker, setShowPicker] = useState(Boolean(invalidMentorSlug));
+  const [geminiMatchNote, setGeminiMatchNote] = useState<string | null>(null);
   const [compGrant, setCompGrant] = useState<SessionCompGrantBannerGrant | null>(
     initialCompGrant,
   );
@@ -470,24 +471,34 @@ export default function BookingClient({
   }, [pendingSlug, experts, mentor]);
 
   const needsExpert = form.serviceType === 'session_1on1';
-  const pickerVisible = !chrisCampaign && needsExpert && (showPicker || !activeMentor);
+  const pickerVisible = !chrisCampaign && needsExpert && showPicker;
+
+  const replaceBookingQuery = (mentorSlug: string | null) => {
+    const qs = new URLSearchParams();
+    if (mentorSlug) qs.set('mentor', mentorSlug);
+    if (attachedAssessmentToken) qs.set('assessment', attachedAssessmentToken);
+    const suffix = qs.toString();
+    router.replace(suffix ? `/booking?${suffix}` : '/booking', { scroll: false });
+  };
 
   const handleSelectExpert = (slug: string) => {
     setPendingSlug(slug);
     setShowPicker(false);
+    setGeminiMatchNote(null);
     setError(null);
-    router.replace(`/booking?mentor=${encodeURIComponent(slug)}`, { scroll: false });
+    replaceBookingQuery(slug);
   };
 
   const handleChangeExpert = () => {
     setShowPicker(true);
-    router.replace('/booking', { scroll: false });
+    replaceBookingQuery(null);
   };
 
   const handleClearExpertSelection = () => {
     setPendingSlug(null);
     setShowPicker(true);
-    router.replace('/booking', { scroll: false });
+    setGeminiMatchNote(null);
+    replaceBookingQuery(null);
   };
 
   const baseCents = activeMentor?.liveSessionPriceCents ?? 0;
@@ -516,13 +527,6 @@ export default function BookingClient({
   const step: 1 | 2 = checkout?.clientSecret ? 2 : 1;
 
   const submitBooking = async () => {
-    if (!activeMentor && form.serviceType === 'session_1on1') {
-      setFieldErrors({});
-      setShowPicker(true);
-      setError('Choose an expert above before booking a live session.');
-      return;
-    }
-
     const payload = {
       mentorId: activeMentor?.id,
       serviceType: form.serviceType,
@@ -561,11 +565,21 @@ export default function BookingClient({
       const json = (await res.json()) as {
         success?: boolean;
         error?: string;
+        code?: string;
         fieldErrors?: FieldErrors;
-        data?: CheckoutState & { skipPayment?: boolean };
+        data?: CheckoutState & {
+          skipPayment?: boolean;
+          mentorSlug?: string | null;
+          mentorName?: string | null;
+          aiMatchReason?: string | null;
+          matchedByGemini?: boolean;
+        };
       };
 
       if (!res.ok || !json.success) {
+        if (json.code === 'match_failed') {
+          setShowPicker(true);
+        }
         if (json.fieldErrors) {
           setFieldErrors(json.fieldErrors);
           setError(json.error ?? formLevelSummary());
@@ -576,6 +590,22 @@ export default function BookingClient({
 
       if (!json.data) {
         throw new Error("We couldn't complete your booking. Try again.");
+      }
+
+      if (json.data.matchedByGemini) {
+        if (json.data.mentorSlug) {
+          setPendingSlug(json.data.mentorSlug);
+        }
+        setShowPicker(false);
+        const name = json.data.mentorName?.trim();
+        const reason = json.data.aiMatchReason?.trim().slice(0, 280) ?? '';
+        setGeminiMatchNote(
+          name
+            ? reason
+              ? `Gemini matched you to ${name}. ${reason}`
+              : `Gemini matched you to ${name}.`
+            : 'Gemini matched you to a listed expert.',
+        );
       }
 
       if (json.data.skipPayment) {
@@ -688,9 +718,22 @@ export default function BookingClient({
               </h1>
               <p className="mt-2 text-label-md text-on-surface-variant">
                 {needsExpert
-                  ? 'Choose an expert below to see pricing and continue.'
+                  ? 'Tell us your goals. Gemini matches you to a listed expert — then you confirm time and pay.'
                   : 'Add your session details to continue.'}
               </p>
+              {needsExpert && step === 1 && !showPicker ? (
+                <button
+                  type="button"
+                  data-testid="booking-choose-expert"
+                  onClick={() => {
+                    setShowPicker(true);
+                    setError(null);
+                  }}
+                  className="mt-3 text-label-sm text-on-surface-variant hover:text-primary transition-colors"
+                >
+                  Choose an expert yourself
+                </button>
+              ) : null}
             </>
           )}
         </div>
@@ -708,6 +751,16 @@ export default function BookingClient({
                 />
               ) : (
                 <form onSubmit={handleSubmit} method="post" className="space-y-10">
+                  {geminiMatchNote ? (
+                    <div
+                      className="rounded-lg border border-outline-variant bg-surface-container-low px-4 py-3 text-label-md text-on-surface"
+                      data-testid="booking-gemini-match-note"
+                    >
+                      <p className="font-semibold text-on-surface">Gemini matched you</p>
+                      <p className="mt-1 text-on-surface-variant leading-relaxed">{geminiMatchNote}</p>
+                    </div>
+                  ) : null}
+
                   {assessmentPrefillNote ? (
                     <div
                       className="rounded-lg border border-outline-variant bg-surface-container-low px-4 py-3 text-label-md text-on-surface"
@@ -725,13 +778,30 @@ export default function BookingClient({
                   ) : null}
 
                   {pickerVisible ? (
-                    <BookingExpertPicker
-                      experts={experts}
-                      selectedSlug={pendingSlug}
-                      invalidMentorSlug={invalidMentorSlug}
-                      onSelect={handleSelectExpert}
-                      onClearSelection={handleClearExpertSelection}
-                    />
+                    <div className="space-y-3">
+                      <BookingExpertPicker
+                        experts={experts}
+                        selectedSlug={pendingSlug}
+                        invalidMentorSlug={invalidMentorSlug}
+                        onSelect={handleSelectExpert}
+                        onClearSelection={handleClearExpertSelection}
+                      />
+                      {needsExpert && !invalidMentorSlug ? (
+                        <button
+                          type="button"
+                          data-testid="booking-use-gemini-match"
+                          onClick={() => {
+                            setPendingSlug(null);
+                            setShowPicker(false);
+                            setGeminiMatchNote(null);
+                            replaceBookingQuery(null);
+                          }}
+                          className="text-label-sm text-on-surface-variant hover:text-primary transition-colors"
+                        >
+                          Use Gemini match instead
+                        </button>
+                      ) : null}
+                    </div>
                   ) : null}
 
                   {compGrant && form.serviceType === 'session_1on1' ? (
@@ -780,9 +850,6 @@ export default function BookingClient({
                         value={form.serviceType}
                         onChange={(serviceType) => {
                           setForm({ ...form, serviceType });
-                          if (serviceType === 'session_1on1' && !activeMentor) {
-                            setShowPicker(true);
-                          }
                         }}
                       />
                     </section>
@@ -806,7 +873,9 @@ export default function BookingClient({
                   <section>
                     <h2 className={sectionTitleClass}>Session brief</h2>
                     <p className={sectionHintClass}>
-                      Help your expert prepare — this feeds your automated briefing.
+                      {needsExpert && !activeMentor
+                        ? 'This is what Gemini uses to pick your expert, and what feeds the pre-call brief.'
+                        : 'Help your expert prepare — this feeds your automated briefing.'}
                     </p>
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
@@ -894,17 +963,23 @@ export default function BookingClient({
                       {loading
                         ? skipPayments
                           ? 'Generating AI briefing…'
-                          : 'Creating booking…'
-                        : skipPayments
-                          ? 'Confirm booking'
                           : needsExpert && !activeMentor
-                            ? 'Continue'
+                            ? 'Matching you with an expert…'
+                            : 'Creating booking…'
+                        : skipPayments
+                          ? needsExpert && !activeMentor
+                            ? 'Match me and confirm'
+                            : 'Confirm booking'
+                          : needsExpert && !activeMentor
+                            ? 'Match me and continue'
                             : `Continue — ${formatMoney(totalCents)}`}
                     </button>
                     <p className="text-label-sm text-on-surface-variant">
                       {skipPayments
                         ? 'Payments skipped in dev — briefing generates immediately.'
-                        : 'No charge until after the session.'}
+                        : needsExpert && !activeMentor
+                          ? 'You will see the expert and price on the next step. Payment is collected when you book.'
+                          : 'Payment is collected when you book. Refunds follow the cancellation policy.'}
                     </p>
                   </div>
                 </form>
@@ -947,7 +1022,7 @@ export default function BookingClient({
             </div>
           ) : (
             <p className="text-label-sm text-on-surface-variant text-center">
-              Select an expert above to see your estimated total
+              Gemini matches you after you submit — price confirmed then
             </p>
           )}
         </div>

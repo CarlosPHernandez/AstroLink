@@ -20,12 +20,15 @@ export function buildPathAssessmentEmail(params: {
   firstName: string;
   token: string;
   report: PathAssessmentReport;
+  mentorName?: string | null;
+  mentorSlug?: string | null;
 }): { subject: string; html: string } {
   const resultsUrl = pathAssessmentResultsUrl(params.token);
-  const bookingUrl = pathAssessmentBookingUrl(params.token);
+  const bookingUrl = pathAssessmentBookingUrl(params.token, params.mentorSlug);
   const writtenReviewUrl = pathAssessmentWrittenReviewUrl(params.token);
   const reportHtml = renderPathAssessmentReportHtml(params.report, {
     firstName: params.firstName,
+    mentorName: params.mentorName ?? undefined,
     bookingUrl,
     writtenReviewUrl,
     includeLiveCta: true,

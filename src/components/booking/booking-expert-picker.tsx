@@ -46,7 +46,7 @@ export function BookingExpertPicker({
         Choose your expert
       </h2>
       <p className="text-label-sm text-on-surface-variant mb-4">
-        Select who you want to meet — your rate updates instantly in the summary.
+        Optional — you can pick someone yourself, or let Gemini match from your goals.
       </p>
 
       {invalidMentorSlug ? (
