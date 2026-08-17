@@ -9,7 +9,7 @@ Why bidirectional live captions use a separate LLM budget, an in-flight queue, a
 
 ## The problem
 
-In v0.2.0.0, captions are **bidirectional**: each participant can trigger segment translation when the detected speech locale differs from their viewer locale. A 45-minute call with two active speakers can generate hundreds of `translate-segment` requests in a few minutes.
+Captions are **bidirectional**: we translate the *other* person's speech into the viewer's locale. A 45-minute call with two active speakers can generate hundreds of `translate-segment` requests in a few minutes.
 
 Without guards, three failure modes appear:
 
@@ -27,9 +27,9 @@ Without guards, three failure modes appear:
 
 This isolates caption bursts from the rest of the app's LLM budget.
 
-### In-flight queue (cap = 3)
+### In-flight queue (cap = 6)
 
-`translation-queue.ts` admits at most **3 concurrent** segment translations per client session. Additional segments queue; the oldest queued id is dropped when the queue is full (in-flight work is never cancelled).
+`translation-queue.ts` admits at most **6 concurrent** segment translations per client session so overlapping bilingual turns are less likely to drop the other speaker. Additional segments queue; the oldest queued id is dropped when the queue is full (in-flight work is never cancelled).
 
 ```
 transcription-message
