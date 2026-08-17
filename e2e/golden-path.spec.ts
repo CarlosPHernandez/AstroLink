@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { deleteE2eBookingsForMentee, E2E_GOALS_PREFIX } from './helpers/supabase-cleanup';
+import { confirmCaptionLanguage } from './helpers/caption-language';
 import { futureDatetimeLocal } from './helpers/datetime';
 
 const E2E_GOALS_TAG = `${E2E_GOALS_PREFIX}golden-path`;
@@ -80,6 +81,7 @@ test.describe('D1 golden path (skip Stripe)', () => {
     const tokenError = page.getByTestId('session-token-error');
 
     if (await joinReady.isVisible()) {
+      await confirmCaptionLanguage(page);
       await expect(page.locator('[data-testid="session-daily-call"]')).toBeVisible();
     } else if (await provisioning.isVisible()) {
       await expect(provisioning).toContainText(/Room preparing|Preparing room/i);

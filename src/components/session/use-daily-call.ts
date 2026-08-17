@@ -132,10 +132,7 @@ const MULTI_TRANSCRIPTION_CONFIG = {
   punctuate: true,
 } as const;
 
-const FALLBACK_TRANSCRIPTION_CONFIG = {
-  language: 'en',
-  punctuate: true,
-} as const;
+const MAX_SEEN_SEGMENT_KEYS = 200;
 
 function isBenignTranscriptionError(message: string | undefined): boolean {
   if (!message) {
@@ -159,11 +156,12 @@ function startOwnerTranscription(
   try {
     call.startTranscription(MULTI_TRANSCRIPTION_CONFIG);
   } catch (err: unknown) {
-    console.warn('[daily] startTranscription multi failed, trying en fallback', err);
+    console.warn('[daily] startTranscription multi failed, retrying multi', err);
     try {
-      call.startTranscription(FALLBACK_TRANSCRIPTION_CONFIG);
-    } catch (fallbackErr: unknown) {
-      console.warn('[daily] startTranscription fallback failed', fallbackErr);
+      call.startTranscription(MULTI_TRANSCRIPTION_CONFIG);
+    } catch (retryErr: unknown) {
+      console.warn('[daily] startTranscription multi retry failed', retryErr);
+      transcriptionStarted.current = false;
       onUnavailable();
     }
   }
@@ -260,6 +258,12 @@ export function useDailyCall(options: UseDailyCallOptions) {
       return;
     }
     seenSegmentsRef.current.add(dedupeKey);
+    if (seenSegmentsRef.current.size > MAX_SEEN_SEGMENT_KEYS) {
+      const first = seenSegmentsRef.current.values().next().value;
+      if (first) {
+        seenSegmentsRef.current.delete(first);
+      }
+    }
     onFinalRef.current?.(resolved);
   }, []);
 
@@ -275,11 +279,11 @@ export function useDailyCall(options: UseDailyCallOptions) {
         return;
       }
       transcriptionRetriedRef.current = true;
-      console.warn('[daily] transcription-error, retrying with en fallback', event?.errorMsg);
+      console.warn('[daily] transcription-error, retrying multi language STT', event?.errorMsg);
       try {
-        call.startTranscription(FALLBACK_TRANSCRIPTION_CONFIG);
+        call.startTranscription(MULTI_TRANSCRIPTION_CONFIG);
       } catch (err: unknown) {
-        console.warn('[daily] transcription fallback after error failed', err);
+        console.warn('[daily] transcription multi retry after error failed', err);
         setTranscriptionUnavailable(true);
       }
     },

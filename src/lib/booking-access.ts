@@ -161,8 +161,7 @@ export async function getBookingForSession(
 
   const captionsAvailable =
     gate === 'ready' && (isDailyTranscriptionEnabled() || e2eCaptionsStub);
-  const showCaptionsForBuyer =
-    captionsAvailable && menteePreferredLocale !== 'en';
+  const showCaptionsForBuyer = captionsAvailable;
 
   return {
     booking: {

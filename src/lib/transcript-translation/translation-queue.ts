@@ -1,4 +1,4 @@
-export const MAX_IN_FLIGHT_TRANSLATIONS = 3;
+export const MAX_IN_FLIGHT_TRANSLATIONS = 6;
 
 export function buildTranslationCacheKey(
   sourceLocale: string,

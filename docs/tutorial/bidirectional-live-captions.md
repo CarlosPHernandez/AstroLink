@@ -33,9 +33,10 @@ Enable transcription in the [Daily dashboard](https://dashboard.daily.co/) for y
 ## Step 2: Book and join from two sides
 
 1. On your laptop, book Chris and open `/session/{bookingId}` as Carlos (mentee).
-2. On your phone (or a second browser profile), open the same LAN URL, sign in as Chris, and join the same session.
+2. Before the call mounts, confirm **Captions and recap language**. If the profile is still English, we guess from the browser (`[data-testid="caption-language-guess"]`). Change the select if the guess is wrong, then **Continue to call**. That saves via `POST /api/me/preferred-locale` (the call still starts if save fails).
+3. On your phone (or a second browser profile), open the same LAN URL, sign in as Chris, and join the same session.
 
-**What you should see:** Both sides reach `[data-testid="session-join-ready"]`. The mentor header may show **Captions on for buyer** when the mentee locale is not English.
+**What you should see:** Both sides reach `[data-testid="session-join-ready"]`. After the mentee confirms language, the header can show **Captions on for {buyer} ({locale})** whenever transcription is on — including English buyers who still need the other person's speech translated.
 
 ## Step 3: Turn on captions and speak
 
@@ -63,8 +64,9 @@ For local tuning, see [Live caption rate limits](../explanation/live-caption-rat
 
 You exercised the full D3 Phase 3 path:
 
-- Daily `multi` + `nova-3` transcription on owner join
-- Per-viewer translate direction (mentee sees Spanish; mentor sees English when locales differ)
+- Join-time language confirm (browser guess when the profile is still `en`)
+- Daily `multi` + `nova-3` transcription on owner join (retries bilingual STT; no silent English-only fallback)
+- Other-person translate direction (missing STT language tag is not treated as English)
 - Caption rail with graceful pause on rate limits
 - Post-call transcript fetch and batch translate
 

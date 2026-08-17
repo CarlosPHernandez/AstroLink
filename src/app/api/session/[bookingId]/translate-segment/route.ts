@@ -87,14 +87,23 @@ export async function POST(request: Request, context: RouteContext) {
       ? menteeProfile.preferred_locale
       : 'en';
 
-  const serverTargetLocale = resolveServerTargetLocale({
-    sessionUserId: session.userId,
-    sessionRole: session.role,
-    menteeId: booking.mentee_id,
-    menteePreferredLocale,
-  });
-
   const requestedLocale = body.targetLocale?.trim();
+  const menteeRequestedLocale =
+    session.userId === booking.mentee_id &&
+    requestedLocale &&
+    isSupportedTargetLocale(requestedLocale)
+      ? requestedLocale
+      : null;
+
+  const serverTargetLocale =
+    menteeRequestedLocale ??
+    resolveServerTargetLocale({
+      sessionUserId: session.userId,
+      sessionRole: session.role,
+      menteeId: booking.mentee_id,
+      menteePreferredLocale,
+    });
+
   if (requestedLocale && requestedLocale !== serverTargetLocale) {
     return NextResponse.json({ error: 'targetLocale mismatch' }, { status: 400 });
   }

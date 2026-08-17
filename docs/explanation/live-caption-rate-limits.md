@@ -9,7 +9,7 @@ Why bidirectional live captions use a separate LLM budget, an in-flight queue, a
 
 ## The problem
 
-In v0.2.0.0, captions are **bidirectional**: each participant can trigger segment translation when the detected speech locale differs from their viewer locale. A 45-minute call with two active speakers can generate hundreds of `translate-segment` requests in a few minutes.
+Captions are **bidirectional**: we translate the *other* person's speech into the viewer's locale. A 45-minute call with two active speakers can generate hundreds of `translate-segment` requests in a few minutes.
 
 Without guards, three failure modes appear:
 
@@ -27,9 +27,9 @@ Without guards, three failure modes appear:
 
 This isolates caption bursts from the rest of the app's LLM budget.
 
-### In-flight queue (cap = 3)
+### In-flight queue (cap = 6)
 
-`translation-queue.ts` admits at most **3 concurrent** segment translations per client session. Additional segments queue; the oldest queued id is dropped when the queue is full (in-flight work is never cancelled).
+`translation-queue.ts` admits at most **6 concurrent** segment translations per client session so overlapping bilingual turns are less likely to drop the other speaker. Additional segments queue; the oldest queued id is dropped when the queue is full (in-flight work is never cancelled).
 
 ```
 transcription-message
@@ -68,7 +68,7 @@ Order-of-magnitude for a 45-min bilingual call (~200 utterances, mentee `es`, me
 | Component | Requests | Mitigation | Effective LLM calls |
 |-----------|----------|------------|---------------------|
 | Segment translate | ~200 per viewer who needs translation | LRU cache (~70% hit on repeated phrases) | ~60–120 per side |
-| Queue drops | Bursts during fast dialogue | Cap=3 + drop oldest queued | Bounded parallelism |
+| Queue drops | Bursts during fast dialogue | Cap=6 + drop oldest queued | Bounded parallelism |
 | Rate limit | Sustained over limit | Pause + resume | Zero calls while paused |
 
 The engineering review [cost model](./transcript-translation-engineering-review.md#cost-model-optimized) estimated ~$0.12 live translate per session with cache. Bidirectional mode can approach **2×** that when both sides need translation, but the caption scope and cache still bound worst case versus sharing the global 10/min limit.
@@ -80,9 +80,9 @@ The engineering review [cost model](./transcript-translation-engineering-review.
 | Choice | Benefit | Cost |
 |--------|---------|------|
 | Caption scope separate from global | Briefings still work during heavy caption demos | Two limit configs to tune |
-| Queue cap=3 | Predictable latency and cost | Fast cross-talk may drop queued segments (shows original) |
+| Queue cap=6 | Overlapping bilingual turns stay in flight longer | More concurrent LLM calls during cross-talk |
 | Pause instead of error badge | Call continues; no scary red state | Viewer sees untranslated speech until window clears |
-| Default `detectedLocale` → `en` when missing | Avoids mistranslating English for English viewers | Spanish-only speech with bad ASR metadata may skip translation until metadata improves |
+| Missing STT tag is not English | Spanish/English no longer invert when Deepgram omits a language | Unknown-speaker lines with no tag stay untranslated until speaker or tag arrives |
 
 ---
 

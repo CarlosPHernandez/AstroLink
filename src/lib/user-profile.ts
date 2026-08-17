@@ -158,6 +158,27 @@ export async function updateMenteeProfile(
   };
 }
 
+export async function updatePreferredLocale(
+  userId: string,
+  locale: SupportedTargetLocale,
+): Promise<SupportedTargetLocale | null> {
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .update({
+      preferred_locale: locale,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId)
+    .select('preferred_locale')
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error('updatePreferredLocale:', error?.message);
+    return null;
+  }
+  return isSupportedTargetLocale(data.preferred_locale) ? data.preferred_locale : locale;
+}
+
 export async function setMenteeStripeCustomerId(
   userId: string,
   stripeCustomerId: string,

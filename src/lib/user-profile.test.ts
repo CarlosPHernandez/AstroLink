@@ -10,14 +10,17 @@ vi.mock('@/lib/supabase', () => ({
       })),
       update: vi.fn(() => ({
         eq: vi.fn(() => ({
-          select: vi.fn(() => ({ single: mockSingle })),
+          select: vi.fn(() => ({
+            single: mockSingle,
+            maybeSingle: mockMaybeSingle,
+          })),
         })),
       })),
     })),
   },
 }));
 
-import { getMenteeProfile, updateMenteeProfile } from '@/lib/user-profile';
+import { getMenteeProfile, updateMenteeProfile, updatePreferredLocale } from '@/lib/user-profile';
 
 describe('user-profile preferred_locale', () => {
   beforeEach(() => {
@@ -65,5 +68,32 @@ describe('user-profile preferred_locale', () => {
     });
 
     expect(profile?.preferredLocale).toBe('es');
+  });
+
+  it('updates preferred_locale alone and returns the saved tag', async () => {
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: { preferred_locale: 'ja' },
+      error: null,
+    });
+
+    await expect(updatePreferredLocale('user-1', 'ja')).resolves.toBe('ja');
+  });
+
+  it('returns the requested locale when the row stores an unsupported tag', async () => {
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: { preferred_locale: 'de' },
+      error: null,
+    });
+
+    await expect(updatePreferredLocale('user-1', 'fr')).resolves.toBe('fr');
+  });
+
+  it('returns null when preferred_locale cannot be saved', async () => {
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'update failed' },
+    });
+
+    await expect(updatePreferredLocale('user-1', 'es')).resolves.toBeNull();
   });
 });

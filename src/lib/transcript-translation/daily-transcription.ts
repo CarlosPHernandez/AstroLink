@@ -23,6 +23,9 @@ export type DailyTranscriptionMessagePayload = {
   is_final?: boolean;
   session_id?: string;
   speech_id?: string;
+  language?: string;
+  languages?: string[];
+  detected_language?: string;
   start_ts?: number;
   end_ts?: number;
   rawResponse?: DeepgramRawResponse;
@@ -58,10 +61,36 @@ function textFromPayload(payload: DailyTranscriptionMessagePayload): string {
   return payload.rawResponse?.channel?.alternatives?.[0]?.transcript?.trim() ?? '';
 }
 
+function isUsableLocaleTag(tag: string): boolean {
+  const normalized = tag.trim().toLowerCase();
+  return normalized.length > 0 && normalized !== 'multi' && normalized !== 'unknown';
+}
+
+function firstLocaleTag(...candidates: Array<string | string[] | undefined>): string | undefined {
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      const first = candidate.find((tag) => isUsableLocaleTag(tag))?.trim();
+      if (first) {
+        return first;
+      }
+      continue;
+    }
+    const trimmed = candidate?.trim();
+    if (trimmed && isUsableLocaleTag(trimmed)) {
+      return trimmed;
+    }
+  }
+  return undefined;
+}
+
 function detectedLocaleFromPayload(payload: DailyTranscriptionMessagePayload): string | undefined {
-  const langs = payload.rawResponse?.channel?.alternatives?.[0]?.languages;
-  const first = langs?.[0]?.trim();
-  return first || undefined;
+  const alt = payload.rawResponse?.channel?.alternatives?.[0];
+  return firstLocaleTag(
+    payload.language,
+    payload.detected_language,
+    payload.languages,
+    alt?.languages,
+  );
 }
 
 function isFinalPayload(payload: DailyTranscriptionMessagePayload): boolean {
@@ -75,12 +104,12 @@ function isFinalPayload(payload: DailyTranscriptionMessagePayload): boolean {
 }
 
 function segmentIdFromPayload(payload: DailyTranscriptionMessagePayload): string {
+  const speakerKey =
+    payload.user_id?.trim() || payload.participantId?.trim() || 'unknown';
   const speechId = payload.speech_id?.trim();
   if (speechId) {
-    return speechId;
+    return `${speakerKey}:${speechId}`;
   }
-  const speakerKey =
-    payload.participantId?.trim() || payload.user_id?.trim() || 'unknown';
   const start = payload.start_ts ?? (payload.timestamp instanceof Date ? payload.timestamp.getTime() / 1000 : payload.timestamp ?? 0);
   const text = textFromPayload(payload);
   return `${speakerKey}:${start}:${text.slice(0, 64)}`;
@@ -125,5 +154,5 @@ export function parseTranscriptionMessage(
 
 /** Dedupe key for coalescing partial/final segments. */
 export function transcriptionDedupeKey(utterance: TranscriptUtterance): string {
-  return `${utterance.speakerId}:${utterance.startMs}:${utterance.text}`;
+  return `${utterance.speakerId}:${utterance.id}:${utterance.startMs}:${utterance.text}`;
 }

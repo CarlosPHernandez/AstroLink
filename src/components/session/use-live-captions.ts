@@ -68,9 +68,11 @@ export function useLiveCaptions(options: UseLiveCaptionsOptions) {
   const clientCacheRef = useRef<Map<string, string>>(new Map());
   const queueRef = useRef<TranslationQueueSnapshot>({ inFlight: 0, queuedSegmentIds: [] });
   const pendingBySegmentRef = useRef<Map<string, PendingTranslation>>(new Map());
+  const pausedDuringLimitRef = useRef<PendingTranslation[]>([]);
   const translationPausedRef = useRef(false);
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const runTranslationRef = useRef<(pending: PendingTranslation) => void>(() => {});
+  const scheduleTranslationRef = useRef<(pending: PendingTranslation) => void>(() => {});
 
   useEffect(() => {
     return () => {
@@ -91,6 +93,11 @@ export function useLiveCaptions(options: UseLiveCaptionsOptions) {
       translationPausedRef.current = false;
       setTranslationPaused(false);
       resumeTimerRef.current = null;
+      const replay = pausedDuringLimitRef.current;
+      pausedDuringLimitRef.current = [];
+      for (const pending of replay) {
+        scheduleTranslationRef.current(pending);
+      }
     }, delayMs);
   }, []);
 
@@ -244,6 +251,10 @@ export function useLiveCaptions(options: UseLiveCaptionsOptions) {
     [finalizeDroppedTranslation, runTranslation],
   );
 
+  useEffect(() => {
+    scheduleTranslationRef.current = scheduleTranslation;
+  }, [scheduleTranslation]);
+
   const handleUtterance = useCallback(
     (raw: TranscriptUtterance) => {
       if (!captionsEnabled || !captionsOn || transcriptionUnavailable) {
@@ -253,6 +264,8 @@ export function useLiveCaptions(options: UseLiveCaptionsOptions) {
       const [mapped] = mapSpeakersToRoles([raw], {
         mentorUserId: mentorId,
         menteeUserId: menteeId,
+        mentorDisplayName: mentorName,
+        menteeDisplayName: menteeName,
       });
       const label = resolveSessionSpeakerLabel({
         speakerRole: mapped.speakerRole,
@@ -264,9 +277,34 @@ export function useLiveCaptions(options: UseLiveCaptionsOptions) {
         viewerRole: sessionRole,
         menteePreferredLocale,
         detectedLocale: mapped.detectedLocale,
+        speakerRole: mapped.speakerRole,
       });
 
-      if (!direction.shouldTranslate || translationPausedRef.current) {
+      if (translationPausedRef.current && direction.shouldTranslate) {
+        const placeholderId = `${mapped.id}-pending`;
+        pausedDuringLimitRef.current = [
+          ...pausedDuringLimitRef.current.slice(-7),
+          {
+            segmentId: mapped.id,
+            placeholderId,
+            label,
+            sourceLocale: direction.sourceLocale,
+            targetLocale: direction.targetLocale,
+            rawText: mapped.text,
+          },
+        ];
+        pushLine({
+          id: placeholderId,
+          speakerLabel: label,
+          text: mapped.text,
+          translated: false,
+          loading: false,
+          error: false,
+        });
+        return;
+      }
+
+      if (!direction.shouldTranslate) {
         pushLine({
           id: mapped.id,
           speakerLabel: label,
@@ -301,7 +339,7 @@ export function useLiveCaptions(options: UseLiveCaptionsOptions) {
         id: placeholderId,
         speakerLabel: label,
         text: mapped.text,
-        translated: true,
+        translated: false,
         loading: true,
         error: false,
       });

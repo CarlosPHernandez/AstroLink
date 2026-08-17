@@ -87,4 +87,27 @@ describe('getBookingForSession', () => {
     expect(booking).not.toHaveProperty('tokenError');
     expect(mockBuildAuthorizedDailyJoinUrl).not.toHaveBeenCalled();
   });
+
+  it('offers captions to English mentees when transcription is available', async () => {
+    mockIsDailyTranscriptionEnabled.mockReturnValue(true);
+    mockBookingSingle.mockResolvedValueOnce({
+      data: {
+        id: bookingId,
+        status: 'confirmed',
+        daily_room_url: dailyRoomUrl,
+        mentee_id: 'mentee-uuid',
+        mentor_id: 'mentor-uuid',
+        scheduled_at: scheduledAt,
+        briefing_json: null,
+        mentors: { full_name: 'Chris Sembroski' },
+        users: { full_name: 'Carlos Hernandez', preferred_locale: 'en' },
+      },
+      error: null,
+    });
+
+    const { booking } = await getBookingForSession(bookingId);
+    expect(booking?.menteePreferredLocale).toBe('en');
+    expect(booking?.captionsAvailable).toBe(true);
+    expect(booking?.showCaptionsForBuyer).toBe(true);
+  });
 });

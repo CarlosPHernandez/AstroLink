@@ -212,7 +212,7 @@ export default function MenteeSettingsClient({
                   htmlFor="preferredLocale"
                   className="block text-[9px] font-mono text-on-surface-variant uppercase tracking-widest mb-1.5"
                 >
-                  Session recap language
+                  Captions and recap language
                 </label>
                 <select
                   id="preferredLocale"
@@ -232,7 +232,8 @@ export default function MenteeSettingsClient({
                   message={state?.errors?.preferredLocale?.[0]}
                 />
                 <p className="mt-1 text-[10px] text-on-surface-variant font-light">
-                  Applies to future session recaps. Past sessions are not re-translated.
+                  Applies to live captions and future recaps. You can also confirm this when you join
+                  a call. Past sessions are not re-translated.
                 </p>
               </div>
 

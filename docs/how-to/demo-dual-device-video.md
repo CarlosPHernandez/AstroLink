@@ -59,7 +59,7 @@ DAILY_API_KEY=...
 DAILY_TRANSCRIPTION_ENABLED=true
 ```
 
-For live translated captions (D3 Phase 3), set mentee `preferred_locale` to `es` (or `pt-BR`, `fr`, `ja`) in `/dashboard/mentee/settings` before joining. Mentor speaks English; mentee sees the caption rail.
+For live translated captions (D3 Phase 3), set mentee `preferred_locale` to `es` (or `pt-BR`, `fr`, `ja`) in `/dashboard/mentee/settings`, or confirm it on the join-time language gate. Mentor speaks English; mentee sees the caption rail of the *other* person.
 
 `npm run dev:lan` sets `DEV_LAN_ORIGIN` automatically so Next.js allows HMR and server actions from your phone. If you still see “Blocked cross-origin request … from \<LAN-IP\>” in the terminal, restart `dev:lan` (DHCP may have changed your IP).
 

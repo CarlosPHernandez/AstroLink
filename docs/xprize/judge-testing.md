@@ -9,7 +9,7 @@ Production is `APP_MODE=full` at https://www.astro-link.space/.
 - Marketing: **$0**
 - Take rate: **20%** platform / **80%** expert
 - Costs: Stripe fee, Supabase Pro, Vercel Pro
-- LLM: Production uses `LLM_PROVIDER` (Gemini when set to `gemini`). Matching is not Gemini-branded if the provider is still OpenAI.
+- LLM: Production Gemini is live (`LLM_PROVIDER=gemini`). Matching is a Gemini decision on the default `/booking` path.
 - Daily `enable_transcription_storage`: **true**
 - Repo: private until submission, then public
 - Team: 3 people, 1 full-time

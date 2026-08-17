@@ -5,6 +5,7 @@ import {
   buildTranslationCacheKey,
   dequeueNextTranslationWork,
   isGracefulTranslationFallback,
+  MAX_IN_FLIGHT_TRANSLATIONS,
   releaseTranslationSlot,
 } from '@/lib/transcript-translation/translation-queue';
 
@@ -25,12 +26,23 @@ describe('admitTranslationRequest', () => {
   });
 
   it('queues newest and drops oldest queued when at capacity', () => {
-    const atCapacity = { inFlight: 3, queuedSegmentIds: ['old-queued'] };
+    const atCapacity = { inFlight: 6, queuedSegmentIds: ['old-queued'] };
     const result = admitTranslationRequest(atCapacity, 'new-seg');
     expect(result.startNow).toBe(false);
     expect(result.droppedQueuedId).toBe('old-queued');
     expect(result.snapshot.queuedSegmentIds).toEqual(['new-seg']);
-    expect(result.snapshot.inFlight).toBe(3);
+    expect(result.snapshot.inFlight).toBe(6);
+  });
+
+  it('queues without dropping when at the in-flight cap and the wait list is empty', () => {
+    expect(MAX_IN_FLIGHT_TRANSLATIONS).toBe(6);
+    const result = admitTranslationRequest(
+      { inFlight: MAX_IN_FLIGHT_TRANSLATIONS, queuedSegmentIds: [] },
+      'first-queued',
+    );
+    expect(result.startNow).toBe(false);
+    expect(result.droppedQueuedId).toBeNull();
+    expect(result.snapshot.queuedSegmentIds).toEqual(['first-queued']);
   });
 });
 

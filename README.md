@@ -74,7 +74,7 @@ Structured decision logs for judges: [T8 in D1 plan](docs/d1-implementation-plan
 4. After authorize, either:
    - Forward webhooks: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`, or
    - Dev fulfill: `POST /api/book/fulfill` with `{ "bookingId": "<uuid>" }` (development only).
-5. Mentee dashboard shows APX-02 briefing; **Join session** opens `/session/[bookingId]` with a server-minted Daily token (private room).
+5. Mentee dashboard shows APX-02 briefing; **Join session** opens `/session/[bookingId]` with a server-minted Daily token (private room). Buyers confirm captions/recap language before Daily mounts.
 
 ## Repository layout
 
@@ -121,11 +121,11 @@ npm test          # Vitest unit/contract tests
 npm run test:e2e  # Playwright D1 golden path (requires .env.local + Supabase seed)
 ```
 
-Vitest covers D1 contract logic: booking pricing, `/api/book` request schema, Daily webhook parsing, LLM rate limits (including caption scope), dev payment skip helpers, session waitlist guard (`getSession`), Stripe booking test-mode production guard, booking-agent mentor pool validation, D3 translate-segment / segment-cache / translation-queue / caption-direction paths, transcript APIs, public expert helpers (`expert-book-href`, `expert-bio`), and Chris campaign helpers (`chris-pricing`, `chris-campaign-dates`, slots, booking validation).
+Vitest covers D1 contract logic: booking pricing, `/api/book` request schema, Daily webhook parsing, LLM rate limits (including caption scope), dev payment skip helpers, session waitlist guard (`getSession`), Stripe booking test-mode production guard, booking-agent mentor pool validation, D3 translate-segment / segment-cache / translation-queue / caption-direction / guess-supported-locale / `POST /api/me/preferred-locale` paths, transcript APIs, public expert helpers (`expert-book-href`, `expert-bio`), and Chris campaign helpers (`chris-pricing`, `chris-campaign-dates`, slots, booking validation).
 
 ### E2E (Playwright)
 
-Automates the skip-Stripe D1 golden path, D3 localized recap, D3 live-caption stub, and public experts directory: E2E session bootstrap → book Chris → APX-02 briefing → session room; pt-BR mentee recap after `simulate_meeting_ended`; mentee caption rail with stubbed segment translation; `/experts` filters, preview panel, and profile deep links.
+Automates the skip-Stripe D1 golden path, D3 localized recap, D3 live-caption stub, and public experts directory: E2E session bootstrap → book Chris → APX-02 briefing → session room (mentee confirms caption language via `e2e/helpers/caption-language.ts` before Daily mounts); pt-BR mentee recap after `simulate_meeting_ended`; mentee caption rail with stubbed segment translation; `/experts` filters, preview panel, and profile deep links.
 
 **Prerequisites:** `.env.local` with Supabase keys, `ENCRYPTION_KEY`, and seed data applied (`20260531140100_seed_d1_dev.sql`, plus `20260607120000_session_translations.sql` for D3 Phase 2). Playwright sets `APP_MODE=full`, `ENABLE_DEMO_AUTH=true`, `SKIP_STRIPE_PAYMENTS=true`, `E2E_STUB_LLM=true`, and `DAILY_TRANSCRIPTION_ENABLED=false` on the dev server automatically (so post-session synthesis runs without Daily transcription).
 

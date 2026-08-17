@@ -29,10 +29,11 @@ Structured using [Diataxis](https://diataxis.fr/): tutorials teach, how-tos guid
 
 | Doc | Quadrant | Description |
 |-----|----------|-------------|
-| [d3-transcript-translation-roadmap.md](./d3-transcript-translation-roadmap.md) | Explanation | D3 roadmap — Phases 1–3 shipped (capture, localized recap, bidirectional live captions + post-call transcript); Phase 4 moat next |
+| [d3-transcript-translation-roadmap.md](./d3-transcript-translation-roadmap.md) | Explanation | D3 roadmap — Phases 1–3 shipped (capture, localized recap, bidirectional live captions + join language gate); Phase 4 moat next |
 | [explanation/transcript-translation-architecture.md](./explanation/transcript-translation-architecture.md) | Explanation | Canonical English, Daily STT, APX-06 translation layer |
 | [explanation/transcript-translation-engineering-review.md](./explanation/transcript-translation-engineering-review.md) | Explanation | Token budgets, eng decisions, cost model |
-| [explanation/live-caption-rate-limits.md](./explanation/live-caption-rate-limits.md) | Explanation | Caption LLM scope, queue cap, pause banner, sustained-speech cost |
+| [explanation/live-caption-rate-limits.md](./explanation/live-caption-rate-limits.md) | Explanation | Caption LLM scope, queue cap 6, pause banner, sustained-speech cost |
+| [explanation/ceo-captions-and-paid-path-brief.md](./explanation/ceo-captions-and-paid-path-brief.md) | Explanation | Founder brief: other-person captions + paid-path honesty |
 | [explanation/transcript-translation-ai-sdk-review.md](./explanation/transcript-translation-ai-sdk-review.md) | Explanation | Vercel AI SDK fit vs extending `llm.ts` |
 | [explanation/transcript-translation-case-studies.md](./explanation/transcript-translation-case-studies.md) | Explanation | Zoom, Teams, Meet, telehealth — differentiation |
 
