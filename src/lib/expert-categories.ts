@@ -1,15 +1,64 @@
 import type { ExpertCategory } from '@/lib/mentor-directory';
 
-export const EXPERT_CATEGORIES = ['all', 'systems', 'propulsion', 'spacecraft', 'policy'] as const;
+export const EXPERT_CATEGORIES = [
+  'all',
+  'astronauts',
+  'medicine',
+  'careers',
+  'training',
+  'spacecraft',
+  'policy',
+] as const;
 
 export type ExpertCategoryFilterValue = (typeof EXPERT_CATEGORIES)[number];
 
-export function filterExpertsByCategory<T extends { category: ExpertCategory }>(
+export const EXPERT_CATEGORY_LABELS: Record<ExpertCategoryFilterValue, string> = {
+  all: 'All',
+  astronauts: 'Astronauts',
+  medicine: 'Medicine',
+  careers: 'Careers',
+  training: 'Training',
+  spacecraft: 'Spacecraft',
+  policy: 'Policy',
+};
+
+/** Public-safe inference — no export-control / weapons / propulsion jargon. */
+const CATEGORY_KEYWORDS: Record<ExpertCategory, string[]> = {
+  medicine: ['cardiologist', 'medicine', 'medical', 'physician', 'clinical'],
+  training: ['training', 'trainer', 'nbl', 'zero-g', 'zero g', 'parabolic', 'crew training'],
+  spacecraft: ['spacecraft', 'habitation', 'eva', 'orbital', 'iss', 'life support'],
+  policy: ['policy', 'compliance', 'regulation', 'security', 'infrastructure', 'risk management'],
+  careers: ['career', 'intern', 'college', 'stem', 'student', 'founder', 'speaker', 'keynote', 'mentorship'],
+};
+
+export function inferPublicExpertCategory(input: {
+  title?: string | null;
+  bio?: string | null;
+  expertise?: string[];
+}): ExpertCategory {
+  const haystack = [input.title ?? '', input.bio ?? '', ...(input.expertise ?? [])]
+    .join(' ')
+    .toLowerCase();
+  for (const category of ['medicine', 'training', 'policy', 'careers', 'spacecraft'] as const) {
+    if (CATEGORY_KEYWORDS[category].some((kw) => haystack.includes(kw))) {
+      return category;
+    }
+  }
+  return 'careers';
+}
+
+/** Directory tab only — not a stored mentor category. */
+const ASTRONAUT_DIRECTORY_SLUGS = new Set(['chris-sembroski', 'eiman-jahangir']);
+
+export function filterExpertsByCategory<T extends { category: ExpertCategory; slug?: string }>(
   experts: T[],
   category: string,
 ): T[] {
   if (category === 'all') {
     return experts;
+  }
+  if (category === 'astronauts') {
+    return experts.filter((expert) => Boolean(expert.slug && ASTRONAUT_DIRECTORY_SLUGS.has(expert.slug)));
   }
   return experts.filter((expert) => expert.category === category);
 }
@@ -31,7 +80,9 @@ export function filterExpertsByQuery<
 }
 
 /** True when the selected expert would disappear from the picker after a category change. */
-export function shouldClearExpertOnCategoryChange<T extends { slug: string; category: ExpertCategory }>(
+export function shouldClearExpertOnCategoryChange<
+  T extends { slug: string; category: ExpertCategory },
+>(
   experts: T[],
   selectedSlug: string | null,
   category: string,

@@ -1,6 +1,6 @@
 'use client';
 
-import { EXPERT_CATEGORIES } from '@/lib/expert-categories';
+import { EXPERT_CATEGORIES, EXPERT_CATEGORY_LABELS } from '@/lib/expert-categories';
 
 type ExpertCategoryFilterProps = {
   selectedCategory: string;
@@ -29,7 +29,7 @@ export function ExpertCategoryFilter({
             aria-pressed={selectedCategory === cat}
             className={`experts-dir-chip${selectedCategory === cat ? ' is-active' : ''}`}
           >
-            {cat}
+            {EXPERT_CATEGORY_LABELS[cat]}
           </button>
         ))}
       </div>
@@ -54,7 +54,7 @@ export function ExpertCategoryFilter({
               : 'border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:border-outline'
           }`}
         >
-          {cat}
+          {EXPERT_CATEGORY_LABELS[cat]}
         </button>
       ))}
     </div>
