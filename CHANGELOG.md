@@ -3,6 +3,15 @@
 All notable changes to AstroLink are documented in this file.
 
 
+## [0.17.0.0] - 2026-08-17
+
+### Added
+- Live sessions show a countdown for time left in the booked call (header chip + video overlay).
+- Timer urgency shifts at five minutes left (wrap up) and one minute left (ending soon), so both people know before Daily ends the room.
+
+### Changed
+- Session helper copy now points at the countdown and automatic end-of-call behavior.
+
 ## [0.16.0.0] - 2026-08-17
 
 ### Added

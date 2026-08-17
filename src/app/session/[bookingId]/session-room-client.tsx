@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState, useSyncExternalStore } from 'r
 import Link from 'next/link';
 import { CaptionLanguageGate } from '@/components/session/caption-language-gate';
 import { DailyCallRoom } from '@/components/session/daily-call-room';
+import { SessionCallTimer } from '@/components/session/session-call-timer';
 import { SessionTranscriptPanel } from '@/components/session/session-transcript-panel';
 import type { BookingSessionView } from '@/lib/booking-access';
 import type { SupportedTargetLocale } from '@/lib/transcript-translation/types';
@@ -305,6 +306,13 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
           </span>
         </div>
         <div className="flex items-center gap-3">
+          {booking.gate === 'ready' && !showPostSessionUi ? (
+            <SessionCallTimer
+              scheduledAt={booking.scheduledAt}
+              durationMinutes={booking.durationMinutes}
+              variant="header"
+            />
+          ) : null}
           {liveBooking.showCaptionsForBuyer && localeReady ? (
             <span
               data-testid="session-captions-indicator"
@@ -424,8 +432,9 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
                 <DailyCallRoom booking={liveBooking} onEnded={handleCallEnded} />
               )}
               <p className="mt-3 text-center text-label-sm text-on-surface-variant">
-                Leave with End session when you are done. The call also ends automatically at the
-                booked length. Your recap generates after the call ends.
+                Leave with End session when you are done. The countdown shows time left in the
+                booked session; the call also ends automatically when time is up. Your recap
+                generates after the call ends.
               </p>
             </div>
           )}
