@@ -3,6 +3,23 @@
 All notable changes to AstroLink are documented in this file.
 
 
+## [0.16.0.0] - 2026-08-17
+
+### Added
+- Expert directory ratings on cards when an expert has approved, public reviews.
+- Medicine tab for clinical experts (e.g. Dr. Eiman).
+- Astronauts tab listing Chris and Eiman by profile.
+
+### Changed
+- `/experts` matches the landing and educators look: white surface, snap-scroll expert row, clearer filters.
+- Session rates show as **per 15 minutes** on the directory, CTAs, and profile booking card (not per hour).
+- Category labels are broader and public-safe: Careers, Training, Spacecraft, Policy (no propulsion/systems jargon).
+- Empty category results keep page height so the footer does not jump up.
+- Above-the-fold expert portraits use eager loading (Next.js 16 LCP).
+
+### Fixed
+- Category filter empty state no longer collapses the layout under the footer.
+
 ## [0.15.0.0] - 2026-08-17
 
 ### Added
