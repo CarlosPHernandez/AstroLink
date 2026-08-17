@@ -103,6 +103,8 @@ const approvedMentor = {
   live_session_price_cents: 15000,
   is_listed: true,
   compliance_status: 'approved',
+  slug: 'ada-expert',
+  full_name: 'Ada Expert',
 };
 
 describe('BookingAgent (immediate-capture payments, platform-only)', () => {
@@ -147,6 +149,15 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     });
 
     expect(result.bookingId).toBe('booking-1');
+    expect(result).toEqual(
+      expect.objectContaining({
+        matchedByGemini: true,
+        mentorId: 'mentor-1',
+        mentorSlug: 'ada-expert',
+        mentorName: 'Ada Expert',
+        aiMatchReason: 'Strong propulsion fit.',
+      }),
+    );
     expect(mockGenerateStructuredJson).toHaveBeenCalled();
   });
 
@@ -166,7 +177,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
         menteeGoals: 'Learn about propulsion',
         menteeBackground: 'Early-career engineer',
       }),
-    ).rejects.toThrow('Matching engine returned an unknown expert');
+    ).rejects.toThrow('Gemini could not match you to a listed expert');
   });
 
   it('throws when the mentor pool is empty', async () => {
@@ -181,7 +192,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
         menteeGoals: 'Learn about propulsion',
         menteeBackground: 'Early-career engineer',
       }),
-    ).rejects.toThrow('No approved mentors available in the pool.');
+    ).rejects.toThrow('No listed experts are available to match');
     expect(mockGenerateStructuredJson).not.toHaveBeenCalled();
   });
 
@@ -390,6 +401,8 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     });
 
     expect(result.amountCents).toBe(7500);
+    expect(result.matchedByGemini).toBe(false);
+    expect(result.aiMatchReason).toBeNull();
     expect(mockReserveSlot).not.toHaveBeenCalled();
     const [paymentIntentParams] = mockStripePaymentIntentsCreate.mock.calls[0];
     expect(paymentIntentParams).toEqual(

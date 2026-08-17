@@ -10,6 +10,7 @@ import {
   pathAssessmentWrittenReviewPath,
 } from '@/lib/path-assessment/public-url';
 import { WRITTEN_REPORT_REVIEW_CENTS } from '@/lib/path-assessment/written-review-pricing';
+import { liveBookCtaCopy } from '@/lib/path-assessment/live-book-cta';
 import type {
   PathAssessmentPublicView,
   PathAssessmentRecommendedMentor,
@@ -103,6 +104,7 @@ export function AssessmentLiveCta({
   recommendedMentor?: PathAssessmentRecommendedMentor | null;
 }) {
   const href = pathAssessmentBookingPath(token, recommendedMentor?.slug);
+  const cta = liveBookCtaCopy(recommendedMentor?.fullName);
   return (
     <aside
       className="rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-surface)] p-5 sm:p-6 shadow-[0_8px_28px_-20px_rgba(14,20,32,0.25)]"
@@ -136,8 +138,8 @@ export function AssessmentLiveCta({
         className="mt-5 inline-flex min-h-11 w-full sm:w-auto touch-manipulation items-center justify-center rounded-full bg-[var(--landing-ink)] px-5 sm:px-6 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--landing-ink)] focus-visible:ring-offset-2"
         data-testid="path-assessment-book-live"
       >
-        <span className="sm:hidden">Book live expert review</span>
-        <span className="hidden sm:inline">Book live expert review with my report</span>
+        <span className="sm:hidden">{cta.mobile}</span>
+        <span className="hidden sm:inline">{cta.desktop}</span>
       </Link>
     </aside>
   );

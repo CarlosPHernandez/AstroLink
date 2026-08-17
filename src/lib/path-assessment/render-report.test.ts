@@ -42,9 +42,19 @@ describe('renderPathAssessmentReportHtml', () => {
       bookingUrl: 'https://astro-link.space/booking?assessment=tok',
       includeLiveCta: true,
     });
-    expect(html).toContain('Book live expert review with my report');
+    expect(html).toContain('Book a live session — Gemini matches you');
     expect(html).toContain('https://astro-link.space/booking?assessment=tok');
     expect(html).not.toContain('$50');
+  });
+
+  it('names the matched expert on the live CTA when provided', () => {
+    const html = renderPathAssessmentReportHtml(report, {
+      bookingUrl: 'https://astro-link.space/booking?assessment=tok&mentor=chris-sembroski',
+      includeLiveCta: true,
+      mentorName: 'Chris Sembroski',
+    });
+    expect(html).toContain('Book Chris Sembroski');
+    expect(html).toContain('mentor=chris-sembroski');
   });
 
   it('includes written CTA when enabled with URL', () => {

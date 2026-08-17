@@ -25,6 +25,7 @@ export function renderPathAssessmentReportHtml(
   report: PathAssessmentReport,
   options?: {
     firstName?: string;
+    mentorName?: string;
     bookingUrl?: string;
     writtenReviewUrl?: string;
     includeLiveCta?: boolean;
@@ -36,6 +37,10 @@ export function renderPathAssessmentReportHtml(
   const bookingUrl = options?.bookingUrl?.trim() || '';
   const writtenReviewUrl = options?.writtenReviewUrl?.trim() || '';
   const firstName = options?.firstName?.trim();
+  const mentorName = options?.mentorName?.trim();
+  const liveCtaLabel = mentorName
+    ? `Book ${mentorName}`
+    : 'Book a live session — Gemini matches you';
 
   const gaps = report.key_gaps
     .map(
@@ -69,7 +74,7 @@ export function renderPathAssessmentReportHtml(
       <p style="margin:0 0 8px;font-weight:600;color:#171A1F;line-height:1.4;">Want a verified expert to review this report with you live?</p>
       <p style="margin:0 0 16px;color:#66717F;font-size:14px;line-height:1.5;">We'll load your assessment so they can prepare specific advice for your situation.</p>
       <p style="margin:0 0 12px;color:#171A1F;font-size:14px;line-height:1.5;">${escapeHtml(report.upsell_bridge_live)}</p>
-      <a href="${escapeHtml(bookingUrl)}" style="display:inline-block;padding:12px 18px;background:#0E1420;color:#FFFFFF;text-decoration:none;border-radius:999px;font-size:14px;font-weight:600;">Book live expert review with my report</a>
+      <a href="${escapeHtml(bookingUrl)}" style="display:inline-block;padding:12px 18px;background:#0E1420;color:#FFFFFF;text-decoration:none;border-radius:999px;font-size:14px;font-weight:600;">${escapeHtml(liveCtaLabel)}</a>
     </div>`
       : includeLiveCta
         ? `

@@ -77,7 +77,7 @@ function actionsForSession(session: SessionData): ActionCard[] {
     {
       href: '/booking',
       title: 'Book a session',
-      description: 'Pick an expert and schedule a live 1:1 call.',
+      description: 'Tell us your goals. Gemini matches you to a listed expert.',
       icon: 'videocam',
       primary: true,
       testId: 'signed-in-cta-book',

@@ -80,6 +80,7 @@ export class PathAssessmentAgent {
 
     const reportHtml = renderPathAssessmentReportHtml(report, {
       firstName: params.answers.firstName,
+      mentorName: demandMatch?.fullName,
       bookingUrl: pathAssessmentBookingUrl(publicToken, demandMatch?.slug),
       writtenReviewUrl: pathAssessmentWrittenReviewUrl(publicToken),
       includeLiveCta: true,
@@ -122,6 +123,8 @@ export class PathAssessmentAgent {
         firstName: params.answers.firstName,
         token: publicToken,
         report,
+        mentorName: demandMatch?.fullName ?? null,
+        mentorSlug: demandMatch?.slug ?? null,
       });
     } catch (emailErr) {
       console.warn('[path-assessment] email send failed (non-fatal)', emailErr);
@@ -136,6 +139,7 @@ export class PathAssessmentAgent {
   ): Promise<{
     mentorId: string;
     slug: string | null;
+    fullName: string;
     matchScore: number;
     matchReason: string;
   } | null> {
@@ -156,6 +160,7 @@ export class PathAssessmentAgent {
       return {
         mentorId: result.mentor_id,
         slug: mentor?.slug ?? null,
+        fullName: mentor?.full_name ?? '',
         matchScore: result.match_score,
         matchReason: result.match_reason,
       };
@@ -217,11 +222,15 @@ export class PathAssessmentAgent {
     firstName: string;
     token: string;
     report: PathAssessmentReport;
+    mentorName?: string | null;
+    mentorSlug?: string | null;
   }): Promise<void> {
     const { subject, html } = buildPathAssessmentEmail({
       firstName: params.firstName,
       token: params.token,
       report: params.report,
+      mentorName: params.mentorName,
+      mentorSlug: params.mentorSlug,
     });
 
     const result = await sendEmail({

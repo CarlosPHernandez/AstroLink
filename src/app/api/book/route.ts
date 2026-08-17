@@ -13,6 +13,7 @@ import { clampSessionDurationMinutes } from '@/lib/session-duration';
 import { ChrisCampaignSoldOutError } from '@/lib/chris-campaign/chris-campaign-slots';
 import { resolveChrisCampaignForBooking } from '@/lib/chris-campaign/validate-chris-booking';
 import { getSession } from '@/lib/session';
+import { ExpertMatchFailedError } from '@/lib/expert-match';
 import { BookingAgent } from '@/services/agents/booking-agent';
 
 export async function POST(request: Request) {
@@ -105,9 +106,20 @@ export async function POST(request: Request) {
         skipPayment: result.skipPayment,
         matchReason: result.matchReason,
         amountCents: result.amountCents,
+        mentorId: result.mentorId,
+        mentorSlug: result.mentorSlug,
+        mentorName: result.mentorName,
+        aiMatchReason: result.aiMatchReason,
+        matchedByGemini: result.matchedByGemini,
       },
     });
   } catch (error: unknown) {
+    if (error instanceof ExpertMatchFailedError) {
+      return NextResponse.json(
+        { success: false, error: error.message, code: error.code },
+        { status: 422 },
+      );
+    }
     if (error instanceof ChrisCampaignSoldOutError) {
       return NextResponse.json({ success: false, error: error.message }, { status: 409 });
     }
