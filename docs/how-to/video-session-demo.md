@@ -46,9 +46,9 @@ npm run dev
 ## Live captions demo (D3 Phase 3 — bidirectional)
 
 1. Set `DAILY_TRANSCRIPTION_ENABLED=true` in `.env.local` and enable transcription on your Daily domain.
-2. Set mentee `preferred_locale` to a non-English value (e.g. `es`) via `/dashboard/mentee/settings`. Mentor can stay on `en`.
+2. Set mentee `preferred_locale` to a non-English value (e.g. `es`) via `/dashboard/mentee/settings`, **or** confirm it on the join-time **Captions and recap language** gate (we guess from the browser when the profile is still English). Mentor can stay on `en`.
 3. For phone + laptop: `npm run dev:lan` → open `https://<LAN-IP>:3000` on both devices (camera/mic require HTTPS on mobile).
-4. Run the two-user join script above. Mentor should see **Captions on for buyer** when locales differ.
+4. Run the two-user join script above. After the mentee confirms language, the header can show **Captions on for {buyer} ({locale})** whenever transcription is on.
 5. Mentee toggles the caption rail below the video. Speak English on the mentor side — Spanish lines should appear within ~2s. If the mentor’s locale differs from the mentee’s, mentor captions translate the other way too.
 6. If you hit LLM rate limits, the rail shows **Live translation paused** with original speech until the window clears (not a hard error).
 7. After the call completes, the session page shows a **transcript panel** with optional localized toggle.

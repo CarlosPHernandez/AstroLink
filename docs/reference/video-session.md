@@ -115,9 +115,29 @@ Retry room creation for a `confirmed` booking missing `daily_room_url`.
 
 **Errors:** `401` unauthorized, `403` forbidden, `400` wrong status, `503` missing `DAILY_API_KEY`.
 
+### `POST /api/me/preferred-locale`
+
+Persist the buyer’s caption and recap language on `users.preferred_locale`. Used by the join-time language gate and mentee settings.
+
+**Auth:** Logged-in mentee only (`401` if signed out, `403` if mentor/admin).
+
+**Body:**
+
+```json
+{ "locale": "es" }
+```
+
+`locale` must be a supported target (`en`, `es`, `pt-BR`, `fr`, `ja`).
+
+**Success (200):** `{ "locale": "es" }`
+
+**Errors:** `400` invalid JSON or unsupported locale, `500` if the profile update fails.
+
+The join gate still continues into the call if this request fails; captions then use the in-memory choice for that session.
+
 ### `POST /api/session/[bookingId]/translate-segment`
 
-Live caption segment translation (D3 Phase 3). Server enforces target locale from mentee `preferred_locale`; client may pass `targetLocale` for validation only.
+Live caption segment translation (D3 Phase 3). Mentors and admins are forced to target `en`. A mentee may pass a supported `targetLocale` (the language they confirmed at join); that request is honored even if the saved profile is still `en`. Any other `targetLocale` that does not match the server target returns `400`.
 
 **Auth:** Logged-in mentee, mentor, or admin on that booking.
 
@@ -250,22 +270,27 @@ Development operator for demo rehearsal. Returns `404` in production.
 | Path | Role |
 |------|------|
 | `src/components/session/daily-call-room.tsx` | `createCallObject()` join, video tiles, transcription events |
-| `src/components/session/use-daily-call.ts` | Daily lifecycle, `startTranscription({ language: 'multi' })` on owner join |
-| `src/components/session/use-live-captions.ts` | Bidirectional caption state, translation queue, pause/resume |
+| `src/components/session/use-daily-call.ts` | Daily lifecycle, `startTranscription({ language: 'multi' })` on owner join; retries `multi` on start/error (does not fall back to English-only) |
+| `src/components/session/use-live-captions.ts` | Other-person caption direction, translation queue (cap 6), pause/resume |
+| `src/components/session/caption-language-gate.tsx` | Mentee join confirm: browser guess when profile is still `en`; `POST /api/me/preferred-locale` |
 | `src/components/session/caption-rail.tsx` | Caption band below video + toggle + paused banner |
 | `src/components/session/session-transcript-panel.tsx` | Post-call transcript + localized toggle (`completed` gate) |
 | `src/components/session/call-controls.tsx` | Mic, camera, local leave |
 
-`getBookingForSession()` also returns `menteePreferredLocale`, `captionsAvailable`, and `showTranslatedCaptionsForBuyer` for the session shell.
+`getBookingForSession()` also returns `menteePreferredLocale`, `captionsAvailable`, and `showCaptionsForBuyer` (true whenever transcription or the E2E stub is on — including English buyers who still need the other person’s speech translated).
 
 ## UI test IDs
 
 | `data-testid` | When visible |
 |---------------|--------------|
-| `session-join-ready` | Gate `ready`, call object mounted |
+| `session-join-ready` | Gate `ready` (language gate or Daily call) |
+| `caption-language-gate` | Mentee join confirm, before Daily mounts |
+| `caption-language-select` | Locale `<select>` on the join gate |
+| `caption-language-continue` | Confirm language and enter the call |
+| `caption-language-guess` | Browser-guess hint when profile is still English |
 | `session-daily-call` | Active Daily call surface |
-| `session-captions-indicator` | Mentor header when buyer has non-English captions |
-| `caption-rail` | Mentee with captions enabled |
+| `session-captions-indicator` | Header when transcription is on (`Captions on for {buyer} ({locale})`) |
+| `caption-rail` | Caption band when captions are enabled |
 | `session-provisioning` | Gate `provisioning` |
 | `session-payment-required` | Gate `pending_payment` |
 | `session-completed` | Gate `completed` |

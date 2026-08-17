@@ -4,8 +4,8 @@
 
 **Moat:** Domain-tuned translation (aerospace glossary, ITAR-aware moderation hooks, session context from APX-02 brief) layered on paid expert sessions — not commodity captions.
 
-**Last updated:** 2026-06-07  
-**Status:** Phase 3 live translated captions shipped on `translation-p3-4` — custom Daily call object + caption rail; Phase 4 moat next  
+**Last updated:** 2026-08-17  
+**Status:** Phase 3 live translated captions shipped (other-person direction, join language gate, queue cap 6 in v0.15.0.0); Phase 4 moat next  
 **Depends on:** D1 video golden path shipped; D3 Phase 1 transcript capture shipped
 
 ---
@@ -79,7 +79,7 @@ See [transcript-translation-case-studies.md](./explanation/transcript-translatio
 | DB: `session_translations` | Shipped | `target_locale`, `summary_json`, RLS mirrors transcripts |
 | APX-06 TranslationAgent | Shipped | `translateSessionRecap()` — structured `PostSessionOutput` in one LLM call |
 | API: `GET /api/session/[id]/recap?locale=` | Shipped | Mentee default from profile; `translationPending` / `translationFailed` flags |
-| Mentee settings locale | Shipped | Server action on `/dashboard/mentee/settings` (no `PATCH /api/user/locale`) |
+| Mentee settings locale | Shipped | Server action on `/dashboard/mentee/settings` plus `POST /api/me/preferred-locale` (join gate) |
 | Booking flow: language preference | Deferred (2b) | Checkout picker out of Phase 2 scope |
 
 **Locales v1:** `en`, `es`, `pt-BR`, `fr`, `ja` (align with Zoom benchmark languages + LATAM wedge).
@@ -95,10 +95,11 @@ See [transcript-translation-case-studies.md](./explanation/transcript-translatio
 | Task | Status | Notes |
 |------|--------|-------|
 | Session UI: Daily transcription events | Shipped | `createCallObject()`; `multi` + `nova-3` on owner join |
-| Speaker resolution + caption direction | Shipped | `resolve-speaker.ts`, `caption-direction.ts` |
-| `translateSegment()` + LRU cache + queue | Shipped | `translation-queue.ts` (cap=3); dedicated `caption` LLM rate scope |
+| Speaker resolution + caption direction | Shipped | `resolve-speaker.ts`, `caption-direction.ts` — other person; missing STT tag ≠ English |
+| `translateSegment()` + LRU cache + queue | Shipped | `translation-queue.ts` (cap=6); dedicated `caption` LLM rate scope |
+| Join language gate | Shipped (v0.15.0.0) | `CaptionLanguageGate`; `POST /api/me/preferred-locale`; mentee requested locale honored on `translate-segment` |
 | Caption rail component | Shipped | `CaptionRail` below video; pause banner on rate limit |
-| Mentor UX: "Captions on for buyer" indicator | Shipped | `session-captions-indicator` in session header |
+| Captions-on indicator | Shipped | `session-captions-indicator` whenever transcription is on (including English buyers) |
 | Post-call transcript panel | Shipped | `GET/POST .../transcript`; `SessionTranscriptPanel` on `completed` |
 
 **Exit criteria:** Dual-device demo on `npm run dev:lan` — expert English, buyer Spanish (or pt-BR) captions; mentor sees buyer speech translated when locales differ.
@@ -191,8 +192,8 @@ Assumptions: 45-min session, 2 participants, 6,000 words transcript.
 
 1. **Phase 1:** Complete live session → `session_transcripts` row → recap mentions call topics (not empty template).
 2. **Phase 2:** Set mentee `preferred_locale=pt-BR` in settings → after session, recap UI shows localized stub (`[pt-BR]` prefix under `E2E_STUB_LLM`); `audit_log` shows `RECAP_TRANSLATED` on success.
-3. **Phase 3:** Enable captions → expert speaks → buyer sees translated lines within 2s.
-4. **Regression:** English-only users see no added latency or cost (translation skipped when `locale=en`).
+3. **Phase 3:** Confirm caption language at join → expert speaks → buyer sees the *other* person's lines in that language within 2s.
+4. **Regression:** Skip translation only when source locale already matches the viewer (not “buyer is English”). English buyers still translate the other speaker.
 
 ---
 

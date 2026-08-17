@@ -53,7 +53,7 @@ Cross-language expert sessions: live captions + localized recap. **Wedge/moat** 
 - **Phase 0 (done):** Skill, cursor rule, roadmap, architecture, eng review, AI SDK review, case studies, `src/lib/transcript-translation/` types + token budget.
 - **Phase 1 (done):** Daily WebVTT capture → `session_transcripts` → real APX-03 input via `selectTranscriptWindow()`.
 - **Phase 2 (done):** `preferred_locale` + APX-06 recap translation (`es`, `pt-BR`, `fr`, `ja`).
-- **Phase 3 (done, v0.1.5.0):** Live translated captions — `createCallObject()` UI, caption rail, `translate-segment` API.
+- **Phase 3 (done, v0.15.0.0):** Live translated captions — other-person direction, join language gate, `POST /api/me/preferred-locale`, caption rail, `translate-segment` honors mentee requested locale.
 - **Phase 4 (next):** Glossary expansion, APX-04 moderation, human interpreter escalation.
 
 See [d3-transcript-translation-roadmap.md](./d3-transcript-translation-roadmap.md).

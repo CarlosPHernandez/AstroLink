@@ -43,7 +43,7 @@ on mentee profile           on mentor owner join                    session_tran
                       (flash, LRU cache)       SessionTranscriptPanel (completed)
 ```
 
-Each viewer gets captions of the *other* person in their locale. We do not treat a missing language tag as English (that inverted Spanish/English). English mentors still see a captions indicator when the buyer locale is not English. CEO-facing writeup: [ceo-captions-and-paid-path-brief.md](./ceo-captions-and-paid-path-brief.md).
+Each viewer gets captions of the *other* person in their locale. We do not treat a missing language tag as English (that inverted Spanish/English). The captions indicator shows whenever transcription is on, including English buyers who still need the other person's speech translated. CEO-facing writeup: [ceo-captions-and-paid-path-brief.md](./ceo-captions-and-paid-path-brief.md).
 
 ---
 

@@ -18,10 +18,11 @@ When editing files matched by this rule:
 2. **Canonical language:** Persist transcripts as spoken (mixed en/es when multilingual transcription is on). APX-03 recap output stays English. Translations are derived artifacts keyed by `target_locale`.
 3. **Token budget:** Use `src/lib/transcript-translation/token-budget.ts` before sending transcript text to any LLM. Never pass an unbounded transcript to `SessionAgent` or a translation call.
 4. **LLM stack:** Extend `src/lib/llm.ts` (`generateStructuredJson`, `llmFlashModel`). Do not introduce Vercel AI SDK (`ai`, `@ai-sdk/*`) unless the AI SDK review doc is updated with an approved migration slice.
-5. **Daily:** Transcription is Deepgram-backed via Daily (`startTranscription`, WebVTT storage). Translation is AstroLink-owned — Daily does not translate.
-6. **Audit:** Log translation jobs to `audit_log` with `agent_id: APX-06`, `segment_id`, `source_locale`, `target_locale`, and `token_estimate`.
-7. **UI:** Live captions must work at 320px width; follow `skills/mobile-first-design-practices/SKILL.md`.
-8. **Scope guard:** D3 v1 is in-session captions + post-session recap translation — not full-app i18n (that is a separate initiative).
+5. **Daily:** Transcription is Deepgram-backed via Daily (`startTranscription({ language: 'multi' })`, WebVTT storage). Translation is AstroLink-owned — Daily does not translate. Retry `multi` on start/error; do not fall back to English-only STT.
+6. **Caption direction:** Translate the *other* person into the viewer's locale. Never treat a missing Deepgram/Daily language tag as English — infer from speaker role or skip. Mentee join `CaptionLanguageGate` + `POST /api/me/preferred-locale`; `translate-segment` honors a mentee's requested supported locale.
+7. **Audit:** Log translation jobs to `audit_log` with `agent_id: APX-06`, `segment_id`, `source_locale`, `target_locale`, and `token_estimate`.
+8. **UI:** Live captions must work at 320px width; follow `skills/mobile-first-design-practices/SKILL.md`.
+9. **Scope guard:** D3 v1 is in-session captions + post-session recap translation — not full-app i18n (that is a separate initiative).
 
 ## Phase gates
 

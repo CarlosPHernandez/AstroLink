@@ -78,9 +78,10 @@ As of D3 Phase 3, `/session/[id]` uses `@daily-co/daily-js` `createCallObject()`
 
 - `DailyCallRoom` renders participant video tiles and call controls.
 - When `DAILY_TRANSCRIPTION_ENABLED=true`, the mentor (owner) join starts Daily transcription (`language: 'multi'`, `model: 'nova-3'`). Rejoin does not call `startTranscription` twice.
-- `transcription-message` events resolve the speaker, pick translate direction per viewer (`caption-direction.ts`), and enqueue segment translation (`translation-queue.ts` → `translate-segment`).
-- Each participant with a non-matching locale sees a caption rail below the video. Rate limits surface a paused banner with original text, not a fatal error.
-- Mentors see **Captions on for buyer** when the mentee locale ≠ `en`.
+- Mentees confirm captions/recap language before Daily mounts (`CaptionLanguageGate` → `POST /api/me/preferred-locale`).
+- `transcription-message` events resolve the speaker, pick *other-person* translate direction (`caption-direction.ts`; missing STT tag is not treated as English), and enqueue segment translation (`translation-queue.ts` cap 6 → `translate-segment`).
+- Each participant sees a caption rail of the other speaker when locales differ. Rate limits surface a paused banner with original text, not a fatal error.
+- The header shows **Captions on for {buyer} ({locale})** whenever transcription is on, including English buyers who still need the other person's speech translated.
 - After `completed`, `SessionTranscriptPanel` loads utterances via `GET .../transcript` and optional batch localize.
 
 Private rooms, per-load meeting tokens, and webhook-driven completion are unchanged from D1.

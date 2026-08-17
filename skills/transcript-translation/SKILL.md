@@ -29,11 +29,11 @@ AstroLink connects buyers with aerospace experts across language barriers. This 
 - `mobile-first-design-practices` — live caption overlay and recap UI on 320px viewports.
 - Existing `src/lib/llm.ts` — structured JSON and flash/pro model tiers (do **not** add AI SDK for D3 Phase 0–2 without eng review).
 
-## Current state (v0.2.0.0)
+## Current state (v0.15.0.0)
 
 - **Phase 1:** `session_transcripts` populated from Daily WebVTT; APX-03 receives truncated English window.
 - **Phase 2:** `users.preferred_locale`; APX-06 recap translation; `GET /api/session/[bookingId]/recap` resolves locale server-side.
-- **Phase 3 (bidirectional):** `DailyCallRoom` with Daily `multi` + `nova-3` transcription; `resolve-speaker`, `caption-direction`, and `translation-queue`; both participants see captions in their preferred locale via `translate-segment`; `CaptionRail` below video; mentor captions indicator; graceful pause on `rate_limited` / `budget_exceeded`.
+- **Phase 3 (bidirectional):** `DailyCallRoom` with Daily `multi` + `nova-3` transcription; `resolve-speaker`, `resolveCaptionDirection` (other-person; missing STT tag ≠ English), and `translation-queue` (cap 6); both participants see the *other* speaker via `translate-segment`; mentee join `CaptionLanguageGate` + `POST /api/me/preferred-locale`; `CaptionRail` below video; captions indicator whenever transcription is on; graceful pause on `rate_limited` / `budget_exceeded`. STT start/error retries `multi` — never silent English-only fallback.
 - **Phase 3b (post-call transcript):** `GET /api/session/[bookingId]/transcript`, `POST .../transcript/translate`, `SessionTranscriptPanel` with localized toggle after `completed`.
 
 ## Architecture principles
@@ -50,11 +50,13 @@ AstroLink connects buyers with aerospace experts across language barriers. This 
 |------|------|
 | Types & constants | `src/lib/transcript-translation/` |
 | Speaker + direction + queue | `resolve-speaker.ts`, `caption-direction.ts`, `translation-queue.ts` |
+| Join locale guess | `guess-supported-locale.ts` |
 | Batch post-call translate | `batch-translate.ts` |
 | Post-session hook | `src/lib/post-session.ts` |
 | Synthesis agent | `src/services/agents/session-agent.ts` |
 | Session UI | `src/app/session/[bookingId]/session-room-client.tsx` |
-| Call object + captions | `src/components/session/` (`daily-call-room`, `use-daily-call`, `use-live-captions`, `caption-rail`, `session-transcript-panel`) |
+| Call object + captions | `src/components/session/` (`daily-call-room`, `use-daily-call`, `use-live-captions`, `caption-language-gate`, `caption-rail`, `session-transcript-panel`) |
+| Preferred locale API | `src/app/api/me/preferred-locale/route.ts` |
 | Segment translate API | `src/app/api/session/[bookingId]/translate-segment/route.ts` |
 | Transcript APIs | `src/app/api/session/[bookingId]/transcript/` (GET + POST translate) |
 | Join URL helper | `src/app/api/session/[bookingId]/join-url/route.ts`, `src/lib/daily-join-url.ts` |
@@ -75,7 +77,7 @@ AstroLink connects buyers with aerospace experts across language barriers. This 
 
 ### Phase 2 — Post-session translation ✅ shipped
 
-1. `users.preferred_locale` on mentee profile (settings server action; BCP-47, default `en`).
+1. `users.preferred_locale` on mentee profile (settings server action and `POST /api/me/preferred-locale`; BCP-47, default `en`).
 2. After APX-03, `maybeRunTranslationIfNeeded()` runs APX-06 inline when English `summary_json` exists and mentee locale ≠ `en` (also on transcription-disabled `meeting.ended` path).
 3. `session_translations.summary_json` per `target_locale`; `GET /api/session/[bookingId]/recap` resolves locale server-side (`recap-locale.ts`); session room polls without `?locale=`.
 4. Checkout locale picker remains **Phase 2b** — not in this slice.
@@ -83,8 +85,8 @@ AstroLink connects buyers with aerospace experts across language barriers. This 
 ### Phase 3 — Live translated captions ✅ shipped (v0.2.0.0 bidirectional)
 
 1. `createCallObject()` with `startTranscription({ language: 'multi', model: 'nova-3' })` on owner join; guard duplicate starts on rejoin.
-2. `transcription-message` → resolve speaker → `shouldTranslateForViewer()` → `translation-queue` → `translate-segment` API.
-3. Per-booking LRU segment cache; server enforces target locale per viewer (mentee and mentor each see their preferred language).
+2. `transcription-message` → resolve speaker → `resolveCaptionDirection()` (other person; no fake English default) → `translation-queue` (cap 6) → `translate-segment` API.
+3. Per-booking LRU segment cache; mentee `targetLocale` is honored when it is a supported locale; mentors stay on `en`.
 4. `CaptionRail` below video band; paused banner on rate limit (shows original speech, auto-resumes).
 5. Post-call: `SessionTranscriptPanel` + batch translate for completed bookings.
 
@@ -122,7 +124,7 @@ Target: {target_locale}
 - Unit: `token-budget.ts` window selection, glossary term preservation mocks.
 - Contract: `translateSegment` returns stable output for E2E stub (`E2E_STUB_LLM=true`).
 - E2E Phase 2: `e2e/localized-recap.spec.ts` — book → `simulate_meeting_ended` → assert `[pt-BR]` recap stub.
-- E2E Phase 3: `e2e/live-captions.spec.ts` — stubbed translate-segment + caption rail assertions.
+- E2E Phase 3: `e2e/live-captions.spec.ts` — stubbed translate-segment + caption rail assertions. Golden path and live-caption specs call `confirmCaptionLanguage()` (`e2e/helpers/caption-language.ts`) before Daily mounts.
 
 ## Do not
 
@@ -133,6 +135,8 @@ Target: {target_locale}
 - Ship or claim post-call transcripts when Daily `enable_transcription_storage` is false, or when you have only proven live captions.
 - Treat Daily transcript list `t_finished` as proof of downloadable WebVTT.
 - Assume enabling storage later recovers past meetings — it does not.
+- Treat a missing Deepgram/Daily language tag as English — infer from speaker role or skip translation.
+- Silently fall back to English-only STT after a `multi` start or transcription error.
 
 ## Related agents
 
