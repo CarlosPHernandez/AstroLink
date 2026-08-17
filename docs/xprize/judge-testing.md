@@ -17,7 +17,7 @@ Production is `APP_MODE=full` at https://www.astro-link.space/.
 ## Golden path
 
 1. `/assessment` — complete the quiz. If Gemini succeeds, results show a **Gemini matched you to {Expert}** card and **Book {Name}**. If the model fails, a **template report** banner is shown (do not treat that as a Gemini decision).
-2. **Default book path is APX-01 match:** go to `/booking` with no `?mentor=`. Enter goals + background + time, then **Match me and continue**. The configured LLM picks a listed expert. Browse (`Choose an expert yourself`) still works and is explicit selection, not a match. If Production `LLM_PROVIDER=gemini`, this is a Gemini decision.
+2. **Default book path is APX-01 match:** go to `/booking` with no `?mentor=`. Enter goals + background + time, then **Match me and continue**. The configured LLM picks a listed expert. Browse (`Choose an expert yourself`) still works and is explicit selection, not a match. If Production `LLM_PROVIDER=gemini`, this is a Gemini decision. If the model cannot pick, you get an honest **match_failed** error (no silent fallback expert). LLM rate limits stay a **429**, not a fake “no match.”
 3. Earliest bookable day is **today + 2 Eastern calendar days**.
 4. After payment, mentee dashboard shows the dual brief (APX-02).
 5. Join `/session/[id]` at scheduled start (set `DAILY_ROOM_JOIN_WINDOW_BEFORE_MINUTES=15` on Production if judges need early join).

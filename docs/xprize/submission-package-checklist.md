@@ -181,7 +181,7 @@ Official requirements:
 
 ## 3.1 One-liner
 
-AstroLink is a paid aerospace expert network: anyone can discover and book verified operators for live 1:1 sessions, while Gemini-powered agents run matching (when needed), dual pre-session briefs, post-session synthesis, bilingual captions/recap, and trust triage.
+AstroLink is a paid aerospace expert network: anyone can discover and book verified operators for live 1:1 sessions, while Gemini-powered agents run matching as the default `/booking` path, dual pre-session briefs, post-session synthesis, bilingual captions/recap, and trust triage.
 
 ## 3.2 Category thesis
 
@@ -226,7 +226,7 @@ Be precise in the video: **LLM decision agents** vs **workflow agents**.
 - Export: `src/lib/xprize-decision-logs.ts`, `src/app/api/admin/audit-logs/export/route.ts`
 - Agents: `src/services/agents/*`
 
-**Honesty note for judges:** Most buyers pick a named expert. Matching runs when no mentor is selected. Still show match_reason / ranking value; do not claim every booking is AI-matched unless product behavior changes.
+**Honesty note for judges:** Default `/booking` (no `?mentor=`) is APX-01 match. Directory / `?mentor=` browse is explicit selection (`matchedByGemini: false`). Match failure is `422 match_failed` (no silent fallback expert). LLM rate limits on match stay `429`. Do not claim every booking is AI-matched.
 
 ## 3.5 Paid surfaces (business model)
 
@@ -300,8 +300,8 @@ Sustainability narrative (honest): platform captures payment at launch; mentor C
 
 Recommended single story (under 3 minutes of footage):
 
-1. Path Assessment → personalized Gemini report (APX-10)  
-2. Book expert with goals → dual brief on mentee dashboard (APX-02)  
+1. Path Assessment → personalized Gemini report (APX-10); **Book {Name}** when a listed expert was recommended  
+2. Bare `/booking` (no `?mentor=`) → goals → APX-01 match → dual brief on mentee dashboard (APX-02)  
 3. Join session → show live captions if bilingual story (APX-06)  
 4. Post-session recap actions (APX-03)  
 5. Cut to decision log / export (ops evidence)  
