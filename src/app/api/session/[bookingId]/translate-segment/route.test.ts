@@ -42,6 +42,7 @@ vi.mock('@/services/agents/translation-agent', () => ({
 
 import { POST } from '@/app/api/session/[bookingId]/translate-segment/route';
 import { LlmRateLimitError } from '@/lib/llm-rate-limit';
+import { TranslateSegmentError } from '@/lib/transcript-translation/translate-segment';
 
 const bookingId = '00000000-0000-4000-8000-000000000099';
 
@@ -127,6 +128,41 @@ describe('POST /api/session/[bookingId]/translate-segment', () => {
     );
   });
 
+  it('honors a mentee targetLocale even when the saved profile is still English', async () => {
+    mockUserMaybeSingle.mockResolvedValueOnce({
+      data: { preferred_locale: 'en' },
+      error: null,
+    });
+    mockTranslateSegment.mockResolvedValueOnce({
+      segmentId: 'seg-join',
+      translatedText: '[es] Hello world',
+      sourceLocale: 'en',
+      targetLocale: 'es',
+      cacheHit: false,
+      estimatedInputTokens: 2,
+    });
+
+    const res = await POST(
+      new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          segmentId: 'seg-join',
+          text: 'Hello world',
+          sourceLocale: 'en',
+          targetLocale: 'es',
+        }),
+      }),
+      { params: Promise.resolve({ bookingId }) },
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockTranslateSegment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targetLocale: 'es',
+      }),
+    );
+  });
+
   it('allows mentor viewer to target English with non-en sourceLocale', async () => {
     mockGetSession.mockResolvedValueOnce({
       userId: 'mentor-uuid',
@@ -189,5 +225,129 @@ describe('POST /api/session/[bookingId]/translate-segment', () => {
     const body = await res.json();
     expect(body.code).toBe('rate_limited');
     expect(body.retryAfterMs).toBe(12_000);
+  });
+
+  it('returns 400 when mentee requests an unsupported targetLocale', async () => {
+    const res = await POST(
+      new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          segmentId: 'seg-de',
+          text: 'Hello world',
+          targetLocale: 'de',
+        }),
+      }),
+      { params: Promise.resolve({ bookingId }) },
+    );
+
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: 'targetLocale mismatch' });
+    expect(mockTranslateSegment).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when a mentor requests a non-English targetLocale', async () => {
+    mockGetSession.mockResolvedValueOnce({
+      userId: 'mentor-uuid',
+      role: 'mentor',
+    });
+
+    const res = await POST(
+      new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          segmentId: 'seg-mismatch',
+          text: 'Debemos revisar la arquitectura.',
+          sourceLocale: 'es',
+          targetLocale: 'es',
+        }),
+      }),
+      { params: Promise.resolve({ bookingId }) },
+    );
+
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: 'targetLocale mismatch' });
+  });
+
+  it('returns 400 for invalid JSON and missing fields', async () => {
+    const invalid = await POST(new Request('http://localhost', { method: 'POST', body: '{bad' }), {
+      params: Promise.resolve({ bookingId }),
+    });
+    expect(invalid.status).toBe(400);
+
+    const missing = await POST(
+      new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({ segmentId: '   ', text: '' }),
+      }),
+      { params: Promise.resolve({ bookingId }) },
+    );
+    expect(missing.status).toBe(400);
+    expect(await missing.json()).toEqual({ error: 'segmentId and text are required' });
+  });
+
+  it('returns 404 when the booking is missing', async () => {
+    mockBookingMaybeSingle.mockResolvedValueOnce({ data: null, error: null });
+    const res = await POST(
+      new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({ segmentId: 'seg-1', text: 'Hello world' }),
+      }),
+      { params: Promise.resolve({ bookingId }) },
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it('maps TranslateSegmentError codes to 400 or 422', async () => {
+    mockTranslateSegment.mockRejectedValueOnce(
+      new TranslateSegmentError('Segment text too short', 'text_too_short'),
+    );
+    const shortRes = await POST(
+      new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({ segmentId: 'seg-1', text: 'Hello world', targetLocale: 'es' }),
+      }),
+      { params: Promise.resolve({ bookingId }) },
+    );
+    expect(shortRes.status).toBe(400);
+    expect((await shortRes.json()).code).toBe('text_too_short');
+
+    mockTranslateSegment.mockRejectedValueOnce(
+      new TranslateSegmentError('Translation skipped for same language', 'same_language'),
+    );
+    const sameRes = await POST(
+      new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({ segmentId: 'seg-1', text: 'Hello world', targetLocale: 'es' }),
+      }),
+      { params: Promise.resolve({ bookingId }) },
+    );
+    expect(sameRes.status).toBe(422);
+    expect((await sameRes.json()).code).toBe('same_language');
+  });
+
+  it('defaults sourceLocale to en and allows admin participants', async () => {
+    mockGetSession.mockResolvedValueOnce({
+      userId: 'admin-uuid',
+      role: 'admin',
+    });
+
+    const res = await POST(
+      new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          segmentId: 'seg-admin',
+          text: 'Hello world',
+        }),
+      }),
+      { params: Promise.resolve({ bookingId }) },
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockTranslateSegment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceLocale: 'en',
+        targetLocale: 'en',
+      }),
+    );
   });
 });

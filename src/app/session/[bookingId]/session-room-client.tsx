@@ -2,9 +2,11 @@
 
 import React, { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
+import { CaptionLanguageGate } from '@/components/session/caption-language-gate';
 import { DailyCallRoom } from '@/components/session/daily-call-room';
 import { SessionTranscriptPanel } from '@/components/session/session-transcript-panel';
 import type { BookingSessionView } from '@/lib/booking-access';
+import type { SupportedTargetLocale } from '@/lib/transcript-translation/types';
 import { getDashboardPathForRole } from '@/lib/dashboard-paths';
 import { isSessionBriefing, resolveSessionObjectives } from '@/lib/briefing-display';
 import type { PostSessionOutput } from '@/lib/types';
@@ -201,11 +203,21 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
   const [elapsedMs, setElapsedMs] = useState(0);
   const [provisionLoading, setProvisionLoading] = useState(false);
   const [provisionError, setProvisionError] = useState<string | null>(null);
+  const [sessionLocale, setSessionLocale] = useState<SupportedTargetLocale>(
+    booking.menteePreferredLocale,
+  );
+  const [localeReady, setLocaleReady] = useState(booking.sessionRole !== 'mentee');
   const { insecure: insecureMediaOrigin, httpsOrigin: httpsDevOrigin } = useSyncExternalStore(
     subscribeMediaOrigin,
     getMediaOriginSnapshot,
     () => MEDIA_ORIGIN_SERVER_SNAPSHOT,
   );
+
+  const liveBooking: BookingSessionView = {
+    ...booking,
+    menteePreferredLocale: sessionLocale,
+    showCaptionsForBuyer: booking.captionsAvailable,
+  };
 
   const exitHref = getDashboardPathForRole(booking.sessionRole);
   const isCompleted =
@@ -293,12 +305,12 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
           </span>
         </div>
         <div className="flex items-center gap-3">
-          {booking.showCaptionsForBuyer ? (
+          {liveBooking.showCaptionsForBuyer && localeReady ? (
             <span
               data-testid="session-captions-indicator"
               className="text-label-sm text-on-surface-variant"
             >
-              Captions on for {firstDisplayName(booking.menteeName)} ({booking.menteePreferredLocale})
+              Captions on for {firstDisplayName(booking.menteeName)} ({sessionLocale})
             </span>
           ) : null}
           <span
@@ -400,7 +412,17 @@ export default function SessionRoomClient({ booking }: { booking: BookingSession
             !showPostSessionUi &&
             (booking.dailyRoomUrl || booking.e2eCaptionsStub) && (
             <div data-testid="session-join-ready" className="w-full">
-              <DailyCallRoom booking={booking} onEnded={handleCallEnded} />
+              {booking.sessionRole === 'mentee' && !localeReady ? (
+                <CaptionLanguageGate
+                  savedLocale={booking.menteePreferredLocale}
+                  onContinue={(locale) => {
+                    setSessionLocale(locale);
+                    setLocaleReady(true);
+                  }}
+                />
+              ) : (
+                <DailyCallRoom booking={liveBooking} onEnded={handleCallEnded} />
+              )}
               <p className="mt-3 text-center text-label-sm text-on-surface-variant">
                 Leave with End session when you are done. The call also ends automatically at the
                 booked length. Your recap generates after the call ends.

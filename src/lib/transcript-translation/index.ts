@@ -48,7 +48,16 @@ export {
 export type { TranslateSegmentErrorCode } from '@/lib/transcript-translation/translate-segment';
 export { parseWebVtt } from '@/lib/transcript-translation/parse-webvtt';
 export { mapSpeakersToRoles } from '@/lib/transcript-translation/map-speakers';
-export { resolveCaptionDirection, resolveViewerLocale } from '@/lib/transcript-translation/caption-direction';
+export {
+  inferSourceLocaleFromSpeaker,
+  resolveCaptionDirection,
+  resolveViewerLocale,
+} from '@/lib/transcript-translation/caption-direction';
+export {
+  guessSupportedLocale,
+  resolveJoinLocale,
+  LOCALE_LABELS,
+} from '@/lib/transcript-translation/guess-supported-locale';
 export type { CaptionDirection, CaptionViewerRole } from '@/lib/transcript-translation/caption-direction';
 export { resolveSpeakerUserId } from '@/lib/transcript-translation/resolve-speaker';
 export type { DailyParticipantRecord, DailyParticipantsMap } from '@/lib/transcript-translation/resolve-speaker';

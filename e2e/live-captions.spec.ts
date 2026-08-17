@@ -5,6 +5,7 @@ import {
   E2E_GOALS_PREFIX,
   setE2eDailyRoomStub,
 } from './helpers/supabase-cleanup';
+import { confirmCaptionLanguage } from './helpers/caption-language';
 import { futureDatetimeLocal } from './helpers/datetime';
 
 const E2E_GOALS_TAG = `${E2E_GOALS_PREFIX}live-captions`;
@@ -96,6 +97,7 @@ test.describe('D3 Phase 3 live captions', () => {
     await page.goto(`/session/${bookingId}`);
 
     await expect(page.getByTestId('session-join-ready')).toBeVisible({ timeout: 30_000 });
+    await confirmCaptionLanguage(page);
     await expect(page.getByTestId('session-daily-call')).toBeVisible();
     await expect(page.getByTestId('caption-rail')).toBeVisible();
     await expect(page.getByTestId('session-captions-indicator')).toContainText('pt-BR');
