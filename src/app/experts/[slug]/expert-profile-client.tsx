@@ -6,7 +6,7 @@ import { DurationStepper } from '@/components/experts/duration-stepper';
 import { ExpertReviews } from '@/components/experts/expert-reviews';
 import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
 import { MaterialIcon } from '@/components/ui/material-icon';
-import { computeDurationPriceCents } from '@/lib/booking-pricing';
+import { computeDurationPriceCents, formatFifteenMinuteRate } from '@/lib/booking-pricing';
 import { getExpertBookHref } from '@/lib/expert-book-href';
 import type { ExpertCta } from '@/lib/expert-cta';
 import type { PublicExpertReview } from '@/lib/expert-reviews';
@@ -220,7 +220,8 @@ export default function ExpertProfileClient({
                     <span>session</span>
                   </p>
                   <p className="experts-pro-price__rate">
-                    ${expert.rate}/hr · prorated to {durationMinutes} min
+                    {formatFifteenMinuteRate(expert.liveSessionPriceCents)} · prorated to{' '}
+                    {durationMinutes} min
                   </p>
                 </div>
               </>

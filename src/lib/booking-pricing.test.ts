@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   PRE_CALL_BRIEF_ADDON_CENTS,
   computeBookingTotalCents,
+  formatFifteenMinuteRate,
 } from '@/lib/booking-pricing';
 
 describe('computeBookingTotalCents', () => {
@@ -73,6 +74,11 @@ describe('computeBookingTotalCents', () => {
         includePreCallBrief: false,
       }),
     ).toBe(PRE_CALL_BRIEF_ADDON_CENTS);
+  });
+
+  it('formats the 15-minute marketplace rate from hourly cents', () => {
+    expect(formatFifteenMinuteRate(6000)).toBe('$15 / 15 min');
+    expect(formatFifteenMinuteRate(24_000)).toBe('$60 / 15 min');
   });
 
   it('rejects extended_session in D1', () => {

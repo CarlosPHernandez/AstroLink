@@ -149,7 +149,8 @@ export function ExpertIntroMedia({
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 480px"
-            priority={priority}
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : 'auto'}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10" />
           {!hideLabel ? (

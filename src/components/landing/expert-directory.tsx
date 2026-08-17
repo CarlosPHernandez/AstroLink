@@ -81,7 +81,8 @@ export default function ExpertDirectory({
                               src={portrait.src}
                               alt={portrait.alt}
                               fill
-                              priority={index === 0}
+                              loading={index < 4 ? 'eager' : 'lazy'}
+                              fetchPriority={index === 0 ? 'high' : 'auto'}
                               className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
                               sizes="(max-width: 640px) 62vw, 230px"
                             />
@@ -187,7 +188,8 @@ export default function ExpertDirectory({
                       src={portrait.src}
                       alt={portrait.alt}
                       fill
-                      priority={index === 0}
+                      loading={index < 5 ? 'eager' : 'lazy'}
+                      fetchPriority={index === 0 ? 'high' : 'auto'}
                       className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
                       sizes="(max-width: 768px) 45vw, 220px"
                     />

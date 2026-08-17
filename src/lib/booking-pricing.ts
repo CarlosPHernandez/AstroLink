@@ -14,6 +14,14 @@ export function computeDurationPriceCents(hourlyRateCents: number, minutes: numb
   return perMinute * safeMinutes;
 }
 
+/** Marketplace label: hourly cents prorated to a 15-minute increment. */
+export function formatFifteenMinuteRate(hourlyRateCents: number): string {
+  const cents = computeDurationPriceCents(hourlyRateCents, 15);
+  const dollars = cents / 100;
+  const amount = Number.isInteger(dollars) ? String(dollars) : dollars.toFixed(2);
+  return `$${amount} / 15 min`;
+}
+
 export function computeBookingTotalCents(params: {
   serviceType: ServiceType;
   liveSessionPriceCents: number;

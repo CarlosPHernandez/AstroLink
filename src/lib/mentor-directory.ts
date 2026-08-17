@@ -3,9 +3,10 @@ import 'server-only';
 import { unstable_cache } from 'next/cache';
 import { DEFAULT_MENTOR_IMAGE } from '@/lib/public-images';
 import { supabase } from '@/lib/supabase';
+import { inferPublicExpertCategory } from '@/lib/expert-categories';
 import type { Mentor } from '@/lib/types';
 
-export type ExpertCategory = 'systems' | 'propulsion' | 'spacecraft' | 'policy';
+export type ExpertCategory = 'careers' | 'training' | 'spacecraft' | 'policy' | 'medicine';
 
 export interface ListedExpert {
   id: string;
@@ -35,22 +36,7 @@ function hasPublicSupabaseConfig(): boolean {
   );
 }
 
-const CATEGORY_KEYWORDS: Record<ExpertCategory, string[]> = {
-  propulsion: ['propulsion', 'ion', 'engine', 'launch'],
-  spacecraft: ['spacecraft', 'habitation', 'eva', 'orbital', 'iss'],
-  policy: ['policy', 'compliance', 'nf-1860', 'federal', 'budget', 'regulation'],
-  systems: ['systems', 'integration', 'avionics', 'operations', 'strategy'],
-};
 
-function inferCategory(expertise: string[]): ExpertCategory {
-  const haystack = expertise.join(' ').toLowerCase();
-  for (const category of ['propulsion', 'spacecraft', 'policy', 'systems'] as const) {
-    if (CATEGORY_KEYWORDS[category].some((kw) => haystack.includes(kw))) {
-      return category;
-    }
-  }
-  return 'systems';
-}
 
 export function mentorToListedExpert(mentor: Mentor): ListedExpert {
   const slug = mentor.slug ?? mentor.id;
@@ -61,7 +47,11 @@ export function mentorToListedExpert(mentor: Mentor): ListedExpert {
     role: mentor.title ?? 'Aerospace Expert',
     employer: mentor.employer,
     rate: Math.round(mentor.live_session_price_cents / 100),
-    category: inferCategory(mentor.expertise),
+    category: inferPublicExpertCategory({
+      title: mentor.title,
+      bio: mentor.bio,
+      expertise: mentor.expertise,
+    }),
     expertise: mentor.expertise,
     bio: mentor.bio,
     imageUrl: mentor.image_url ?? DEFAULT_MENTOR_IMAGE,
