@@ -27,7 +27,10 @@ import {
   isStripePaymentsSkipped,
 } from '@/lib/booking-payments';
 import { resolveBookingMatchFields } from '@/lib/booking-match-fields';
-import { matchListedMentor } from '@/lib/expert-match';
+import {
+  ExpertMatchFailedError,
+  matchListedMentor,
+} from '@/lib/expert-match';
 import { confirmBookingWithoutPayment } from '@/lib/post-payment';
 import {
   assertGrantApplicable,
@@ -153,12 +156,16 @@ export class BookingAgent {
     }
 
     if (!finalMentorId) {
-      throw new Error('No mentor could be matched for this session.');
+      throw new ExpertMatchFailedError(
+        'Gemini could not match you to a listed expert from these goals. Add more detail, or choose someone from the directory.',
+      );
     }
 
     const { data: mentor, error: mentorErr } = await supabaseAdmin
       .from('mentors')
-      .select('stripe_connect_account_id, live_session_price_cents, is_listed, compliance_status')
+      .select(
+        'stripe_connect_account_id, live_session_price_cents, is_listed, compliance_status, slug, full_name',
+      )
       .eq('id', finalMentorId)
       .single();
 
@@ -361,6 +368,11 @@ export class BookingAgent {
         skipPayment: true,
         matchReason: matchFields.buyerGoals,
         amountCents: displayAmountCents,
+        mentorId: finalMentorId,
+        mentorSlug: mentor.slug ?? null,
+        mentorName: mentor.full_name,
+        aiMatchReason: matchFields.aiMatchReason,
+        matchedByGemini: didRunMatcher,
       };
     }
 
@@ -385,6 +397,11 @@ export class BookingAgent {
       skipPayment: false,
       matchReason: matchFields.buyerGoals,
       amountCents: displayAmountCents,
+      mentorId: finalMentorId,
+      mentorSlug: mentor.slug ?? null,
+      mentorName: mentor.full_name,
+      aiMatchReason: matchFields.aiMatchReason,
+      matchedByGemini: didRunMatcher,
     };
   }
 

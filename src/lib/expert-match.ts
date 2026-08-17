@@ -1,9 +1,33 @@
 import 'server-only';
 
-import { callLlmWithBackoff, generateStructuredJson, llmFlashModel } from '@/lib/llm';
+import {
+  callLlmWithBackoff,
+  generateStructuredJson,
+  isE2eStubLlmEnabled,
+  isLlmRateLimitError,
+  llmFlashModel,
+} from '@/lib/llm';
 import type { LlmAuditAgentId } from '@/lib/llm-audit';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { MatchingOutput } from '@/lib/types';
+
+export class ExpertMatchFailedError extends Error {
+  readonly code = 'match_failed' as const;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'ExpertMatchFailedError';
+  }
+}
+
+export const EXPERT_MATCH_EMPTY_POOL =
+  'No listed experts are available to match right now. Browse the directory to book someone directly.';
+
+export const EXPERT_MATCH_INVALID =
+  'Gemini could not match you to a listed expert from these goals. Add more detail, or choose someone from the directory.';
+
+export const EXPERT_MATCH_UNAVAILABLE =
+  'Gemini could not complete a match just now. Try again, or choose someone from the directory.';
 
 export type ListedMentorMatchRow = {
   id: string;
@@ -39,7 +63,16 @@ export async function matchListedMentor(input: {
 }): Promise<MatchingOutput> {
   const mentors = input.mentors ?? (await loadListedMentorPool());
   if (mentors.length === 0) {
-    throw new Error('No approved mentors available in the pool.');
+    throw new ExpertMatchFailedError(EXPERT_MATCH_EMPTY_POOL);
+  }
+
+  if (isE2eStubLlmEnabled()) {
+    const first = mentors[0];
+    return {
+      mentor_id: first.id,
+      match_score: 0.85,
+      match_reason: 'E2E stub: first listed expert (LLM stubbed).',
+    };
   }
 
   const matchingSystemInstruction = `
@@ -59,32 +92,41 @@ export async function matchListedMentor(input: {
       ${JSON.stringify(mentors, null, 2)}
     `;
 
-  const result = await callLlmWithBackoff(() =>
-    generateStructuredJson<MatchingOutput>({
-      model: llmFlashModel,
-      rateLimitKey: input.rateLimitKey,
-      systemInstruction: matchingSystemInstruction,
-      prompt,
-      audit: {
-        agentId: input.agentId,
-        operation: input.operation,
-        refId: input.refId ?? null,
-      },
-      schema: {
-        type: 'OBJECT',
-        properties: {
-          mentor_id: { type: 'STRING' },
-          match_score: { type: 'NUMBER' },
-          match_reason: { type: 'STRING' },
+  let result: MatchingOutput;
+  try {
+    result = await callLlmWithBackoff(() =>
+      generateStructuredJson<MatchingOutput>({
+        model: llmFlashModel,
+        rateLimitKey: input.rateLimitKey,
+        systemInstruction: matchingSystemInstruction,
+        prompt,
+        audit: {
+          agentId: input.agentId,
+          operation: input.operation,
+          refId: input.refId ?? null,
         },
-        required: ['mentor_id', 'match_score', 'match_reason'],
-      },
-    }),
-  );
+        schema: {
+          type: 'OBJECT',
+          properties: {
+            mentor_id: { type: 'STRING' },
+            match_score: { type: 'NUMBER' },
+            match_reason: { type: 'STRING' },
+          },
+          required: ['mentor_id', 'match_score', 'match_reason'],
+        },
+      }),
+    );
+  } catch (error) {
+    if (error instanceof ExpertMatchFailedError || isLlmRateLimitError(error)) {
+      throw error;
+    }
+    console.warn('[expert-match] matcher failed', error);
+    throw new ExpertMatchFailedError(EXPERT_MATCH_UNAVAILABLE);
+  }
 
   const mentorInPool = mentors.some((mentor) => mentor.id === result.mentor_id);
   if (!mentorInPool) {
-    throw new Error('Matching engine returned an unknown expert');
+    throw new ExpertMatchFailedError(EXPERT_MATCH_INVALID);
   }
 
   return result;
