@@ -1,11 +1,13 @@
 'use client';
 
 import Image from 'next/image';
-import type { ListedExpert } from '@/lib/mentor-directory';
-import { toOptimizedImageUrl } from '@/lib/public-images';
+import { MaterialIcon } from '@/components/ui/material-icon';
+import { formatFifteenMinuteRate } from '@/lib/booking-pricing';
+import type { DirectoryExpert } from '@/lib/directory-expert';
+import { landingFeaturedPortrait } from '@/lib/landing/featured-expert';
 
 type ExpertCardProps = {
-  expert: ListedExpert;
+  expert: DirectoryExpert;
   isSelected: boolean;
   isHovered: boolean;
   onSelect: () => void;
@@ -22,10 +24,8 @@ export function ExpertCard({
   priority = false,
 }: ExpertCardProps) {
   const expanded = isSelected || isHovered;
-  const focusLabel = expert.expertise[0] ?? expert.category;
-  const chromeRight =
-    expert.availability === 'Available Now' ? 'Available' : 'Book';
-  const chromeLeft = expert.introVideoUrl ? 'Intro video' : expert.category;
+  const portrait = landingFeaturedPortrait(expert);
+  const rating = expert.reviewSummary;
 
   return (
     <button
@@ -39,26 +39,32 @@ export function ExpertCard({
     >
       <div className="experts-card__media">
         <Image
-          src={toOptimizedImageUrl(expert.imageUrl)}
-          alt={expert.name}
+          src={portrait.src}
+          alt={portrait.alt}
           fill
-          priority={priority}
-          className="experts-card__img object-cover"
-          sizes="(max-width: 640px) 100vw, (max-width: 960px) 50vw, 33vw"
+          loading={priority ? 'eager' : 'lazy'}
+          fetchPriority={priority ? 'high' : 'auto'}
+          className="experts-card__img object-cover object-top"
+          sizes="(max-width: 640px) 70vw, 260px"
         />
-        <div className="experts-card__chrome" aria-hidden={!expanded}>
-          <span>{chromeLeft}</span>
-          <span>{chromeRight}</span>
-        </div>
       </div>
 
       <div className="experts-card__body">
+        <span className="experts-card__verified">Verified</span>
         <h2 className="experts-card__name">{expert.name}</h2>
-        <p className="experts-card__role">{expert.role}</p>
-        <div className="experts-card__meta">
-          <span className="experts-card__focus">{focusLabel}</span>
-          <span className="experts-card__rate">${expert.rate} / hr</span>
-        </div>
+        <p className="experts-card__role">
+          {[expert.role, expert.employer].filter(Boolean).join(' · ')}
+        </p>
+        {rating && rating.count > 0 ? (
+          <p className="experts-card__rating" data-testid={`expert-card-rating-${expert.slug}`}>
+            <MaterialIcon name="star" size={14} className="experts-card__star" aria-hidden />
+            <span>
+              {rating.average.toFixed(1)}
+              <span className="experts-card__rating-count"> ({rating.count})</span>
+            </span>
+          </p>
+        ) : null}
+        <p className="experts-card__rate">{formatFifteenMinuteRate(expert.liveSessionPriceCents)}</p>
       </div>
     </button>
   );
