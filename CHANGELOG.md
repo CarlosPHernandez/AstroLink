@@ -3,6 +3,21 @@
 All notable changes to AstroLink are documented in this file.
 
 
+## [0.15.0.0] - 2026-08-17
+
+### Added
+- Before a buyer joins a live session, they confirm captions and recap language. We guess from the browser when their profile is still English; they can change it. That choice is saved for later recaps.
+- Caption language in mentee settings now applies to live captions as well as recaps.
+
+### Changed
+- Live captions translate the *other* person into your language. We no longer treat a missing speech-to-text language tag as English (that inverted Spanish and English).
+- Overlapping bilingual turns keep more translations in flight (queue cap 6) before dropping the oldest waiting line.
+- The captions indicator shows whenever transcription is on, including English buyers who still need the other person's speech translated.
+
+### Fixed
+- Speech-to-text errors retry bilingual mode. We do not silently fall back to English-only.
+- If saving the join-time language fails, captions still use the language the buyer confirmed.
+
 ## [0.14.2.0] - 2026-08-16
 
 ### Changed
