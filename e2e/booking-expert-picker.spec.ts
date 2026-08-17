@@ -21,9 +21,10 @@ test.describe('Booking expert picker', () => {
     await skipIfNoBookingExperts(page);
 
     await expect(page.getByTestId('booking-mobile-price-bar')).toContainText(
-      'Select an expert above',
+      'Gemini matches you after you submit',
     );
 
+    await page.getByTestId('booking-choose-expert').click();
     await page.getByTestId('booking-expert-chris-sembroski').click();
     await expect(page).toHaveURL(/\/booking\?mentor=chris-sembroski/);
 
@@ -36,6 +37,8 @@ test.describe('Booking expert picker', () => {
     await page.goto('/booking', { waitUntil: 'networkidle' });
     await skipIfNoBookingExperts(page);
 
+    await expect(page.getByTestId('booking-expert-picker')).toHaveCount(0);
+    await page.getByTestId('booking-choose-expert').click();
     await expect(page.getByTestId('booking-expert-picker')).toBeVisible();
     await expect(page.getByText('No expert selected')).toHaveCount(0);
 
@@ -69,6 +72,8 @@ test.describe('Booking expert picker', () => {
     await page.goto('/booking', { waitUntil: 'networkidle' });
     await skipIfNoBookingExperts(page);
 
+    await page.getByTestId('booking-choose-expert').click();
+
     const categories = ['policy', 'propulsion', 'spacecraft'] as const;
     let sawEmpty = false;
     for (const cat of categories) {
@@ -89,6 +94,7 @@ test.describe('Booking expert picker', () => {
     await page.goto('/booking', { waitUntil: 'networkidle' });
     await skipIfNoBookingExperts(page);
 
+    await page.getByTestId('booking-choose-expert').click();
     await page.getByTestId('booking-expert-chris-sembroski').click();
     await expect(page.getByRole('heading', { name: 'Chris Sembroski' })).toBeVisible();
 
@@ -120,6 +126,7 @@ test.describe('Booking expert picker', () => {
     await page.goto('/booking', { waitUntil: 'networkidle' });
     await skipIfNoBookingExperts(page);
 
+    await page.getByTestId('booking-choose-expert').click();
     await page.getByTestId('booking-expert-chris-sembroski').click();
     await expect(page.getByRole('heading', { name: 'Chris Sembroski' })).toBeVisible();
     await expect(page.getByTestId('booking-expert-picker')).toHaveCount(0);
@@ -141,22 +148,83 @@ test.describe('Booking expert picker', () => {
     await expect(page.getByTestId('booking-expert-picker')).toHaveCount(0);
   });
 
-  test('submit without expert shows validation error and keeps picker visible', async ({ page }) => {
+  test('use Gemini match instead hides the picker again', async ({ page }) => {
     await page.goto('/booking', { waitUntil: 'networkidle' });
+    await skipIfNoBookingExperts(page);
 
+    await page.getByTestId('booking-choose-expert').click();
     await expect(page.getByTestId('booking-expert-picker')).toBeVisible();
+
+    await page.getByTestId('booking-use-gemini-match').click();
+    await expect(page.getByTestId('booking-expert-picker')).toHaveCount(0);
+    await expect(page.getByTestId('booking-choose-expert')).toBeVisible();
+    await expect(page.getByTestId('booking-submit')).toContainText(/Match me/);
+  });
+
+  test('match failure shows an honest error and opens browse', async ({ page }) => {
+    await page.goto('/booking', { waitUntil: 'networkidle' });
+    await skipIfNoBookingExperts(page);
+
+    await page.route('**/api/book', async (route) => {
+      if (route.request().method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      await route.fulfill({
+        status: 422,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: false,
+          error:
+            'Gemini could not match you to a listed expert from these goals. Add more detail, or choose someone from the directory.',
+          code: 'match_failed',
+        }),
+      });
+    });
 
     const scheduledAt = futureDatetimeLocal();
     await page.getByTestId('booking-scheduled-at').fill(scheduledAt);
     await page.getByTestId('booking-goals').fill(E2E_GOALS);
-    await page.getByTestId('booking-background').fill('E2E — submit guard without expert.');
-
+    await page.getByTestId('booking-background').fill(
+      'E2E — honest match fail should open the directory picker.',
+    );
     await page.getByTestId('booking-submit').click();
 
     await expect(
-      page.getByText('Choose an expert above before booking a live session.'),
+      page.getByText('Gemini could not match you to a listed expert from these goals'),
     ).toBeVisible();
     await expect(page.getByTestId('booking-expert-picker')).toBeVisible();
-    await expect(page).toHaveURL('/booking');
+    await expect(page).toHaveURL(/\/booking/);
+  });
+
+  test('submit without expert lets Gemini match and completes booking', async ({ page }) => {
+    await page.goto('/booking', { waitUntil: 'networkidle' });
+    await skipIfNoBookingExperts(page);
+
+    await expect(page.getByTestId('booking-expert-picker')).toHaveCount(0);
+    await expect(page.getByTestId('booking-choose-expert')).toBeVisible();
+
+    const scheduledAt = futureDatetimeLocal();
+    await page.getByTestId('booking-scheduled-at').fill(scheduledAt);
+    await page.getByTestId('booking-goals').fill(E2E_GOALS);
+    await page.getByTestId('booking-background').fill(
+      'E2E — default Gemini match path without picking an expert.',
+    );
+
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        (res) => res.url().includes('/api/book') && res.request().method() === 'POST',
+        { timeout: 90_000 },
+      ),
+      page.getByTestId('booking-submit').click(),
+    ]);
+
+    expect(response.ok(), `POST /api/book failed: ${await response.text()}`).toBeTruthy();
+    const body = (await response.json()) as {
+      data?: { matchedByGemini?: boolean; mentorId?: string };
+    };
+    expect(body.data?.matchedByGemini).toBe(true);
+    expect(body.data?.mentorId).toBeTruthy();
+    await page.waitForURL(/\/dashboard\/mentee/, { timeout: 90_000 });
   });
 });
