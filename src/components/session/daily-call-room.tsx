@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 
 import { CallControls } from '@/components/session/call-controls';
 import { CaptionRail } from '@/components/session/caption-rail';
+import { SessionCallTimer } from '@/components/session/session-call-timer';
 import { useDailyCall } from '@/components/session/use-daily-call';
 import { useLiveCaptions } from '@/components/session/use-live-captions';
 import { resolveViewerLocale } from '@/lib/transcript-translation/caption-direction';
@@ -171,6 +172,14 @@ export function DailyCallRoom({ booking, onEnded }: DailyCallRoomProps) {
             {daily.error ?? 'Could not join the video room.'}
           </p>
         )}
+        {/* Remaining time — always visible over the video area while in the call shell. */}
+        <div className="absolute right-3 top-3 z-20">
+          <SessionCallTimer
+            scheduledAt={booking.scheduledAt}
+            durationMinutes={booking.durationMinutes}
+            variant="call"
+          />
+        </div>
         <VideoTile
           label={isAdminObserver ? 'AstroLink' : (local?.userName ?? 'You')}
           track={local?.videoTrack ?? null}
