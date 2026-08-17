@@ -50,7 +50,7 @@ describe('buildEarlyAccessMetadata', () => {
       role: 'Astronaut',
       employer: 'Inspiration4',
       rate: 250,
-      category: 'systems',
+      category: 'careers',
       expertise: [],
       bio: 'Bio',
       imageUrl: '/chris_sembroski.jpeg',

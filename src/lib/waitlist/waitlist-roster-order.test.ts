@@ -13,7 +13,7 @@ function expert(slug: string, name: string): ListedExpert {
     role: 'Expert',
     employer: 'Org',
     rate: 100,
-    category: 'systems',
+    category: 'careers',
     expertise: [],
     bio: 'Bio',
     imageUrl: '/img.jpg',

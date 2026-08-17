@@ -74,7 +74,7 @@ test.describe('Booking expert picker', () => {
 
     await page.getByTestId('booking-choose-expert').click();
 
-    const categories = ['policy', 'propulsion', 'spacecraft'] as const;
+    const categories = ['Policy', 'Training', 'Spacecraft'] as const;
     let sawEmpty = false;
     for (const cat of categories) {
       await page.getByRole('button', { name: cat, exact: true }).click();

@@ -9,7 +9,7 @@ const sampleExpert: ListedExpert = {
   role: 'Astronaut',
   employer: 'Inspiration4',
   rate: 250,
-  category: 'systems',
+  category: 'careers',
   expertise: ['Human spaceflight'],
   bio: 'Inspiration4 astronaut.',
   imageUrl: '/chris_sembroski.jpeg',
