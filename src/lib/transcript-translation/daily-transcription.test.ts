@@ -17,7 +17,7 @@ describe('parseTranscriptionMessage', () => {
     });
 
     expect(utterance).toEqual({
-      id: 'speech-1',
+      id: 'mentor-uuid:speech-1',
       speakerId: 'mentor-uuid',
       speakerRole: 'unknown',
       startMs: 12500,
@@ -89,6 +89,73 @@ describe('parseTranscriptionMessage', () => {
     });
     expect(utterance).not.toBeNull();
     const key = transcriptionDedupeKey(utterance!);
-    expect(key).toBe('u1:1000:Stable line');
+    expect(key).toBe(`u1:${utterance!.id}:1000:Stable line`);
+  });
+
+  it('reads locale from top-level Daily language fields', () => {
+    const utterance = parseTranscriptionMessage({
+      text: 'Hola',
+      user_id: 'u1',
+      is_final: true,
+      language: 'es',
+    });
+    expect(utterance?.detectedLocale).toBe('es');
+  });
+
+  it('ignores multi/unknown config echoes and uses Deepgram languages', () => {
+    const utterance = parseTranscriptionMessage({
+      text: 'Hola',
+      user_id: 'u1',
+      is_final: true,
+      language: 'multi',
+      rawResponse: {
+        is_final: true,
+        channel: { alternatives: [{ transcript: 'Hola', languages: ['es'] }] },
+      },
+    });
+    expect(utterance?.detectedLocale).toBe('es');
+  });
+
+  it('ignores unknown tags and later usable array entries', () => {
+    const utterance = parseTranscriptionMessage({
+      text: 'Bonjour',
+      user_id: 'u1',
+      is_final: true,
+      language: 'unknown',
+      languages: ['multi', '  ', 'fr'],
+    });
+    expect(utterance?.detectedLocale).toBe('fr');
+  });
+
+  it('reads detected_language when top-level language is a config echo', () => {
+    const utterance = parseTranscriptionMessage({
+      text: 'こんにちは',
+      user_id: 'u1',
+      is_final: true,
+      language: 'multi',
+      detected_language: 'ja',
+    });
+    expect(utterance?.detectedLocale).toBe('ja');
+  });
+
+  it('omits detectedLocale when every tag is unusable', () => {
+    const utterance = parseTranscriptionMessage({
+      text: 'Hello',
+      user_id: 'u1',
+      is_final: true,
+      language: 'multi',
+      languages: ['unknown', ''],
+    });
+    expect(utterance?.detectedLocale).toBeUndefined();
+  });
+
+  it('returns null for empty text and keeps partials when requireFinal is false', () => {
+    expect(parseTranscriptionMessage({ text: '   ', is_final: true })).toBeNull();
+    const partial = parseTranscriptionMessage(
+      { text: 'partial', is_final: false },
+      { requireFinal: false },
+    );
+    expect(partial?.text).toBe('partial');
+    expect(partial?.isFinal).toBe(false);
   });
 });
