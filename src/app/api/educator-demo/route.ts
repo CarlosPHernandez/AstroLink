@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
 import { sendEmail } from '@/lib/email/resend-client';
+import {
+  assertEducatorDemoSubmitRateLimit,
+  getEducatorDemoClientIp,
+  isEducatorDemoRateLimitError,
+} from '@/lib/educators/rate-limit';
 import { EducatorDemoRequestSchema } from '@/lib/educators/educator-demo-schema';
 import { supabaseAdmin } from '@/lib/supabase';
 import { toFieldErrors } from '@/lib/zod-field-errors';
@@ -37,6 +42,22 @@ export async function POST(request: Request) {
   }
 
   const { fullName, email, schoolName, role, studentPopulation, message, referrer } = parsed.data;
+
+  try {
+    assertEducatorDemoSubmitRateLimit(getEducatorDemoClientIp(request), email);
+  } catch (error) {
+    if (isEducatorDemoRateLimitError(error)) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(Math.ceil(error.retryAfterMs / 1000)) },
+        },
+      );
+    }
+    throw error;
+  }
+
   const userAgent = request.headers.get('user-agent')?.slice(0, 500) ?? null;
 
   const { error: insertError } = await supabaseAdmin.from('educator_demo_requests').insert({

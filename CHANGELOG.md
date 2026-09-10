@@ -3,6 +3,16 @@
 All notable changes to AstroLink are documented in this file.
 
 
+## [0.18.0.0] - 2026-09-09
+
+### Changed
+- Anyone can book. Leftover Chris waitlist email links (`ref=early-signups`) now pay the public menu ($65 / $125 / $190 / $250). No early discount and no “spots remaining” UI.
+- Waitlist mode is a kill-switch only. It no longer reopens Chris auth, booking, or session APIs.
+
+### Added
+- Educator demo requests are rate-limited. Too many from one IP or email return 429.
+- A live session cannot be marked complete more than five minutes before the booked start (admins can still complete early for ops).
+
 ## [0.17.0.0] - 2026-08-17
 
 ### Added

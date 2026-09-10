@@ -1,9 +1,7 @@
 import {
-  CHRIS_EARLY_PRICE_BY_DURATION_CENTS,
   CHRIS_FULL_PRICE_BY_DURATION_CENTS,
   CHRIS_HOURLY_PRICE_CENTS,
   CHRIS_SESSION_DURATION_MINUTES,
-  CHRIS_WAITLIST_EMAIL_REFERRER,
   type ChrisPricedDurationMinutes,
 } from '@/lib/chris-campaign/chris-campaign-constants';
 import { clampSessionDurationMinutes } from '@/lib/session-duration';
@@ -11,20 +9,17 @@ import { clampSessionDurationMinutes } from '@/lib/session-duration';
 /**
  * Chris charge tiers (server is source of truth — never trust client amount).
  *
- * - early_access: waitlist email `ref=early-signups` → early menu + slot scarcity
- * - full: social / public / missing ref → full menu + hide limited-slot scarcity UI
+ * Waitlist early-access pricing is retired. Every `ref` (including leftover
+ * `early-signups` links) charges the public $250/hr whole-dollar menu.
+ * `early_access` remains on the type for historical PaymentIntent metadata.
  *
  * Anchor: $250/hr. Prices are a whole-dollar menu by duration (not linear pro-rata).
  */
 export type ChrisPricingTier = 'early_access' | 'full';
 
 export function resolveChrisPricingTier(
-  marketingReferrer: string | null | undefined,
+  _marketingReferrer?: string | null,
 ): ChrisPricingTier {
-  const ref = marketingReferrer?.trim() ?? '';
-  if (ref === CHRIS_WAITLIST_EMAIL_REFERRER) {
-    return 'early_access';
-  }
   return 'full';
 }
 
@@ -54,45 +49,33 @@ export function scaleChrisPriceForDuration(
   return resolveChrisOriginalPriceCents(durationMinutes);
 }
 
-/** Stripe PaymentIntent amount for campaign=chris (menu by duration + tier). */
+/** Stripe PaymentIntent amount for campaign=chris (public menu by duration). */
 export function resolveChrisChargeCents(
-  marketingReferrer: string | null | undefined,
+  _marketingReferrer: string | null | undefined,
   durationMinutes: number = CHRIS_SESSION_DURATION_MINUTES,
 ): number {
-  const key = toPricedDuration(durationMinutes);
-  if (resolveChrisPricingTier(marketingReferrer) === 'early_access') {
-    return CHRIS_EARLY_PRICE_BY_DURATION_CENTS[key];
-  }
-  return CHRIS_FULL_PRICE_BY_DURATION_CENTS[key];
+  return CHRIS_FULL_PRICE_BY_DURATION_CENTS[toPricedDuration(durationMinutes)];
 }
 
-/** Show “spots remaining” scarcity only for early-access waitlist traffic. */
+/** Waitlist scarcity UI is retired — public booking does not show spots remaining. */
 export function showChrisSlotScarcity(
-  marketingReferrer: string | null | undefined,
+  _marketingReferrer?: string | null,
 ): boolean {
-  return resolveChrisPricingTier(marketingReferrer) === 'early_access';
+  return false;
 }
 
 export function chrisPricingMode(
-  marketingReferrer: string | null | undefined,
+  _marketingReferrer?: string | null,
 ): 'chris_early_access_menu' | 'chris_full_250' {
-  return resolveChrisPricingTier(marketingReferrer) === 'early_access'
-    ? 'chris_early_access_menu'
-    : 'chris_full_250';
+  return 'chris_full_250';
 }
 
-/** Discount line only applies on early-access tier (list − charge at that duration). */
+/** Waitlist early-access discount is retired. */
 export function chrisEarlyAccessDiscountCents(
-  marketingReferrer: string | null | undefined,
-  durationMinutes: number = CHRIS_SESSION_DURATION_MINUTES,
+  _marketingReferrer?: string | null,
+  _durationMinutes: number = CHRIS_SESSION_DURATION_MINUTES,
 ): number {
-  if (resolveChrisPricingTier(marketingReferrer) !== 'early_access') {
-    return 0;
-  }
-  return (
-    resolveChrisOriginalPriceCents(durationMinutes) -
-    resolveChrisChargeCents(marketingReferrer, durationMinutes)
-  );
+  return 0;
 }
 
 /** Hourly anchor for docs/UI copy ($250). */

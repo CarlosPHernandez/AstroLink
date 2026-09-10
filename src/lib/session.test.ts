@@ -70,6 +70,17 @@ describe('session', () => {
       await expect(getSession()).resolves.toEqual(payload);
     });
 
+    it('still nulls mentee cookies in waitlist even if Chris booking is enabled', async () => {
+      vi.stubEnv('APP_MODE', 'waitlist');
+      vi.stubEnv('ENABLE_DEMO_AUTH', 'false');
+      vi.stubEnv('CHRIS_BOOKING_ENABLED', 'true');
+      const encrypted = await encryptPayload(buildSessionPayload({ role: 'mentee' }));
+      mockCookiesGet.mockReturnValue({ value: encrypted });
+
+      const { getSession } = await import('@/lib/session');
+      await expect(getSession()).resolves.toBeNull();
+    });
+
     it('returns session in waitlist mode when demo auth is enabled', async () => {
       vi.stubEnv('APP_MODE', 'waitlist');
       vi.stubEnv('ENABLE_DEMO_AUTH', 'true');

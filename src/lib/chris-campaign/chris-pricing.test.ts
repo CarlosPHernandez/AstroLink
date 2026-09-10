@@ -44,15 +44,15 @@ describe('chris-pricing ($250/hr whole-dollar menu)', () => {
     }
   });
 
-  it('charges early-access menu only for early-signups', () => {
-    expect(resolveChrisPricingTier(CHRIS_WAITLIST_EMAIL_REFERRER)).toBe('early_access');
-    expect(resolveChrisChargeCents(CHRIS_WAITLIST_EMAIL_REFERRER)).toBe(17000);
-    expect(resolveChrisChargeCents(CHRIS_WAITLIST_EMAIL_REFERRER, 15)).toBe(6000);
-    expect(resolveChrisChargeCents(CHRIS_WAITLIST_EMAIL_REFERRER, 30)).toBe(11500);
-    expect(resolveChrisChargeCents(CHRIS_WAITLIST_EMAIL_REFERRER, 60)).toBe(22500);
-    expect(showChrisSlotScarcity(CHRIS_WAITLIST_EMAIL_REFERRER)).toBe(true);
-    expect(chrisPricingMode(CHRIS_WAITLIST_EMAIL_REFERRER)).toBe('chris_early_access_menu');
-    expect(chrisEarlyAccessDiscountCents(CHRIS_WAITLIST_EMAIL_REFERRER, 45)).toBe(2000);
+  it('charges the public menu for leftover early-signups refs (waitlist pricing retired)', () => {
+    expect(resolveChrisPricingTier(CHRIS_WAITLIST_EMAIL_REFERRER)).toBe('full');
+    expect(resolveChrisChargeCents(CHRIS_WAITLIST_EMAIL_REFERRER)).toBe(19000);
+    expect(resolveChrisChargeCents(CHRIS_WAITLIST_EMAIL_REFERRER, 15)).toBe(6500);
+    expect(resolveChrisChargeCents(CHRIS_WAITLIST_EMAIL_REFERRER, 30)).toBe(12500);
+    expect(resolveChrisChargeCents(CHRIS_WAITLIST_EMAIL_REFERRER, 60)).toBe(25000);
+    expect(showChrisSlotScarcity(CHRIS_WAITLIST_EMAIL_REFERRER)).toBe(false);
+    expect(chrisPricingMode(CHRIS_WAITLIST_EMAIL_REFERRER)).toBe('chris_full_250');
+    expect(chrisEarlyAccessDiscountCents(CHRIS_WAITLIST_EMAIL_REFERRER, 45)).toBe(0);
     for (const cents of Object.values(CHRIS_EARLY_PRICE_BY_DURATION_CENTS)) {
       expect(cents % 100).toBe(0);
     }

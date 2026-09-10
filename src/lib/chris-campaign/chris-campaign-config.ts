@@ -12,7 +12,7 @@ export {
   CHRIS_MENTOR_SLUG_DEFAULT,
 } from '@/lib/chris-campaign/chris-campaign-constants';
 
-/** Opens booking funnel under waitlist APP_MODE (Vercel Production only). */
+/** Chris campaign booking on `/talk-with-chris`. Independent of APP_MODE. */
 export function isChrisBookingEnabled(): boolean {
   return process.env.CHRIS_BOOKING_ENABLED?.trim().toLowerCase() === 'true';
 }

@@ -105,4 +105,134 @@ describe('POST /api/session/[bookingId]/complete', () => {
     expect(res.status).toBe(403);
     expect(mockFulfill).not.toHaveBeenCalled();
   });
+
+  it('rejects complete before the session start window', async () => {
+    const bookingId = '11111111-1111-4111-8111-111111111111';
+    mockGetSession.mockResolvedValue({
+      userId: 'mentee-1',
+      role: 'mentee',
+    });
+    mockFrom.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({
+            data: {
+              id: bookingId,
+              status: 'confirmed',
+              mentee_id: 'mentee-1',
+              mentor_id: 'mentor-1',
+              daily_room_url: 'https://astrolink.daily.co/astrolink-abc',
+              duration_minutes: 15,
+              scheduled_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            },
+            error: null,
+          }),
+        }),
+      }),
+    });
+
+    const res = await POST(new Request('http://localhost/api/session/x/complete', { method: 'POST' }), {
+      params: Promise.resolve({ bookingId }),
+    });
+    expect(res.status).toBe(409);
+    expect(mockFulfill).not.toHaveBeenCalled();
+  });
+
+  it('allows admin to complete before the session start window', async () => {
+    const bookingId = '11111111-1111-4111-8111-111111111111';
+    mockGetSession.mockResolvedValue({
+      userId: 'admin-1',
+      role: 'admin',
+    });
+    mockFrom.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({
+            data: {
+              id: bookingId,
+              status: 'confirmed',
+              mentee_id: 'mentee-1',
+              mentor_id: 'mentor-1',
+              daily_room_url: 'https://astrolink.daily.co/astrolink-abc',
+              duration_minutes: 15,
+              scheduled_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            },
+            error: null,
+          }),
+        }),
+      }),
+    });
+    mockFulfill.mockResolvedValue({ processed: true, bookingId, alreadyProcessed: false });
+
+    const res = await POST(new Request('http://localhost/api/session/x/complete', { method: 'POST' }), {
+      params: Promise.resolve({ bookingId }),
+    });
+    expect(res.status).toBe(200);
+    expect(mockFulfill).toHaveBeenCalled();
+  });
+
+  it('rejects complete when scheduled_at is missing', async () => {
+    const bookingId = '11111111-1111-4111-8111-111111111111';
+    mockGetSession.mockResolvedValue({
+      userId: 'mentee-1',
+      role: 'mentee',
+    });
+    mockFrom.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({
+            data: {
+              id: bookingId,
+              status: 'confirmed',
+              mentee_id: 'mentee-1',
+              mentor_id: 'mentor-1',
+              daily_room_url: 'https://astrolink.daily.co/astrolink-abc',
+              duration_minutes: 15,
+              scheduled_at: null,
+            },
+            error: null,
+          }),
+        }),
+      }),
+    });
+
+    const res = await POST(new Request('http://localhost/api/session/x/complete', { method: 'POST' }), {
+      params: Promise.resolve({ bookingId }),
+    });
+    expect(res.status).toBe(409);
+    expect(mockFulfill).not.toHaveBeenCalled();
+  });
+
+  it('replays fulfill for already-completed bookings', async () => {
+    const bookingId = '11111111-1111-4111-8111-111111111111';
+    mockGetSession.mockResolvedValue({
+      userId: 'mentee-1',
+      role: 'mentee',
+    });
+    mockFrom.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({
+            data: {
+              id: bookingId,
+              status: 'completed',
+              mentee_id: 'mentee-1',
+              mentor_id: 'mentor-1',
+              daily_room_url: 'https://astrolink.daily.co/astrolink-abc',
+              duration_minutes: 15,
+              scheduled_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            },
+            error: null,
+          }),
+        }),
+      }),
+    });
+    mockFulfill.mockResolvedValue({ processed: true, bookingId, alreadyProcessed: true });
+
+    const res = await POST(new Request('http://localhost/api/session/x/complete', { method: 'POST' }), {
+      params: Promise.resolve({ bookingId }),
+    });
+    expect(res.status).toBe(200);
+    expect(mockFulfill).toHaveBeenCalled();
+  });
 });
