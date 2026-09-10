@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { DurationStepper } from '@/components/experts/duration-stepper';
@@ -14,15 +13,10 @@ import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-book
 import { getChrisBookingEntryHref } from '@/lib/chris-campaign/chris-booking-href';
 import { trackChrisRequestSession } from '@/lib/chris-campaign/chris-campaign-analytics';
 import {
-  CHRIS_PUBLIC_REFERRER,
-  CHRIS_WAITLIST_EMAIL_REFERRER,
-} from '@/lib/chris-campaign/chris-campaign-referrer';
-import {
   resolveChrisChargeCents,
   resolveChrisOriginalPriceCents,
   resolveChrisPricingTier,
 } from '@/lib/chris-campaign/chris-pricing';
-import { getChrisWaitlistHref } from '@/lib/chris-campaign/chris-waitlist-href';
 
 type ChrisMobileBookingCardProps = {
   bookingEnabled: boolean;
@@ -56,14 +50,7 @@ export function ChrisMobileBookingCard({
     return (
       <div className="chris-glass-card rounded-none border-white/10 px-6 py-4 shadow-2xl">
         <p className="text-sm font-light text-secondary-fixed-dim/80">
-          Booking is not open yet.{' '}
-          <Link
-            href={getChrisWaitlistHref(CHRIS_PUBLIC_REFERRER)}
-            className="text-tertiary-fixed-dim underline-offset-4 hover:underline"
-          >
-            Join the waitlist
-          </Link>{' '}
-          to get notified.
+          Booking is not open yet. Check back soon.
         </p>
       </div>
     );
@@ -76,14 +63,7 @@ export function ChrisMobileBookingCard({
         data-testid="chris-sold-out"
       >
         <p className="text-sm font-light text-secondary-fixed-dim/80">
-          All Chris Sembroski sessions are currently reserved.{' '}
-          <Link
-            href={getChrisWaitlistHref(CHRIS_WAITLIST_EMAIL_REFERRER)}
-            className="text-tertiary-fixed-dim underline-offset-4 hover:underline"
-          >
-            Join the waitlist
-          </Link>{' '}
-          for the next wave.
+          All Chris Sembroski sessions are currently reserved. Check back soon.
         </p>
       </div>
     );

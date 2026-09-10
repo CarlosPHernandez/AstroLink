@@ -49,12 +49,12 @@ export function isProtectedAppSurfaceEnabled(): boolean {
   return !isWaitlistMode() || isDemoAuthEnabled();
 }
 
-/** Booking funnel open under waitlist when Chris campaign is live. */
+/** Chris campaign booking flag (`CHRIS_BOOKING_ENABLED`). Independent of APP_MODE. */
 export function isChrisBookingSurfaceEnabled(): boolean {
   return isChrisBookingEnabled();
 }
 
 /** Real Supabase Auth (email, phone, OAuth). Off when demo cookie auth is on. */
 export function isSupabaseAuthEnabled(): boolean {
-  return (isProtectedAppSurfaceEnabled() || isChrisBookingSurfaceEnabled()) && !isDemoAuthEnabled();
+  return isProtectedAppSurfaceEnabled() && !isDemoAuthEnabled();
 }

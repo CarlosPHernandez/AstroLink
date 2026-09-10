@@ -146,6 +146,6 @@ npm ci
 npm run dev                  # http://localhost:3000
 ```
 
-**Waitlist production:** `APP_MODE=waitlist` — public surface is `/early-access` and `/join/[slug]` only. See [AGENTS.md](AGENTS.md).
+**Production:** `APP_MODE=full` — directory, booking, and `/talk-with-chris` are open. `APP_MODE=waitlist` is a kill-switch only. See [AGENTS.md](AGENTS.md).
 
 **Deploy:** Vercel (production URL: [astro-link.space](https://astro-link.space)). See [docs/how-to/stripe-production-cutover.md](docs/how-to/stripe-production-cutover.md) for payment cutover.

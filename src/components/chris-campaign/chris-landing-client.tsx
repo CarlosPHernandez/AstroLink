@@ -37,7 +37,6 @@ export function ChrisLandingClient({
   slotsRemaining,
 }: ChrisLandingClientProps) {
   const showSlots = showChrisSlotScarcity(marketingReferrer);
-  // Server still enforces cap for all refs; UI sold-out only when scarcity is shown.
   const soldOut = bookingEnabled && slotsRemaining <= 0;
   const landingViewTracked = useRef(false);
 

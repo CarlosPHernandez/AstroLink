@@ -353,7 +353,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     );
   });
 
-  it('creates Chris campaign PaymentIntent at $170 early-access/45-min for early-signups ref', async () => {
+  it('charges leftover early-signups refs at the public 45-min menu', async () => {
     mockIsStripePaymentsSkipped.mockReturnValue(false);
 
     const agent = new BookingAgent();
@@ -368,21 +368,21 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
       marketingReferrer: 'early-signups',
     });
 
-    expect(result.amountCents).toBe(17000);
+    expect(result.amountCents).toBe(19000);
     const [paymentIntentParams] = mockStripePaymentIntentsCreate.mock.calls[0];
     expect(paymentIntentParams).toEqual(
       expect.objectContaining({
-        amount: 17000,
+        amount: 19000,
         metadata: expect.objectContaining({
           marketing_referrer: 'early-signups',
-          pricing_mode: 'chris_early_access_menu',
-          pricing_tier: 'early_access',
-          charged_amount_cents: '17000',
+          pricing_mode: 'chris_full_250',
+          pricing_tier: 'full',
+          charged_amount_cents: '19000',
           original_amount_cents: '19000',
-          discount_label: 'Inspired24',
         }),
       }),
     );
+    expect(paymentIntentParams.metadata).not.toHaveProperty('discount_label');
     expect(paymentIntentParams.metadata).not.toHaveProperty('discount_percent');
   });
 

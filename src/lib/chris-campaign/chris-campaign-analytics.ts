@@ -1,5 +1,5 @@
 import { track } from '@vercel/analytics';
-import { resolveChrisPricingTier } from '@/lib/chris-campaign/chris-pricing';
+import { CHRIS_WAITLIST_EMAIL_REFERRER } from '@/lib/chris-campaign/chris-campaign-constants';
 import {
   dwellBucket,
   sanitizeWaitlistRef,
@@ -18,7 +18,7 @@ import {
  * 3. Paid: chris_checkout_success / chris_booking_page_view and / chris_session_continue.
  * 4. Exit last_step distribution: session | account | payment | stripe.
  * 5. Draft restore: QA only (banner); no BI dashboard.
- * 6. Segment by ref (early-access vs public) when volume allows.
+ * 6. Segment by ref (legacy waitlist email vs public) when volume allows. Pricing is the same.
  */
 
 export type ChrisAnalyticsPage = '/talk-with-chris' | '/booking';
@@ -55,11 +55,12 @@ export function buildChrisAnalyticsContext(
   marketingReferrer: string | null | undefined,
   page: ChrisAnalyticsPage,
 ): ChrisAnalyticsContext {
-  const tier = resolveChrisPricingTier(marketingReferrer);
+  const ref = sanitizeChrisCampaignRef(marketingReferrer);
   return {
     campaign: 'chris',
-    ref: sanitizeChrisCampaignRef(marketingReferrer),
-    source: tier === 'early_access' ? 'early_access' : 'full',
+    ref,
+    // Traffic source only — leftover waitlist email links still tag as early_access.
+    source: ref === CHRIS_WAITLIST_EMAIL_REFERRER ? 'early_access' : 'full',
     page,
   };
 }

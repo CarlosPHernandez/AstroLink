@@ -25,6 +25,7 @@ describe('resolveWaitlistRoute', () => {
   });
 
   it('allows remaining public waitlist pages', () => {
+    expect(resolveWaitlistRoute('/talk-with-chris', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/press', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/privacy', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/experts', null)).toEqual({ action: 'allow' });
@@ -70,37 +71,23 @@ describe('resolveWaitlistRoute', () => {
     expect(resolveWaitlistRoute('/api/auth/session', null)).toEqual({ action: 'api_blocked' });
   });
 
-  describe('with Chris booking enabled', () => {
-    const chrisOn = { chrisBookingEnabled: true };
-
-    it('allows Chris booking pages and APIs', () => {
-      expect(resolveWaitlistRoute('/talk-with-chris', null, chrisOn)).toEqual({ action: 'allow' });
-      expect(resolveWaitlistRoute('/auth', null, chrisOn)).toEqual({ action: 'allow' });
-      expect(resolveWaitlistRoute('/booking', null, chrisOn)).toEqual({ action: 'allow' });
-      expect(resolveWaitlistRoute('/api/book', null, chrisOn)).toEqual({ action: 'allow' });
-      expect(resolveWaitlistRoute('/api/auth/session', null, chrisOn)).toEqual({ action: 'allow' });
-      expect(resolveWaitlistRoute('/api/bookings/abc/cancel', null, chrisOn)).toEqual({
-        action: 'allow',
-      });
-      expect(resolveWaitlistRoute('/r/chris-slot', null, chrisOn)).toEqual({ action: 'allow' });
-      expect(resolveWaitlistRoute('/api/chris-slot-choice', null, chrisOn)).toEqual({
-        action: 'allow',
-      });
+  it('does not reopen Chris booking APIs or pages (waitlist experiment retired)', () => {
+    expect(resolveWaitlistRoute('/auth', null)).toEqual({
+      action: 'redirect',
+      destination: '/talk-with-chris',
     });
-
-    it('redirects experts paths to talk-with-chris', () => {
-      expect(resolveWaitlistRoute('/experts', null, chrisOn)).toEqual({
-        action: 'redirect',
-        destination: '/talk-with-chris',
-      });
-      expect(resolveWaitlistRoute('/experts/chris-sembroski', null, chrisOn)).toEqual({
-        action: 'redirect',
-        destination: '/talk-with-chris',
-      });
-      expect(resolveWaitlistRoute('/join/chris-sembroski', null, chrisOn)).toEqual({
-        action: 'redirect',
-        destination: '/talk-with-chris',
-      });
+    expect(resolveWaitlistRoute('/booking', null)).toEqual({
+      action: 'redirect',
+      destination: '/talk-with-chris',
+    });
+    expect(resolveWaitlistRoute('/api/book', null)).toEqual({ action: 'api_blocked' });
+    expect(resolveWaitlistRoute('/api/auth/session', null)).toEqual({ action: 'api_blocked' });
+    expect(resolveWaitlistRoute('/api/chris-slot-choice', null)).toEqual({
+      action: 'api_blocked',
+    });
+    expect(resolveWaitlistRoute('/r/chris-slot', null)).toEqual({
+      action: 'redirect',
+      destination: '/talk-with-chris',
     });
   });
 });

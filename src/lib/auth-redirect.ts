@@ -1,5 +1,5 @@
 import 'server-only';
-import { isChrisBookingSurfaceEnabled, isProtectedAppSurfaceEnabled } from '@/lib/app-mode';
+import { isProtectedAppSurfaceEnabled } from '@/lib/app-mode';
 import type { SessionData } from '@/lib/session';
 import { WAITLIST_PUBLIC_LANDING_PATH } from '@/lib/waitlist/waitlist-landing';
 
@@ -76,9 +76,7 @@ export function getDefaultPathAfterAuth(params: {
 }
 
 export function getSignInPath(): string {
-  return isProtectedAppSurfaceEnabled() || isChrisBookingSurfaceEnabled()
-    ? '/auth'
-    : WAITLIST_PUBLIC_LANDING_PATH;
+  return isProtectedAppSurfaceEnabled() ? '/auth' : WAITLIST_PUBLIC_LANDING_PATH;
 }
 
 export function toAuthWithRedirect(returnPath: string): string {

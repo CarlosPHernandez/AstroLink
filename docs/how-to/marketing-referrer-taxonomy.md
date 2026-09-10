@@ -33,7 +33,7 @@ Use the same host as your production canonical (`getAppBaseUrl()` → `https://a
 | `outbound-<prospect-slug>` | Oliver | One-off link in a sales email (optional) |
 | `chris-sembroski` | Chris campaign | Public Chris promotion — `/talk-with-chris?ref=chris-sembroski` (full $250/hr menu; no limited-slot scarcity UI) |
 | `chris-social` | Chris social | Chris Instagram/X/etc. — `/talk-with-chris?ref=chris-social` (full menu; hide spots remaining) |
-| `early-signups` | Waitlist email | Chris waitlist email — early-access menu + show limited slots; CTA may use `/talk-with-chris?ref=early-signups` |
+| `early-signups` | Waitlist email (retired) | Historical Chris waitlist email. Still stored for charts; **charges the public menu** (no early discount, no scarcity UI). |
 | `booking-incomplete` | Ops incomplete-booking email | Manual check-in for auth users who started Chris booking but did not pay — default CTA on `chris-incomplete-booking` template (full menu unless overridden with `--early`) |
 | `expert-david-guajardo` | David / Carlos | David’s partner landing `/join/david-guajardo` (auto-set; do not hand-edit links) |
 | `expert-<mentor-slug>` | Expert roster | Other `/join/<slug>` partner pages (e.g. `expert-chris-sembroski`) |
@@ -54,12 +54,11 @@ Add new rows to this table before publishing links. Carlos refreshes canvases fr
 
 ## Chris campaign pricing (same `ref` ids)
 
-On `/talk-with-chris` and the Chris booking wizard, `ref` becomes `bookings.marketing_referrer` and drives charge amount:
+On `/talk-with-chris` and the Chris booking wizard, `ref` becomes `bookings.marketing_referrer`. Waitlist early-access pricing is retired — every `ref` charges the public menu:
 
 | `ref` | Charge (by duration menu) | Slot scarcity UI |
 |-------|----------------------------|------------------|
-| `early-signups` | Early menu: $60 / $115 / $170 / $225 (15–60 min) | Yes |
-| `chris-social`, `chris-sembroski`, `booking-incomplete`, missing/other | Full menu: $65 / $125 / $190 / $250 (15–60 min; $250/hr anchor) | No |
+| `early-signups`, `chris-social`, `chris-sembroski`, `booking-incomplete`, missing/other | Full menu: $65 / $125 / $190 / $250 (15–60 min; $250/hr anchor) | No |
 
 Server SOOT: [`chris-pricing.ts`](../../src/lib/chris-campaign/chris-pricing.ts). Launch cutover: [chris-campaign-launch-checklist.md](./chris-campaign-launch-checklist.md).
 

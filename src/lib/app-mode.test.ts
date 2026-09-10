@@ -50,12 +50,12 @@ describe('app-mode', () => {
     expect(isAdminEmailAllowed('other@example.com')).toBe(false);
   });
 
-  it('enables Supabase auth when Chris booking is on in waitlist mode', async () => {
+  it('does not reopen Supabase auth for Chris booking while waitlist mode is on', async () => {
     vi.stubEnv('APP_MODE', 'waitlist');
     vi.stubEnv('ENABLE_DEMO_AUTH', 'false');
     vi.stubEnv('CHRIS_BOOKING_ENABLED', 'true');
     const { isChrisBookingSurfaceEnabled, isSupabaseAuthEnabled } = await import('@/lib/app-mode');
     expect(isChrisBookingSurfaceEnabled()).toBe(true);
-    expect(isSupabaseAuthEnabled()).toBe(true);
+    expect(isSupabaseAuthEnabled()).toBe(false);
   });
 });

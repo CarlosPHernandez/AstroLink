@@ -6,12 +6,12 @@ describe('auth-redirect (Chris booking surface)', () => {
     vi.resetModules();
   });
 
-  it('routes sign-in to /auth when Chris booking is enabled in waitlist mode', async () => {
+  it('does not open /auth for Chris booking while waitlist mode is on', async () => {
     vi.stubEnv('APP_MODE', 'waitlist');
     vi.stubEnv('ENABLE_DEMO_AUTH', 'false');
     vi.stubEnv('CHRIS_BOOKING_ENABLED', 'true');
     const { getSignInPath } = await import('@/lib/auth-redirect');
-    expect(getSignInPath()).toBe('/auth');
+    expect(getSignInPath()).toBe('/talk-with-chris');
   });
 
   it('routes sign-in to talk-with-chris when waitlist without Chris booking', async () => {
