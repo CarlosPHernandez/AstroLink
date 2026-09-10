@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { extractDailyRoomNameFromUrl } from '@/lib/daily';
 import { fulfillBookingAfterMeetingEndedForBooking } from '@/lib/post-session';
 import { getSession } from '@/lib/session';
+import { sessionCompleteTooEarly } from '@/lib/session-complete-gate';
 import { supabaseAdmin } from '@/lib/supabase';
 
 type RouteContext = {
@@ -59,6 +60,15 @@ export async function POST(_request: Request, context: RouteContext) {
       { error: `Cannot complete booking with status: ${booking.status}` },
       { status: 400 },
     );
+  }
+
+  const tooEarly = sessionCompleteTooEarly({
+    status: booking.status,
+    scheduledAt: booking.scheduled_at,
+    sessionRole: session.role,
+  });
+  if (tooEarly.blocked) {
+    return NextResponse.json({ error: tooEarly.error }, { status: 409 });
   }
 
   const nowSec = Math.floor(Date.now() / 1000);
