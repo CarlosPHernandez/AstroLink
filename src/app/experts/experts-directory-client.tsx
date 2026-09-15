@@ -10,6 +10,10 @@ import { PublicSiteHeader } from '@/components/landing/public-site-header';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import type { DirectoryExpert } from '@/lib/directory-expert';
 import { filterExpertsByCategory, filterExpertsByQuery } from '@/lib/expert-categories';
+import {
+  filterExpertsByHomepageTopic,
+  isHomepageTopic,
+} from '@/lib/experts/public-expert-copy';
 
 const ExpertDetailPanel = dynamic(
   () =>
@@ -39,8 +43,11 @@ export default function ExpertsDirectoryClient({
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
   const urlQuery = searchParams.get('q');
+  const urlTopic = searchParams.get('topic');
   const [searchQuery, setSearchQuery] = useState(() => urlQuery ?? '');
   const [syncedUrlQuery, setSyncedUrlQuery] = useState(() => urlQuery);
+  const [topicFilter, setTopicFilter] = useState(() => urlTopic);
+  const [syncedUrlTopic, setSyncedUrlTopic] = useState(() => urlTopic);
 
   // Re-seed the search box from the URL when ?q= changes on the same mounted
   // route (e.g. a second hero search) — render-time adjustment, not an effect,
@@ -48,6 +55,10 @@ export default function ExpertsDirectoryClient({
   if (urlQuery !== syncedUrlQuery) {
     setSyncedUrlQuery(urlQuery);
     setSearchQuery(urlQuery ?? '');
+  }
+  if (urlTopic !== syncedUrlTopic) {
+    setSyncedUrlTopic(urlTopic);
+    setTopicFilter(urlTopic);
   }
 
   useEffect(() => {
@@ -58,10 +69,12 @@ export default function ExpertsDirectoryClient({
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  const filteredExperts = useMemo(
-    () => filterExpertsByQuery(filterExpertsByCategory(experts, selectedCategory), searchQuery),
-    [experts, selectedCategory, searchQuery],
-  );
+  const filteredExperts = useMemo(() => {
+    const scoped = isHomepageTopic(topicFilter)
+      ? filterExpertsByHomepageTopic(experts, topicFilter)
+      : filterExpertsByCategory(experts, selectedCategory);
+    return filterExpertsByQuery(scoped, searchQuery);
+  }, [experts, selectedCategory, searchQuery, topicFilter]);
 
   const selectedExpert = useMemo(
     () => experts.find((e) => e.slug === selectedSlug) ?? null,
@@ -77,6 +90,7 @@ export default function ExpertsDirectoryClient({
   }, []);
 
   const handleCategoryChange = (cat: string) => {
+    setTopicFilter(null);
     setSelectedCategory(cat);
     setSelectedSlug(null);
   };

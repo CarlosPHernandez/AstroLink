@@ -6,13 +6,13 @@ const CONFERENCE_ROWS = [
   { label: 'Meals & incidentals', value: '$50–$150/day' },
 ] as const;
 
-const ASTROLINK_ROWS = [
+const ASTROLINK_BASE_ROWS = [
   { label: 'Flights, hotel, time off', value: '$0' },
   { label: 'Chance of meeting the right person', value: 'You pick them' },
   { label: 'Time with your expert', value: 'Dedicated, 1:1' },
 ] as const;
 
-export function LandingCostComparison() {
+export function LandingCostComparison({ rateFloorLabel }: { rateFloorLabel: string }) {
   return (
     <section className="py-10 sm:py-16 lg:py-20">
       <div className="max-w-[1100px] mx-auto px-md sm:px-lg">
@@ -67,13 +67,16 @@ export function LandingCostComparison() {
               THE ASTROLINK ROUTE
             </span>
             <ul className="text-sm text-[var(--landing-text)] mb-4">
-              {ASTROLINK_ROWS.map((row) => (
+              {[
+                ...ASTROLINK_BASE_ROWS,
+                { label: 'Typical session', value: `From ${rateFloorLabel}` },
+              ].map((row) => (
                 <li
                   key={row.label}
-                  className="flex justify-between border-b border-[var(--landing-border)] py-2.5 last:border-b-0"
+                  className="flex justify-between gap-3 border-b border-[var(--landing-border)] py-2.5 last:border-b-0"
                 >
                   <span>{row.label}</span>
-                  <span className="font-semibold text-[var(--landing-accent)]">{row.value}</span>
+                  <span className="font-semibold text-[var(--landing-accent)] text-right">{row.value}</span>
                 </li>
               ))}
             </ul>

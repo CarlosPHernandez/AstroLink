@@ -150,8 +150,9 @@ describe('landing-featured-expert', () => {
 });
 
 describe('orderLandingDirectoryExperts', () => {
-  it('orders experts Eiman, Chris, Priya, Jenni, Andrew regardless of input order', () => {
+  it('orders experts Chris, Eiman, Priya, Jenni, Andrew, David regardless of input order', () => {
     const ordered = orderLandingDirectoryExperts([
+      expert('david-guajardo', 'David F. Guajardo'),
       expert('andrew-parris', 'Andrew Parris'),
       expert('priya-abiram', 'Priya Abiram'),
       expert('chris-sembroski', 'Chris Sembroski'),
@@ -159,11 +160,12 @@ describe('orderLandingDirectoryExperts', () => {
       expert('jenni-doe', 'Jenni Doe'),
     ]);
     expect(ordered.map((e) => e.slug)).toEqual([
-      LANDING_FEATURED_EXPERT_SLUG,
       'chris-sembroski',
+      LANDING_FEATURED_EXPERT_SLUG,
       'priya-abiram',
       'jenni-doe',
       'andrew-parris',
+      'david-guajardo',
     ]);
   });
 

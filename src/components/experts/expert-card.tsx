@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import { formatFifteenMinuteRate } from '@/lib/booking-pricing';
 import type { DirectoryExpert } from '@/lib/directory-expert';
+import { publicExpertProof, publicExpertTitle } from '@/lib/experts/public-expert-copy';
 import { landingFeaturedPortrait } from '@/lib/landing/featured-expert';
 
 type ExpertCardProps = {
@@ -26,6 +27,8 @@ export function ExpertCard({
   const expanded = isSelected || isHovered;
   const portrait = landingFeaturedPortrait(expert);
   const rating = expert.reviewSummary;
+  const title = publicExpertTitle(expert.slug, expert.role);
+  const proof = publicExpertProof(expert.slug);
 
   return (
     <button
@@ -52,9 +55,8 @@ export function ExpertCard({
       <div className="experts-card__body">
         <span className="experts-card__verified">Verified</span>
         <h2 className="experts-card__name">{expert.name}</h2>
-        <p className="experts-card__role">
-          {[expert.role, expert.employer].filter(Boolean).join(' · ')}
-        </p>
+        <p className="experts-card__role">{title}</p>
+        {proof ? <p className="experts-card__proof">{proof}</p> : null}
         {rating && rating.count > 0 ? (
           <p className="experts-card__rating" data-testid={`expert-card-rating-${expert.slug}`}>
             <MaterialIcon name="star" size={14} className="experts-card__star" aria-hidden />

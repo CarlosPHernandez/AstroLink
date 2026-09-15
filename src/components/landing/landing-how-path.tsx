@@ -20,17 +20,17 @@ export function LandingHowPath() {
           data-testid="landing-assessment-offer"
         >
           <p className="text-[11px] font-mono font-semibold uppercase tracking-[0.14em] text-[var(--landing-accent)] mb-2.5">
-            Free readiness report
+            Free path assessment
           </p>
           <h2
             id="landing-how-path-heading"
             className="font-landing-display text-xl sm:text-2xl font-bold tracking-tight text-[var(--landing-text)] mb-3"
           >
-            Find out where you stand.
+            Not sure who to book?
           </h2>
           <p className="text-sm sm:text-base text-[var(--landing-muted)] max-w-[50ch] mx-auto mb-7">
-            Answer a few questions about your goals and get a personalized readiness report in
-            under three minutes — free, no account required.
+            Answer a few questions about your goals and get a recommended expert in under three
+            minutes — free, no account required.
           </p>
           <Link
             href="/assessment"
