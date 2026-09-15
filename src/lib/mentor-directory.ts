@@ -4,6 +4,7 @@ import { unstable_cache } from 'next/cache';
 import { DEFAULT_MENTOR_IMAGE } from '@/lib/public-images';
 import { supabase } from '@/lib/supabase';
 import { inferPublicExpertCategory } from '@/lib/expert-categories';
+import { publicExpertTitle } from '@/lib/experts/public-expert-copy';
 import type { Mentor } from '@/lib/types';
 
 export type ExpertCategory = 'careers' | 'training' | 'spacecraft' | 'policy' | 'medicine';
@@ -44,7 +45,7 @@ export function mentorToListedExpert(mentor: Mentor): ListedExpert {
     id: mentor.id,
     slug,
     name: mentor.full_name,
-    role: mentor.title ?? 'Aerospace Expert',
+    role: publicExpertTitle(slug, mentor.title ?? 'Aerospace Expert'),
     employer: mentor.employer,
     rate: Math.round(mentor.live_session_price_cents / 100),
     category: inferPublicExpertCategory({

@@ -3,35 +3,31 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { formatFifteenMinuteRate } from '@/lib/booking-pricing';
+import {
+  publicExpertCopyForSlug,
+  publicExpertCtaFirstName,
+  publicExpertTitle,
+} from '@/lib/experts/public-expert-copy';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
-const ROTATION_SLUGS = ['chris-sembroski', 'priya-abiram', 'eiman-jahangir', 'andrew-parris'] as const;
+const ROTATION_SLUGS = [
+  'chris-sembroski',
+  'eiman-jahangir',
+  'priya-abiram',
+  'jenni-hesterman',
+  'andrew-parris',
+  'david-guajardo',
+] as const;
 
-const PREVIEW_COPY: Record<string, { question: string; answer: string; color: string }> = {
-  'chris-sembroski': {
-    question: 'I want to switch into aerospace. What paths actually work?',
-    answer:
-      'There are a few routes that actually work — happy to walk through what worked for me and where most people get stuck.',
-    color: '#1859D4',
-  },
-  'priya-abiram': {
-    question: 'What does it actually take to get into mission operations?',
-    answer:
-      'Less about the degree than people think, more about the projects. Happy to walk through what got me in the room.',
-    color: '#0E1420',
-  },
-  'eiman-jahangir': {
-    question: 'What does astronaut training actually involve day to day?',
-    answer:
-      "It's less glamorous than people expect at first, then very real all at once. Happy to walk through what training looked like.",
-    color: '#66717F',
-  },
-  'andrew-parris': {
-    question: 'How do I even start networking in this industry?',
-    answer: 'Start narrower than you think — one project, one community, one expert. I can point you there.',
-    color: '#171A1F',
-  },
+const PREVIEW_COLORS: Record<string, string> = {
+  'chris-sembroski': '#1859D4',
+  'eiman-jahangir': '#66717F',
+  'priya-abiram': '#0E1420',
+  'jenni-hesterman': '#1859D4',
+  'andrew-parris': '#171A1F',
+  'david-guajardo': '#0E1420',
 };
 
 const DEFAULT_PREVIEW = {
@@ -48,6 +44,7 @@ type PreviewExpert = {
   name: string;
   firstName: string;
   role: string;
+  rateLabel: string;
   initials: string;
   imageSrc: string;
   question: string;
@@ -56,25 +53,26 @@ type PreviewExpert = {
 };
 
 function toPreviewExpert(expert: ListedExpert): PreviewExpert {
-  const copy = PREVIEW_COPY[expert.slug] ?? DEFAULT_PREVIEW;
+  const copy = publicExpertCopyForSlug(expert.slug);
   const parts = expert.name.trim().split(/\s+/);
   const initials = ((parts[0]?.[0] ?? '') + (parts[parts.length - 1]?.[0] ?? '')).toUpperCase();
   return {
     slug: expert.slug,
     name: expert.name,
-    firstName: parts[0] ?? expert.name,
-    role: expert.role,
+    firstName: publicExpertCtaFirstName(expert.slug, expert.name),
+    role: publicExpertTitle(expert.slug, expert.role),
+    rateLabel: formatFifteenMinuteRate(expert.liveSessionPriceCents),
     initials,
     imageSrc: toOptimizedImageUrl(expert.imageUrl),
-    question: copy.question,
-    answer: copy.answer,
-    color: copy.color,
+    question: copy?.question ?? DEFAULT_PREVIEW.question,
+    answer: copy?.answer ?? DEFAULT_PREVIEW.answer,
+    color: PREVIEW_COLORS[expert.slug.toLowerCase()] ?? DEFAULT_PREVIEW.color,
   };
 }
 
 export function LandingExpertChatPreview({ experts }: { experts: ListedExpert[] }) {
   const rotation = useMemo(() => {
-    const bySlug = new Map(experts.map((expert) => [expert.slug, expert]));
+    const bySlug = new Map(experts.map((expert) => [expert.slug.toLowerCase(), expert]));
     return ROTATION_SLUGS.map((slug) => bySlug.get(slug))
       .filter((expert): expert is ListedExpert => Boolean(expert))
       .map(toPreviewExpert);
@@ -114,10 +112,7 @@ export function LandingExpertChatPreview({ experts }: { experts: ListedExpert[] 
     <section className="py-4 sm:py-6" data-testid="landing-expert-chat-preview">
       <div className="max-w-[920px] mx-auto px-md sm:px-lg">
         <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(240px,320px)] gap-5 items-end">
-          <div
-            className="relative overflow-hidden rounded-2xl bg-[var(--landing-surface-soft)]"
-            style={{ aspectRatio: '5 / 6' }}
-          >
+          <div className="relative h-[280px] sm:h-auto sm:aspect-[5/6] overflow-hidden rounded-2xl bg-[var(--landing-surface-soft)]">
             <Image
               src={current.imageSrc}
               alt={current.name}
@@ -147,6 +142,9 @@ export function LandingExpertChatPreview({ experts }: { experts: ListedExpert[] 
                 VERIFIED
               </span>
             </div>
+            <p className="mb-3 text-[13px] font-semibold text-[var(--landing-text)]" data-testid="landing-spotlight-rate">
+              {current.rateLabel}
+            </p>
 
             <p className="ml-[20%] mb-2 rounded-[14px_14px_4px_14px] bg-[var(--landing-ink)] px-3 py-2 text-xs text-white">
               {current.question}
@@ -160,7 +158,7 @@ export function LandingExpertChatPreview({ experts }: { experts: ListedExpert[] 
 
             <Link
               href={`/experts/${current.slug}`}
-              className="block w-full rounded-full bg-[var(--landing-ink)] px-3 py-2.5 text-center text-xs font-semibold text-white hover:opacity-90"
+              className="flex min-h-12 w-full items-center justify-center rounded-full bg-[var(--landing-ink)] px-3 text-center text-sm font-semibold text-white hover:opacity-90"
             >
               Book a session with {current.firstName}
             </Link>

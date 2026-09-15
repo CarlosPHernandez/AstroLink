@@ -22,6 +22,17 @@ export function formatFifteenMinuteRate(hourlyRateCents: number): string {
   return `$${amount} / 15 min`;
 }
 
+/** Lowest listed 15-min rate, for homepage proof. Do not invent a number. */
+export function formatDirectoryRateFloor(
+  experts: Array<{ liveSessionPriceCents: number }>,
+  fallback = '$25 / 15 min',
+): string {
+  if (experts.length === 0) return fallback;
+  const floor = Math.min(...experts.map((expert) => expert.liveSessionPriceCents));
+  if (!Number.isFinite(floor) || floor <= 0) return fallback;
+  return formatFifteenMinuteRate(floor);
+}
+
 export function computeBookingTotalCents(params: {
   serviceType: ServiceType;
   liveSessionPriceCents: number;

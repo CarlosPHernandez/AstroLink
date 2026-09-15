@@ -1,7 +1,6 @@
 import LandingHero from '@/components/landing/landing-hero';
 import { LandingAssessmentBar } from '@/components/landing/landing-assessment-bar';
 import { LandingExpertChatPreview } from '@/components/landing/landing-expert-chat-preview';
-import { LandingParticipation } from '@/components/landing/landing-participation';
 import { LandingIntroGrid } from '@/components/landing/landing-intro-grid';
 import { LandingCostComparison } from '@/components/landing/landing-cost-comparison';
 import { LandingFeaturesGrid } from '@/components/landing/landing-features-grid';
@@ -9,19 +8,21 @@ import { LandingHowPath } from '@/components/landing/landing-how-path';
 import ExpertDirectory from '@/components/landing/expert-directory';
 import { LandingHeader } from '@/components/landing/landing-header';
 import Link from 'next/link';
+import { formatDirectoryRateFloor } from '@/lib/booking-pricing';
 import type { ListedExpert } from '@/lib/mentor-directory';
 
 export default function LandingPage({ experts }: { experts: ListedExpert[] }) {
+  const rateFloorLabel = formatDirectoryRateFloor(experts);
+
   return (
     <div className="landing-mission min-h-screen overflow-x-hidden bg-[var(--landing-surface)] text-[var(--landing-text)] font-landing-body selection:bg-[color:var(--landing-accent)]/20">
       <LandingAssessmentBar />
       <LandingHeader />
       <main>
-        <LandingHero />
+        <LandingHero rateFloorLabel={rateFloorLabel} />
         <LandingExpertChatPreview experts={experts} />
-        <LandingParticipation />
         <LandingIntroGrid />
-        <LandingCostComparison />
+        <LandingCostComparison rateFloorLabel={rateFloorLabel} />
         <LandingFeaturesGrid />
         <ExpertDirectory experts={experts} variant="grid" />
         <LandingHowPath />

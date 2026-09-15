@@ -69,20 +69,19 @@
 
 ## Layout
 
-- **Approach:** **Section flow** (marketing), with grids where the 2026-08-10 redesign calls for them (feature grid, intro grid, hackathon capability grid, expert directory) — see Decisions Log.
-- **Marketing rule (superseded 2026-08-10):** the prior "no 3-column icon feature grids / no dense card mosaics" rule no longer applies to the landing page — the current shipping structure intentionally includes a 3-card intro grid, a 6-item feature grid, and a 6-cell hackathon capability grid, adopted wholesale from the Claude design-workspace redesign by explicit founder direction. Composition is still type + real faces first; grids are used for genuinely list-shaped content (features, capabilities), not as decorative filler.
-- **Landing structure (current shipping, 2026-08-10 redesign, revised same day):**
-  1. Assessment top bar — white surface, ink FREE pill, plain "Start now →" link (matches mockup exactly, not a button)
-  2. Header
-  3. Search hero (headline "Talk to {role}.", search bar → `/experts?q=`, 3 audience chips → `/assessment`, primary CTA + Browse experts link)
-  4. Rotating expert chat-preview card (portrait + illustrative Q&A mock, Chris → Priya → Eiman → Andrew, 5s crossfade)
-  5. Hackathon section (Gemini/XPRIZE logos, status pills, APX-0N capability grid, Devpost link)
-  6. 3-card numbered intro grid (01/02/03)
-  7. "Do the math" cost comparison (conference route vs AstroLink route)
-  8. "What you get" feature grid (6 items, numbered circular badges)
-  9. Expert directory grid (5-up, real people, Verified badge)
-  10. Free assessment CTA (centered bordered card)
-  - **Not shipping:** session reviews section and the before/after draggable comparison — both were added during the 2026-08-10 redesign pass, then pulled same day per founder feedback (no good reason to have reviews directly under the hero; the slider added a section without earning its place). Real review data/component (`expert_reviews`, `ExpertReviews`) is unaffected and still live on the expert profile page.
+- **Approach:** **Section flow** (marketing), with grids where the 2026-08-10 redesign calls for them (feature grid, intro grid, expert directory) — see Decisions Log.
+- **Marketing rule (superseded 2026-08-10):** the prior "no 3-column icon feature grids / no dense card mosaics" rule no longer applies to the landing page — the current shipping structure intentionally includes a 3-card intro grid and a 6-item feature grid, adopted from the Claude design-workspace redesign by explicit founder direction. Composition is still type + real faces first; grids are used for genuinely list-shaped content (features), not as decorative filler.
+- **Landing structure (current shipping, Variation B 2026-09-11):**
+  1. Optional desktop promo bar — “Not sure who to book?” path assessment (hidden on mobile)
+  2. Header — Browse experts is the primary public CTA (Unlock access / Join are gone)
+  3. Hero — H1 “1-on-1 with people who have done the work.”, listed 15-min rate, Browse experts primary, assessment secondary, search (desktop), topic chips → `/experts?topic=`
+  4. Rotating expert spotlight (portrait max 280px on mobile, Q&A, published rate, Book)
+  5. “Not a coach” intro + 3 cards (verified operators / you pick / rate on the profile)
+  6. "Do the math" cost comparison (conference vs AstroLink, including typical session rate)
+  7. "What you get" feature grid (6 items; item 06 is Published pricing)
+  8. Expert directory strip (up to 6 people, ship title + one proof line + rate on the card face)
+  9. Assessment closer — “Not sure who to book?”
+  - **Not shipping:** Gemini/XPRIZE participation section (logos, APX capability grid, Devpost link) — pulled 2026-09-11 per founder request. Session reviews section and the before/after draggable comparison were added during the 2026-08-10 redesign pass, then pulled same day per founder feedback. Real review data/component (`expert_reviews`, `ExpertReviews`) is unaffected and still live on the expert profile page.
 - **Max content width:** ~1200px shell
 - **Border radius:** Small on portraits/frames (`rounded-sm` / ~8–12px); pills for CTAs and chips only
 - **Mid-page assessment strip:** Horizontal CTA bar only (chip + short title + meta + CTA). No stacked long prose.
@@ -130,6 +129,8 @@
 | 2026-08-10 | **Full adoption of Claude design-workspace redesign for landing + expert profile** | Founder-directed: implement the full mockup structure (search hero, rotating chat-preview card, expanded hackathon section, 3-card intro grid, cost comparison, before/after slider, feature grid, expert directory grid) — supersedes the 2026-08-08 restraint pass's grid/prose bans for these specific sections. Real reviews and no-fabricated-testimonials rules are unchanged. |
 | 2026-08-10 | Expert profile page re-themed dark → light | Prior profile page ("prototype C") used a standalone dark palette unrelated to `--landing-*`; redesign converts it to the same light tokens as the landing page for brand consistency. Scoped via `.experts-profile--light` modifier so `/experts/[slug]/video-request` (shares many `.experts-pro-*` classes) keeps its existing dark theme untouched. |
 | 2026-08-10 | Drop before/after slider + landing reviews section same-day | Founder feedback: no reason for a reviews section directly under the hero; the draggable slider didn't earn its section. Both removed from `landing-page.tsx`; real reviews stay live on the expert profile page only. |
+| 2026-09-11 | Drop Gemini/XPRIZE participation section from homepage | Founder: remove logos, “Gemini allocates demand” H2, APX grid, and Devpost link. Chat preview now leads into the intro grid. |
+| 2026-09-11 | **Homepage Variation B** | Booking is the product; assessment is the backup door. First screen must answer what/who/get/cost/do. Expert cards: name, ship title, one proof line, live 15-min rate. |
 | 2026-08-10 | Montserrat 800 weight added; hero H1 + wordmark set to 800 | Font loader (`layout.tsx`) only loaded up to 700, so mockup headings specified at 800 were rendering with browser-synthesized bold instead of the true Montserrat ExtraBold cut. Fixed to match the mockup exactly. |
 | 2026-08-10 | Top bar rebuilt to match mockup exactly | Prior implementation used an accent-blue wash background and a filled button CTA; mockup specifies a plain white bar, an ink-filled FREE pill, and a plain text "Start now →" link. Corrected for full color/typography fidelity to the source mockup. |
 

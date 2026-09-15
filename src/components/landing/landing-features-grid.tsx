@@ -6,7 +6,7 @@ const FEATURES = [
   { number: '03', title: 'Verified profiles', body: 'Real credentials and an intro video on every expert, before you ever book.' },
   { number: '04', title: 'Session recap & action items', body: 'A summary and next steps generated from the call, so nothing gets lost after you hang up.' },
   { number: '05', title: 'Live captions & translation', body: 'Follow along in the moment and get a localized recap afterward.' },
-  { number: '06', title: 'Clear pricing', body: 'Rates are on every profile up front — no hidden fees, no bundles.' },
+  { number: '06', title: 'Published pricing', body: 'Rates are on every profile up front — no hidden fees, no bundles.' },
 ] as const;
 
 export function LandingFeaturesGrid() {

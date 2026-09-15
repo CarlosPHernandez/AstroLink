@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   PRE_CALL_BRIEF_ADDON_CENTS,
   computeBookingTotalCents,
+  formatDirectoryRateFloor,
   formatFifteenMinuteRate,
 } from '@/lib/booking-pricing';
 
@@ -79,6 +80,10 @@ describe('computeBookingTotalCents', () => {
   it('formats the 15-minute marketplace rate from hourly cents', () => {
     expect(formatFifteenMinuteRate(6000)).toBe('$15 / 15 min');
     expect(formatFifteenMinuteRate(24_000)).toBe('$60 / 15 min');
+    expect(formatDirectoryRateFloor([{ liveSessionPriceCents: 25_020 }, { liveSessionPriceCents: 10_020 }])).toBe(
+      '$25.05 / 15 min',
+    );
+    expect(formatDirectoryRateFloor([])).toBe('$25 / 15 min');
   });
 
   it('rejects extended_session in D1', () => {

@@ -5,6 +5,8 @@ import Image from 'next/image';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import { LandingScrollReveal } from '@/components/landing/landing-scroll-reveal';
+import { formatFifteenMinuteRate } from '@/lib/booking-pricing';
+import { publicExpertProof, publicExpertTitle } from '@/lib/experts/public-expert-copy';
 import {
   landingFeaturedPortrait,
   orderLandingDirectoryExperts,
@@ -173,25 +175,27 @@ export default function ExpertDirectory({
             listed.
           </p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-9">
+          <div className="mb-9 flex gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory pb-2 -mx-md px-md sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4 sm:overflow-visible sm:snap-none">
             {teaserExperts.map((expert, index) => {
               const portrait = landingFeaturedPortrait(expert);
+              const proof = publicExpertProof(expert.slug);
+              const title = publicExpertTitle(expert.slug, expert.role);
               return (
                 <Link
                   key={expert.id}
                   href={`/experts/${expert.slug}`}
                   data-testid={`expert-card-${expert.slug}`}
-                  className="group overflow-hidden rounded-[14px] border border-[var(--landing-border)] bg-[var(--landing-surface)] transition-[box-shadow,border-color] duration-200 hover:shadow-[0_12px_32px_-18px_rgba(14,20,32,0.18)] hover:border-[var(--landing-muted)]"
+                  className="group w-[min(78vw,280px)] shrink-0 snap-start overflow-hidden rounded-[14px] border border-[var(--landing-border)] bg-[var(--landing-surface)] transition-[box-shadow,border-color] duration-200 hover:shadow-[0_12px_32px_-18px_rgba(14,20,32,0.18)] hover:border-[var(--landing-muted)] sm:w-auto"
                 >
                   <div className="relative aspect-[3/4] w-full overflow-hidden bg-[var(--landing-surface-soft)]">
                     <Image
                       src={portrait.src}
                       alt={portrait.alt}
                       fill
-                      loading={index < 5 ? 'eager' : 'lazy'}
+                      loading={index < 6 ? 'eager' : 'lazy'}
                       fetchPriority={index === 0 ? 'high' : 'auto'}
                       className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
-                      sizes="(max-width: 768px) 45vw, 220px"
+                      sizes="(max-width: 768px) 78vw, 280px"
                     />
                   </div>
                   <div className="p-3.5">
@@ -199,8 +203,12 @@ export default function ExpertDirectory({
                       VERIFIED
                     </span>
                     <p className="text-sm font-semibold text-[var(--landing-text)] truncate">{expert.name}</p>
-                    <p className="text-xs text-[var(--landing-faint)] truncate">
-                      {[expert.role, expert.employer].filter(Boolean).join(' · ')}
+                    <p className="text-xs text-[var(--landing-muted)] line-clamp-2">{title}</p>
+                    {proof ? (
+                      <p className="mt-1 text-xs text-[var(--landing-text)] line-clamp-2">{proof}</p>
+                    ) : null}
+                    <p className="mt-2 text-[13px] font-semibold text-[var(--landing-text)]">
+                      {formatFifteenMinuteRate(expert.liveSessionPriceCents)}
                     </p>
                   </div>
                 </Link>

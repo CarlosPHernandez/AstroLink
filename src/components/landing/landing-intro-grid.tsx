@@ -5,17 +5,17 @@ const CARDS = [
   {
     number: '01',
     title: 'Verified operators',
-    body: "Astronauts, flight controllers, and engineers who've done the work — not influencers, not recruiters.",
+    body: 'Astronauts, flight controllers, and engineers who have done the work — not influencers, not recruiters.',
   },
   {
     number: '02',
-    title: 'Real career paths',
-    body: 'Ask about the path that matters to you and hear what actually worked, from someone who walked it.',
+    title: 'You pick the person',
+    body: 'Open a profile, watch the intro, see the rate. Book a live session only when you are ready.',
   },
   {
     number: '03',
-    title: 'Browse before you book',
-    body: 'See rates and watch an intro on every profile. Book a live session only when you’re ready.',
+    title: 'Rate on the profile',
+    body: 'Published prices. No hidden fees, no bundles, no “contact us for pricing.”',
   },
 ] as const;
 
@@ -23,6 +23,17 @@ export function LandingIntroGrid() {
   return (
     <section className="border-t border-[var(--landing-border)] py-10 sm:py-16 lg:py-20">
       <div className="max-w-[1100px] mx-auto px-md sm:px-lg">
+        <div className="max-w-[820px] mx-auto text-center mb-8 sm:mb-10">
+          <h2 className="font-landing-display text-xl sm:text-2xl font-bold tracking-tight text-[var(--landing-text)] mb-3">
+            Not a coach. Someone who has done the job.
+          </h2>
+          <p className="text-sm sm:text-base leading-relaxed text-[var(--landing-muted)]">
+            High-stakes aerospace knowledge is locked behind personal networks and consulting firms
+            most people cannot access. AstroLink is where you discover a verified operator, see the
+            rate, and book a live 1:1 — a real conversation with someone who has done the work.
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6 mb-9">
           {CARDS.map((card, i) => (
             <LandingScrollReveal
@@ -43,10 +54,6 @@ export function LandingIntroGrid() {
           ))}
         </div>
 
-        <p className="text-center text-base text-[var(--landing-muted)] max-w-[62ch] mx-auto mb-4">
-          AstroLink is for students, career-switchers, and teams who want a real conversation
-          instead of another forum thread.
-        </p>
         <p className="text-center">
           <Link href="/experts" className="text-sm font-semibold text-[var(--landing-accent)] hover:underline">
             Browse the full expert directory →

@@ -26,18 +26,6 @@
 **Priority:** P2
 **Depends on:** None
 
-### Update or remove the hardcoded "Deadline Aug 17, 2026" pill
-
-**What:** `landing-participation.tsx`'s hackathon status pills hardcode "Deadline Aug 17, 2026" as static text with no expiry logic.
-
-**Why:** Will read as stale/wrong on the live site once that date passes.
-
-**Context:** Flagged by the Claude adversarial review on 2026-08-10.
-
-**Effort:** S
-**Priority:** P1
-**Depends on:** None
-
 ### Add e2e coverage for the re-themed expert profile page
 
 **What:** `expert-profile-client.tsx` was fully restructured (cover-hero + two-column body + sticky booking card) in the 2026-08-10 light re-theme, but no Playwright spec exercises the profile page at all.

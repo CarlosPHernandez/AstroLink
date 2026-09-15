@@ -53,16 +53,28 @@ export function orderLandingExperts(experts: ListedExpert[]): ListedExpert[] {
   return [featured, ...experts.filter((expert) => expert.id !== featured.id)];
 }
 
-/** Fixed roster + order for the landing page's bottom expert directory grid. */
-const LANDING_DIRECTORY_NAME_ORDER = ['eiman', 'chris', 'priya', 'jenni', 'andrew'] as const;
+/** Fixed roster + order for the landing directory strip (Variation B: all 6). */
+const LANDING_DIRECTORY_MATCHERS = [
+  { slug: 'chris-sembroski', name: 'chris' },
+  { slug: 'eiman-jahangir', name: 'eiman' },
+  { slug: 'priya-abiram', name: 'priya' },
+  { slug: 'jenni-hesterman', name: 'jenni' },
+  { slug: 'andrew-parris', name: 'andrew' },
+  { slug: 'david-guajardo', name: 'david' },
+] as const;
 
 export function orderLandingDirectoryExperts(experts: ListedExpert[]): ListedExpert[] {
   const used = new Set<string>();
   const ordered: ListedExpert[] = [];
-  for (const key of LANDING_DIRECTORY_NAME_ORDER) {
-    const match = experts.find(
-      (expert) => !used.has(expert.id) && expert.name.toLowerCase().includes(key),
+  for (const matcher of LANDING_DIRECTORY_MATCHERS) {
+    const bySlug = experts.find(
+      (expert) => !used.has(expert.id) && expert.slug.toLowerCase() === matcher.slug,
     );
+    const match =
+      bySlug ??
+      experts.find(
+        (expert) => !used.has(expert.id) && expert.name.toLowerCase().includes(matcher.name),
+      );
     if (match) {
       ordered.push(match);
       used.add(match.id);

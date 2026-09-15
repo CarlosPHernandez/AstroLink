@@ -189,22 +189,24 @@ export function PublicSiteHeader({ variant = 'landing' }: PublicSiteHeaderProps)
                   Sign In
                 </Link>
                 <Link
-                  href={UNLOCK_HREF}
+                  href="/experts"
                   className={`inline-flex items-center px-5 py-2.5 text-sm font-medium transition-colors ${primaryCta}`}
+                  data-testid="site-header-browse-cta"
                 >
-                  Unlock access
+                  Browse experts
                 </Link>
               </div>
             )}
           </nav>
 
           <div className="flex items-center gap-1.5 md:hidden">
-            {sessionReady && !session ? (
+            {!session ? (
               <Link
-                href={UNLOCK_HREF}
+                href="/experts"
                 className={`inline-flex min-h-10 touch-manipulation items-center px-3.5 py-2 text-xs font-semibold transition-colors active:scale-[0.98] ${primaryCta}`}
+                data-testid="site-header-browse-cta-mobile"
               >
-                Join
+                Browse experts
               </Link>
             ) : null}
             {sessionReady && session ? (
@@ -284,11 +286,18 @@ export function PublicSiteHeader({ variant = 'landing' }: PublicSiteHeaderProps)
                   Sign In
                 </Link>
                 <Link
+                  href="/experts"
+                  onClick={closeMenu}
+                  className={`mt-3 inline-flex min-h-12 touch-manipulation items-center justify-center px-6 text-sm font-semibold transition-colors active:scale-[0.98] ${primaryCta}`}
+                >
+                  Browse experts
+                </Link>
+                <Link
                   href={UNLOCK_HREF}
                   onClick={closeMenu}
-                  className={`mt-4 inline-flex min-h-12 touch-manipulation items-center justify-center px-6 text-sm font-semibold transition-colors active:scale-[0.98] ${primaryCta}`}
+                  className={`inline-flex min-h-12 touch-manipulation items-center text-base font-medium transition-colors ${panelMuted}`}
                 >
-                  Unlock access
+                  Create account
                 </Link>
               </>
             )}

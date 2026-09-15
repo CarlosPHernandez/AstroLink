@@ -2,28 +2,40 @@ import { test, expect } from '@playwright/test';
 
 const emptyStorage = { cookies: [] as [], origins: [] as [] };
 
-test.describe('Landing search hero (2026-08-10 redesign)', () => {
+test.describe('Landing search hero (Variation B)', () => {
   test.use({ storageState: emptyStorage });
 
-  test('hero leads with search + assessment CTA', async ({ page }) => {
+  test('hero leads with Browse experts and a listed price', async ({ page }) => {
     await page.goto('/');
 
     await expect(page.getByTestId('landing-hero-title')).toBeVisible();
-    await expect(page.getByTestId('landing-hero-title')).toContainText(/talk to/i);
-    await expect(page.getByTestId('landing-hero-search')).toBeVisible();
-    await expect(page.getByTestId('landing-hero-assessment-cta')).toBeVisible();
+    await expect(page.getByTestId('landing-hero-title')).toContainText(/1-on-1 with people who have done the work/i);
+    await expect(page.getByTestId('landing-hero-proof')).toContainText(/\/ 15 min/i);
     await expect(page.getByTestId('landing-hero-experts-cta')).toBeVisible();
+    await expect(page.getByTestId('landing-hero-assessment-cta')).toBeVisible();
+    await expect(page.getByTestId('landing-hero-search')).toBeVisible();
 
-    // Goal-form relay removed (low traction) — the new search bar is a different
-    // feature (routes to /experts?q=), not the old chat-relay.
     await expect(page.getByTestId('landing-goal-input')).toHaveCount(0);
     await expect(page.getByTestId('landing-hero-relay-expert')).toHaveCount(0);
+    await expect(page.getByText(/Unlock access/i)).toHaveCount(0);
+  });
+
+  test('primary CTA navigates to /experts', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('landing-hero-experts-cta').click();
+    await expect(page).toHaveURL(/\/experts/);
   });
 
   test('assessment CTA navigates to /assessment', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('landing-hero-assessment-cta').click();
     await expect(page).toHaveURL(/\/assessment/);
+  });
+
+  test('topic chips route to the directory, not the assessment', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('landing-hero-chips').getByRole('link', { name: 'Astronauts' }).click();
+    await expect(page).toHaveURL(/\/experts\?topic=astronauts/);
   });
 
   test('hero search submits to /experts?q=', async ({ page }) => {
@@ -85,9 +97,9 @@ test.describe('Landing search hero (2026-08-10 redesign)', () => {
     await expect(hero).toBeVisible();
     const box = await hero.boundingBox();
     expect(box).not.toBeNull();
-    // Hero (headline + search + chips + CTAs) should not dominate multiple phone screens.
-    // Threshold raised from the pre-redesign assessment-magnet hero to accommodate the
-    // search bar + audience chips; re-tighten after visual QA if it renders smaller.
-    expect(box!.height).toBeLessThan(1000);
+    expect(box!.height).toBeLessThan(720);
+    await expect(page.getByTestId('landing-hero-proof')).toBeVisible();
+    await expect(page.getByTestId('landing-hero-experts-cta')).toBeVisible();
+    await expect(page.getByTestId('site-header-browse-cta-mobile')).toBeVisible();
   });
 });
