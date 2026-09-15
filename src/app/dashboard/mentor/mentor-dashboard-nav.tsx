@@ -10,6 +10,7 @@ import { MentorBrandFooter } from '@/app/dashboard/mentor/mentor-brand-footer';
 export type MentorDashboardTab =
   | 'overview'
   | 'sessions'
+  | 'offers'
   | 'videos'
   | 'reports'
   | 'earnings'
@@ -19,12 +20,13 @@ export type MentorDashboardTab =
 type NavItem = {
   id: MentorDashboardTab;
   label: string;
-  icon: 'home' | 'sessions' | 'videos' | 'reports' | 'earnings' | 'listing' | 'settings';
+  icon: 'home' | 'sessions' | 'offers' | 'videos' | 'reports' | 'earnings' | 'listing' | 'settings';
 };
 
 const PRIMARY_NAV: NavItem[] = [
   { id: 'overview', label: 'Overview', icon: 'home' },
   { id: 'sessions', label: 'Sessions', icon: 'sessions' },
+  { id: 'offers', label: 'Services', icon: 'offers' },
   { id: 'videos', label: 'Videos', icon: 'videos' },
   { id: 'reports', label: 'Report reviews', icon: 'reports' },
   { id: 'earnings', label: 'Earnings', icon: 'earnings' },
@@ -76,6 +78,18 @@ function NavIcon({ name, className }: { name: NavItem['icon']; className?: strin
             strokeWidth="1.25"
           />
           <path d="M2 6.5h12M5.5 2v2.5M10.5 2v2.5" stroke="currentColor" strokeWidth="1.25" />
+        </svg>
+      );
+    case 'offers':
+      return (
+        <svg {...common}>
+          <path
+            d="M2.75 8.25 8.25 2.75h4.5v4.5L7.25 12.75a1.5 1.5 0 0 1-2.12 0l-2.38-2.38a1.5 1.5 0 0 1 0-2.12Z"
+            stroke="currentColor"
+            strokeWidth="1.25"
+            strokeLinejoin="round"
+          />
+          <circle cx="11" cy="5" r="0.9" stroke="currentColor" strokeWidth="1.25" />
         </svg>
       );
     case 'videos':
@@ -207,6 +221,7 @@ export function MentorDashboardNav({
   expertName,
   expertInitials,
   upcomingCount = 0,
+  showOffersTab = false,
 }: {
   activeTab: MentorDashboardTab;
   onTabChange: (tab: MentorDashboardTab) => void;
@@ -214,9 +229,13 @@ export function MentorDashboardNav({
   expertName: string;
   expertInitials: string;
   upcomingCount?: number;
+  showOffersTab?: boolean;
 }) {
   const payoutNeedsAttention = payoutNavStatus === 'setup_required';
   const payoutLabel = PAYOUT_NAV_LABELS[payoutNavStatus];
+  const primaryNav = showOffersTab
+    ? PRIMARY_NAV
+    : PRIMARY_NAV.filter((item) => item.id !== 'offers');
 
   return (
     <aside className="md-sidebar" data-testid="mentor-dashboard-sidebar">
@@ -237,7 +256,7 @@ export function MentorDashboardNav({
           <div className="md-sidebar-nav-block">
             <p className="md-sidebar-section-label">Workspace</p>
             <nav className="md-sidebar-nav" aria-label="Mentor dashboard" role="tablist">
-              {PRIMARY_NAV.map((item) => (
+              {primaryNav.map((item) => (
                 <NavButton
                   key={item.id}
                   item={item}

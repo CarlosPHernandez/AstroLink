@@ -32,6 +32,7 @@ import { MentorOverviewPanel } from '@/app/dashboard/mentor/mentor-overview-pane
 import { MentorPageHeader } from '@/app/dashboard/mentor/mentor-page-header';
 import { MentorPayoutsPanel } from '@/app/dashboard/mentor/mentor-payouts-panel';
 import { MentorSettingsPanel } from '@/app/dashboard/mentor/mentor-settings-panel';
+import { MentorOffersPanel } from '@/app/dashboard/mentor/mentor-offers-panel';
 import { MentorVideoRequestsPanel } from '@/app/dashboard/mentor/mentor-video-requests-panel';
 import { MentorReportReviewsPanel } from '@/app/dashboard/mentor/mentor-report-reviews-panel';
 import { MentorSessionFeedbackPanel } from '@/app/dashboard/mentor/mentor-session-feedback-panel';
@@ -66,6 +67,7 @@ interface MentorProfileState {
   bio: string;
   expertise: string;
   rate: number;
+  expertOffersEnabled: boolean;
 }
 
 function emptyProfileFromSession(session: SessionData): MentorProfileState {
@@ -82,6 +84,7 @@ function emptyProfileFromSession(session: SessionData): MentorProfileState {
     bio: '',
     expertise: '',
     rate: 0,
+    expertOffersEnabled: false,
   };
 }
 
@@ -329,6 +332,7 @@ export default function MentorDashboardClient({
         expertName={profile.fullName}
         expertInitials={expertInitials}
         upcomingCount={upcoming.length}
+        showOffersTab={profile.expertOffersEnabled}
       />
 
       <div className={activeTab === 'settings' ? 'md-shell md-shell-settings' : 'md-shell'}>
@@ -383,6 +387,7 @@ export default function MentorDashboardClient({
               </div>
             )}
 
+            {activeTab === 'offers' && profile.expertOffersEnabled ? <MentorOffersPanel /> : null}
             {activeTab === 'videos' && <MentorVideoRequestsPanel />}
             {activeTab === 'reports' && <MentorReportReviewsPanel />}
 

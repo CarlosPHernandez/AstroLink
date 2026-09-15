@@ -15,7 +15,7 @@ export default async function MentorDashboard() {
     supabaseAdmin
       .from('mentors')
       .select(
-        'full_name, email, employer, expertise, bio, live_session_price_cents, compliance_status, slug, is_listed, stripe_onboarding_completed, stripe_connect_account_id, is_civil_servant',
+        'full_name, email, employer, expertise, bio, live_session_price_cents, compliance_status, slug, is_listed, stripe_onboarding_completed, stripe_connect_account_id, is_civil_servant, expert_offers_enabled',
       )
       .eq('id', session.userId)
       .maybeSingle(),
@@ -47,6 +47,7 @@ export default async function MentorDashboard() {
               stripeOnboardingCompleted: mentor.stripe_onboarding_completed,
               stripeConnectAccountId: mentor.stripe_connect_account_id,
               isCivilServant: mentor.is_civil_servant,
+              expertOffersEnabled: Boolean(mentor.expert_offers_enabled),
             }
           : null
       }
