@@ -39,6 +39,12 @@ vi.mock('@/services/agents/notification-agent', () => ({
   })),
 }));
 
+const mockIncrementOfferCounter = vi.hoisted(() => vi.fn());
+
+vi.mock('@/lib/expert-offers/counters', () => ({
+  incrementOfferCounter: (...args: unknown[]) => mockIncrementOfferCounter(...args),
+}));
+
 import { confirmBookingWithoutPayment, runConfirmedBookingFulfillment } from '@/lib/post-payment';
 
 describe('runConfirmedBookingFulfillment', () => {
@@ -86,7 +92,12 @@ describe('confirmBookingWithoutPayment', () => {
 
   it('confirms pending booking and sends notifications', async () => {
     mockBookingSingle.mockResolvedValue({
-      data: { id: 'booking-1', status: 'pending_payment', daily_room_url: null },
+      data: {
+        id: 'booking-1',
+        status: 'pending_payment',
+        daily_room_url: null,
+        expert_offer_id: null,
+      },
       error: null,
     });
 
@@ -94,5 +105,40 @@ describe('confirmBookingWithoutPayment', () => {
 
     expect(result).toEqual({ bookingId: 'booking-1', alreadyProcessed: false });
     expect(mockSendConfirmations).toHaveBeenCalledWith('booking-1');
+    expect(mockIncrementOfferCounter).not.toHaveBeenCalled();
+  });
+
+  it('increments bookings_paid on first confirm when the booking has an offer', async () => {
+    mockBookingSingle.mockResolvedValue({
+      data: {
+        id: 'booking-1',
+        status: 'pending_payment',
+        daily_room_url: null,
+        expert_offer_id: 'offer-1',
+      },
+      error: null,
+    });
+
+    const result = await confirmBookingWithoutPayment('booking-1');
+
+    expect(result).toEqual({ bookingId: 'booking-1', alreadyProcessed: false });
+    expect(mockIncrementOfferCounter).toHaveBeenCalledWith('offer-1', 'bookings_paid');
+  });
+
+  it('does not increment bookings_paid when the booking was already confirmed', async () => {
+    mockBookingSingle.mockResolvedValue({
+      data: {
+        id: 'booking-1',
+        status: 'confirmed',
+        daily_room_url: null,
+        expert_offer_id: 'offer-1',
+      },
+      error: null,
+    });
+
+    const result = await confirmBookingWithoutPayment('booking-1');
+
+    expect(result).toEqual({ bookingId: 'booking-1', alreadyProcessed: true });
+    expect(mockIncrementOfferCounter).not.toHaveBeenCalled();
   });
 });

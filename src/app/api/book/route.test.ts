@@ -99,4 +99,42 @@ describe('POST /api/book (Gemini default match)', () => {
       }),
     );
   });
+
+  it('passes offerSlug through to the agent and does not send a campaign', async () => {
+    mockGetSession.mockResolvedValue({ userId: 'mentee-1', role: 'mentee' });
+    mockBookSession.mockResolvedValue({
+      bookingId: 'b1',
+      stripeClientSecret: 'sec',
+      skipPayment: true,
+      matchReason: null,
+      amountCents: 1000,
+      mentorId: 'm1',
+      mentorSlug: 'demo',
+      mentorName: 'Demo',
+      aiMatchReason: null,
+      matchedByGemini: false,
+    });
+
+    const res = await POST(
+      new Request('http://localhost/api/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mentorId: 'a0000002-0000-4000-8000-000000000002',
+          offerSlug: 'strategy-call',
+          scheduledAt: '2030-06-15T18:00:00.000Z',
+          goals: 'Understand commercial crew certification path for our vehicle.',
+          background: 'Series A space startup building reusable orbital tug with 12 engineers.',
+        }),
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(mockBookSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        offerSlug: 'strategy-call',
+        serviceType: 'packaged_offer',
+        applyCompGrantId: undefined,
+      }),
+    );
+  });
 });

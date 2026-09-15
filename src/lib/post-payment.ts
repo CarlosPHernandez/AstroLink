@@ -6,11 +6,18 @@ import {
 } from '@/lib/booking-payments';
 import { briefingContentReady, type BriefingPayload } from '@/lib/briefing-display';
 import { canProvisionDailyRoom, provisionDailyRoomForBooking } from '@/lib/daily';
+import { incrementOfferCounter } from '@/lib/expert-offers/counters';
 import { isLlmRateLimitError } from '@/lib/llm';
 import { supabaseAdmin } from '@/lib/supabase';
 import { BriefingAgent } from '@/services/agents/briefing-agent';
 import { NotificationAgent } from '@/services/agents/notification-agent';
 import { PaymentAgent } from '@/services/agents/payment-agent';
+
+async function incrementBookingsPaidIfOffer(expertOfferId: string | null | undefined) {
+  if (expertOfferId) {
+    await incrementOfferCounter(expertOfferId, 'bookings_paid');
+  }
+}
 
 /**
  * APX-02 briefing, Daily room, and APX-08 confirmation emails after a booking is confirmed.
@@ -61,7 +68,7 @@ export async function runConfirmedBookingFulfillment(bookingId: string) {
 export async function confirmBookingWithoutPayment(bookingId: string) {
   const { data: booking, error } = await supabaseAdmin
     .from('bookings')
-    .select('id, status, daily_room_url')
+    .select('id, status, daily_room_url, expert_offer_id')
     .eq('id', bookingId)
     .single();
 
@@ -79,6 +86,8 @@ export async function confirmBookingWithoutPayment(bookingId: string) {
 
   await supabaseAdmin.from('bookings').update({ status: 'confirmed' }).eq('id', bookingId);
 
+  await incrementBookingsPaidIfOffer(booking.expert_offer_id);
+
   await runConfirmedBookingFulfillment(bookingId);
 
   return { bookingId, alreadyProcessed: false };
@@ -95,7 +104,7 @@ export async function recordBookingPaymentSucceeded(params: {
 }) {
   const { data: booking, error } = await supabaseAdmin
     .from('bookings')
-    .select('id, status')
+    .select('id, status, expert_offer_id')
     .eq('stripe_payment_intent_id', params.paymentIntentId)
     .single();
 
@@ -106,6 +115,8 @@ export async function recordBookingPaymentSucceeded(params: {
   if (isDevSkippedPaymentIntent(params.paymentIntentId) || isStripePaymentsSkipped()) {
     return confirmBookingWithoutPayment(booking.id);
   }
+
+  const alreadyProcessed = booking.status === 'confirmed' || booking.status === 'completed';
 
   const paymentAgent = new PaymentAgent();
   await paymentAgent.handlePaymentSucceeded({
@@ -122,9 +133,13 @@ export async function recordBookingPaymentSucceeded(params: {
     },
   });
 
+  if (!alreadyProcessed) {
+    await incrementBookingsPaidIfOffer(booking.expert_offer_id);
+  }
+
   return {
     bookingId: booking.id,
-    alreadyProcessed: booking.status === 'confirmed' || booking.status === 'completed',
+    alreadyProcessed,
   };
 }
 

@@ -3,6 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mockMentorPool = vi.hoisted(() => vi.fn());
 const mockMentorSingle = vi.hoisted(() => vi.fn());
 const mockBookingInsert = vi.hoisted(() => vi.fn());
+const mockBookingInsertRow = vi.hoisted(() => vi.fn());
+const mockOfferMaybeSingle = vi.hoisted(() => vi.fn());
+const mockIncrementOfferCounter = vi.hoisted(() => vi.fn());
 const mockAuditInsert = vi.hoisted(() => vi.fn());
 const mockGenerateStructuredJson = vi.hoisted(() => vi.fn());
 const mockReserveSlot = vi.hoisted(() => vi.fn());
@@ -27,9 +30,23 @@ vi.mock('@/lib/supabase', () => ({
       }
       if (table === 'bookings') {
         return {
-          insert: vi.fn(() => ({
-            select: vi.fn(() => ({
-              single: mockBookingInsert,
+          insert: vi.fn((row: unknown) => {
+            mockBookingInsertRow(row);
+            return {
+              select: vi.fn(() => ({
+                single: mockBookingInsert,
+              })),
+            };
+          }),
+        };
+      }
+      if (table === 'expert_offers') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: mockOfferMaybeSingle,
+              })),
             })),
           })),
         };
@@ -86,6 +103,10 @@ vi.mock('@/lib/stripe-customer', () => ({
     mockGetOrCreateStripeCustomerForMentee(...args),
 }));
 
+vi.mock('@/lib/expert-offers/counters', () => ({
+  incrementOfferCounter: (...args: unknown[]) => mockIncrementOfferCounter(...args),
+}));
+
 import { BookingAgent } from '@/services/agents/booking-agent';
 
 const mentorPool = [
@@ -105,6 +126,16 @@ const approvedMentor = {
   compliance_status: 'approved',
   slug: 'ada-expert',
   full_name: 'Ada Expert',
+  expert_offers_enabled: true,
+};
+
+const publishedOffer = {
+  id: 'offer-1',
+  title: 'Strategy call',
+  slug: 'strategy-call',
+  duration_minutes: 45,
+  price_cents: 1000,
+  status: 'published' as const,
 };
 
 describe('BookingAgent (immediate-capture payments, platform-only)', () => {
@@ -126,6 +157,9 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     });
     mockStripePaymentIntentsUpdate.mockResolvedValue({ id: 'pi_test_123' });
     mockGetOrCreateStripeCustomerForMentee.mockResolvedValue('cus_test_123');
+    mockOfferMaybeSingle.mockResolvedValue({ data: null, error: null });
+    mockIncrementOfferCounter.mockResolvedValue(undefined);
+    mockBookingInsertRow.mockReset();
   });
 
   afterEach(() => {
@@ -420,5 +454,101 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     );
     expect(paymentIntentParams).not.toHaveProperty('discounts');
     expect(paymentIntentParams.metadata).not.toHaveProperty('pricing_mode');
+  });
+
+  it('locks offer price and duration, writes snapshot, and increments checkout_starts', async () => {
+    mockIsStripePaymentsSkipped.mockReturnValue(false);
+    mockOfferMaybeSingle.mockResolvedValue({ data: publishedOffer, error: null });
+
+    const agent = new BookingAgent();
+    const result = await agent.bookSession({
+      menteeId: 'mentee-1',
+      mentorId: 'mentor-1',
+      serviceType: 'packaged_offer',
+      scheduledAt: '2030-01-02T18:00:00.000Z',
+      menteeGoals: 'Learn about propulsion',
+      menteeBackground: 'Early-career engineer',
+      durationMinutes: 15,
+      offerSlug: 'strategy-call',
+    });
+
+    expect(result.amountCents).toBe(1000);
+    expect(result.matchedByGemini).toBe(false);
+    expect(mockGenerateStructuredJson).not.toHaveBeenCalled();
+    expect(mockReserveSlot).not.toHaveBeenCalled();
+    expect(mockIncrementOfferCounter).toHaveBeenCalledWith('offer-1', 'checkout_starts');
+    expect(mockBookingInsertRow).toHaveBeenCalledWith(
+      expect.objectContaining({
+        service_type: 'packaged_offer',
+        include_pre_call_brief: true,
+        duration_minutes: 45,
+        expert_offer_id: 'offer-1',
+        offer_snapshot: {
+          offer_id: 'offer-1',
+          title: 'Strategy call',
+          slug: 'strategy-call',
+          duration_minutes: 45,
+          price_cents: 1000,
+        },
+      }),
+    );
+    const [paymentIntentParams] = mockStripePaymentIntentsCreate.mock.calls[0];
+    expect(paymentIntentParams).toEqual(
+      expect.objectContaining({
+        amount: 1000,
+        metadata: expect.objectContaining({
+          service_type: 'packaged_offer',
+          offer_id: 'offer-1',
+        }),
+      }),
+    );
+    expect(paymentIntentParams.metadata).not.toHaveProperty('pricing_mode');
+  });
+
+  it('rejects unpublished offers and campaign or comp-grant combinations', async () => {
+    mockOfferMaybeSingle.mockResolvedValue({
+      data: { ...publishedOffer, status: 'unpublished' },
+      error: null,
+    });
+
+    const agent = new BookingAgent();
+    await expect(
+      agent.bookSession({
+        menteeId: 'mentee-1',
+        mentorId: 'mentor-1',
+        serviceType: 'packaged_offer',
+        scheduledAt: '2030-01-02T18:00:00.000Z',
+        menteeGoals: 'Learn about propulsion',
+        menteeBackground: 'Early-career engineer',
+        offerSlug: 'strategy-call',
+      }),
+    ).rejects.toThrow('This session is not available.');
+
+    mockOfferMaybeSingle.mockResolvedValue({ data: publishedOffer, error: null });
+    await expect(
+      agent.bookSession({
+        menteeId: 'mentee-1',
+        mentorId: 'mentor-1',
+        serviceType: 'packaged_offer',
+        scheduledAt: '2030-01-02T18:00:00.000Z',
+        menteeGoals: 'Learn about propulsion',
+        menteeBackground: 'Early-career engineer',
+        offerSlug: 'strategy-call',
+        campaignId: 'chris-sembroski',
+      }),
+    ).rejects.toThrow('This session is booked from its share link, not the campaign checkout.');
+
+    await expect(
+      agent.bookSession({
+        menteeId: 'mentee-1',
+        mentorId: 'mentor-1',
+        serviceType: 'packaged_offer',
+        scheduledAt: '2030-01-02T18:00:00.000Z',
+        menteeGoals: 'Learn about propulsion',
+        menteeBackground: 'Early-career engineer',
+        offerSlug: 'strategy-call',
+        applyCompGrantId: 'a0000003-0000-4000-8000-000000000003',
+      }),
+    ).rejects.toThrow('Complimentary sessions do not apply to packaged offers.');
   });
 });
