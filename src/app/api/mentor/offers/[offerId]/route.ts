@@ -2,30 +2,16 @@ import { NextResponse } from 'next/server';
 import type { Database } from '@/lib/database.types';
 import { canEditPriceDuration, canEditSlug } from '@/lib/expert-offers/guards';
 import { toExpertOfferListItem } from '@/lib/expert-offers/path';
-import { requireMentorOffersAccess } from '@/lib/expert-offers/resolve-mentor';
+import {
+  loadOwnedOffer,
+  requireMentorOffersAccess,
+} from '@/lib/expert-offers/resolve-mentor';
 import { OfferPatchSchema } from '@/lib/expert-offers/schema';
 import { nextOfferSlug, slugifyOfferTitle } from '@/lib/expert-offers/slug';
 import { supabaseAdmin } from '@/lib/supabase';
 
 type ExpertOfferRow = Database['public']['Tables']['expert_offers']['Row'];
 type ExpertOfferUpdate = Database['public']['Tables']['expert_offers']['Update'];
-
-async function loadOwnedOffer(
-  offerId: string,
-  mentorId: string,
-): Promise<ExpertOfferRow | NextResponse> {
-  const { data, error } = await supabaseAdmin
-    .from('expert_offers')
-    .select('*')
-    .eq('id', offerId)
-    .eq('mentor_id', mentorId)
-    .maybeSingle();
-
-  if (error || !data) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  }
-  return data as ExpertOfferRow;
-}
 
 export async function GET(
   _request: Request,
