@@ -95,4 +95,16 @@ describe('computeBookingTotalCents', () => {
       }),
     ).toThrow(/not available in D1/);
   });
+
+  it('charges the frozen offer price and skips hourly proration', () => {
+    expect(
+      computeBookingTotalCents({
+        serviceType: 'packaged_offer',
+        liveSessionPriceCents: 32_000,
+        includePreCallBrief: false,
+        durationMinutes: 45,
+        offerPriceCents: 1000,
+      }),
+    ).toBe(1000);
+  });
 });
