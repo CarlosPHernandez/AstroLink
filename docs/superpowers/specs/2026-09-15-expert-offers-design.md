@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-15  
 **Source PRD:** `/Users/carloshernandez/Downloads/AstroLink_Expert_Offers_PRD_2026-09-15.md`  
-**Status:** Ready for review — do not implement until this file is accepted  
+**Status:** Accepted — implementation plan `docs/superpowers/plans/2026-09-15-expert-offers.md`  
 **Code names:** Feature = Expert Offers. Dashboard tab / public noun = **Services**. Table prefix = `expert_offers`.
 
 ## Problem
