@@ -6,12 +6,13 @@ import {
 import { getChrisMentorSlug } from '@/lib/chris-campaign/chris-campaign-config';
 import { parseChrisCampaignReferrer } from '@/lib/chris-campaign/chris-campaign-referrer';
 import { ChrisBookingWizard } from '@/components/chris-campaign/chris-booking-wizard';
+import { loadPublicOffer } from '@/lib/expert-offers/load-public-offer';
 import { getMentorBySlug, listPublicMentors } from '@/lib/mentor-directory';
 import { clampSessionDurationMinutes, SESSION_DURATION_DEFAULT } from '@/lib/session-duration';
 import { getAvailableGrantForUser } from '@/lib/session-comp-grants';
 import { toAuthWithRedirect } from '@/lib/auth-redirect';
 import { getSession } from '@/lib/session';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import BookingClient from './booking-client';
 import { SpaBookingWithReportTracker } from '@/components/path-assessment/spa-analytics-effects';
 
@@ -25,6 +26,7 @@ export default async function BookingPage({
     ref?: string;
     duration?: string;
     assessment?: string;
+    offer?: string;
   }>;
 }) {
   const {
@@ -34,16 +36,58 @@ export default async function BookingPage({
     ref: refParam,
     duration: durationParam,
     assessment: assessmentTokenParam,
+    offer,
   } = await searchParams;
+  const offerSlugParam = offer?.trim() || null;
   const chrisCampaign = isChrisCampaignBookingQuery(campaign);
 
   const session = await getSession();
-  const mentorSlug = chrisCampaign ? getChrisMentorSlug() : mentorSlugParam;
+  // Offer query wins over campaign=chris — never resolve Chris as the mentor.
+  const mentorSlug = offerSlugParam
+    ? mentorSlugParam
+    : chrisCampaign
+      ? getChrisMentorSlug()
+      : mentorSlugParam;
 
   const [experts, mentor] = await Promise.all([
     listPublicMentors(),
     mentorSlug ? getMentorBySlug(mentorSlug) : Promise.resolve(null),
   ]);
+
+  if (offerSlugParam) {
+    if (!session) {
+      const returnQs = new URLSearchParams();
+      if (mentorSlugParam?.trim()) returnQs.set('mentor', mentorSlugParam.trim());
+      returnQs.set('offer', offerSlugParam);
+      redirect(toAuthWithRedirect(`/booking?${returnQs.toString()}`));
+    }
+
+    const publicOffer = await loadPublicOffer(mentorSlugParam ?? '', offerSlugParam);
+    if (!publicOffer || !mentor) {
+      notFound();
+    }
+
+    return (
+      <BookingClient
+        session={session}
+        experts={experts}
+        mentor={mentor}
+        invalidMentorSlug={null}
+        skipPayments={isStripePaymentsSkipped()}
+        chrisCampaign={false}
+        prefillScheduledAt={null}
+        prefillDurationMinutes={publicOffer.offer.duration_minutes}
+        assessmentToken={null}
+        initialCompGrant={null}
+        offer={{
+          slug: publicOffer.offer.slug,
+          title: publicOffer.offer.title,
+          durationMinutes: publicOffer.offer.duration_minutes,
+          priceCents: publicOffer.offer.price_cents,
+        }}
+      />
+    );
+  }
 
   if (chrisCampaign) {
     if (!mentor) {
