@@ -29,6 +29,8 @@ let flagSnapshot: MentorOfferFlags | null = null;
 let didMutateMentor = false;
 let publicOfferPath = '';
 
+test.describe.configure({ mode: 'serial' });
+
 function skipIfMissingRelation(error: unknown): void {
   const message = error instanceof Error ? error.message : String(error);
   if (isMissingExpertOffersRelation(message)) {
@@ -37,8 +39,6 @@ function skipIfMissingRelation(error: unknown): void {
 }
 
 test.describe('Expert offers demand path', () => {
-  test.describe.configure({ mode: 'serial' });
-
   test('homepage and /experts do not list packaged sessions or the e2e offer', async ({
     page,
   }) => {
@@ -70,9 +70,9 @@ test.describe('Expert offers demand path', () => {
           test.skip(true, `E2E mentor ${E2E_MENTOR_EMAIL} missing in Supabase`);
         }
         await setMentorExpertOffersEnabled(E2E_MENTOR_EMAIL, true);
+        didMutateMentor = true;
         // Seed Chris is stripe_onboarding_completed=false; publish requires payout setup.
         await setMentorStripeOnboardingCompleted(E2E_MENTOR_EMAIL, true);
-        didMutateMentor = true;
       } catch (error) {
         skipIfMissingRelation(error);
         throw error;
@@ -96,15 +96,11 @@ test.describe('Expert offers demand path', () => {
 
       if (!didMutateMentor || !flagSnapshot) return;
 
-      try {
-        await setMentorExpertOffersEnabled(E2E_MENTOR_EMAIL, flagSnapshot.expert_offers_enabled);
-        await setMentorStripeOnboardingCompleted(
-          E2E_MENTOR_EMAIL,
-          flagSnapshot.stripe_onboarding_completed,
-        );
-      } catch {
-        // Restore best-effort so later specs see the default-off flag.
-      }
+      await setMentorExpertOffersEnabled(E2E_MENTOR_EMAIL, flagSnapshot.expert_offers_enabled);
+      await setMentorStripeOnboardingCompleted(
+        E2E_MENTOR_EMAIL,
+        flagSnapshot.stripe_onboarding_completed,
+      );
     });
 
     test.describe('authenticated mentor', () => {
@@ -192,7 +188,9 @@ test.describe('Expert offers demand path', () => {
         });
 
         await expect(page.locator('input[type=range]')).toHaveCount(0);
-        await expect(page.locator('#booking-checkout-summary').getByText('$10.00')).toBeVisible();
+        await expect(
+          page.locator('#booking-checkout-summary').getByText('$10.00').first(),
+        ).toBeVisible();
         await expect(page.getByTestId('booking-offer-sku')).toContainText(OFFER_TITLE);
 
         const scheduledAt = futureDatetimeLocal();
@@ -214,6 +212,16 @@ test.describe('Expert offers demand path', () => {
         await page.waitForURL(/\/dashboard\/mentee/, { timeout: 90_000 });
         await expect(page.getByText(OFFER_TITLE)).toBeVisible();
       });
+    });
+  });
+
+  test.describe('services tab after flag restore', () => {
+    test.use({ storageState: mentorAuthFile });
+
+    test('hides Services tab after expert offers flag restore', async ({ page }) => {
+      await page.goto('/dashboard/mentor');
+      await expect(page.getByTestId('mentor-dashboard-sidebar')).toBeVisible();
+      await expect(page.getByTestId('mentor-tab-offers')).toHaveCount(0);
     });
   });
 });

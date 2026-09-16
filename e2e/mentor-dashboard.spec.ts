@@ -36,6 +36,10 @@ test.describe('Mentor dashboard', () => {
     });
 
     test('hides Services tab when expert offers flag is off', async ({ page }) => {
+      test.skip(
+        !process.env.CI,
+        'Chris flag is mutated by expert-offers.spec.ts under local parallel workers',
+      );
       await page.goto('/dashboard/mentor');
       await expect(page.getByTestId('mentor-dashboard-sidebar')).toBeVisible();
       await expect(page.getByTestId('mentor-tab-offers')).toHaveCount(0);
