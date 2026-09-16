@@ -8,7 +8,12 @@ export type PublishMentor = {
   slug: string | null;
 };
 
-export function assertCanPublish(mentor: PublishMentor, publishedCount: number): string | null {
+export function publishedCapError(): string {
+  return `You can publish up to ${OFFER_PUBLISHED_CAP} sessions. Unpublish one first.`;
+}
+
+/** Stripe / listing / flag checks. Cap is enforced atomically in publish_expert_offer. */
+export function assertMentorCanPublish(mentor: PublishMentor): string | null {
   if (!mentor.expert_offers_enabled) {
     return 'Packaged sessions are not enabled for this account.';
   }
@@ -24,8 +29,14 @@ export function assertCanPublish(mentor: PublishMentor, publishedCount: number):
   if (!mentor.slug) {
     return 'Add a public profile slug before publishing.';
   }
+  return null;
+}
+
+export function assertCanPublish(mentor: PublishMentor, publishedCount: number): string | null {
+  const blocked = assertMentorCanPublish(mentor);
+  if (blocked) return blocked;
   if (publishedCount >= OFFER_PUBLISHED_CAP) {
-    return `You can publish up to ${OFFER_PUBLISHED_CAP} sessions. Unpublish one first.`;
+    return publishedCapError();
   }
   return null;
 }

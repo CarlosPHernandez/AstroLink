@@ -1344,6 +1344,15 @@ export type Database = {
         }
         Returns: Json
       }
+      publish_expert_offer: {
+        Args: {
+          p_offer_id: string
+          p_mentor_id: string
+          p_now: string
+          p_cap: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       agent_id:

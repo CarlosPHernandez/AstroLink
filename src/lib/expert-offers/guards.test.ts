@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   assertCanArchive,
   assertCanPublish,
+  assertMentorCanPublish,
   canEditPriceDuration,
   canEditSlug,
+  publishedCapError,
 } from '@/lib/expert-offers/guards';
 
 const ready = {
@@ -27,7 +29,12 @@ describe('assertCanPublish', () => {
     expect(assertCanPublish({ ...ready, stripe_onboarding_completed: false }, 0)).toMatch(/payout/i);
     expect(assertCanPublish({ ...ready, compliance_status: 'pending_review' }, 0)).toMatch(/approved/i);
     expect(assertCanPublish({ ...ready, is_listed: false }, 0)).toMatch(/listed/i);
-    expect(assertCanPublish(ready, 5)).toMatch(/5/);
+    expect(assertCanPublish(ready, 5)).toBe(publishedCapError());
+  });
+
+  it('mentor-ready checks do not include the published cap', () => {
+    expect(assertMentorCanPublish(ready)).toBeNull();
+    expect(assertCanPublish(ready, 4)).toBeNull();
   });
 });
 
