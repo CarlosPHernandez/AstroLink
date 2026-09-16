@@ -13,7 +13,7 @@ import {
   type MenteeBookingView,
 } from '@/lib/booking-partition';
 import type { BriefingPayload } from '@/lib/briefing-display';
-import { formatServiceTypeLabel } from '@/lib/types';
+import { formatOfferBookingLabel } from '@/lib/expert-offers/label';
 import {
   SessionCompGrantBanner,
   type SessionCompGrantBannerGrant,
@@ -217,7 +217,11 @@ export default function MenteeDashboardClient({
           <div>
             <h3 className="text-base font-bold text-on-surface">{booking.mentorName}</h3>
             <p className="text-xs text-on-surface-variant mt-0.5">
-              {formatServiceTypeLabel(booking.serviceType, booking.durationMinutes)} ·{' '}
+              {formatOfferBookingLabel({
+                serviceType: booking.serviceType,
+                durationMinutes: booking.durationMinutes,
+                offerTitle: booking.offerTitle,
+              })} ·{' '}
               <span suppressHydrationWarning>{formatSessionWhen(booking.scheduledAt)}</span>
             </p>
           </div>

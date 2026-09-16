@@ -5,6 +5,7 @@ export function bookingDurationMinutes(serviceType: ServiceType): number {
     case 'extended_session':
       return 60;
     case 'session_1on1':
+    case 'packaged_offer':
       return 30;
     case 'pre_call_brief':
       return 30;

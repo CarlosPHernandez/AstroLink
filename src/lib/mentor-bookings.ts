@@ -78,7 +78,7 @@ export async function listMentorBookings(mentorId: string): Promise<MentorBookin
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .select(
-      'id, service_type, scheduled_at, status, match_reason, daily_room_url, briefing_json, intake_background, duration_minutes, path_assessment_id, users(full_name), path_assessments(first_name, answers_json, report_json)',
+      'id, service_type, scheduled_at, status, match_reason, daily_room_url, briefing_json, intake_background, duration_minutes, offer_snapshot, path_assessment_id, users(full_name), path_assessments(first_name, answers_json, report_json)',
     )
     .eq('mentor_id', mentorId)
     .order('scheduled_at', { ascending: false });
@@ -90,7 +90,7 @@ export async function listMentorBookings(mentorId: string): Promise<MentorBookin
       const fallback = await supabaseAdmin
         .from('bookings')
         .select(
-          'id, service_type, scheduled_at, status, match_reason, daily_room_url, briefing_json, intake_background, duration_minutes, users(full_name)',
+          'id, service_type, scheduled_at, status, match_reason, daily_room_url, briefing_json, intake_background, duration_minutes, offer_snapshot, users(full_name)',
         )
         .eq('mentor_id', mentorId)
         .order('scheduled_at', { ascending: false });
@@ -110,6 +110,7 @@ export async function listMentorBookings(mentorId: string): Promise<MentorBookin
           intakeBackground: row.intake_background,
           briefing: (row.briefing_json as BriefingPayload | null) ?? null,
           durationMinutes: row.duration_minutes ?? undefined,
+          offerTitle: (row.offer_snapshot as { title?: string } | null)?.title ?? null,
           pathAssessment: null,
         };
       });
@@ -135,6 +136,7 @@ export async function listMentorBookings(mentorId: string): Promise<MentorBookin
       intakeBackground: row.intake_background,
       briefing: (row.briefing_json as BriefingPayload | null) ?? null,
       durationMinutes: row.duration_minutes ?? undefined,
+      offerTitle: (row.offer_snapshot as { title?: string } | null)?.title ?? null,
       pathAssessment: mapPathAssessment(assessmentJoin),
     };
   });

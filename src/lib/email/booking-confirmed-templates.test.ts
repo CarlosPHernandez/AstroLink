@@ -58,4 +58,15 @@ describe('buildMenteeConfirmationEmail', () => {
     expect(email.html).not.toContain('Expert session (30 min)');
     expect(email.attachment).toBeUndefined();
   });
+
+  it('uses the offer snapshot title for packaged_offer bookings', () => {
+    const email = buildMenteeConfirmationEmail({
+      ...baseContext,
+      serviceType: 'packaged_offer',
+      durationMinutes: 45,
+      offerTitle: 'Book lessons and how to apply them',
+    });
+    expect(email.html).toContain('Book lessons and how to apply them (45 min)');
+    expect(email.html).not.toContain('Packaged session (45 min)');
+  });
 });

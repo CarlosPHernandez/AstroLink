@@ -10,7 +10,7 @@ export { isBookingUpcoming, partitionMenteeBookings } from '@/lib/booking-partit
 export async function listMenteeBookings(menteeId: string): Promise<MenteeBookingView[]> {
   const { data, error } = await supabaseAdmin
     .from('bookings')
-    .select('id, service_type, scheduled_at, status, match_reason, daily_room_url, briefing_json, duration_minutes, mentors(full_name)')
+    .select('id, service_type, scheduled_at, status, match_reason, daily_room_url, briefing_json, duration_minutes, offer_snapshot, mentors(full_name)')
     .eq('mentee_id', menteeId)
     .order('scheduled_at', { ascending: false });
 
@@ -51,6 +51,7 @@ export async function listMenteeBookings(menteeId: string): Promise<MenteeBookin
       dailyRoomUrl: row.daily_room_url,
       briefing: (row.briefing_json as BriefingPayload | null) ?? null,
       durationMinutes: row.duration_minutes ?? undefined,
+      offerTitle: (row.offer_snapshot as { title?: string } | null)?.title ?? null,
       hasSubmittedReview: reviewedBookingIds.has(row.id),
     };
   });
