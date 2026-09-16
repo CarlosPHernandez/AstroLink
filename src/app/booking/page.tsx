@@ -63,7 +63,7 @@ export default async function BookingPage({
     }
 
     const publicOffer = await loadPublicOffer(mentorSlugParam ?? '', offerSlugParam);
-    if (!publicOffer || !mentor) {
+    if (!publicOffer) {
       notFound();
     }
 
@@ -71,7 +71,7 @@ export default async function BookingPage({
       <BookingClient
         session={session}
         experts={experts}
-        mentor={mentor}
+        mentor={publicOffer.expert}
         invalidMentorSlug={null}
         skipPayments={isStripePaymentsSkipped()}
         chrisCampaign={false}

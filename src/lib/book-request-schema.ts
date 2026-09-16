@@ -59,6 +59,14 @@ export const BookBodySchema = z
     const goalsTrim = data.goals.trim();
     const bgTrim = data.background.trim();
 
+    if (data.serviceType === 'packaged_offer' && !data.offerSlug) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Packaged sessions must be booked from their share link.',
+        path: ['serviceType'],
+      });
+    }
+
     if (data.offerSlug) {
       if (!data.mentorId) {
         ctx.addIssue({

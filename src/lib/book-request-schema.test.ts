@@ -190,6 +190,20 @@ describe('BookBodySchema', () => {
     expect(result.success).toBe(false);
   });
 
+  it('rejects packaged_offer without offerSlug', () => {
+    const result = BookBodySchema.safeParse({
+      ...validBody,
+      serviceType: 'packaged_offer',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const fields = result.error.flatten().fieldErrors;
+      expect(
+        fields.serviceType?.[0] ?? fields.offerSlug?.[0],
+      ).toBe('Packaged sessions must be booked from their share link.');
+    }
+  });
+
   it('accepts offerSlug with mentorId and omits serviceType', () => {
     const parsed = BookBodySchema.parse({
       mentorId: validBody.mentorId,
