@@ -58,38 +58,66 @@ function priceDurationLocked(offer: ExpertOfferListItem): boolean {
   return offer.status !== 'draft' && offer.bookings_paid > 0;
 }
 
-async function readError(res: Response): Promise<string> {
-  try {
-    const data = (await res.json()) as { error?: string };
-    return data.error ?? 'Request failed';
-  } catch {
-    return 'Request failed';
-  }
+function OfferActionAlert({
+  message,
+  kind,
+}: {
+  message: string;
+  kind: 'publish' | 'other';
+}) {
+  return (
+    <div className="md-alert md-alert-error" role="alert" data-testid="mentor-offer-error">
+      <p className="md-alert-title">
+        {kind === 'publish' ? "Can't publish this session" : 'Something went wrong'}
+      </p>
+      <p className="md-alert-body">{message}</p>
+    </div>
+  );
 }
 
 export function MentorOffersPanel() {
   const [items, setItems] = useState<ExpertOfferListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [errorKind, setErrorKind] = useState<'publish' | 'other'>('other');
+  const [errorOfferId, setErrorOfferId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | 'new' | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
+  function clearError() {
+    setError('');
+    setErrorKind('other');
+    setErrorOfferId(null);
+  }
+
+  function showError(message: string, kind: 'publish' | 'other' = 'other', offerId: string | null = null) {
+    setError(message);
+    setErrorKind(kind);
+    setErrorOfferId(offerId);
+  }
+
   const loadList = useCallback(async () => {
     setLoading(true);
     setError('');
+    setErrorKind('other');
+    setErrorOfferId(null);
     try {
       const res = await fetch('/api/mentor/offers');
       const data = (await res.json()) as { items?: ExpertOfferListItem[]; error?: string };
       if (!res.ok) {
         setError(data.error ?? 'Could not load sessions.');
+        setErrorKind('other');
+        setErrorOfferId(null);
         setItems([]);
       } else {
         setItems(data.items ?? []);
       }
     } catch {
       setError('Network error');
+      setErrorKind('other');
+      setErrorOfferId(null);
       setItems([]);
     }
     setLoading(false);
@@ -113,13 +141,13 @@ export function MentorOffersPanel() {
   function openCreate() {
     setEditingId('new');
     setForm(EMPTY_FORM);
-    setError('');
+    clearError();
   }
 
   function openEdit(offer: ExpertOfferListItem) {
     setEditingId(offer.id);
     setForm(formFromOffer(offer));
-    setError('');
+    clearError();
   }
 
   function closeForm() {
@@ -137,7 +165,11 @@ export function MentorOffersPanel() {
   async function handleSave() {
     const priceCents = dollarsToPriceCents(form.priceDollars);
     if (priceCents == null) {
-      setError('Price must be between $10 and $500.');
+      showError(
+        'Price must be between $10 and $500.',
+        'other',
+        typeof editingId === 'string' && editingId !== 'new' ? editingId : null,
+      );
       return;
     }
 
@@ -156,7 +188,8 @@ export function MentorOffersPanel() {
     }
 
     setBusy(true);
-    setError('');
+    clearError();
+    const saveOfferId = typeof editingId === 'string' && editingId !== 'new' ? editingId : null;
     try {
       const isCreate = editingId === 'new' || editingId == null;
       const res = await fetch(isCreate ? '/api/mentor/offers' : `/api/mentor/offers/${editingId}`, {
@@ -175,7 +208,7 @@ export function MentorOffersPanel() {
       });
       const data = (await res.json()) as ExpertOfferListItem & { error?: string };
       if (!res.ok) {
-        setError(data.error ?? 'Could not save session.');
+        showError(data.error ?? 'Could not save session.', 'other', saveOfferId);
         setBusy(false);
         return;
       }
@@ -183,19 +216,23 @@ export function MentorOffersPanel() {
       setEditingId(data.id);
       setForm(formFromOffer(data));
     } catch {
-      setError('Network error');
+      showError('Network error', 'other', saveOfferId);
     }
     setBusy(false);
   }
 
   async function postAction(offerId: string, action: 'publish' | 'unpublish' | 'archive') {
     setBusy(true);
-    setError('');
+    clearError();
     try {
       const res = await fetch(`/api/mentor/offers/${offerId}/${action}`, { method: 'POST' });
       const data = (await res.json()) as ExpertOfferListItem & { error?: string };
       if (!res.ok) {
-        setError(data.error ?? `Could not ${action} session.`);
+        showError(
+          data.error ?? `Could not ${action} session.`,
+          action === 'publish' ? 'publish' : 'other',
+          offerId,
+        );
         setBusy(false);
         return;
       }
@@ -204,7 +241,7 @@ export function MentorOffersPanel() {
         setForm(formFromOffer(data));
       }
     } catch {
-      setError('Network error');
+      showError('Network error', action === 'publish' ? 'publish' : 'other', offerId);
     }
     setBusy(false);
   }
@@ -216,7 +253,7 @@ export function MentorOffersPanel() {
       setCopiedId(offer.id);
       window.setTimeout(() => setCopiedId((current) => (current === offer.id ? null : current)), 1500);
     } catch {
-      setError('Could not copy link.');
+      showError('Could not copy link.', 'other', offer.id);
     }
   }
 
@@ -235,10 +272,8 @@ export function MentorOffersPanel() {
         }
       />
 
-      {error ? (
-        <p className="md-empty" role="alert">
-          {error}
-        </p>
+      {error && editingId == null && errorOfferId == null ? (
+        <OfferActionAlert message={error} kind={errorKind} />
       ) : null}
 
       {loading ? (
@@ -335,6 +370,8 @@ export function MentorOffersPanel() {
             </p>
           ) : null}
 
+          {error ? <OfferActionAlert message={error} kind={errorKind} /> : null}
+
           <div className="md-btn-row">
             {editingOffer?.status !== 'archived' ? (
               <button type="submit" className="md-btn md-btn-primary" disabled={busy}>
@@ -410,6 +447,9 @@ export function MentorOffersPanel() {
                   {copiedId === offer.id ? 'Copied' : 'Copy link'}
                 </button>
               </p>
+              {error && errorOfferId === offer.id && editingId == null ? (
+                <OfferActionAlert message={error} kind={errorKind} />
+              ) : null}
               <div className="md-btn-row">
                 <button
                   type="button"
