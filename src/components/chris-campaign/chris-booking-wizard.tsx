@@ -45,6 +45,7 @@ import {
   resolveChrisPricingTier,
 } from '@/lib/chris-campaign/chris-pricing';
 import { useChrisWizardAnalytics } from '@/lib/chris-campaign/use-chris-wizard-analytics';
+import { trackMetaInitiateCheckout } from '@/lib/meta-pixel';
 
 import { ChrisBookingFulfillmentOverlay } from '@/components/chris-campaign/chris-booking-fulfillment-overlay';
 import { ChrisBookingNextSteps } from '@/components/chris-campaign/chris-booking-next-steps';
@@ -529,6 +530,12 @@ export function ChrisBookingWizard({
         skipPayment: !!json.data.skipPayment,
       });
       wizardAnalytics.reportCheckoutStart();
+      if (!json.data.skipPayment) {
+        trackMetaInitiateCheckout({
+          bookingId: json.data.bookingId,
+          amountCents: json.data.amountCents,
+        });
+      }
 
       if (json.data.skipPayment) {
         router.refresh();

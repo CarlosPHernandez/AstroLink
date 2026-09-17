@@ -25,6 +25,7 @@ import {
   isJoinRoomEnabled,
   joinRoomAvailabilityTitle,
 } from '@/lib/join-window';
+import { trackMetaPurchaseFromRedirect } from '@/lib/meta-pixel';
 import PostSessionReviewClient from './post-session-review-client';
 
 interface SessionData {
@@ -164,6 +165,9 @@ export default function MenteeDashboardClient({
     }
 
     handledBookedRef.current = bookedId;
+    if (!skipPayments) {
+      trackMetaPurchaseFromRedirect(bookedId);
+    }
 
     const frame = window.requestAnimationFrame(() => {
       const briefing = localBriefings[booking.id] ?? booking.briefing;
@@ -176,7 +180,7 @@ export default function MenteeDashboardClient({
       router.replace('/dashboard/mentee', { scroll: false });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [bookedId, bookings, generateBriefing, localBriefings, openBriefingPanel, router]);
+  }, [bookedId, bookings, generateBriefing, localBriefings, openBriefingPanel, router, skipPayments]);
 
   // Auto-refresh a few times if the just-booked item is still pending_payment.
   // Lets the Stripe webhook (succeeded -> fulfill -> confirmed + room) catch up and
