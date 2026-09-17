@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MentorPageHeader } from '@/app/dashboard/mentor/mentor-page-header';
 import { OFFER_DURATIONS, type OfferDurationMinutes } from '@/lib/expert-offers/constants';
+import { formatOfferStatusLabel } from '@/lib/expert-offers/label';
 import { dollarsToPriceCents } from '@/lib/expert-offers/money';
 import type { ExpertOfferListItem, ExpertOfferStatus } from '@/lib/expert-offers/types';
 import { formatMoney } from '@/lib/format';
@@ -258,7 +259,7 @@ export function MentorOffersPanel() {
   }
 
   return (
-    <div className="md-stack" data-testid="mentor-offers-tab">
+    <div className="md-stack md-offers" data-testid="mentor-offers-tab">
       <MentorPageHeader
         as="h2"
         title="Services"
@@ -385,7 +386,7 @@ export function MentorOffersPanel() {
                 disabled={busy}
                 onClick={() => void postAction(editingOffer.id, 'publish')}
               >
-                Publish {editingOffer.public_url}
+                Publish
               </button>
             ) : null}
             {editingOffer?.status === 'published' ? (
@@ -413,6 +414,17 @@ export function MentorOffersPanel() {
             </button>
           </div>
         </form>
+      ) : items.length === 0 && error && errorOfferId == null ? (
+        <div className="md-stack-tight" data-testid="mentor-offers-load-error">
+          <button
+            type="button"
+            className="md-btn md-btn-ghost"
+            disabled={busy}
+            onClick={() => void loadList()}
+          >
+            Try again
+          </button>
+        </div>
       ) : items.length === 0 ? (
         <div className="md-stack-tight" data-testid="mentor-offers-empty">
           <p className="md-empty">{BETA_COPY}</p>
@@ -430,7 +442,9 @@ export function MentorOffersPanel() {
             >
               <div className="md-card-head">
                 <p className="md-card-title">{offer.title}</p>
-                <span className={STATUS_CHIP[offer.status]}>{offer.status}</span>
+                <span className={STATUS_CHIP[offer.status]}>
+                  {formatOfferStatusLabel(offer.status)}
+                </span>
               </div>
               <p className="md-card-meta">
                 {formatMoney(offer.price_cents)} · {offer.duration_minutes} min · {offer.page_views}{' '}
@@ -465,7 +479,7 @@ export function MentorOffersPanel() {
                     disabled={busy}
                     onClick={() => void postAction(offer.id, 'publish')}
                   >
-                    Publish {offer.public_url}
+                    Publish
                   </button>
                 ) : null}
                 {offer.status === 'published' ? (

@@ -680,6 +680,23 @@
   color: var(--md-muted);
 }
 
+/* Services tab only — rounder cards/chips; rest of the dash stays as-is */
+.mentor-dash .md-offers .md-card {
+  border-radius: 16px;
+  padding: var(--md-space-3) var(--md-space-2);
+}
+
+.mentor-dash .md-offers .md-chip {
+  border-radius: 999px;
+  padding: 3px 10px;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+.mentor-dash .md-offers .md-btn {
+  border-radius: 10px;
+}
+
 /* Buttons */
 .mentor-dash .md-btn {
   display: inline-flex;

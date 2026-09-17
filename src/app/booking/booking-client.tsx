@@ -23,6 +23,7 @@ import { CHRIS_BOOKING_CAMPAIGN_QUERY } from '@/lib/chris-campaign/chris-campaig
 import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-booking-mode';
 import { BookBodySchema } from '@/lib/book-request-schema';
 import { getDashboardPathForRole, getPostBookingDashboardPath } from '@/lib/dashboard-paths';
+import { bookingOfferBackNav } from '@/lib/expert-offers/path';
 import { formatMoney } from '@/lib/format';
 import type { SessionData } from '@/lib/session';
 import { SESSION_DURATION_MIN } from '@/lib/session-duration';
@@ -259,7 +260,7 @@ function CheckoutSummary({
               </dt>
               <dd className="font-mono text-on-surface tabular-nums shrink-0">
                 {offer
-                  ? formatMoney(offer.priceCents)
+                  ? `${offer.durationMinutes} min · ${formatMoney(offer.priceCents)}`
                   : isLive
                     ? mentor
                       ? `${formatMoney(mentor.liveSessionPriceCents)}/hr`
@@ -498,6 +499,11 @@ export default function BookingClient({
 
   const needsExpert = form.serviceType === 'session_1on1';
   const pickerVisible = !offer && !chrisCampaign && needsExpert && showPicker;
+  const backNav = bookingOfferBackNav({
+    chrisCampaign,
+    mentorSlug: offer ? activeMentor?.slug ?? mentor?.slug : null,
+    offerSlug: offer?.slug,
+  });
 
   const replaceBookingQuery = (mentorSlug: string | null) => {
     const qs = new URLSearchParams();
@@ -702,11 +708,11 @@ export default function BookingClient({
       >
         <div className="mb-8">
           <Link
-            href={chrisCampaign ? '/talk-with-chris' : '/experts'}
+            href={backNav.href}
             className="inline-flex items-center gap-0.5 text-label-md text-on-surface-variant hover:text-primary mb-5 transition-colors"
           >
             <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-            {chrisCampaign ? 'Talk with Chris' : 'Directory'}
+            {backNav.label}
           </Link>
 
           {activeMentor && !showPicker ? (

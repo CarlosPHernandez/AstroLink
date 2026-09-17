@@ -4,6 +4,22 @@ export function offerPublicPath(mentorSlug: string, offerSlug: string): string {
   return `/s/${mentorSlug}/${offerSlug}`;
 }
 
+export function bookingOfferBackNav(opts: {
+  chrisCampaign?: boolean;
+  mentorSlug?: string | null;
+  offerSlug?: string | null;
+}): { href: string; label: string } {
+  const mentorSlug = opts.mentorSlug?.trim() ?? '';
+  const offerSlug = opts.offerSlug?.trim() ?? '';
+  if (mentorSlug && offerSlug) {
+    return { href: offerPublicPath(mentorSlug, offerSlug), label: 'Session' };
+  }
+  if (opts.chrisCampaign) {
+    return { href: '/talk-with-chris', label: 'Talk with Chris' };
+  }
+  return { href: '/experts', label: 'Directory' };
+}
+
 export function toExpertOfferListItem(
   row: Omit<ExpertOfferListItem, 'public_url'>,
   mentorSlug: string,

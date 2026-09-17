@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatOfferBookingLabel } from '@/lib/expert-offers/label';
+import { formatOfferBookingLabel, formatOfferStatusLabel } from '@/lib/expert-offers/label';
 
 describe('formatOfferBookingLabel', () => {
   it('prefers the snapshot title', () => {
@@ -19,5 +19,14 @@ describe('formatOfferBookingLabel', () => {
         durationMinutes: 30,
       }),
     ).toBe('Packaged session (30 min)');
+  });
+});
+
+describe('formatOfferStatusLabel', () => {
+  it('title-cases dashboard status chips', () => {
+    expect(formatOfferStatusLabel('published')).toBe('Published');
+    expect(formatOfferStatusLabel('draft')).toBe('Draft');
+    expect(formatOfferStatusLabel('unpublished')).toBe('Unpublished');
+    expect(formatOfferStatusLabel('archived')).toBe('Archived');
   });
 });

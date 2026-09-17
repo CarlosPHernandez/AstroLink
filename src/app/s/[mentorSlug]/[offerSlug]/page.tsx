@@ -37,19 +37,28 @@ export default async function PublicOfferPage({ params }: PageProps) {
   const profileHref = `/experts/${expert.slug}`;
 
   return (
-    <div className="min-h-screen bg-background font-[family-name:var(--font-montserrat)] text-on-surface">
+    <div className="landing-mission min-h-screen bg-[var(--landing-canvas)] text-[var(--landing-text)] font-landing-body">
       <OfferPublicClient mentorSlug={mentorSlug} offerSlug={offerSlug} />
-      <header className="border-b border-outline-variant bg-surface">
-        <div className="mx-auto flex w-full max-w-[var(--max-width-content)] items-center px-lg py-md">
-          <Link href="/" className="text-sm font-bold tracking-tight text-on-surface">
+      <header className="border-b border-[var(--landing-border)] bg-[var(--landing-surface)]">
+        <div className="mx-auto flex w-full max-w-[40rem] items-center justify-between px-6 py-4">
+          <Link
+            href="/"
+            className="text-[1.05rem] font-bold tracking-tight text-[var(--landing-text)]"
+          >
             AstroLink
+          </Link>
+          <Link
+            href="/experts"
+            className="text-sm text-[var(--landing-muted)] hover:text-[var(--landing-text)]"
+          >
+            Directory
           </Link>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-[var(--max-width-content)] px-lg py-xl">
-        <article className="rounded-lg border border-outline-variant bg-surface p-lg shadow-sm sm:p-xl">
-          <div className="flex items-center gap-md">
-            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-outline-variant bg-surface-container-low">
+      <main className="mx-auto w-full max-w-[40rem] px-6 py-10 sm:py-14">
+        <article className="rounded-xl border border-[var(--landing-border)] bg-[var(--landing-surface)] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] sm:p-8">
+          <div className="flex items-center gap-4">
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[12px] border border-[var(--landing-border)] bg-[var(--landing-surface-soft)]">
               <Image
                 src={toOptimizedImageUrl(expert.imageUrl)}
                 alt={expert.name}
@@ -60,35 +69,37 @@ export default async function PublicOfferPage({ params }: PageProps) {
               />
             </div>
             <div className="min-w-0">
-              <p className="text-base font-semibold text-on-surface">{expert.name}</p>
-              <p className="mt-0.5 text-sm text-on-surface-variant">{expert.role}</p>
+              <p className="text-base font-semibold text-[var(--landing-text)]">{expert.name}</p>
+              <p className="mt-0.5 text-sm text-[var(--landing-muted)]">{expert.role}</p>
             </div>
           </div>
 
-          <h1 className="mt-lg text-2xl font-bold tracking-tight text-on-surface">{offer.title}</h1>
-          <p className="mt-sm text-sm font-medium tabular-nums text-on-surface">
+          <h1 className="mt-6 text-2xl font-bold tracking-tight text-[var(--landing-text)]">
+            {offer.title}
+          </h1>
+          <p className="mt-2 text-sm font-medium tabular-nums text-[var(--landing-text)]">
             {offer.duration_minutes} min · {formatMoney(offer.price_cents)}
           </p>
 
-          <p className="mt-lg whitespace-pre-wrap text-body-md text-on-surface-variant">
+          <p className="mt-6 whitespace-pre-wrap text-body-md leading-relaxed text-[var(--landing-muted)]">
             {offer.description}
           </p>
 
-          <p className="mt-lg text-sm text-on-surface">
+          <p className="mt-6 text-sm text-[var(--landing-text)]">
             What you get: live video · {offer.duration_minutes} minutes
           </p>
 
-          <div className="mt-xl flex flex-col gap-sm sm:flex-row sm:items-center">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
               href={bookHref}
               data-testid="offer-book-cta"
-              className="inline-flex min-h-12 items-center justify-center rounded-full bg-[var(--landing-ink)] px-6 text-sm font-semibold text-white hover:opacity-90"
+              className="inline-flex min-h-12 items-center justify-center rounded-full bg-[var(--landing-ink)] px-6 text-sm font-semibold text-white hover:bg-black"
             >
               Book this session
             </Link>
             <Link
               href={profileHref}
-              className="inline-flex min-h-12 items-center justify-center rounded-full border border-outline-variant bg-surface px-6 text-sm font-semibold text-on-surface hover:border-outline"
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface)] px-6 text-sm font-semibold text-[var(--landing-text)] hover:border-[var(--landing-muted)]"
             >
               View full profile
             </Link>

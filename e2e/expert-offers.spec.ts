@@ -133,7 +133,7 @@ test.describe('Expert offers demand path', () => {
         await page.locator('#mentor-offer-price').fill('10');
         await page.getByRole('button', { name: 'Create session' }).click();
 
-        const publish = page.getByRole('button', { name: /^Publish / });
+        const publish = page.getByRole('button', { name: 'Publish' });
         await expect(publish).toBeVisible({ timeout: 15_000 });
         await publish.click();
         await expect(page.getByRole('button', { name: 'Unpublish' })).toBeVisible({
