@@ -11,6 +11,7 @@ import { PaymentAgent } from '@/services/agents/payment-agent';
 import { PathAssessmentReviewAgent } from '@/services/agents/path-assessment-review-agent';
 import { VideoRequestAgent } from '@/services/agents/video-request-agent';
 import { WRITTEN_REPORT_REVIEW_PRODUCT } from '@/lib/path-assessment/written-review-pricing';
+import { sendMetaCapiPurchase } from '@/lib/meta-capi';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -121,6 +122,32 @@ export async function POST(request: Request) {
         mentorId,
         menteeId,
       });
+
+      if (event.type === 'payment_intent.succeeded') {
+        const bookingId = paymentIntent.metadata?.booking_id?.trim();
+        if (bookingId && paymentIntent.amount > 0) {
+          let email: string | undefined;
+          let phone: string | undefined;
+          try {
+            const { data: mentee } = await supabaseAdmin
+              .from('users')
+              .select('email, phone')
+              .eq('id', menteeId)
+              .maybeSingle();
+            email = mentee && 'email' in mentee ? String(mentee.email ?? '') : undefined;
+            phone = mentee && 'phone' in mentee ? (mentee.phone as string | null) ?? undefined : undefined;
+          } catch {
+            // Conversions API must never fail Stripe fulfillment.
+          }
+          void sendMetaCapiPurchase({
+            bookingId,
+            amountCents: paymentIntent.amount,
+            email: email || undefined,
+            phone: phone || undefined,
+            externalId: menteeId,
+          });
+        }
+      }
     }
 
     if (event.type === 'payment_intent.payment_failed') {

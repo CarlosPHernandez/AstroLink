@@ -7,6 +7,7 @@ import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-
 import { loadStripe } from '@stripe/stripe-js';
 import { FormAlert } from '@/components/forms/form-alert';
 import { getPostBookingDashboardPath } from '@/lib/dashboard-paths';
+import { trackMetaPurchase } from '@/lib/meta-pixel';
 import type { SessionData } from '@/lib/session';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
@@ -69,6 +70,11 @@ function PaymentStepInner({
       setError(submitError.message ?? 'Payment failed');
       return;
     }
+
+    trackMetaPurchase({
+      bookingId: checkout.bookingId,
+      amountCents: checkout.amountCents,
+    });
 
     if (onPaymentComplete) {
       onPaymentComplete(checkout.bookingId);

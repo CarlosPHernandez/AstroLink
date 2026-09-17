@@ -15,6 +15,11 @@ import { resolveChrisCampaignForBooking } from '@/lib/chris-campaign/validate-ch
 import { getSession } from '@/lib/session';
 import { ExpertMatchFailedError } from '@/lib/expert-match';
 import { BookingAgent } from '@/services/agents/booking-agent';
+import {
+  readClientIp,
+  readMetaBrowserIds,
+  sendMetaCapiInitiateCheckout,
+} from '@/lib/meta-capi';
 
 export async function POST(request: Request) {
   try {
@@ -83,6 +88,10 @@ export async function POST(request: Request) {
       : body.durationMinutes;
 
     const agent = new BookingAgent();
+    const browserIds = readMetaBrowserIds(request);
+    const clientIp = readClientIp(request);
+    const clientUserAgent = request.headers.get('user-agent');
+
     const result = await agent.bookSession({
       menteeId: session.userId,
       mentorId: chrisCampaign?.mentorId ?? body.mentorId,
@@ -97,6 +106,19 @@ export async function POST(request: Request) {
       applyCompGrantId: body.applyCompGrantId,
       assessmentToken: body.assessmentToken,
     });
+
+    if (!result.skipPayment) {
+      void sendMetaCapiInitiateCheckout({
+        bookingId: result.bookingId,
+        amountCents: result.amountCents,
+        email: session.email,
+        externalId: session.userId,
+        clientIp,
+        clientUserAgent,
+        fbp: browserIds.fbp,
+        fbc: browserIds.fbc,
+      });
+    }
 
     return NextResponse.json({
       success: true,

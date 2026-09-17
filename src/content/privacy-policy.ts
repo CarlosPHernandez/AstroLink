@@ -47,6 +47,7 @@ export const PRIVACY_POLICY = {
         'We send waitlist-related email only for product updates about early access and launch—not a recurring newsletter unless you opt into additional communications later.',
         'You may request removal at any time by emailing us at the address below.',
         'We collect anonymous interaction events on the waitlist page (for example, whether the signup form was viewed or submitted) through Vercel Web Analytics. These events do not include your email address.',
+        'When we run paid traffic campaigns, we use Meta Pixel and the Meta Conversions API to measure visits and whether someone completes a paid live session booking. The pixel may set a cookie. The browser and our servers send page views and conversion events (including booking value and a hashed email when we have one) to Meta. We do not send your name. You can opt out of Meta ads measurement through your Facebook or Instagram ad settings.',
       ],
     },
     {
@@ -75,6 +76,7 @@ export const PRIVACY_POLICY = {
         'Stripe (payments).',
         'Daily (video sessions and related session features).',
         'Hosting and infrastructure providers (for example, Vercel).',
+        'Meta (Facebook/Instagram) when the advertising pixel is enabled, to measure paid-traffic campaigns.',
         'Email delivery providers when we send product or transactional messages.',
       ],
     },
