@@ -4,7 +4,6 @@ import { useActionState } from 'react';
 import Link from 'next/link';
 import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
-import { MaterialIcon } from '@/components/ui/material-icon';
 import { fieldErrorInputClass } from '@/lib/zod-field-errors';
 import { forgotPasswordAction, type ActionState } from '../actions';
 
@@ -18,12 +17,8 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-surface-container-lowest text-on-surface flex flex-col justify-center items-center p-4 sm:p-gutter font-sans">
       <main className="w-full max-w-[420px]" data-testid="forgot-password-page">
         <div className="mb-6 text-center flex flex-col items-center">
-          <Link
-            href="/"
-            className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-md shadow-[0_4px_20px_rgba(0,88,188,0.15)]"
-            aria-label="Back to home"
-          >
-            <MaterialIcon name="satellite_alt" className="text-on-primary" size={28} />
+          <Link href="/" className="font-headline-md text-headline-md font-bold tracking-tight mb-xs">
+            AstroLink
           </Link>
           <h1 className="font-headline-md text-headline-md font-bold tracking-tight mb-xs">
             Reset password
