@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { ExpertInitials } from '@/components/experts/expert-initials';
 import { useEffect, useState, type ReactNode } from 'react';
 import { LandingComparisonSlider } from '@/components/landing/landing-comparison-slider';
 import {
@@ -88,10 +89,14 @@ function StoryQuoteCard({
   );
 }
 
-function StoryPortrait({ src, alt }: { src: string; alt: string }) {
+function StoryPortrait({ src, alt }: { src: string | null; alt: string }) {
   return (
     <div className="landing-story-portrait-frame relative mx-auto aspect-[9/16] w-full max-w-[300px] overflow-hidden rounded-sm border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_20px_48px_-28px_rgba(14,20,32,0.22)]">
-      <Image src={src} alt={alt} fill className="object-cover object-top" sizes="(max-width: 640px) 260px, 300px" />
+      {src ? (
+        <Image src={src} alt={alt} fill className="object-cover object-top" sizes="(max-width: 640px) 260px, 300px" />
+      ) : (
+        <ExpertInitials name={alt} className="absolute inset-0 text-4xl" />
+      )}
     </div>
   );
 }

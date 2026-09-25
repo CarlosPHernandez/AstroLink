@@ -18,7 +18,7 @@ type ExpertProps = {
   slug: string;
   name: string;
   role: string;
-  imageUrl: string;
+  imageUrl: string | null;
   introVideoUrl: string | null;
   videoRequestPriceCents: number;
   videoRequestSlaDays: number;

@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { MentorOfferEditor } from '@/components/activate/offer-steps';
+import { MentorProfileMediaPanel } from '@/app/dashboard/mentor/mentor-profile-media-panel';
 import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
 import { fieldErrorInputClass } from '@/lib/zod-field-errors';
@@ -12,7 +13,7 @@ import {
   type PayoutNavStatus,
 } from '@/lib/mentor-payouts-config';
 
-export type MentorSettingsSection = 'account' | 'password' | 'compliance' | 'offer';
+export type MentorSettingsSection = 'account' | 'media' | 'password' | 'compliance' | 'offer';
 
 const SETTINGS_SECTIONS: {
   id: MentorSettingsSection;
@@ -25,6 +26,12 @@ const SETTINGS_SECTIONS: {
     label: 'Account',
     title: 'Account',
     description: 'Sign-in identity and how you appear in the product.',
+  },
+  {
+    id: 'media',
+    label: 'Photo & video',
+    title: 'Photo & video',
+    description: 'The portrait and short video buyers see on your profile.',
   },
   {
     id: 'password',
@@ -49,6 +56,8 @@ const SETTINGS_SECTIONS: {
 export function MentorSettingsPanel({
   fullName,
   email,
+  imageUrl,
+  introVideoUrl,
   hourlyRateDollars,
   payoutNavStatus,
   isCivilServant,
@@ -64,6 +73,8 @@ export function MentorSettingsPanel({
 }: {
   fullName: string;
   email: string;
+  imageUrl: string | null;
+  introVideoUrl: string | null;
   hourlyRateDollars: number;
   payoutNavStatus: PayoutNavStatus;
   isCivilServant: boolean;
@@ -324,6 +335,14 @@ export function MentorSettingsPanel({
                   {passwordPending ? 'Updating…' : 'Update password'}
                 </button>
               </form>
+            ) : null}
+
+            {section === 'media' ? (
+              <MentorProfileMediaPanel
+                fullName={fullName}
+                imageUrl={imageUrl}
+                introVideoUrl={introVideoUrl}
+              />
             ) : null}
 
             {section === 'compliance' ? (

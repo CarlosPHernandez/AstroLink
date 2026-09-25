@@ -2,7 +2,7 @@ import 'server-only';
 
 import type { Metadata } from 'next';
 import { getProductionAppUrl } from '@/lib/app-url';
-import { DEFAULT_MENTOR_IMAGE, toOptimizedImageUrl } from '@/lib/public-images';
+import { toOptimizedImageUrl } from '@/lib/public-images';
 import {
   EARLY_ACCESS_DESCRIPTION,
   EARLY_ACCESS_TITLE,
@@ -113,7 +113,7 @@ export function buildPageMetadata(input: BuildPageMetadataInput): Metadata {
       const canonicalPath = `/experts/${expert.slug}`;
       const title = `${expert.name} · AstroLink`;
       const description = expertDescription(expert);
-      const imageUrl = absoluteAssetUrl(expert.imageUrl ?? DEFAULT_MENTOR_IMAGE);
+      const imageUrl = expert.imageUrl ? absoluteAssetUrl(expert.imageUrl) : null;
       return {
         ...baseMetadata(canonicalPath),
         title,
@@ -123,7 +123,9 @@ export function buildPageMetadata(input: BuildPageMetadataInput): Metadata {
           description,
           url: productionUrl(canonicalPath),
           siteName: SITE_NAME,
-          images: [{ url: imageUrl, alt: `${expert.name} — AstroLink expert` }],
+          ...(imageUrl
+            ? { images: [{ url: imageUrl, alt: `${expert.name} — AstroLink expert` }] }
+            : {}),
         },
       };
     }
@@ -135,7 +137,7 @@ export function buildPageMetadata(input: BuildPageMetadataInput): Metadata {
       const fallback = `Join the waitlist for live 1:1 video sessions with ${expert.name} on AstroLink.`;
       const description = truncateMetaDescription(expert.bio.trim() || fallback);
       const title = `Early access · ${expert.name}`;
-      const imageUrl = absoluteAssetUrl(expert.imageUrl ?? DEFAULT_MENTOR_IMAGE);
+      const imageUrl = expert.imageUrl ? absoluteAssetUrl(expert.imageUrl) : null;
       return {
         metadataBase: new URL(getProductionAppUrl()),
         alternates: {
@@ -148,7 +150,9 @@ export function buildPageMetadata(input: BuildPageMetadataInput): Metadata {
           description,
           url: productionUrl(joinPath),
           siteName: SITE_NAME,
-          images: [{ url: imageUrl, alt: `${expert.name} — AstroLink early access` }],
+          ...(imageUrl
+            ? { images: [{ url: imageUrl, alt: `${expert.name} — AstroLink early access` }] }
+            : {}),
         },
       };
     }
