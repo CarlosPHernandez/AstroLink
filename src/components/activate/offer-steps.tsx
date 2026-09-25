@@ -202,6 +202,38 @@ function toggleService(current: ServiceId[], id: ServiceId, checked: boolean): S
   return current.filter((service) => service !== id);
 }
 
+export function useMentorOfferLoad() {
+  const [fields, setFields] = useState<OfferFieldsValue>(blankOfferFields);
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const loadedRef = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch('/api/mentor/offer');
+        const data = (await response.json().catch(() => null)) as OfferApi | null;
+        if (cancelled) return;
+        if (response.ok && data != null && Array.isArray(data.services)) {
+          setFields(offerFieldsFromApi(data));
+          loadedRef.current = true;
+          setLoaded(true);
+          return;
+        }
+        setLoadError(data?.error ?? 'Could not load offer.');
+      } catch {
+        if (!cancelled) setLoadError('Could not load offer.');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return { fields, setFields, loaded, loadedRef, loadError };
+}
+
 export function OfferServicesFields({
   value,
   onChange,
@@ -368,51 +400,12 @@ export function OfferHoursFields({
 }
 
 export function MentorOfferEditor({ hourlyRateDollars }: { hourlyRateDollars: number }) {
-  const [fields, setFields] = useState<OfferFieldsValue>(blankOfferFields);
+  const { fields, setFields, loaded, loadedRef, loadError } = useMentorOfferLoad();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pending, setPending] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const loadedRef = useRef(false);
-  const editedBeforeLoadRef = useRef(false);
-
-  function changeFields(next: OfferFieldsValue) {
-    if (!loadedRef.current) editedBeforeLoadRef.current = true;
-    setFields(next);
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const response = await fetch('/api/mentor/offer');
-        const data = (await response.json().catch(() => null)) as OfferApi | null;
-        if (cancelled) return;
-        const ok = response.ok && data != null && Array.isArray(data.services);
-        if (editedBeforeLoadRef.current) {
-          if (ok) {
-            loadedRef.current = true;
-            setLoaded(true);
-          } else {
-            setError(data?.error ?? 'Could not load offer.');
-          }
-          return;
-        }
-        if (ok && data) {
-          setFields(offerFieldsFromApi(data));
-          loadedRef.current = true;
-          setLoaded(true);
-          return;
-        }
-        setError(data?.error ?? 'Could not load offer.');
-      } catch {
-        if (!cancelled) setError('Could not load offer.');
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const shownError = loaded ? error : loadError;
+  const locked = pending || !loaded;
 
   async function onSave() {
     if (!loadedRef.current) return;
@@ -452,17 +445,17 @@ export function MentorOfferEditor({ hourlyRateDollars }: { hourlyRateDollars: nu
       <h2 className="activate-section-title">Services</h2>
       <p className="activate-section-copy">{SERVICES_COPY}</p>
       <p className="activate-section-copy">Hourly rate ${hourlyRateDollars}</p>
-      <OfferServicesFields value={fields} onChange={changeFields} disabled={pending} />
+      <OfferServicesFields value={fields} onChange={setFields} disabled={locked} />
 
       <h2 className="activate-section-title" style={{ marginTop: '2.5rem' }}>
         Hours
       </h2>
       <p className="activate-section-copy">{HOURS_COPY}</p>
-      <OfferHoursFields value={fields} onChange={changeFields} disabled={pending} />
+      <OfferHoursFields value={fields} onChange={setFields} disabled={locked} />
 
-      {error ? (
+      {shownError ? (
         <div className="mt-6">
-          <FormAlert message={error} />
+          <FormAlert message={shownError} />
         </div>
       ) : null}
       {saved ? (

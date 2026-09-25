@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useEffect, useRef, useState } from 'react';
+import React, { useActionState, useState } from 'react';
 import {
   completeActivationAction,
   saveActivationProfileAction,
@@ -22,11 +22,9 @@ import {
   OfferHoursFields,
   OfferServicesFields,
   SERVICES_COPY,
-  blankOfferFields,
   buildMentorOffer,
-  offerFieldsFromApi,
+  useMentorOfferLoad,
   validateOfferChoice,
-  type OfferFieldsValue,
 } from '@/components/activate/offer-steps';
 import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
@@ -138,35 +136,19 @@ export function ActivateSetupClient({
     return result;
   }, undefined);
 
-  const [offerFields, setOfferFields] = useState<OfferFieldsValue>(blankOfferFields);
-  const offerTouched = useRef(false);
-  const updateOfferFields = (next: OfferFieldsValue) => {
-    offerTouched.current = true;
-    setOfferFields(next);
-  };
+  const {
+    fields: offerFields,
+    setFields: setOfferFields,
+    loaded: offerLoaded,
+    loadedRef: offerLoadedRef,
+    loadError: offerLoadError,
+  } = useMentorOfferLoad();
   const [offerError, setOfferError] = useState<string | null>(null);
   const [offerPending, setOfferPending] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const response = await fetch('/api/mentor/offer');
-        if (!response.ok) return;
-        const data = (await response.json()) as Parameters<typeof offerFieldsFromApi>[0];
-        if (!cancelled && !offerTouched.current && data && Array.isArray(data.services)) {
-          setOfferFields(offerFieldsFromApi(data));
-        }
-      } catch {
-        // Keep the blank offer. Hours can still be saved later.
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const shownOfferError = offerLoaded ? offerError : offerLoadError;
 
   const saveOffer = async () => {
+    if (!offerLoadedRef.current) return;
     const built = buildMentorOffer(profile.rate, offerFields);
     if (!built.ok) {
       setOfferError(built.error);
@@ -452,15 +434,20 @@ export function ActivateSetupClient({
                   className={`${activateInputClass} activate-input-readonly`}
                 />
               </div>
-              {offerError ? (
+              {shownOfferError ? (
                 <div className="mt-6">
-                  <FormAlert message={offerError} />
+                  <FormAlert message={shownOfferError} />
                 </div>
               ) : null}
-              <OfferServicesFields value={offerFields} onChange={updateOfferFields} />
+              <OfferServicesFields
+                value={offerFields}
+                onChange={setOfferFields}
+                disabled={!offerLoaded}
+              />
               <StepNav onBack={() => setStep(3)}>
                 <button
                   type="button"
+                  disabled={!offerLoaded}
                   className={activatePrimaryBtnClass}
                   onClick={() => {
                     const message = validateOfferChoice(profile.rate, offerFields);
@@ -483,20 +470,20 @@ export function ActivateSetupClient({
             <div>
               <h2 className="activate-section-title">Hours</h2>
               <p className="activate-section-copy">{HOURS_COPY}</p>
-              {offerError ? (
+              {shownOfferError ? (
                 <div className="mt-6">
-                  <FormAlert message={offerError} />
+                  <FormAlert message={shownOfferError} />
                 </div>
               ) : null}
               <OfferHoursFields
                 value={offerFields}
-                onChange={updateOfferFields}
-                disabled={offerPending}
+                onChange={setOfferFields}
+                disabled={!offerLoaded || offerPending}
               />
               <StepNav onBack={() => setStep(4)}>
                 <button
                   type="button"
-                  disabled={offerPending}
+                  disabled={!offerLoaded || offerPending}
                   className={activatePrimaryBtnClass}
                   onClick={() => void saveOffer()}
                   data-testid="activate-hours-save"
