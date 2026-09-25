@@ -85,6 +85,8 @@ describe('resolveWaitlistRoute', () => {
     expect(resolveWaitlistRoute('/api/chris-slot-choice', null)).toEqual({
       action: 'api_blocked',
     });
+    expect(resolveWaitlistRoute('/invite/token', null)).toEqual({ action: 'allow' });
+    expect(resolveWaitlistRoute('/api/guest-invites/claim', null)).toEqual({ action: 'allow' });
     expect(resolveWaitlistRoute('/r/chris-slot', null)).toEqual({
       action: 'redirect',
       destination: '/talk-with-chris',

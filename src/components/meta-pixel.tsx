@@ -11,7 +11,7 @@ export function MetaPixel() {
   const skipFirstPath = useRef(true);
 
   useEffect(() => {
-    if (!pixelId) return;
+    if (!pixelId || pathname.startsWith('/invite')) return;
     if (skipFirstPath.current) {
       skipFirstPath.current = false;
       return;
@@ -19,7 +19,7 @@ export function MetaPixel() {
     trackMetaPageView();
   }, [pathname, pixelId]);
 
-  if (!pixelId) return null;
+  if (!pixelId || pathname.startsWith('/invite')) return null;
 
   return (
     <>

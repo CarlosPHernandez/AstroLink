@@ -2,6 +2,16 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.19.0.0] - 2026-09-24
+
+### Added
+- A private link can book one free 25-minute call with Chris. It expires, and it only works for the email set when the link is created.
+- That link can be minted or revoked from a local command. The page explains the conversation, shows example questions, and shows real published reviews when Chris has any.
+
+### Changed
+- Signing up from the Chris booking flow can return to the invite after the confirmation email.
+- The ads pixel does not load on the invite page.
+- Waitlist mode still opens the invite page and the claim request. The rest of booking stays closed.
 
 ## [0.18.0.0] - 2026-09-09
 

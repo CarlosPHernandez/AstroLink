@@ -8,6 +8,7 @@ import { parseChrisCampaignReferrer } from '@/lib/chris-campaign/chris-campaign-
 import { ChrisBookingWizard } from '@/components/chris-campaign/chris-booking-wizard';
 import { getMentorBySlug, listPublicMentors } from '@/lib/mentor-directory';
 import { clampSessionDurationMinutes, SESSION_DURATION_DEFAULT } from '@/lib/session-duration';
+import { getClaimedInviteForUser } from '@/lib/guest-session-invites';
 import { getAvailableGrantForUser } from '@/lib/session-comp-grants';
 import { toAuthWithRedirect } from '@/lib/auth-redirect';
 import { getSession } from '@/lib/session';
@@ -53,6 +54,14 @@ export default async function BookingPage({
     const prefillScheduledAt = resolveChrisPrefillScheduledAt(date);
     const prefillDate = prefillScheduledAt ? (date?.trim() || null) : null;
     const marketingReferrer = parseChrisCampaignReferrer(refParam ? `?ref=${refParam}` : '');
+    let claimedInvite: Awaited<ReturnType<typeof getClaimedInviteForUser>> = null;
+    if (session) {
+      try {
+        claimedInvite = await getClaimedInviteForUser(session.userId);
+      } catch (error) {
+        console.error('guest invite lookup:', error);
+      }
+    }
     const parsedDuration = durationParam ? Number.parseInt(durationParam, 10) : NaN;
     const prefillDurationMinutes = Number.isFinite(parsedDuration)
       ? clampSessionDurationMinutes(parsedDuration)
@@ -62,10 +71,14 @@ export default async function BookingPage({
       <ChrisBookingWizard
         session={session}
         mentor={mentor}
-        marketingReferrer={marketingReferrer ?? null}
+        marketingReferrer={claimedInvite?.marketingReferrer ?? marketingReferrer ?? null}
         prefillScheduledAt={prefillScheduledAt}
         prefillDate={prefillDate}
-        prefillDurationMinutes={prefillDurationMinutes}
+        prefillDurationMinutes={
+          claimedInvite ? claimedInvite.durationMinutes : prefillDurationMinutes
+        }
+        guestInvite={claimedInvite ? { id: claimedInvite.id } : null}
+        authReturnPath={null}
       />
     );
   }

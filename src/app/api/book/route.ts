@@ -9,6 +9,7 @@ import {
 import { screenBookingIntake } from '@/lib/intake-moderation';
 import { isLlmRateLimitError } from '@/lib/llm';
 import { CHRIS_SESSION_DURATION_MINUTES } from '@/lib/chris-campaign/chris-campaign-constants';
+import { GUEST_INVITE_DURATION_MINUTES } from '@/lib/guest-invite-constants';
 import { clampSessionDurationMinutes } from '@/lib/session-duration';
 import { ChrisCampaignSoldOutError } from '@/lib/chris-campaign/chris-campaign-slots';
 import { resolveChrisCampaignForBooking } from '@/lib/chris-campaign/validate-chris-booking';
@@ -81,11 +82,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: message }, { status: 400 });
     }
 
-    const durationMinutes = chrisCampaign
-      ? clampSessionDurationMinutes(
-          body.durationMinutes ?? CHRIS_SESSION_DURATION_MINUTES,
-        )
-      : body.durationMinutes;
+    const durationMinutes = body.guestInviteId
+      ? GUEST_INVITE_DURATION_MINUTES
+      : chrisCampaign
+        ? clampSessionDurationMinutes(
+            body.durationMinutes ?? CHRIS_SESSION_DURATION_MINUTES,
+          )
+        : body.durationMinutes;
 
     const agent = new BookingAgent();
     const browserIds = readMetaBrowserIds(request);
@@ -104,6 +107,8 @@ export async function POST(request: Request) {
       campaignId: chrisCampaign?.campaignId,
       marketingReferrer: body.marketingReferrer,
       applyCompGrantId: body.applyCompGrantId,
+      guestInviteId: body.guestInviteId,
+      menteeEmail: session.email,
       assessmentToken: body.assessmentToken,
     });
 
