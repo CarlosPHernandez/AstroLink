@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import React, { useActionState, useEffect, useRef, useState } from 'react';
 import {
   completeActivationAction,
   saveActivationProfileAction,
@@ -17,6 +17,17 @@ import {
   activatePrimaryBtnClass,
   activateSecondaryBtnClass,
 } from '@/components/activate/activate-shell';
+import {
+  HOURS_COPY,
+  OfferHoursFields,
+  OfferServicesFields,
+  SERVICES_COPY,
+  blankOfferFields,
+  buildMentorOffer,
+  offerFieldsFromApi,
+  validateOfferChoice,
+  type OfferFieldsValue,
+} from '@/components/activate/offer-steps';
 import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
 import { fieldErrorInputClass } from '@/lib/zod-field-errors';
@@ -122,10 +133,68 @@ export function ActivateSetupClient({
   >(async (prev, formData) => {
     const result = await savePayoutPreferenceAction(prev, formData);
     if (result.success) {
-      setStep(5);
+      setStep(7);
     }
     return result;
   }, undefined);
+
+  const [offerFields, setOfferFields] = useState<OfferFieldsValue>(blankOfferFields);
+  const offerTouched = useRef(false);
+  const updateOfferFields = (next: OfferFieldsValue) => {
+    offerTouched.current = true;
+    setOfferFields(next);
+  };
+  const [offerError, setOfferError] = useState<string | null>(null);
+  const [offerPending, setOfferPending] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch('/api/mentor/offer');
+        if (!response.ok) return;
+        const data = (await response.json()) as Parameters<typeof offerFieldsFromApi>[0];
+        if (!cancelled && !offerTouched.current && data && Array.isArray(data.services)) {
+          setOfferFields(offerFieldsFromApi(data));
+        }
+      } catch {
+        // Keep the blank offer. Hours can still be saved later.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const saveOffer = async () => {
+    const built = buildMentorOffer(profile.rate, offerFields);
+    if (!built.ok) {
+      setOfferError(built.error);
+      return;
+    }
+    setOfferPending(true);
+    setOfferError(null);
+    try {
+      const response = await fetch('/api/mentor/offer', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(built.offer),
+      });
+      const result = (await response.json().catch(() => null)) as {
+        success?: boolean;
+        error?: string;
+      } | null;
+      if (!response.ok || !result?.success) {
+        setOfferError(result?.error ?? 'Could not save offer.');
+        return;
+      }
+      setStep(6);
+    } catch {
+      setOfferError('Check your network and try again.');
+    } finally {
+      setOfferPending(false);
+    }
+  };
 
   const [completeState, setCompleteState] = useState<ActivateActionState | undefined>();
   const [completePending, setCompletePending] = useState(false);
@@ -371,6 +440,74 @@ export function ActivateSetupClient({
           )}
 
           {step === 4 && (
+            <div>
+              <h2 className="activate-section-title">Services</h2>
+              <p className="activate-section-copy">{SERVICES_COPY}</p>
+              <div className="mt-8">
+                <FieldLabel htmlFor="offer-rate">Hourly rate (USD)</FieldLabel>
+                <input
+                  id="offer-rate"
+                  readOnly
+                  value={profile.rate}
+                  className={`${activateInputClass} activate-input-readonly`}
+                />
+              </div>
+              {offerError ? (
+                <div className="mt-6">
+                  <FormAlert message={offerError} />
+                </div>
+              ) : null}
+              <OfferServicesFields value={offerFields} onChange={updateOfferFields} />
+              <StepNav onBack={() => setStep(3)}>
+                <button
+                  type="button"
+                  className={activatePrimaryBtnClass}
+                  onClick={() => {
+                    const message = validateOfferChoice(profile.rate, offerFields);
+                    if (message) {
+                      setOfferError(message);
+                      return;
+                    }
+                    setOfferError(null);
+                    setStep(5);
+                  }}
+                  data-testid="activate-services-continue"
+                >
+                  Continue
+                </button>
+              </StepNav>
+            </div>
+          )}
+
+          {step === 5 && (
+            <div>
+              <h2 className="activate-section-title">Hours</h2>
+              <p className="activate-section-copy">{HOURS_COPY}</p>
+              {offerError ? (
+                <div className="mt-6">
+                  <FormAlert message={offerError} />
+                </div>
+              ) : null}
+              <OfferHoursFields
+                value={offerFields}
+                onChange={updateOfferFields}
+                disabled={offerPending}
+              />
+              <StepNav onBack={() => setStep(4)}>
+                <button
+                  type="button"
+                  disabled={offerPending}
+                  className={activatePrimaryBtnClass}
+                  onClick={() => void saveOffer()}
+                  data-testid="activate-hours-save"
+                >
+                  {offerPending ? 'Saving…' : 'Save & continue'}
+                </button>
+              </StepNav>
+            </div>
+          )}
+
+          {step === 6 && (
             <form action={payoutAction}>
               <h2 className="activate-section-title">Payout preference</h2>
               <p className="activate-section-copy">
@@ -414,7 +551,7 @@ export function ActivateSetupClient({
               ) : (
                 <input type="hidden" name="payoutHandle" value="" />
               )}
-              <StepNav onBack={() => setStep(3)}>
+              <StepNav onBack={() => setStep(5)}>
                 <button
                   type="submit"
                   disabled={payoutPending}
@@ -427,7 +564,7 @@ export function ActivateSetupClient({
             </form>
           )}
 
-          {step === 5 && (
+          {step === 7 && (
             <div>
               <h2 className="activate-section-title">You&apos;re ready</h2>
               <p className="activate-section-copy">

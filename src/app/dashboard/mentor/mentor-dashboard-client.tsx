@@ -562,6 +562,7 @@ export default function MentorDashboardClient({
               <MentorSettingsPanel
                 fullName={profile.fullName}
                 email={profile.email}
+                hourlyRateDollars={profile.rate}
                 payoutNavStatus={payoutNavStatus}
                 isCivilServant={profile.isCivilServant}
                 onCivilServantChange={(checked) => {

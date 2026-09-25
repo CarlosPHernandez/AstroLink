@@ -8,9 +8,13 @@ const STEP_LABELS = [
   'Identity',
   'Password',
   'Profile',
+  'Services',
+  'Hours',
   'Payouts',
   'Done',
 ] as const;
+
+export const ACTIVATE_STEP_COUNT = STEP_LABELS.length;
 
 export function ActivateBrandHeader({
   title,
@@ -41,7 +45,7 @@ export function ActivateBrandHeader({
 /** Chris-style skewed segmented progress bar. */
 export function ActivateStepProgress({
   currentStep,
-  totalSteps = 6,
+  totalSteps = ACTIVATE_STEP_COUNT,
 }: {
   currentStep: number;
   totalSteps?: number;
