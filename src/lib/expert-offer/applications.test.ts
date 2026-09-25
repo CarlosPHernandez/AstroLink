@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ExpertApplicationSchema, type ExpertApplication } from '@/lib/expert-offer/schema';
 
 const mockFrom = vi.hoisted(() => vi.fn());
+const mockCreateOrUpdateMentor = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/supabase', () => ({
   supabaseAdmin: {
@@ -9,7 +10,11 @@ vi.mock('@/lib/supabase', () => ({
   },
 }));
 
-import { submitExpertApplication } from '@/lib/expert-offer/applications';
+vi.mock('@/lib/admin-create-mentor', () => ({
+  createOrUpdateMentor: (...args: unknown[]) => mockCreateOrUpdateMentor(...args),
+}));
+
+import { reviewExpertApplication, submitExpertApplication } from '@/lib/expert-offer/applications';
 
 const base = {
   fullName: 'Avery Quinn',
@@ -175,5 +180,89 @@ describe('submitExpertApplication', () => {
     await expect(submitExpertApplication(application())).rejects.toThrow(
       'Could not submit. Try again.',
     );
+  });
+});
+
+const APP_ID = '00000000-0000-4000-8000-000000000010';
+
+function submittedApplicationRow() {
+  return {
+    id: APP_ID,
+    full_name: 'Avery Quinn',
+    email: 'avery@example.com',
+    employer: 'JSC',
+    expertise: 'Guidance, navigation',
+    bio: 'Ten years on crewed vehicle guidance.',
+    hourly_rate_cents: 15000,
+    services: ['session_1on1'],
+    video_requests_enabled: false,
+    video_request_price_cents: 0,
+    video_request_sla_days: 7,
+    timezone: 'America/Chicago',
+    windows: [{ weekday: 2, startMinute: 540, endMinute: 720 }],
+    status: 'submitted',
+    is_civil_servant: false,
+  };
+}
+
+function selectMaybeSingle(data: Record<string, unknown> | null) {
+  const builder = {
+    select: vi.fn(() => builder),
+    eq: vi.fn(() => builder),
+    maybeSingle: vi.fn(async () => ({ data, error: null })),
+  };
+  return builder;
+}
+
+function applicationUpdate(result: { data: Array<{ id: string }> | null; error: { message: string } | null }) {
+  const chain = {
+    eq: vi.fn(() => chain),
+    select: vi.fn(async () => result),
+  };
+  return { update: vi.fn(() => chain), chain };
+}
+
+describe('reviewExpertApplication', () => {
+  beforeEach(() => {
+    mockFrom.mockReset();
+    mockCreateOrUpdateMentor.mockReset();
+  });
+
+  it('rolls back a created mentor when the offer write fails', async () => {
+    const loaded = selectMaybeSingle(submittedApplicationRow());
+    const emailLookup = selectMaybeSingle(null);
+    const claimed = applicationUpdate({ data: [{ id: APP_ID }], error: null });
+    const offerEq = vi.fn(async () => ({ data: null, error: { message: 'offer write failed' } }));
+    const deletedEq = vi.fn(async () => ({ data: null, error: null }));
+    const reverted = applicationUpdate({ data: [{ id: APP_ID }], error: null });
+    mockCreateOrUpdateMentor.mockResolvedValue({
+      id: 'mentor-new',
+      email: 'avery@example.com',
+      fullName: 'Avery Quinn',
+      slug: 'avery-quinn',
+      liveSessionPriceCents: 15000,
+      isListed: false,
+      complianceStatus: 'approved',
+      bookHref: '/booking?mentor=avery-quinn',
+      created: true,
+    });
+    mockFrom
+      .mockReturnValueOnce(loaded)
+      .mockReturnValueOnce(emailLookup)
+      .mockReturnValueOnce(claimed)
+      .mockReturnValueOnce({ update: vi.fn(() => ({ eq: offerEq })) })
+      .mockReturnValueOnce({ delete: vi.fn(() => ({ eq: deletedEq })) })
+      .mockReturnValueOnce(reverted);
+
+    await expect(reviewExpertApplication(APP_ID, 'approve')).rejects.toThrow(
+      'Could not review application.',
+    );
+
+    expect(mockCreateOrUpdateMentor).toHaveBeenCalledTimes(1);
+    expect(mockFrom).toHaveBeenNthCalledWith(5, 'mentors');
+    expect(deletedEq).toHaveBeenCalledWith('id', 'mentor-new');
+    expect(reverted.update).toHaveBeenCalledWith({ status: 'submitted', mentor_id: null });
+    expect(reverted.chain.eq).toHaveBeenNthCalledWith(1, 'id', APP_ID);
+    expect(reverted.chain.eq).toHaveBeenNthCalledWith(2, 'status', 'approved');
   });
 });

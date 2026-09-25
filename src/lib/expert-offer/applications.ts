@@ -390,6 +390,20 @@ async function claimSubmitted(
   return applications().update(patch).eq('id', id).eq('status', 'submitted').select('id');
 }
 
+type CreatedMentor = { id: string; created: boolean };
+
+async function rollbackHalfApproved(id: string, mentor: CreatedMentor | undefined): Promise<void> {
+  if (mentor?.created) {
+    assertWrite(await mentorWrite('mentors').delete().eq('id', mentor.id));
+  }
+  const reverted = await applications()
+    .update({ status: 'submitted', mentor_id: null })
+    .eq('id', id)
+    .eq('status', 'approved')
+    .select('id');
+  if (reverted.error) throw new Error(REVIEW_FAILED);
+}
+
 export async function reviewExpertApplication(
   id: string,
   decision: 'approve' | 'decline',
@@ -428,26 +442,36 @@ export async function reviewExpertApplication(
     return { ok: false, status: 409, error: 'Already reviewed.' };
   }
 
-  let mentor;
+  let mentor: CreatedMentor | undefined;
   try {
     mentor = await createUnlistedMentor(application);
+    await copyOfferOntoMentor(mentor.id, application);
   } catch (error) {
-    const reverted = await applications()
-      .update({ status: 'submitted' })
-      .eq('id', id)
-      .eq('status', 'approved')
-      .select('id');
-    if (reverted.error) throw new Error(REVIEW_FAILED);
+    await rollbackHalfApproved(id, mentor);
     throw error;
   }
 
-  await copyOfferOntoMentor(mentor.id, application);
-  assertWrite(
-    await applications()
+  let linked: QueryResult<Array<{ id: string }> | null>;
+  try {
+    linked = await applications()
       .update({ mentor_id: mentor.id })
       .eq('id', id)
       .eq('status', 'approved')
-      .select('id'),
-  );
-  return { ok: true, mentorId: mentor.id };
+      .select('id');
+  } catch (error) {
+    if (mentor.created) await rollbackHalfApproved(id, mentor);
+    throw error;
+  }
+
+  if (!linked.error && claimedIds(linked).length > 0) {
+    return { ok: true, mentorId: mentor.id };
+  }
+
+  if (mentor.created) {
+    await rollbackHalfApproved(id, mentor);
+    throw new Error(REVIEW_FAILED);
+  }
+
+  if (linked.error) throw new Error(REVIEW_FAILED);
+  return { ok: false, status: 409, error: 'Already reviewed.' };
 }
