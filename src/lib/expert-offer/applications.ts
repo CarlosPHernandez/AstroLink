@@ -3,16 +3,23 @@ import type { ExpertApplication } from '@/lib/expert-offer/schema';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export type ExpertApplicationSubmitResult = {
-  id: string;
+  /** Null only when a concurrent insert won and the winning row could not be re-read. */
+  id: string | null;
   /** False when a submitted row for this email already existed. */
   created: boolean;
 };
 
 type ApplicationIdRow = { id: string };
 
+type DbError = {
+  message: string;
+  code?: string;
+  details?: string | null;
+};
+
 type QueryResult<T> = {
   data: T;
-  error: { message: string } | null;
+  error: DbError | null;
 };
 
 type ApplicationsFilter = {
@@ -33,6 +40,7 @@ type ApplicationsQuery = {
 };
 
 const SUBMIT_FAILED = 'Could not submit. Try again.';
+const SUBMITTED_EMAIL_INDEX = 'expert_applications_one_submitted_email';
 
 function applications(): ApplicationsQuery {
   // Table is not in database.types.ts yet. Service role only; no anon policy.
@@ -44,6 +52,26 @@ function applications(): ApplicationsQuery {
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+function isSubmittedEmailConflict(error: DbError | null): boolean {
+  if (error?.code !== '23505') return false;
+  const named = `${error.message ?? ''} ${error.details ?? ''}`;
+  if (named.includes(SUBMITTED_EMAIL_INDEX)) return true;
+  // Code-only 23505: this insert's other unique key is the generated primary key.
+  return !/violates unique constraint/i.test(named);
+}
+
+async function findSubmittedId(email: string): Promise<string | null> {
+  const existing = await applications()
+    .select('id')
+    .eq('email', email)
+    .eq('status', 'submitted')
+    .limit(1)
+    .maybeSingle();
+
+  if (existing.error) return null;
+  return existing.data?.id ?? null;
 }
 
 function videoColumns(input: ExpertApplication): {
@@ -108,6 +136,10 @@ export async function submitExpertApplication(
     })
     .select('id')
     .single();
+
+  if (isSubmittedEmailConflict(inserted.error)) {
+    return { id: await findSubmittedId(email), created: false };
+  }
 
   if (inserted.error || !inserted.data?.id) {
     throw new Error(SUBMIT_FAILED);

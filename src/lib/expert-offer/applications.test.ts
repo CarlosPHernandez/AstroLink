@@ -140,6 +140,30 @@ describe('submitExpertApplication', () => {
     expect(lookup.insert).not.toHaveBeenCalled();
   });
 
+  it('returns created false when a concurrent insert hits the submitted-email unique index', async () => {
+    const lookup = lookupBuilder();
+    lookup.maybeSingle.mockResolvedValue({ data: null, error: null });
+    const inserted = insertBuilder();
+    inserted.single.mockResolvedValue({
+      data: null,
+      error: {
+        code: '23505',
+        message:
+          'duplicate key value violates unique constraint "expert_applications_one_submitted_email"',
+      },
+    });
+    const reread = lookupBuilder();
+    reread.maybeSingle.mockResolvedValue({ data: { id: 'existing-id' }, error: null });
+    const lookupQuery = { ...lookup, insert: vi.fn(() => inserted) };
+    mockFrom.mockReturnValueOnce(lookup).mockReturnValueOnce(lookupQuery).mockReturnValueOnce(reread);
+
+    await expect(submitExpertApplication(application())).resolves.toEqual({
+      id: 'existing-id',
+      created: false,
+    });
+    expect(lookupQuery.insert).toHaveBeenCalledTimes(1);
+  });
+
   it('throws when insert fails', async () => {
     const lookup = lookupBuilder();
     lookup.maybeSingle.mockResolvedValue({ data: null, error: null });
