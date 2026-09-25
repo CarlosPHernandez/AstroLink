@@ -11,13 +11,14 @@ export type ComplianceStatus =
   | 'approved'
   | 'rejected';
 
-export type ServiceType = 'session_1on1' | 'pre_call_brief' | 'extended_session';
+export type ServiceType = 'session_1on1' | 'pre_call_brief' | 'extended_session' | 'packaged_offer';
 
 /** User-facing labels for booking UI (expert-network sessions, not recruiting). */
 export const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
   session_1on1: 'Expert session',
   pre_call_brief: 'Pre-call brief package',
   extended_session: 'Deep-dive expert session',
+  packaged_offer: 'Packaged session',
 };
 
 /** Label with booked length when known — do not hardcode 30/60 on variable sessions. */
@@ -85,6 +86,7 @@ export interface Mentor {
   written_report_reviews_enabled?: boolean;
   video_request_price_cents?: number;
   video_request_sla_days?: number;
+  expert_offers_enabled?: boolean;
   stripe_connect_account_id: string | null;
   stripe_onboarding_completed: boolean;
   compliance_status: ComplianceStatus;
@@ -113,6 +115,8 @@ export interface Booking {
   scheduled_at: string;
   stripe_payment_intent_id: string;
   duration_minutes?: number | null; // variable length from slider (prorated price)
+  expert_offer_id?: string | null;
+  offer_snapshot?: import('@/lib/expert-offers/types').OfferSnapshot | null;
   daily_room_url: string | null;
   mentor_token: string | null;
   mentee_token: string | null;

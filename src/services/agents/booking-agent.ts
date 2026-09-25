@@ -27,6 +27,9 @@ import {
   isStripePaymentsSkipped,
 } from '@/lib/booking-payments';
 import { resolveBookingMatchFields } from '@/lib/booking-match-fields';
+import { incrementOfferCounter } from '@/lib/expert-offers/counters';
+import { isOfferPubliclyBookable } from '@/lib/expert-offers/public-access';
+import type { OfferSnapshot } from '@/lib/expert-offers/types';
 import {
   ExpertMatchFailedError,
   matchListedMentor,
@@ -50,31 +53,39 @@ import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 import { MatchingOutput, ServiceType } from '@/lib/types';
 
+type BookSessionParams = {
+  menteeId: string;
+  mentorId?: string; // If undefined, triggers Gemini matching loop
+  serviceType: ServiceType;
+  scheduledAt: string;
+  menteeGoals: string;
+  menteeBackground: string;
+  includePreCallBrief?: boolean;
+  durationMinutes?: number; // from slider for variable 1:1; used for prorated price + persisted
+  campaignId?: string;
+  marketingReferrer?: string;
+  /** Single-use complimentary 15-min grant (server-validated). */
+  applyCompGrantId?: string;
+  /** Space Path Assessment public token — sets bookings.path_assessment_id when valid. */
+  assessmentToken?: string;
+  /** Claimed email-locked guest invite. 25 minutes with Chris at $0. */
+  guestInviteId?: string;
+  menteeEmail?: string;
+  offerSlug?: string;
+};
+
+type LoadedOffer = OfferSnapshot & {
+  id: string;
+  status: string;
+};
+
 export class BookingAgent {
   private agentId = 'APX-01' as const;
 
   /**
    * Orchestrates the scheduling and creates an immediate-capture PaymentIntent.
    */
-  async bookSession(params: {
-    menteeId: string;
-    mentorId?: string; // If undefined, triggers Gemini matching loop
-    serviceType: ServiceType;
-    scheduledAt: string;
-    menteeGoals: string;
-    menteeBackground: string;
-    includePreCallBrief?: boolean;
-    durationMinutes?: number; // from slider for variable 1:1; used for prorated price + persisted
-    campaignId?: string;
-    marketingReferrer?: string;
-    /** Single-use complimentary 15-min grant (server-validated). */
-    applyCompGrantId?: string;
-    /** Claimed email-locked guest invite. 25 minutes with Chris at $0. */
-    guestInviteId?: string;
-    menteeEmail?: string;
-    /** Space Path Assessment public token — sets bookings.path_assessment_id when valid. */
-    assessmentToken?: string;
-  }) {
+  async bookSession(params: BookSessionParams) {
     await this.logAudit('BOOKING_INITIATED', null, {
       mentee_id: params.menteeId,
       mentor_id: params.mentorId ?? null,
@@ -119,24 +130,7 @@ export class BookingAgent {
     }
   }
 
-  private async createBookingAfterSlotReserve(
-    params: {
-      menteeId: string;
-      mentorId?: string;
-      serviceType: ServiceType;
-      scheduledAt: string;
-      menteeGoals: string;
-      menteeBackground: string;
-      includePreCallBrief?: boolean;
-      durationMinutes?: number;
-      campaignId?: string;
-      marketingReferrer?: string;
-      applyCompGrantId?: string;
-      guestInviteId?: string;
-      menteeEmail?: string;
-      assessmentToken?: string;
-    },
-  ) {
+  private async createBookingAfterSlotReserve(params: BookSessionParams) {
     let finalMentorId = params.mentorId;
     let matchReason = 'User selected mentor directly.';
     let didRunMatcher = false;
@@ -157,8 +151,11 @@ export class BookingAgent {
       }
     }
 
-    // 2. Matching Engine (if no mentor selected)
+    // Offer checkout always names the mentor; do not run Gemini match.
     if (!finalMentorId) {
+      if (params.offerSlug) {
+        throw new Error('This session is not available.');
+      }
       const matchResult = await this.matchMentor({
         menteeId: params.menteeId,
         menteeGoals: params.menteeGoals,
@@ -191,6 +188,7 @@ export class BookingAgent {
                 full_name: string;
                 timezone: string | null;
                 offered_services: string[] | null;
+                expert_offers_enabled: boolean | null;
               } | null;
               error: { message: string } | null;
             }>;
@@ -199,7 +197,7 @@ export class BookingAgent {
       }
     )
       .select(
-        'stripe_connect_account_id, live_session_price_cents, is_listed, compliance_status, slug, full_name, timezone, offered_services',
+        'stripe_connect_account_id, live_session_price_cents, is_listed, compliance_status, slug, full_name, timezone, offered_services, expert_offers_enabled',
       )
       .eq('id', finalMentorId)
       .single();
@@ -216,42 +214,59 @@ export class BookingAgent {
     // - For normal experts: edit `live_session_price_cents` in the mentors table (Supabase).
     // - For Chris: whole-dollar duration menu in chris-campaign-constants ($250/hr anchor).
 
-    const isChrisCampaign = Boolean(params.campaignId);
-    let durationMinutes = isChrisCampaign
-      ? clampSessionDurationMinutes(
-          params.durationMinutes ?? CHRIS_SESSION_DURATION_MINUTES,
-        )
-      : params.durationMinutes;
-    const storedDurationMinutes =
-      durationMinutes ?? (params.serviceType === 'session_1on1' ? 30 : 15);
-
-    // timezone is null until the offer wizard is saved. Those experts keep both services.
-    if (mentor.timezone != null) {
-      const offeredServices = Array.isArray(mentor.offered_services)
-        ? mentor.offered_services
-        : ['session_1on1'];
-      if (!offeredServices.includes(params.serviceType)) {
-        throw new ExpertOfferBookingError('This expert does not offer that service.');
+    let offer: LoadedOffer | null = null;
+    if (params.offerSlug) {
+      if (params.campaignId) {
+        throw new Error('This session is booked from its share link, not the campaign checkout.');
       }
-    }
+      if (params.applyCompGrantId) {
+        throw new Error('Complimentary sessions do not apply to packaged offers.');
+      }
 
-    const hours = await loadMentorWindows(finalMentorId);
-    if (hours.windows.length > 0) {
-      const mentorZone = typeof mentor.timezone === 'string' ? mentor.timezone.trim() : '';
-      const timezone = mentorZone || 'America/Chicago';
+      const { data: offerRow } = await supabaseAdmin
+        .from('expert_offers')
+        .select('id, title, slug, duration_minutes, price_cents, status')
+        .eq('mentor_id', finalMentorId)
+        .eq('slug', params.offerSlug)
+        .maybeSingle();
+
       if (
-        !offerSchema.windowContains(
-          hours.windows,
-          timezone,
-          params.scheduledAt,
-          storedDurationMinutes,
-        )
+        !offerRow ||
+        !isOfferPubliclyBookable({
+          status: offerRow.status,
+          expert_offers_enabled: Boolean(mentor.expert_offers_enabled),
+          compliance_status: mentor.compliance_status,
+          is_listed: mentor.is_listed,
+        })
       ) {
-        throw new ExpertOfferBookingError("That time is outside this expert's hours.");
+        throw new Error('This session is not available.');
       }
+
+      offer = {
+        id: offerRow.id,
+        offer_id: offerRow.id,
+        title: offerRow.title,
+        slug: offerRow.slug,
+        duration_minutes: offerRow.duration_minutes,
+        price_cents: offerRow.price_cents,
+        status: offerRow.status,
+      };
     }
+
+    const isChrisCampaign = Boolean(params.campaignId);
+    let durationMinutes = offer
+      ? offer.duration_minutes
+      : isChrisCampaign
+        ? clampSessionDurationMinutes(
+            params.durationMinutes ?? CHRIS_SESSION_DURATION_MINUTES,
+          )
+        : params.durationMinutes;
+    const serviceType = offer ? 'packaged_offer' : params.serviceType;
 
     if (params.guestInviteId) {
+      if (offer) {
+        throw new Error('Invites do not apply to packaged offers.');
+      }
       if (!params.menteeEmail) {
         throw new Error('Sign in to use this invite.');
       }
@@ -276,8 +291,40 @@ export class BookingAgent {
       appliedGuestInviteId = invite.id;
     }
 
+    // timezone is null until the offer wizard is saved. Those experts keep both services.
+    // A packaged offer is its own SKU and does not use the weekly service menu or hours.
+    if (!offer && mentor.timezone != null) {
+      const offeredServices = Array.isArray(mentor.offered_services)
+        ? mentor.offered_services
+        : ['session_1on1'];
+      if (!offeredServices.includes(serviceType)) {
+        throw new ExpertOfferBookingError('This expert does not offer that service.');
+      }
+    }
+
+    const storedDurationMinutes =
+      durationMinutes ?? (serviceType === 'session_1on1' ? 30 : 15);
+
+    if (!offer) {
+      const hours = await loadMentorWindows(finalMentorId);
+      if (hours.windows.length > 0) {
+        const mentorZone = typeof mentor.timezone === 'string' ? mentor.timezone.trim() : '';
+        const timezone = mentorZone || 'America/Chicago';
+        if (
+          !offerSchema.windowContains(
+            hours.windows,
+            timezone,
+            params.scheduledAt,
+            storedDurationMinutes,
+          )
+        ) {
+          throw new ExpertOfferBookingError("That time is outside this expert's hours.");
+        }
+      }
+    }
+
     if (params.applyCompGrantId) {
-      if (params.serviceType !== 'session_1on1') {
+      if (serviceType !== 'session_1on1') {
         throw new Error('Complimentary session only applies to live 1:1 bookings.');
       }
       const grant = await getGrantForApply({
@@ -294,22 +341,24 @@ export class BookingAgent {
 
     // Briefing (APX-02) is always included for live sessions as part of the standard offering.
     // Duration (slider) makes 1:1 price variable (prorated hourly rate from live_session_price_cents).
-    const includePreCallBrief = params.serviceType === 'session_1on1';
+    const includePreCallBrief = serviceType === 'session_1on1' || serviceType === 'packaged_offer';
     let servicePriceCents = computeBookingTotalCents({
-      serviceType: params.serviceType,
+      serviceType,
       liveSessionPriceCents: mentor.live_session_price_cents,
       includePreCallBrief,
       durationMinutes,
+      ...(offer ? { offerPriceCents: offer.price_cents } : {}),
     });
 
     // Chris: list/charge from whole-dollar menu by duration; tier from marketing_referrer.
-    if (isChrisCampaign) {
+    if (isChrisCampaign && !offer) {
       servicePriceCents = resolveChrisOriginalPriceCents(durationMinutes);
     }
 
-    const chrisChargeCents = isChrisCampaign
-      ? resolveChrisChargeCents(params.marketingReferrer, durationMinutes)
-      : null;
+    const chrisChargeCents =
+      isChrisCampaign && !offer
+        ? resolveChrisChargeCents(params.marketingReferrer, durationMinutes)
+        : null;
     // Comp grant: full session free at 15 minutes. Guest invite: 25 minutes with Chris.
     let stripeAmountCents = appliedCompGrantId || appliedGuestInviteId
       ? 0
@@ -339,7 +388,8 @@ export class BookingAgent {
           app: 'astrolink',
           mentor_id: finalMentorId,
           mentee_id: params.menteeId,
-          service_type: params.serviceType,
+          service_type: serviceType,
+          ...(offer ? { offer_id: offer.id } : {}),
           ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
           ...(isChrisCampaign && chrisChargeCents != null
             ? {
@@ -382,10 +432,20 @@ export class BookingAgent {
       didRunMatcher,
     });
 
+    const offerSnapshot: OfferSnapshot | null = offer
+      ? {
+          offer_id: offer.id,
+          title: offer.title,
+          slug: offer.slug,
+          duration_minutes: offer.duration_minutes,
+          price_cents: offer.price_cents,
+        }
+      : null;
+
     const bookingInsert = {
       mentee_id: params.menteeId,
       mentor_id: finalMentorId,
-      service_type: params.serviceType,
+      service_type: serviceType,
       include_pre_call_brief: includePreCallBrief,
       status: 'pending_payment' as const,
       scheduled_at: params.scheduledAt,
@@ -401,6 +461,12 @@ export class BookingAgent {
         ? { marketing_referrer: guestInviteReferrer ?? params.marketingReferrer }
         : {}),
       ...(pathAssessmentId ? { path_assessment_id: pathAssessmentId } : {}),
+      ...(offer
+        ? {
+            expert_offer_id: offer.id,
+            offer_snapshot: offerSnapshot,
+          }
+        : {}),
     };
 
     const { data: booking, error: bookingErr } = await (
@@ -418,6 +484,10 @@ export class BookingAgent {
       throw new Error(
         `Failed to create database booking: ${bookingErr?.message ?? 'no row returned'}`,
       );
+    }
+
+    if (offer) {
+      await incrementOfferCounter(offer.id, 'checkout_starts');
     }
 
     if (skipPayments || isFreeSession) {
@@ -492,8 +562,9 @@ export class BookingAgent {
         app: 'astrolink',
         mentor_id: finalMentorId,
         mentee_id: params.menteeId,
-        service_type: params.serviceType,
+        service_type: serviceType,
         booking_id: booking.id,
+        ...(offer ? { offer_id: offer.id } : {}),
       },
     });
 

@@ -9,7 +9,8 @@ import {
 import { MentorPathAssessmentPanel } from '@/components/path-assessment/mentor-path-assessment-panel';
 import { DashboardSessionTranscript } from '@/components/session/dashboard-session-transcript';
 import { formatSessionWhen } from '@/lib/format';
-import { formatServiceTypeLabel, type BookingStatus } from '@/lib/types';
+import { formatOfferBookingLabel } from '@/lib/expert-offers/label';
+import type { BookingStatus } from '@/lib/types';
 import { isJoinRoomEnabled, joinRoomAvailabilityTitle } from '@/lib/join-window';
 
 function canMentorJoin(booking: MentorBookingView): boolean {
@@ -78,7 +79,11 @@ export function MentorConsultationCard({
   const goals = booking.matchReason ?? 'No goals recorded for this session.';
   const hasJoinControl = canMentorJoin(booking);
   const joinEnabled = hasJoinControl ? isMentorJoinEnabled(booking) : false;
-  const serviceLabel = formatServiceTypeLabel(booking.serviceType, booking.durationMinutes);
+  const serviceLabel = formatOfferBookingLabel({
+    serviceType: booking.serviceType,
+    durationMinutes: booking.durationMinutes,
+    offerTitle: booking.offerTitle,
+  });
   const hasPrepBrief = isSessionBriefing(booking.briefing);
 
   return (

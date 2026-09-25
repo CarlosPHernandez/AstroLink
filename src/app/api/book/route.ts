@@ -58,6 +58,11 @@ export async function POST(request: Request) {
       );
     }
     const body = parsed.data;
+    const isOffer = Boolean(body.offerSlug);
+    const serviceType = isOffer ? 'packaged_offer' : body.serviceType;
+    if (!serviceType) {
+      return NextResponse.json({ success: false, error: 'Select a session type.' }, { status: 400 });
+    }
 
     const moderation = await screenBookingIntake({
       goals: body.goals,
@@ -85,7 +90,7 @@ export async function POST(request: Request) {
 
     const durationMinutes = body.guestInviteId
       ? GUEST_INVITE_DURATION_MINUTES
-      : chrisCampaign
+      : chrisCampaign && !isOffer
         ? clampSessionDurationMinutes(
             body.durationMinutes ?? CHRIS_SESSION_DURATION_MINUTES,
           )
@@ -99,7 +104,7 @@ export async function POST(request: Request) {
     const result = await agent.bookSession({
       menteeId: session.userId,
       mentorId: chrisCampaign?.mentorId ?? body.mentorId,
-      serviceType: body.serviceType,
+      serviceType,
       includePreCallBrief: body.includePreCallBrief ?? false,
       scheduledAt,
       menteeGoals: body.goals,
@@ -111,6 +116,7 @@ export async function POST(request: Request) {
       guestInviteId: body.guestInviteId,
       menteeEmail: session.email,
       assessmentToken: body.assessmentToken,
+      offerSlug: body.offerSlug,
     });
 
     if (!result.skipPayment) {

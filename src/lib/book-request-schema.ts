@@ -8,6 +8,7 @@ import {
   CHRIS_GOALS_MIN_CHARS,
 } from '@/lib/chris-campaign/chris-campaign-constants';
 import { isChrisScheduledDateBookable } from '@/lib/chris-campaign/chris-campaign-dates';
+import { OFFER_SLUG_RE } from '@/lib/expert-offers/constants';
 import {
   clampSessionDurationMinutes,
   SESSION_DURATION_MAX,
@@ -20,9 +21,11 @@ import { sanitizeEarlyAccessReferrer } from '@/lib/waitlist/early-access-referre
 export const BookBodySchema = z
   .object({
     mentorId: z.string().uuid({ message: 'Select a valid expert.' }).optional(),
-    serviceType: z.enum(['session_1on1', 'pre_call_brief'], {
-      message: 'Select a session type.',
-    }),
+    serviceType: z
+      .enum(['session_1on1', 'pre_call_brief', 'packaged_offer'], {
+        message: 'Select a session type.',
+      })
+      .optional(),
     includePreCallBrief: z.boolean().optional(),
     scheduledAt: z.string().min(1, { message: 'Choose a session time.' }),
     goals: z.string(),
@@ -49,11 +52,60 @@ export const BookBodySchema = z
       .string()
       .regex(/^[a-f0-9]{64}$/i, { message: 'Invalid assessment reference.' })
       .optional(),
+    offerSlug: z
+      .string()
+      .regex(OFFER_SLUG_RE, { message: 'Invalid offer.' })
+      .optional(),
   })
   .superRefine((data, ctx) => {
     const isChris = data.campaign === CHRIS_BOOKING_CAMPAIGN_QUERY;
     const goalsTrim = data.goals.trim();
     const bgTrim = data.background.trim();
+
+    if (data.serviceType === 'packaged_offer' && !data.offerSlug) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Packaged sessions must be booked from their share link.',
+        path: ['serviceType'],
+      });
+    }
+
+    if (data.offerSlug) {
+      if (!data.mentorId) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Select a valid expert.',
+          path: ['mentorId'],
+        });
+      }
+      if (data.serviceType && data.serviceType !== 'packaged_offer') {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Packaged sessions cannot mix with another session type.',
+          path: ['serviceType'],
+        });
+      }
+      if (isChris) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'This session is booked from its share link, not the campaign checkout.',
+          path: ['offerSlug'],
+        });
+      }
+      if (data.applyCompGrantId) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Complimentary sessions do not apply to packaged offers.',
+          path: ['applyCompGrantId'],
+        });
+      }
+    } else if (!data.serviceType) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Select a session type.',
+        path: ['serviceType'],
+      });
+    }
 
     if (data.applyCompGrantId) {
       if (data.serviceType !== 'session_1on1') {

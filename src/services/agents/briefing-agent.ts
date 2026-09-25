@@ -37,7 +37,11 @@ export class BriefingAgent {
       .filter(Boolean)
       .join('\n\n');
 
-    if (service_type === 'session_1on1' || service_type === 'extended_session') {
+    if (
+      service_type === 'session_1on1' ||
+      service_type === 'extended_session' ||
+      service_type === 'packaged_offer'
+    ) {
       const briefing = await this.generateDualSessionBriefing({
         bookingId,
         rateLimitKey: booking.mentee_id,

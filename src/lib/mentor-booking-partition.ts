@@ -28,6 +28,7 @@ export interface MentorBookingView {
   intakeBackground: string | null;
   briefing: BriefingPayload | null;
   durationMinutes?: number;
+  offerTitle?: string | null;
   pathAssessment?: MentorPathAssessmentSummary | null;
 }
 

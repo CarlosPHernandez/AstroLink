@@ -200,4 +200,58 @@ describe('BookBodySchema', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it('rejects packaged_offer without offerSlug', () => {
+    const result = BookBodySchema.safeParse({
+      ...validBody,
+      serviceType: 'packaged_offer',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const fields = result.error.flatten().fieldErrors;
+      expect(
+        fields.serviceType?.[0] ?? fields.offerSlug?.[0],
+      ).toBe('Packaged sessions must be booked from their share link.');
+    }
+  });
+
+  it('accepts offerSlug with mentorId and omits serviceType', () => {
+    const parsed = BookBodySchema.parse({
+      mentorId: validBody.mentorId,
+      offerSlug: 'book-lessons-and-how-to-apply-them',
+      scheduledAt: validBody.scheduledAt,
+      goals: validBody.goals,
+      background: validBody.background,
+    });
+    expect(parsed.offerSlug).toBe('book-lessons-and-how-to-apply-them');
+    expect(parsed.serviceType).toBeUndefined();
+  });
+
+  it('rejects offerSlug combined with campaign=chris', () => {
+    const result = BookBodySchema.safeParse({
+      ...validBody,
+      offerSlug: 'thesis-dissertation-review',
+      campaign: 'chris',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects offerSlug combined with a comp grant', () => {
+    const result = BookBodySchema.safeParse({
+      ...validBody,
+      offerSlug: 'strategy-call',
+      applyCompGrantId: 'a0000002-0000-4000-8000-000000000099',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects offerSlug without mentorId', () => {
+    const result = BookBodySchema.safeParse({
+      offerSlug: 'strategy-call',
+      scheduledAt: validBody.scheduledAt,
+      goals: validBody.goals,
+      background: validBody.background,
+    });
+    expect(result.success).toBe(false);
+  });
 });

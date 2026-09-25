@@ -50,6 +50,7 @@ export type Database = {
           id: string
           include_pre_call_brief: boolean
           duration_minutes: number
+          expert_offer_id: string | null
           intake_background: string | null
           match_reason: string | null
           ai_match_reason: string | null
@@ -58,6 +59,7 @@ export type Database = {
           mentee_token: string | null
           mentor_id: string
           mentor_token: string | null
+          offer_snapshot: Json | null
           path_assessment_id: string | null
           scheduled_at: string
           service_type: Database["public"]["Enums"]["service_type"]
@@ -71,6 +73,7 @@ export type Database = {
           id?: string
           include_pre_call_brief?: boolean
           duration_minutes?: number
+          expert_offer_id?: string | null
           intake_background?: string | null
           match_reason?: string | null
           ai_match_reason?: string | null
@@ -79,6 +82,7 @@ export type Database = {
           mentee_token?: string | null
           mentor_id: string
           mentor_token?: string | null
+          offer_snapshot?: Json | null
           path_assessment_id?: string | null
           scheduled_at: string
           service_type: Database["public"]["Enums"]["service_type"]
@@ -92,6 +96,7 @@ export type Database = {
           id?: string
           include_pre_call_brief?: boolean
           duration_minutes?: number
+          expert_offer_id?: string | null
           intake_background?: string | null
           match_reason?: string | null
           ai_match_reason?: string | null
@@ -100,6 +105,7 @@ export type Database = {
           mentee_token?: string | null
           mentor_id?: string
           mentor_token?: string | null
+          offer_snapshot?: Json | null
           path_assessment_id?: string | null
           scheduled_at?: string
           service_type?: Database["public"]["Enums"]["service_type"]
@@ -107,6 +113,13 @@ export type Database = {
           stripe_payment_intent_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_expert_offer_id_fkey"
+            columns: ["expert_offer_id"]
+            isOneToOne: false
+            referencedRelation: "expert_offers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_mentee_id_fkey"
             columns: ["mentee_id"]
@@ -433,6 +446,74 @@ export type Database = {
           },
         ]
       }
+      expert_offers: {
+        Row: {
+          archived_at: string | null
+          bookings_paid: number
+          checkout_starts: number
+          created_at: string
+          currency: string
+          description: string
+          duration_minutes: number
+          id: string
+          mentor_id: string
+          page_views: number
+          price_cents: number
+          published_at: string | null
+          slug: string
+          status: Database["public"]["Enums"]["expert_offer_status"]
+          title: string
+          unpublished_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          bookings_paid?: number
+          checkout_starts?: number
+          created_at?: string
+          currency?: string
+          description: string
+          duration_minutes: number
+          id?: string
+          mentor_id: string
+          page_views?: number
+          price_cents: number
+          published_at?: string | null
+          slug: string
+          status?: Database["public"]["Enums"]["expert_offer_status"]
+          title: string
+          unpublished_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          bookings_paid?: number
+          checkout_starts?: number
+          created_at?: string
+          currency?: string
+          description?: string
+          duration_minutes?: number
+          id?: string
+          mentor_id?: string
+          page_views?: number
+          price_cents?: number
+          published_at?: string | null
+          slug?: string
+          status?: Database["public"]["Enums"]["expert_offer_status"]
+          title?: string
+          unpublished_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expert_offers_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "mentors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expert_reviews: {
         Row: {
           approved_at: string | null
@@ -612,6 +693,7 @@ export type Database = {
           created_at: string
           email: string
           employer: string
+          expert_offers_enabled: boolean
           expertise: string[]
           full_name: string
           id: string
@@ -641,6 +723,7 @@ export type Database = {
           created_at?: string
           email: string
           employer?: string
+          expert_offers_enabled?: boolean
           expertise?: string[]
           full_name: string
           id?: string
@@ -670,6 +753,7 @@ export type Database = {
           created_at?: string
           email?: string
           employer?: string
+          expert_offers_enabled?: boolean
           expertise?: string[]
           full_name?: string
           id?: string
@@ -1317,6 +1401,15 @@ export type Database = {
         }
         Returns: Json
       }
+      publish_expert_offer: {
+        Args: {
+          p_offer_id: string
+          p_mentor_id: string
+          p_now: string
+          p_cap: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       agent_id:
@@ -1363,13 +1456,18 @@ export type Database = {
         | "declined"
         | "expired"
         | "refunded"
+      expert_offer_status: "draft" | "published" | "unpublished" | "archived"
       mentor_payout_method:
         | "paypal"
         | "zelle"
         | "cashapp"
         | "bank_manual"
         | "unset"
-      service_type: "session_1on1" | "pre_call_brief" | "extended_session"
+      service_type:
+        | "session_1on1"
+        | "pre_call_brief"
+        | "extended_session"
+        | "packaged_offer"
       transaction_status: "pending" | "completed" | "failed" | "refunded"
     }
     CompositeTypes: {
@@ -1528,8 +1626,14 @@ export const Constants = {
         "expired",
         "refunded",
       ],
+      expert_offer_status: ["draft", "published", "unpublished", "archived"],
       mentor_payout_method: ["paypal", "zelle", "cashapp", "bank_manual", "unset"],
-      service_type: ["session_1on1", "pre_call_brief", "extended_session"],
+      service_type: [
+        "session_1on1",
+        "pre_call_brief",
+        "extended_session",
+        "packaged_offer",
+      ],
       transaction_status: ["pending", "completed", "failed", "refunded"],
     },
   },

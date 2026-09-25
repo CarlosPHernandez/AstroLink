@@ -7,6 +7,7 @@ describe('bookingDurationMinutes', () => {
     expect(bookingDurationMinutes('session_1on1')).toBe(30);
     expect(bookingDurationMinutes('extended_session')).toBe(60);
     expect(bookingDurationMinutes('pre_call_brief')).toBe(30);
+    expect(bookingDurationMinutes('packaged_offer')).toBe(30);
   });
 });
 

@@ -38,7 +38,12 @@ export function computeBookingTotalCents(params: {
   liveSessionPriceCents: number;
   includePreCallBrief: boolean;
   durationMinutes?: number;
+  offerPriceCents?: number;
 }): number {
+  if (params.offerPriceCents != null) {
+    return params.offerPriceCents;
+  }
+
   if (params.serviceType === 'extended_session') {
     throw new Error('extended_session is not available in D1');
   }

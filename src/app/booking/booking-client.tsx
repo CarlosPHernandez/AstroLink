@@ -24,6 +24,8 @@ import { CHRIS_BOOKING_CAMPAIGN_QUERY } from '@/lib/chris-campaign/chris-campaig
 import { getChrisCampaignDurationMinutes } from '@/lib/chris-campaign/chris-booking-mode';
 import { BookBodySchema } from '@/lib/book-request-schema';
 import { getDashboardPathForRole, getPostBookingDashboardPath } from '@/lib/dashboard-paths';
+import { bookingOfferBackNav } from '@/lib/expert-offers/path';
+import { formatMoney } from '@/lib/format';
 import { trackMetaInitiateCheckout } from '@/lib/meta-pixel';
 import type { SessionData } from '@/lib/session';
 import { SESSION_DURATION_MIN } from '@/lib/session-duration';
@@ -67,9 +69,12 @@ type BookingFormState = {
   durationMinutes: number;
 };
 
-function formatMoney(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`;
-}
+type BookingOffer = {
+  slug: string;
+  title: string;
+  durationMinutes: number;
+  priceCents: number;
+};
 
 function CheckoutProgress({ step, skipPayments }: { step: 1 | 2; skipPayments?: boolean }) {
   if (skipPayments) {
@@ -205,6 +210,7 @@ function CheckoutSummary({
   checkoutAmount,
   onDurationChange,
   showDurationSlider = true,
+  offer = null,
 }: {
   mentor: ListedExpert | null;
   form: BookingFormState;
@@ -213,6 +219,7 @@ function CheckoutSummary({
   checkoutAmount?: number;
   onDurationChange?: (minutes: number) => void;
   showDurationSlider?: boolean;
+  offer?: BookingOffer | null;
 }) {
   const displayTotal = checkoutAmount ?? totalCents;
   const isLive = form.serviceType === 'session_1on1';
@@ -244,7 +251,9 @@ function CheckoutSummary({
               <div className="min-w-0">
                 <p className="text-label-md font-semibold text-on-surface truncate">{mentor.name}</p>
                 <p className="text-label-sm text-on-surface-variant">
-                Live session · {form.durationMinutes} min
+                {offer
+                  ? `${offer.title} · ${offer.durationMinutes} min`
+                  : `Live session · ${form.durationMinutes} min`}
               </p>
               </div>
             </div>
@@ -253,14 +262,16 @@ function CheckoutSummary({
           <dl className="space-y-2.5 text-label-md">
             <div className="flex justify-between gap-3">
               <dt className="text-on-surface-variant">
-                {isLive ? 'Session' : 'Pre-call brief'}
+                {offer ? offer.title : isLive ? 'Session' : 'Pre-call brief'}
               </dt>
               <dd className="font-mono text-on-surface tabular-nums shrink-0">
-                {isLive
-                  ? mentor
-                    ? `${formatMoney(mentor.liveSessionPriceCents)}/hr`
-                    : '—'
-                  : formatMoney(PRE_CALL_BRIEF_ADDON_CENTS)}
+                {offer
+                  ? `${offer.durationMinutes} min · ${formatMoney(offer.priceCents)}`
+                  : isLive
+                    ? mentor
+                      ? `${formatMoney(mentor.liveSessionPriceCents)}/hr`
+                      : '—'
+                    : formatMoney(PRE_CALL_BRIEF_ADDON_CENTS)}
               </dd>
             </div>
             {/* Brief is now included in the base mentor session price for live sessions (no separate add-on) */}
@@ -339,6 +350,7 @@ export default function BookingClient({
   prefillDurationMinutes = 30,
   initialCompGrant = null,
   assessmentToken = null,
+  offer = null,
 }: {
   session: SessionData;
   experts: ListedExpert[];
@@ -351,6 +363,7 @@ export default function BookingClient({
   initialCompGrant?: SessionCompGrantBannerGrant | null;
   /** Space Path Assessment public token from ?assessment= */
   assessmentToken?: string | null;
+  offer?: BookingOffer | null;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -374,8 +387,21 @@ export default function BookingClient({
     goals: '',
     background: '',
     scheduledAt: prefillScheduledAt ?? '',
-    durationMinutes: chrisCampaign ? chrisDurationMinutes : prefillDurationMinutes,
+    durationMinutes: offer
+      ? offer.durationMinutes
+      : chrisCampaign
+        ? chrisDurationMinutes
+        : prefillDurationMinutes,
   });
+
+  useEffect(() => {
+    if (!offer) return;
+    setForm((prev) =>
+      prev.durationMinutes === offer.durationMinutes
+        ? prev
+        : { ...prev, durationMinutes: offer.durationMinutes },
+    );
+  }, [offer]);
 
   useEffect(() => {
     if (!assessmentToken) return;
@@ -431,6 +457,7 @@ export default function BookingClient({
   }, [assessmentToken]);
 
   useEffect(() => {
+    if (offer) return;
     if (initialCompGrant) return;
     let cancelled = false;
     void (async () => {
@@ -457,7 +484,7 @@ export default function BookingClient({
     return () => {
       cancelled = true;
     };
-  }, [initialCompGrant]);
+  }, [initialCompGrant, offer]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -477,11 +504,17 @@ export default function BookingClient({
   }, [pendingSlug, experts, mentor]);
 
   const needsExpert = form.serviceType === 'session_1on1';
-  const pickerVisible = !chrisCampaign && needsExpert && showPicker;
+  const pickerVisible = !offer && !chrisCampaign && needsExpert && showPicker;
+  const backNav = bookingOfferBackNav({
+    chrisCampaign,
+    mentorSlug: offer ? activeMentor?.slug ?? mentor?.slug : null,
+    offerSlug: offer?.slug,
+  });
 
   const replaceBookingQuery = (mentorSlug: string | null) => {
     const qs = new URLSearchParams();
     if (mentorSlug) qs.set('mentor', mentorSlug);
+    if (offer?.slug) qs.set('offer', offer.slug);
     if (attachedAssessmentToken) qs.set('assessment', attachedAssessmentToken);
     const suffix = qs.toString();
     router.replace(suffix ? `/booking?${suffix}` : '/booking', { scroll: false });
@@ -509,15 +542,18 @@ export default function BookingClient({
 
   const baseCents = activeMentor?.liveSessionPriceCents ?? 0;
   // Duration slider (in summary card) makes live 1:1 price dynamic (prorated hourly rate).
-  // Briefing always bundled. pre_call_brief remains fixed.
-  const listTotalCents = computeBookingTotalCents({
-    serviceType: form.serviceType,
-    liveSessionPriceCents: baseCents,
-    includePreCallBrief: false,
-    durationMinutes: form.serviceType === 'session_1on1' ? form.durationMinutes : undefined,
-  });
+  // Briefing always bundled. pre_call_brief remains fixed. Offer SKU price is frozen.
+  const listTotalCents = offer
+    ? offer.priceCents
+    : computeBookingTotalCents({
+        serviceType: form.serviceType,
+        liveSessionPriceCents: baseCents,
+        includePreCallBrief: false,
+        durationMinutes: form.serviceType === 'session_1on1' ? form.durationMinutes : undefined,
+      });
   const effectiveDuration = chrisCampaign ? chrisDurationMinutes : form.durationMinutes;
   const canApplyComp =
+    !offer &&
     Boolean(compGrant) &&
     form.serviceType === 'session_1on1' &&
     effectiveDuration === SESSION_DURATION_MIN;
@@ -533,22 +569,30 @@ export default function BookingClient({
   const step: 1 | 2 = checkout?.clientSecret ? 2 : 1;
 
   const submitBooking = async () => {
-    const payload = {
-      mentorId: activeMentor?.id,
-      serviceType: form.serviceType,
-      includePreCallBrief: false,
-      scheduledAt: new Date(form.scheduledAt).toISOString(),
-      goals: form.goals,
-      background: form.background,
-      durationMinutes: chrisCampaign ? chrisDurationMinutes : form.durationMinutes,
-      ...(chrisCampaign ? { campaign: CHRIS_BOOKING_CAMPAIGN_QUERY } : {}),
-      ...(applyCompGrant && canApplyComp && compGrant
-        ? { applyCompGrantId: compGrant.id }
-        : {}),
-      ...(attachedAssessmentToken
-        ? { assessmentToken: attachedAssessmentToken }
-        : {}),
-    };
+    const payload = offer
+      ? {
+          mentorId: activeMentor?.id,
+          offerSlug: offer.slug,
+          scheduledAt: new Date(form.scheduledAt).toISOString(),
+          goals: form.goals,
+          background: form.background,
+        }
+      : {
+          mentorId: activeMentor?.id,
+          serviceType: form.serviceType,
+          includePreCallBrief: false,
+          scheduledAt: new Date(form.scheduledAt).toISOString(),
+          goals: form.goals,
+          background: form.background,
+          durationMinutes: chrisCampaign ? chrisDurationMinutes : form.durationMinutes,
+          ...(chrisCampaign ? { campaign: CHRIS_BOOKING_CAMPAIGN_QUERY } : {}),
+          ...(applyCompGrant && canApplyComp && compGrant
+            ? { applyCompGrantId: compGrant.id }
+            : {}),
+          ...(attachedAssessmentToken
+            ? { assessmentToken: attachedAssessmentToken }
+            : {}),
+        };
 
     const parsed = BookBodySchema.safeParse(payload);
     if (!parsed.success) {
@@ -583,7 +627,7 @@ export default function BookingClient({
       };
 
       if (!res.ok || !json.success) {
-        if (json.code === 'match_failed') {
+        if (json.code === 'match_failed' && !offer) {
           setShowPicker(true);
         }
         if (json.fieldErrors) {
@@ -674,11 +718,11 @@ export default function BookingClient({
       >
         <div className="mb-8">
           <Link
-            href={chrisCampaign ? '/talk-with-chris' : '/experts'}
+            href={backNav.href}
             className="inline-flex items-center gap-0.5 text-label-md text-on-surface-variant hover:text-primary mb-5 transition-colors"
           >
             <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-            {chrisCampaign ? 'Talk with Chris' : 'Directory'}
+            {backNav.label}
           </Link>
 
           {activeMentor && !showPicker ? (
@@ -707,7 +751,7 @@ export default function BookingClient({
                     </h1>
                   </div>
                 </div>
-                {step === 1 && !chrisCampaign ? (
+                {step === 1 && !chrisCampaign && !offer ? (
                   <button
                     type="button"
                     onClick={handleChangeExpert}
@@ -721,8 +765,22 @@ export default function BookingClient({
                 <span className="truncate max-w-full">{activeMentor.role}</span>
                 <span className="text-outline-variant">·</span>
                 <span className="truncate max-w-full text-on-surface-variant/90">{activeMentor.employer}</span>
-                <span className="text-outline-variant">·</span>
-                <span className="font-mono text-on-surface whitespace-nowrap">${activeMentor.rate}/hr</span>
+                {offer ? (
+                  <>
+                    <span className="text-outline-variant">·</span>
+                    <span
+                      data-testid="booking-offer-sku"
+                      className="inline-flex max-w-full items-center truncate rounded-full border border-outline-variant bg-surface-container-low px-2.5 py-0.5 text-label-sm text-on-surface"
+                    >
+                      {offer.title}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-outline-variant">·</span>
+                    <span className="font-mono text-on-surface whitespace-nowrap">${activeMentor.rate}/hr</span>
+                  </>
+                )}
               </p>
             </>
           ) : (
@@ -735,7 +793,7 @@ export default function BookingClient({
                   ? 'Tell us your goals. Gemini matches you to a listed expert — then you confirm time and pay.'
                   : 'Add your session details to continue.'}
               </p>
-              {needsExpert && step === 1 && !showPicker ? (
+              {needsExpert && step === 1 && !showPicker && !offer ? (
                 <button
                   type="button"
                   data-testid="booking-choose-expert"
@@ -787,7 +845,7 @@ export default function BookingClient({
                     </div>
                   ) : null}
 
-                  {compGrant ? (
+                  {compGrant && !offer ? (
                     <SessionCompGrantBanner grant={compGrant} showBookCta={false} />
                   ) : null}
 
@@ -818,7 +876,7 @@ export default function BookingClient({
                     </div>
                   ) : null}
 
-                  {compGrant && form.serviceType === 'session_1on1' ? (
+                  {compGrant && !offer && form.serviceType === 'session_1on1' ? (
                     <section
                       className="rounded-lg border border-outline-variant bg-surface-container-low px-4 py-3"
                       data-testid="session-comp-grant-apply"
@@ -849,7 +907,14 @@ export default function BookingClient({
                     </section>
                   ) : null}
 
-                  {chrisCampaign ? (
+                  {offer ? (
+                    <section>
+                      <h2 className={sectionTitleClass}>Session</h2>
+                      <p className={sectionHintClass}>
+                        {offer.title} · {offer.durationMinutes} min · {formatMoney(offer.priceCents)}
+                      </p>
+                    </section>
+                  ) : chrisCampaign ? (
                     <section>
                       <h2 className={sectionTitleClass}>Session</h2>
                       <p className={sectionHintClass}>
@@ -1008,9 +1073,12 @@ export default function BookingClient({
             step={step}
             checkoutAmount={checkout?.amountCents}
             onDurationChange={
-              chrisCampaign ? undefined : (m) => setForm({ ...form, durationMinutes: m })
+              offer || chrisCampaign
+                ? undefined
+                : (m) => setForm({ ...form, durationMinutes: m })
             }
-            showDurationSlider={!chrisCampaign}
+            showDurationSlider={!offer && !chrisCampaign}
+            offer={offer}
           />
         </div>
       </main>
@@ -1027,7 +1095,9 @@ export default function BookingClient({
                   {activeMentor.name}
                 </p>
                 <p className="text-label-sm text-on-surface-variant">
-                  {form.durationMinutes} min · ${activeMentor.rate}/hr
+                  {offer
+                    ? `${offer.title} · ${formatMoney(offer.priceCents)}`
+                    : `${form.durationMinutes} min · $${activeMentor.rate}/hr`}
                 </p>
               </div>
               <p className="text-headline-sm font-bold text-primary tabular-nums shrink-0">

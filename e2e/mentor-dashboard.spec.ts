@@ -35,6 +35,16 @@ test.describe('Mentor dashboard', () => {
       await expect(page.getByTestId('mentor-tab-sessions')).toHaveAttribute('aria-selected', 'true');
     });
 
+    test('hides Services tab when expert offers flag is off', async ({ page }) => {
+      test.skip(
+        !process.env.CI,
+        'Chris flag is mutated by expert-offers.spec.ts under local parallel workers',
+      );
+      await page.goto('/dashboard/mentor');
+      await expect(page.getByTestId('mentor-dashboard-sidebar')).toBeVisible();
+      await expect(page.getByTestId('mentor-tab-offers')).toHaveCount(0);
+    });
+
     test('earnings tab hides Connect CTA in E2E dev config', async ({ page }) => {
       await page.goto('/dashboard/mentor');
       await page.getByTestId('mentor-tab-earnings').click();
