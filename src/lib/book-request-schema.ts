@@ -14,6 +14,7 @@ import {
   SESSION_DURATION_MIN,
   SESSION_DURATION_STEP,
 } from '@/lib/session-duration';
+import { GUEST_INVITE_DURATION_MINUTES } from '@/lib/guest-invite-constants';
 import { sanitizeEarlyAccessReferrer } from '@/lib/waitlist/early-access-referrer-sanitize';
 
 export const BookBodySchema = z
@@ -41,6 +42,8 @@ export const BookBodySchema = z
       .transform((value) => sanitizeEarlyAccessReferrer(value)),
     /** Single-use complimentary 15-min grant id (server validates ownership). */
     applyCompGrantId: z.string().uuid().optional(),
+    /** Claimed email-locked guest invite. Forces a 25-minute Chris session at $0. */
+    guestInviteId: z.string().uuid().optional(),
     /** Space Path Assessment public token — attaches report context to the booking. */
     assessmentToken: z
       .string()
@@ -68,6 +71,14 @@ export const BookBodySchema = z
           path: ['durationMinutes'],
         });
       }
+    }
+
+    if (data.guestInviteId && data.applyCompGrantId) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Choose one complimentary offer.',
+        path: ['guestInviteId'],
+      });
     }
 
     if (isChris) {
@@ -118,7 +129,15 @@ export const BookBodySchema = z
       });
     }
 
-    if (data.durationMinutes !== undefined) {
+    if (data.guestInviteId) {
+      if (data.durationMinutes !== GUEST_INVITE_DURATION_MINUTES) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'This invite is a 25-minute session.',
+          path: ['durationMinutes'],
+        });
+      }
+    } else if (data.durationMinutes !== undefined) {
       const clamped = clampSessionDurationMinutes(data.durationMinutes);
       if (
         data.durationMinutes !== clamped ||

@@ -35,6 +35,12 @@ import { ExpertOfferBookingError, loadMentorWindows } from '@/lib/expert-offer/l
 import * as offerSchema from '@/lib/expert-offer/schema';
 import { confirmBookingWithoutPayment } from '@/lib/post-payment';
 import {
+  assertChrisWindowFree,
+  getInviteForBooking,
+  redeemGuestInviteForBooking,
+} from '@/lib/guest-session-invites';
+import { GUEST_INVITE_DURATION_MINUTES } from '@/lib/guest-invite-constants';
+import {
   assertGrantApplicable,
   getGrantForApply,
   redeemGrantForBooking,
@@ -63,6 +69,9 @@ export class BookingAgent {
     marketingReferrer?: string;
     /** Single-use complimentary 15-min grant (server-validated). */
     applyCompGrantId?: string;
+    /** Claimed email-locked guest invite. 25 minutes with Chris at $0. */
+    guestInviteId?: string;
+    menteeEmail?: string;
     /** Space Path Assessment public token — sets bookings.path_assessment_id when valid. */
     assessmentToken?: string;
   }) {
@@ -123,6 +132,8 @@ export class BookingAgent {
       campaignId?: string;
       marketingReferrer?: string;
       applyCompGrantId?: string;
+      guestInviteId?: string;
+      menteeEmail?: string;
       assessmentToken?: string;
     },
   ) {
@@ -130,6 +141,8 @@ export class BookingAgent {
     let matchReason = 'User selected mentor directly.';
     let didRunMatcher = false;
     let appliedCompGrantId: string | null = null;
+    let appliedGuestInviteId: string | null = null;
+    let guestInviteReferrer: string | null = null;
     let pathAssessmentId: string | null = null;
 
     if (params.assessmentToken?.trim()) {
@@ -204,7 +217,7 @@ export class BookingAgent {
     // - For Chris: whole-dollar duration menu in chris-campaign-constants ($250/hr anchor).
 
     const isChrisCampaign = Boolean(params.campaignId);
-    const durationMinutes = isChrisCampaign
+    let durationMinutes = isChrisCampaign
       ? clampSessionDurationMinutes(
           params.durationMinutes ?? CHRIS_SESSION_DURATION_MINUTES,
         )
@@ -236,6 +249,31 @@ export class BookingAgent {
       ) {
         throw new ExpertOfferBookingError("That time is outside this expert's hours.");
       }
+    }
+
+    if (params.guestInviteId) {
+      if (!params.menteeEmail) {
+        throw new Error('Sign in to use this invite.');
+      }
+      const invite = await getInviteForBooking({
+        inviteId: params.guestInviteId,
+        userId: params.menteeId,
+        email: params.menteeEmail,
+      });
+      if (!finalMentorId || finalMentorId !== invite.mentorId) {
+        throw new Error('This invite is only for a session with Chris.');
+      }
+      if (!params.campaignId) {
+        throw new Error('This invite is only for a session with Chris.');
+      }
+      durationMinutes = GUEST_INVITE_DURATION_MINUTES;
+      guestInviteReferrer = invite.marketingReferrer;
+      await assertChrisWindowFree({
+        mentorId: invite.mentorId,
+        scheduledAt: params.scheduledAt,
+        durationMinutes,
+      });
+      appliedGuestInviteId = invite.id;
     }
 
     if (params.applyCompGrantId) {
@@ -272,8 +310,8 @@ export class BookingAgent {
     const chrisChargeCents = isChrisCampaign
       ? resolveChrisChargeCents(params.marketingReferrer, durationMinutes)
       : null;
-    // Comp grant: full session free at 15 minutes (existing free-session path).
-    let stripeAmountCents = appliedCompGrantId
+    // Comp grant: full session free at 15 minutes. Guest invite: 25 minutes with Chris.
+    let stripeAmountCents = appliedCompGrantId || appliedGuestInviteId
       ? 0
       : (chrisChargeCents ?? servicePriceCents);
     const displayAmountCents = stripeAmountCents;
@@ -359,7 +397,9 @@ export class BookingAgent {
       // Defaults via migration for legacy rows; new bookings always provide from slider.
       duration_minutes: storedDurationMinutes,
       ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
-      ...(params.marketingReferrer ? { marketing_referrer: params.marketingReferrer } : {}),
+      ...((guestInviteReferrer ?? params.marketingReferrer)
+        ? { marketing_referrer: guestInviteReferrer ?? params.marketingReferrer }
+        : {}),
       ...(pathAssessmentId ? { path_assessment_id: pathAssessmentId } : {}),
     };
 
@@ -386,7 +426,29 @@ export class BookingAgent {
         skip_payments: skipPayments,
         free_session: isFreeSession,
         comp_grant_id: appliedCompGrantId,
+        guest_invite_id: appliedGuestInviteId,
       });
+
+      if (appliedGuestInviteId) {
+        const redeemed = await redeemGuestInviteForBooking({
+          inviteId: appliedGuestInviteId,
+          userId: params.menteeId,
+          bookingId: booking.id,
+        });
+        if (!redeemed) {
+          await supabaseAdmin
+            .from('bookings')
+            .update({ status: 'cancelled' })
+            .eq('id', booking.id);
+          await this.logAudit('GUEST_INVITE_REDEEM_FAILED', booking.id, {
+            invite_id: appliedGuestInviteId,
+          });
+          throw new Error('This complimentary session could not be applied.');
+        }
+        await this.logAudit('GUEST_INVITE_REDEEMED', booking.id, {
+          invite_id: appliedGuestInviteId,
+        });
+      }
 
       if (appliedCompGrantId) {
         const redeemed = await redeemGrantForBooking({

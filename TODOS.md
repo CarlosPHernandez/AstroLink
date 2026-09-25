@@ -1,5 +1,31 @@
 # TODOS
 
+## Booking
+
+### Reject overlapping times on every Chris booking
+
+**What:** The guest invite refuses a slot that overlaps another live Chris booking. Paid Chris bookings still do not.
+
+**Why:** Nothing in `booking-agent` or the migrations blocks two sessions in the same window.
+
+**Context:** Found in the guest-invite eng review (2026-09-24). The invite path grows the check in `assertChrisWindowFree`. The follow-up is to use it for every `campaign=chris` book.
+
+**Effort:** S
+**Priority:** P2
+**Depends on:** guest invite overlap helper
+
+### Stop sending private token URLs to Meta
+
+**What:** `/r/chris-slot?t=…` still loads `MetaPixel` from the root layout, so `PageView` can send that token to Meta. `/invite` is exempt.
+
+**Why:** Same leak closed for the gift link.
+
+**Context:** `src/components/meta-pixel.tsx` fires `fbq('track', 'PageView')` on every page. Root layout mounts it.
+
+**Effort:** S
+**Priority:** P3
+**Depends on:** None
+
 ## Landing / Experts
 
 ### Verify Spanish-language expert bios still get a `lang="es"` attribute
