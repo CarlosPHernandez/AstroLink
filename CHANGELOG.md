@@ -2,6 +2,18 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.20.0.0] - 2026-09-24
+
+### Added
+- Experts can apply at `/for-experts` with an hourly rate, the services they offer, and the hours they can take calls. AstroLink reviews every application before that expert appears in the directory.
+- Admins can approve an application into an unlisted expert, or decline it. Approving an email that already belongs to an expert does not change that expert.
+- Invited experts set services and weekly hours while finishing setup, and can change them later in settings.
+- After an expert saves hours, new bookings must fall inside those hours. Experts who have not saved hours can still be booked.
+
+### Fixed
+- A failed approval deletes the half-created expert and returns the application so it can be reviewed again.
+- Experts who have not saved the new offer can still sell a pre-call brief.
+
 ## [0.19.0.0] - 2026-09-24
 
 ### Added
