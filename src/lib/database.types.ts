@@ -1091,6 +1091,63 @@ export type Database = {
           },
         ]
       }
+      guest_session_invites: {
+        Row: {
+          id: string
+          token_hash: string
+          email_lock: string
+          mentor_id: string
+          duration_minutes: number
+          campaign_id: string
+          marketing_referrer: string
+          status: string
+          expires_at: string
+          claimed_by_user_id: string | null
+          claimed_at: string | null
+          redeemed_at: string | null
+          redeemed_booking_id: string | null
+          internal_note: string | null
+          created_at: string
+          created_by: string | null
+        }
+        Insert: {
+          id?: string
+          token_hash: string
+          email_lock: string
+          mentor_id: string
+          duration_minutes?: number
+          campaign_id?: string
+          marketing_referrer?: string
+          status?: string
+          expires_at: string
+          claimed_by_user_id?: string | null
+          claimed_at?: string | null
+          redeemed_at?: string | null
+          redeemed_booking_id?: string | null
+          internal_note?: string | null
+          created_at?: string
+          created_by?: string | null
+        }
+        Update: {
+          id?: string
+          token_hash?: string
+          email_lock?: string
+          mentor_id?: string
+          duration_minutes?: number
+          campaign_id?: string
+          marketing_referrer?: string
+          status?: string
+          expires_at?: string
+          claimed_by_user_id?: string | null
+          claimed_at?: string | null
+          redeemed_at?: string | null
+          redeemed_booking_id?: string | null
+          internal_note?: string | null
+          created_at?: string
+          created_by?: string | null
+        }
+        Relationships: []
+      }
       session_transcripts: {
         Row: {
           booking_id: string
