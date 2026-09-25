@@ -11,6 +11,7 @@ const mockIsStripePaymentsSkipped = vi.hoisted(() => vi.fn());
 const mockStripePaymentIntentsCreate = vi.hoisted(() => vi.fn());
 const mockStripePaymentIntentsUpdate = vi.hoisted(() => vi.fn());
 const mockGetOrCreateStripeCustomerForMentee = vi.hoisted(() => vi.fn());
+const mockAvailabilityWindows = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/supabase', () => ({
   supabaseAdmin: {
@@ -36,6 +37,13 @@ vi.mock('@/lib/supabase', () => ({
       }
       if (table === 'audit_log') {
         return { insert: mockAuditInsert };
+      }
+      if (table === 'mentor_availability_windows') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => mockAvailabilityWindows()),
+          })),
+        };
       }
       return { select: vi.fn() };
     }),
@@ -86,6 +94,8 @@ vi.mock('@/lib/stripe-customer', () => ({
     mockGetOrCreateStripeCustomerForMentee(...args),
 }));
 
+import { ExpertOfferBookingError } from '@/lib/expert-offer/load-windows';
+import * as offerSchema from '@/lib/expert-offer/schema';
 import { BookingAgent } from '@/services/agents/booking-agent';
 
 const mentorPool = [
@@ -126,6 +136,7 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     });
     mockStripePaymentIntentsUpdate.mockResolvedValue({ id: 'pi_test_123' });
     mockGetOrCreateStripeCustomerForMentee.mockResolvedValue('cus_test_123');
+    mockAvailabilityWindows.mockResolvedValue({ data: [], error: null });
   });
 
   afterEach(() => {
@@ -420,5 +431,119 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
     );
     expect(paymentIntentParams).not.toHaveProperty('discounts');
     expect(paymentIntentParams.metadata).not.toHaveProperty('pricing_mode');
+  });
+
+  describe('saved offer hours', () => {
+    const tuesdayWindow = [{ weekday: 2, start_minute: 9 * 60, end_minute: 12 * 60 }];
+    const goals = 'Learn about propulsion';
+    const background = 'Early-career engineer';
+
+    beforeEach(() => {
+      // Brief instants are 2026-09-29. Freeze before that week so the 2-day lead does not reject them.
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-09-24T12:00:00.000Z'));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('books a future slot when the mentor has no saved windows', async () => {
+      const contains = vi.spyOn(offerSchema, 'windowContains');
+      mockMentorSingle.mockResolvedValue({
+        data: { ...approvedMentor, timezone: null, offered_services: null },
+        error: null,
+      });
+      mockAvailabilityWindows.mockResolvedValue({ data: [], error: null });
+
+      const agent = new BookingAgent();
+      const result = await agent.bookSession({
+        menteeId: 'mentee-1',
+        mentorId: 'mentor-1',
+        serviceType: 'session_1on1',
+        scheduledAt: '2030-01-15T18:00:00.000Z',
+        menteeGoals: goals,
+        menteeBackground: background,
+      });
+
+      expect(result.bookingId).toBe('booking-1');
+      expect(contains).not.toHaveBeenCalled();
+    });
+
+    it('books a 25-minute session inside Tuesday 09:00–12:00 Chicago', async () => {
+      const contains = vi.spyOn(offerSchema, 'windowContains');
+      mockMentorSingle.mockResolvedValue({
+        data: { ...approvedMentor, timezone: 'America/Chicago' },
+        error: null,
+      });
+      mockAvailabilityWindows.mockResolvedValue({ data: tuesdayWindow, error: null });
+
+      const agent = new BookingAgent();
+      const result = await agent.bookSession({
+        menteeId: 'mentee-1',
+        mentorId: 'mentor-1',
+        serviceType: 'session_1on1',
+        scheduledAt: '2026-09-29T15:00:00.000Z',
+        menteeGoals: goals,
+        menteeBackground: background,
+        durationMinutes: 25,
+      });
+
+      expect(result.bookingId).toBe('booking-1');
+      expect(contains).toHaveBeenCalledWith(
+        [{ weekday: 2, startMinute: 9 * 60, endMinute: 12 * 60 }],
+        'America/Chicago',
+        '2026-09-29T15:00:00.000Z',
+        25,
+      );
+    });
+
+    it('rejects a 25-minute session that runs past the Tuesday window', async () => {
+      mockMentorSingle.mockResolvedValue({
+        data: { ...approvedMentor, timezone: 'America/Chicago' },
+        error: null,
+      });
+      mockAvailabilityWindows.mockResolvedValue({ data: tuesdayWindow, error: null });
+
+      const agent = new BookingAgent();
+      const error = await agent
+        .bookSession({
+          menteeId: 'mentee-1',
+          mentorId: 'mentor-1',
+          serviceType: 'session_1on1',
+          scheduledAt: '2026-09-29T16:50:00.000Z',
+          menteeGoals: goals,
+          menteeBackground: background,
+          durationMinutes: 25,
+        })
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(ExpertOfferBookingError);
+      expect((error as Error).message).toBe("That time is outside this expert's hours.");
+      expect(mockBookingInsert).not.toHaveBeenCalled();
+    });
+
+    it('rejects session_1on1 when offered services omit it', async () => {
+      mockMentorSingle.mockResolvedValue({
+        data: { ...approvedMentor, offered_services: ['extended_session'] },
+        error: null,
+      });
+
+      const agent = new BookingAgent();
+      const error = await agent
+        .bookSession({
+          menteeId: 'mentee-1',
+          mentorId: 'mentor-1',
+          serviceType: 'session_1on1',
+          scheduledAt: '2030-01-15T18:00:00.000Z',
+          menteeGoals: goals,
+          menteeBackground: background,
+        })
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(ExpertOfferBookingError);
+      expect((error as Error).message).toBe('This expert does not offer that service.');
+      expect(mockBookingInsert).not.toHaveBeenCalled();
+    });
   });
 });
