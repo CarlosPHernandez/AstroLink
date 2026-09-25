@@ -3,8 +3,8 @@ import { headers } from 'next/headers';
 
 import '@/components/chris-campaign/chris-landing.css';
 import { InviteClaimButton } from '@/app/invite/[token]/invite-claim-button';
+import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
 import { getChrisMentorSlug } from '@/lib/chris-campaign/chris-campaign-config';
-import { getApprovedReviewsForExpert } from '@/lib/expert-reviews/get-approved-reviews';
 import {
   assertGuestInviteLookupRateLimit,
   guestInviteClientIp,
@@ -12,6 +12,7 @@ import {
 } from '@/lib/guest-invite-rate-limit';
 import { GUEST_INVITE_REFERRER } from '@/lib/guest-invite-constants';
 import { getClaimedInviteForUser, lookupGuestInvite } from '@/lib/guest-session-invites';
+import { publicExpertCopyForSlug } from '@/lib/experts/public-expert-copy';
 import { getMentorBySlug } from '@/lib/mentor-directory';
 import { getSession } from '@/lib/session';
 import { toAuthWithRedirect } from '@/lib/auth-redirect';
@@ -23,12 +24,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
   title: 'A session with Chris Sembroski',
 };
-
-const EXAMPLE_QUESTIONS = [
-  'How did you get from where you were into this industry?',
-  'What should I have ready before I talk to a recruiter or a hiring manager?',
-  'Who hires for this kind of work, and what do they actually look for?',
-];
 
 type PageProps = { params: Promise<{ token: string }> };
 
@@ -65,7 +60,7 @@ export default async function GuestInvitePage({ params }: PageProps) {
 
   const session = await getSession();
   const mentor = await getMentorBySlug(getChrisMentorSlug());
-  const reviews = mentor ? await getApprovedReviewsForExpert(mentor.id) : [];
+  const copy = mentor ? publicExpertCopyForSlug(mentor.slug) : null;
   const claimed =
     session && lookedUp.kind === 'used'
       ? await getClaimedInviteForUser(session.userId).catch(() => null)
@@ -86,64 +81,102 @@ export default async function GuestInvitePage({ params }: PageProps) {
 
   return (
     <div className="chris-landing min-h-screen bg-primary-container px-6 py-10 text-white">
-      <main className="chris-mobile-max mx-auto flex w-full flex-col gap-6">
-        {mentor?.imageUrl ? (
-          // Campaign portrait. Next/Image requires known hosts; a plain img matches other Chris surfaces that already allow this URL.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={mentor.imageUrl}
-            alt={mentor.name}
-            className="h-24 w-24 rounded-full object-cover"
+      <main className="chris-mobile-max mx-auto flex w-full flex-col gap-8">
+        <header className="flex flex-col gap-2">
+          <p className="text-xs font-medium uppercase tracking-widest text-white/50">
+            Free 25-minute session
+          </p>
+          <h1 className="text-4xl font-semibold leading-none tracking-tight">
+            {mentor?.name ?? 'Chris Sembroski'}
+          </h1>
+          <p className="text-lg font-medium leading-snug text-white/90">
+            {copy?.title ?? mentor?.role ?? 'Commercial astronaut'}
+          </p>
+          {copy?.proof ? <p className="text-sm text-white/55">{copy.proof}</p> : null}
+        </header>
+
+        {mentor ? (
+          <ExpertIntroMedia
+            name={mentor.name}
+            imageUrl={mentor.imageUrl}
+            introVideoUrl={mentor.introVideoUrl}
+            priority
+            overlayVariant="minimal"
+            className="aspect-[3/4] w-full border-white/15"
           />
         ) : null}
-        <div className="space-y-3">
-          <h1 className="text-3xl font-semibold leading-tight">
-            Free 25-minute call with Chris Sembroski
-          </h1>
-          <p className="text-base leading-relaxed text-white/80">
-            A conversation to talk through your search. This is not a job offer and not a promised
-            introduction.
-          </p>
+
+        {mentor?.bio ? <ChrisBio bio={mentor.bio} /> : null}
+
+        <div className="flex flex-col gap-3">
           {expiresLabel ? (
-            <p className="text-sm text-white/60">Expires {expiresLabel}.</p>
+            <p className="text-xs text-white/45">Offer expires {expiresLabel}.</p>
           ) : null}
+          <InviteClaimButton
+            token={token}
+            signedIn={Boolean(session)}
+            authHref={toAuthWithRedirect(returnPath)}
+            bookingPath={bookingPath}
+          />
         </div>
-        <InviteClaimButton
-          token={token}
-          signedIn={Boolean(session)}
-          authHref={toAuthWithRedirect(returnPath)}
-          bookingPath={bookingPath}
-        />
-        <section className="space-y-3 border-t border-white/15 pt-6">
-          <h2 className="text-sm font-medium uppercase tracking-widest text-white/60">
-            What you can ask
-          </h2>
-          <ul className="space-y-2 text-sm leading-relaxed text-white/85">
-            {EXAMPLE_QUESTIONS.map((question) => (
-              <li key={question}>{question}</li>
-            ))}
-          </ul>
-          <p className="text-sm leading-relaxed text-white/75">
-            Chris has done the work, including flying, and he can tell you what is real about
-            getting into the industry. He does not place you in a job from this page.
-          </p>
-        </section>
-        {reviews.length > 0 ? (
-          <section className="space-y-3">
-            <h2 className="text-sm font-medium uppercase tracking-widest text-white/60">
-              From people who have sat with him
-            </h2>
-            {reviews.map((review) => (
-              <blockquote key={review.id} className="text-sm leading-relaxed text-white/85">
-                <p>“{review.quote}”</p>
-                <footer className="mt-1 text-white/55">
-                  {review.displayName} · {review.rating} of 5
-                </footer>
-              </blockquote>
-            ))}
-          </section>
-        ) : null}
       </main>
+    </div>
+  );
+}
+
+type BioBlock =
+  | { kind: 'heading'; text: string }
+  | { kind: 'paragraph'; text: string }
+  | { kind: 'labeled'; label: string; text: string };
+
+function chrisBioBlocks(bio: string): BioBlock[] {
+  return bio
+    .replace(/\r\n/g, '\n')
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((text) => {
+      const labeled = text.match(/^([^:]{3,40}):\s+(\S[\s\S]*)$/);
+      if (labeled && labeled[1].split(' ').length <= 6) {
+        return { kind: 'labeled', label: labeled[1], text: labeled[2] };
+      }
+      const isHeading = text.length <= 40 && !/[.!?]$/.test(text) && !text.includes(':');
+      if (isHeading) return { kind: 'heading', text };
+      return { kind: 'paragraph', text };
+    });
+}
+
+function ChrisBio({ bio }: { bio: string }) {
+  const blocks = chrisBioBlocks(bio);
+  return (
+    <div className="flex flex-col gap-3">
+      {blocks.map((block, index) => {
+        if (block.kind === 'heading') {
+          return (
+            <h2
+              key={`${block.kind}-${index}`}
+              className="pt-3 text-xs font-medium uppercase tracking-widest text-white/45"
+            >
+              {block.text}
+            </h2>
+          );
+        }
+        if (block.kind === 'labeled') {
+          return (
+            <p key={`${block.kind}-${index}`} className="text-base font-light leading-relaxed text-white/80">
+              <span className="mb-1 block text-xs font-medium uppercase tracking-widest text-white/45">
+                {block.label}
+              </span>
+              {block.text}
+            </p>
+          );
+        }
+        return (
+          <p key={`${block.kind}-${index}`} className="text-base font-light leading-relaxed text-white/80">
+            {block.text}
+          </p>
+        );
+      })}
     </div>
   );
 }
