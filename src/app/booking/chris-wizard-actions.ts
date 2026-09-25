@@ -10,6 +10,8 @@ import {
 } from '@/lib/supabase/auth-error-message';
 import { createClient } from '@/lib/supabase/server';
 import { ensureMenteeUserRow } from '@/lib/user-profile';
+import { appAuthPath } from '@/lib/app-url';
+import { getSafeRedirectPath } from '@/lib/auth-redirect';
 import { z } from 'zod';
 
 const RegisterSchema = z.object({
@@ -60,10 +62,20 @@ export async function chrisWizardRegisterAction(
 
   if (isSupabaseAuthEnabled()) {
     const supabase = await createClient();
+    const safeNext = getSafeRedirectPath(formData.get('redirect')?.toString(), '');
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: {
+        data: { full_name: fullName },
+        ...(safeNext
+          ? {
+              emailRedirectTo: appAuthPath(
+                `/auth/confirm?next=${encodeURIComponent(safeNext)}`,
+              ),
+            }
+          : {}),
+      },
     });
 
     if (error) {

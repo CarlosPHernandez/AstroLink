@@ -12,6 +12,7 @@ import {
   getBookingClientKey,
   isBookingRateLimitError,
 } from '@/lib/booking-rate-limit';
+import { restoreGuestInviteAfterCancel } from '@/lib/guest-session-invites';
 import { computeCancellationRefund } from '@/lib/refunds';
 import { shouldCreateStripeRefund } from '@/lib/stripe-refundable';
 
@@ -129,6 +130,11 @@ export async function POST(
         policy_reason: policy.reason,
         refund_percent: policy.refundPercent,
       } as Json,
+    });
+
+    await restoreGuestInviteAfterCancel({
+      bookingId: booking.id,
+      scheduledAt: booking.scheduled_at,
     });
 
     if (releaseCampaignSlot && campaignId) {

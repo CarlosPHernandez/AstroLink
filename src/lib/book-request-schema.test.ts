@@ -71,6 +71,17 @@ describe('BookBodySchema', () => {
     expect(BookBodySchema.parse(chrisFuture).campaign).toBe('chris');
   });
 
+  it('rejects a 25-minute Chris session unless a guest invite is attached', () => {
+    const rejected = BookBodySchema.safeParse({ ...chrisFuture, durationMinutes: 25 });
+    expect(rejected.success).toBe(false);
+    const accepted = BookBodySchema.safeParse({
+      ...chrisFuture,
+      durationMinutes: 25,
+      guestInviteId: '33333333-3333-4333-8333-333333333333',
+    });
+    expect(accepted.success).toBe(true);
+  });
+
   it('accepts campaign=chris with 15–60 minute stepped durations', () => {
     for (const durationMinutes of [15, 30, 45, 60]) {
       expect(
