@@ -2,6 +2,16 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.21.0.0] - 2026-09-25
+
+### Added
+- Experts with packaged sessions turned on get a Services tab. They can draft a live session, set a price and length, and publish a share link.
+- A published link shows that session and opens checkout at the saved price and length. The buyer cannot change the price from the page.
+- Bookings from that link keep the session title on the dashboard, the confirmation, and the calendar file.
+
+### Changed
+- A packaged session does not use the weekly hours menu, a guest invite, or a complimentary grant. Normal bookings still follow saved hours.
+
 ## [0.20.0.0] - 2026-09-24
 
 ### Added
