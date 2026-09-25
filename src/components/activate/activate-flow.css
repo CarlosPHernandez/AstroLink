@@ -201,6 +201,12 @@
   height: 1.125rem;
 }
 
+/* Dashboard settings reuse these fields without the full-page shell. */
+.mentor-dash .activate-flow {
+  min-height: 0;
+  background: transparent;
+}
+
 .activate-flow .activate-section-title {
   font-size: 1.125rem;
   font-weight: 600;

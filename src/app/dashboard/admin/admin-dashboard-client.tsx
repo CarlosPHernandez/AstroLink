@@ -4,6 +4,7 @@ import Link from 'next/link';
 import React, { useCallback, useEffect, useState } from 'react';
 import { logoutAction } from '@/app/auth/actions';
 import { CreateExpertPanel } from './create-expert-panel';
+import { ExpertApplicationsPanel } from './expert-applications-panel';
 import { MentorPayoutsPanel } from './mentor-payouts-panel';
 
 type WaitlistMetrics = {
@@ -172,6 +173,7 @@ export default function AdminDashboardClient({ session }: { session: SessionData
 
         <div className="space-y-6">
           <CreateExpertPanel />
+          <ExpertApplicationsPanel />
 
           <div className="p-6 rounded-md border border-outline-variant bg-surface-container-lowest shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">

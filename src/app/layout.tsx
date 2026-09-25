@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter, JetBrains_Mono, Montserrat } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+import { MetaPixel } from "@/components/meta-pixel";
 import { getProductionAppUrl } from "@/lib/app-url";
 import {
   defaultSiteOgImage,
@@ -93,6 +94,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {children}
         <Analytics />
+        <MetaPixel />
       </body>
     </html>
   );

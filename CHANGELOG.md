@@ -2,6 +2,28 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.20.0.0] - 2026-09-24
+
+### Added
+- Experts can apply at `/for-experts` with an hourly rate, the services they offer, and the hours they can take calls. AstroLink reviews every application before that expert appears in the directory.
+- Admins can approve an application into an unlisted expert, or decline it. Approving an email that already belongs to an expert does not change that expert.
+- Invited experts set services and weekly hours while finishing setup, and can change them later in settings.
+- After an expert saves hours, new bookings must fall inside those hours. Experts who have not saved hours can still be booked.
+
+### Fixed
+- A failed approval deletes the half-created expert and returns the application so it can be reviewed again.
+- Experts who have not saved the new offer can still sell a pre-call brief.
+
+## [0.19.0.0] - 2026-09-24
+
+### Added
+- A private link can book one free 25-minute call with Chris. It expires, and it only works for the email set when the link is created.
+- That link can be minted or revoked from a local command. The page explains the conversation, shows example questions, and shows real published reviews when Chris has any.
+
+### Changed
+- Signing up from the Chris booking flow can return to the invite after the confirmation email.
+- The ads pixel does not load on the invite page.
+- Waitlist mode still opens the invite page and the claim request. The rest of booking stays closed.
 
 ## [0.18.0.0] - 2026-09-09
 

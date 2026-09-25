@@ -54,5 +54,6 @@ describe('getSafeRedirectPath', () => {
       '/dashboard/mentee',
     );
     expect(getSafeRedirectPath('//evil.example', '/dashboard/mentee')).toBe('/dashboard/mentee');
+    expect(getSafeRedirectPath('/invite/abc', '/dashboard/mentee')).toBe('/invite/abc');
   });
 });

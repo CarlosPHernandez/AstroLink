@@ -88,6 +88,17 @@ describe('POST /api/bookings/[id]/cancel', () => {
           insert: mockAuditInsert,
         };
       }
+      if (table === 'guest_session_invites') {
+        return {
+          update: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                gt: vi.fn().mockResolvedValue({ error: null }),
+              })),
+            })),
+          })),
+        };
+      }
       return {};
     });
   });

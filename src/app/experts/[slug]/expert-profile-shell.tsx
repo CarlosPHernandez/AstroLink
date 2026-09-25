@@ -1,4 +1,4 @@
-import { isWaitlistMode } from '@/lib/app-mode';
+import { isSupabaseAuthEnabled, isWaitlistMode } from '@/lib/app-mode';
 import { resolveExpertCta } from '@/lib/expert-cta';
 import type { PublicExpertReview } from '@/lib/expert-reviews';
 import type { ListedExpert } from '@/lib/mentor-directory';
@@ -20,6 +20,7 @@ export default async function ExpertProfileShell({
       session={session}
       expertCta={expertCta}
       reviews={reviews}
+      supabaseAuth={isSupabaseAuthEnabled()}
     />
   );
 }

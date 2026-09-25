@@ -39,13 +39,18 @@ export function isPathAssessmentPublicPage(pathname: string): boolean {
   return pathname.startsWith(prefix) && pathname.length > prefix.length;
 }
 
+export function isGuestInvitePage(pathname: string): boolean {
+  return pathname === '/invite' || pathname.startsWith('/invite/');
+}
+
 export function isWaitlistPublicPage(pathname: string): boolean {
   return (
     pathname === WAITLIST_PUBLIC_LANDING_PATH ||
     (WAITLIST_PUBLIC_PAGES as readonly string[]).includes(pathname) ||
     isWaitlistExpertsPage(pathname) ||
     isWaitlistSeoCrawlPage(pathname) ||
-    isPathAssessmentPublicPage(pathname)
+    isPathAssessmentPublicPage(pathname) ||
+    isGuestInvitePage(pathname)
   );
 }
 
@@ -59,6 +64,7 @@ export function isWaitlistAllowedApi(pathname: string): boolean {
   if (pathname === '/api/path-assessment' || pathname.startsWith('/api/path-assessment/')) {
     return true;
   }
+  if (pathname === '/api/guest-invites/claim') return true;
   if (pathname.startsWith('/api/admin/')) return true;
   if (pathname.startsWith('/api/webhooks/')) return true;
   return false;

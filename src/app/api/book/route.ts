@@ -9,12 +9,19 @@ import {
 import { screenBookingIntake } from '@/lib/intake-moderation';
 import { isLlmRateLimitError } from '@/lib/llm';
 import { CHRIS_SESSION_DURATION_MINUTES } from '@/lib/chris-campaign/chris-campaign-constants';
+import { GUEST_INVITE_DURATION_MINUTES } from '@/lib/guest-invite-constants';
 import { clampSessionDurationMinutes } from '@/lib/session-duration';
 import { ChrisCampaignSoldOutError } from '@/lib/chris-campaign/chris-campaign-slots';
 import { resolveChrisCampaignForBooking } from '@/lib/chris-campaign/validate-chris-booking';
 import { getSession } from '@/lib/session';
 import { ExpertMatchFailedError } from '@/lib/expert-match';
+import { ExpertOfferBookingError } from '@/lib/expert-offer/load-windows';
 import { BookingAgent } from '@/services/agents/booking-agent';
+import {
+  readClientIp,
+  readMetaBrowserIds,
+  sendMetaCapiInitiateCheckout,
+} from '@/lib/meta-capi';
 
 export async function POST(request: Request) {
   try {
@@ -81,15 +88,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: message }, { status: 400 });
     }
 
-    const durationMinutes = isOffer
-      ? body.durationMinutes
-      : chrisCampaign
+    const durationMinutes = body.guestInviteId
+      ? GUEST_INVITE_DURATION_MINUTES
+      : chrisCampaign && !isOffer
         ? clampSessionDurationMinutes(
             body.durationMinutes ?? CHRIS_SESSION_DURATION_MINUTES,
           )
         : body.durationMinutes;
 
     const agent = new BookingAgent();
+    const browserIds = readMetaBrowserIds(request);
+    const clientIp = readClientIp(request);
+    const clientUserAgent = request.headers.get('user-agent');
+
     const result = await agent.bookSession({
       menteeId: session.userId,
       mentorId: chrisCampaign?.mentorId ?? body.mentorId,
@@ -102,9 +113,24 @@ export async function POST(request: Request) {
       campaignId: chrisCampaign?.campaignId,
       marketingReferrer: body.marketingReferrer,
       applyCompGrantId: body.applyCompGrantId,
+      guestInviteId: body.guestInviteId,
+      menteeEmail: session.email,
       assessmentToken: body.assessmentToken,
       offerSlug: body.offerSlug,
     });
+
+    if (!result.skipPayment) {
+      void sendMetaCapiInitiateCheckout({
+        bookingId: result.bookingId,
+        amountCents: result.amountCents,
+        email: session.email,
+        externalId: session.userId,
+        clientIp,
+        clientUserAgent,
+        fbp: browserIds.fbp,
+        fbc: browserIds.fbc,
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -130,6 +156,9 @@ export async function POST(request: Request) {
     }
     if (error instanceof ChrisCampaignSoldOutError) {
       return NextResponse.json({ success: false, error: error.message }, { status: 409 });
+    }
+    if (error instanceof ExpertOfferBookingError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
     if (isLlmRateLimitError(error)) {
       return NextResponse.json(

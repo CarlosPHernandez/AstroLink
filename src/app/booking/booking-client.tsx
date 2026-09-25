@@ -25,6 +25,7 @@ import { BookBodySchema } from '@/lib/book-request-schema';
 import { getDashboardPathForRole, getPostBookingDashboardPath } from '@/lib/dashboard-paths';
 import { bookingOfferBackNav } from '@/lib/expert-offers/path';
 import { formatMoney } from '@/lib/format';
+import { trackMetaInitiateCheckout } from '@/lib/meta-pixel';
 import type { SessionData } from '@/lib/session';
 import { SESSION_DURATION_MIN } from '@/lib/session-duration';
 import {
@@ -661,6 +662,10 @@ export default function BookingClient({
       setCheckout({
         bookingId: json.data.bookingId,
         clientSecret: json.data.clientSecret,
+        amountCents: json.data.amountCents,
+      });
+      trackMetaInitiateCheckout({
+        bookingId: json.data.bookingId,
         amountCents: json.data.amountCents,
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });

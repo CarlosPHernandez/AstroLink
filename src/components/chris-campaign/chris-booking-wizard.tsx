@@ -18,6 +18,7 @@ import {
   CHRIS_DISCOUNT_NAME,
   CHRIS_GOALS_MIN_CHARS,
 } from '@/lib/chris-campaign/chris-campaign-constants';
+import { GUEST_INVITE_DURATION_MINUTES } from '@/lib/guest-invite-constants';
 import {
   clearDraft,
   isChrisDraftSessionComplete,
@@ -45,6 +46,7 @@ import {
   resolveChrisPricingTier,
 } from '@/lib/chris-campaign/chris-pricing';
 import { useChrisWizardAnalytics } from '@/lib/chris-campaign/use-chris-wizard-analytics';
+import { trackMetaInitiateCheckout } from '@/lib/meta-pixel';
 
 import { ChrisBookingFulfillmentOverlay } from '@/components/chris-campaign/chris-booking-fulfillment-overlay';
 import { ChrisBookingNextSteps } from '@/components/chris-campaign/chris-booking-next-steps';
@@ -101,6 +103,10 @@ type ChrisBookingWizardProps = {
   prefillScheduledAt: string | null;
   prefillDate: string | null;
   prefillDurationMinutes?: number;
+  /** Claimed guest invite: lock 25 minutes and $0. */
+  guestInvite?: { id: string } | null;
+  /** Where email confirmation should return (invite URL). */
+  authReturnPath?: string | null;
 };
 
 function formatMoney(cents: number) {
@@ -194,9 +200,11 @@ const chrisLabelClass =
 function ChrisWizardAccountStep({
   onAuthSuccess,
   onSuccess,
+  authReturnPath,
 }: {
   onAuthSuccess: (mode: ChrisAuthMode) => void;
   onSuccess: () => void;
+  authReturnPath?: string | null;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<'register' | 'login'>('register');
@@ -239,6 +247,9 @@ function ChrisWizardAccountStep({
         action={mode === 'register' ? registerAction : loginAction}
         className="flex flex-col gap-md"
       >
+        {authReturnPath ? (
+          <input type="hidden" name="redirect" value={authReturnPath} />
+        ) : null}
         {mode === 'register' ? (
           <div className="flex flex-col gap-xs">
             <label className={chrisLabelClass} htmlFor="chris-wizard-fullname">
@@ -335,6 +346,8 @@ export function ChrisBookingWizard({
   prefillScheduledAt,
   prefillDate,
   prefillDurationMinutes,
+  guestInvite = null,
+  authReturnPath = null,
 }: ChrisBookingWizardProps) {
   const router = useRouter();
   const defaultDurationMinutes = getChrisCampaignDurationMinutes();
@@ -347,7 +360,9 @@ export function ChrisBookingWizard({
     prefillScheduledAt ?? defaultChrisScheduledAtDatetimeLocal(),
   );
   const [durationMinutes, setDurationMinutes] = useState(() =>
-    clampSessionDurationMinutes(prefillDurationMinutes ?? defaultDurationMinutes),
+    guestInvite
+      ? GUEST_INVITE_DURATION_MINUTES
+      : clampSessionDurationMinutes(prefillDurationMinutes ?? defaultDurationMinutes),
   );
   // Note: time is defaulted (day selection is the primary UI for the request phase per current scope).
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -364,7 +379,9 @@ export function ChrisBookingWizard({
 
   const displayDate = prefillDate ?? scheduledAt.slice(0, 10);
   const chrisPricingTier = resolveChrisPricingTier(marketingReferrer);
-  const chrisChargeCents = resolveChrisChargeCents(marketingReferrer, durationMinutes);
+  const chrisChargeCents = guestInvite
+    ? 0
+    : resolveChrisChargeCents(marketingReferrer, durationMinutes);
   const chrisOriginalPriceCents = resolveChrisOriginalPriceCents(durationMinutes);
   const chrisLaunchDiscountCents = chrisEarlyAccessDiscountCents(
     marketingReferrer,
@@ -478,9 +495,10 @@ export function ChrisBookingWizard({
       scheduledAt: new Date(scheduledAt).toISOString(),
       goals,
       background,
-      durationMinutes,
+      durationMinutes: guestInvite ? GUEST_INVITE_DURATION_MINUTES : durationMinutes,
       campaign: CHRIS_BOOKING_CAMPAIGN_QUERY,
       ...(marketingReferrer ? { marketingReferrer } : {}),
+      ...(guestInvite ? { guestInviteId: guestInvite.id } : {}),
     };
 
     const parsed = BookBodySchema.safeParse(payload);
@@ -529,6 +547,12 @@ export function ChrisBookingWizard({
         skipPayment: !!json.data.skipPayment,
       });
       wizardAnalytics.reportCheckoutStart();
+      if (!json.data.skipPayment) {
+        trackMetaInitiateCheckout({
+          bookingId: json.data.bookingId,
+          amountCents: json.data.amountCents,
+        });
+      }
 
       if (json.data.skipPayment) {
         router.refresh();
@@ -557,8 +581,9 @@ export function ChrisBookingWizard({
       scheduledAt: new Date(scheduledAt).toISOString(),
       goals,
       background,
-      durationMinutes,
+      durationMinutes: guestInvite ? GUEST_INVITE_DURATION_MINUTES : durationMinutes,
       campaign: CHRIS_BOOKING_CAMPAIGN_QUERY,
+      ...(guestInvite ? { guestInviteId: guestInvite.id } : {}),
     };
 
     const parsed = BookBodySchema.safeParse(payload);
@@ -699,6 +724,7 @@ export function ChrisBookingWizard({
           <>
             {step === 'account' ? (
               <ChrisWizardAccountStep
+                authReturnPath={authReturnPath}
                 onAuthSuccess={handleAuthSuccess}
                 onSuccess={() => {
                   // Step advance is handled by the post-auth resume effect once
@@ -765,11 +791,17 @@ export function ChrisBookingWizard({
                 />
 
                 <div className="mb-md">
-                  <DurationStepper
-                    value={durationMinutes}
-                    onChange={setDurationMinutes}
-                    compact
-                  />
+                  {guestInvite ? (
+                    <p className="text-sm text-white/80" data-testid="guest-invite-duration">
+                      25 minutes · Complimentary
+                    </p>
+                  ) : (
+                    <DurationStepper
+                      value={durationMinutes}
+                      onChange={setDurationMinutes}
+                      compact
+                    />
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-md">
@@ -906,6 +938,10 @@ export function ChrisBookingWizard({
                         </dd>
                       </div>
                     </div>
+                  ) : guestInvite ? (
+                    <div className="mt-3 text-sm text-white/60">
+                      <p>Complimentary session. No card.</p>
+                    </div>
                   ) : (
                     <div className="mt-3 text-sm text-white/60">
                       <p>Full session price (public booking).</p>
@@ -935,7 +971,11 @@ export function ChrisBookingWizard({
                   onClick={() => void submitBooking()}
                   className="mb-6 w-full rounded-xl bg-white py-4 text-base font-semibold text-[#1c1c1c] shadow-lg transition-transform hover:bg-gray-200 active:scale-[0.98] disabled:opacity-50"
                 >
-                  {loading ? 'Preparing checkout…' : 'Pay & confirm session'}
+                  {loading
+                    ? 'Preparing checkout…'
+                    : guestInvite
+                      ? 'Book free session'
+                      : 'Pay & confirm session'}
                 </button>
 
                 <button
