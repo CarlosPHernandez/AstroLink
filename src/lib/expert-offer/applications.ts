@@ -1,4 +1,5 @@
 import 'server-only';
+import { createOrUpdateMentor, type CreateMentorBody } from '@/lib/admin-create-mentor';
 import type { ExpertApplication } from '@/lib/expert-offer/schema';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -24,8 +25,9 @@ type QueryResult<T> = {
 
 type ApplicationsFilter = {
   eq: (column: string, value: string) => ApplicationsFilter;
+  order: (column: string, options: { ascending: boolean }) => ApplicationsFilter;
   limit: (count: number) => ApplicationsFilter;
-  maybeSingle: () => Promise<QueryResult<ApplicationIdRow | null>>;
+  maybeSingle: () => Promise<QueryResult<Record<string, unknown> | null>>;
 };
 
 type ApplicationsInsert = {
@@ -34,9 +36,74 @@ type ApplicationsInsert = {
   };
 };
 
+type ApplicationsUpdate = PromiseLike<QueryResult<null>> & {
+  eq: (column: string, value: string) => ApplicationsUpdate;
+};
+
 type ApplicationsQuery = {
   select: (columns: string) => ApplicationsFilter;
   insert: (row: Record<string, unknown>) => ApplicationsInsert;
+  update: (row: Record<string, unknown>) => ApplicationsUpdate;
+};
+
+type MentorWrite = {
+  update: (row: Record<string, unknown>) => {
+    eq: (column: string, value: string) => Promise<QueryResult<null>>;
+  };
+  delete: () => {
+    eq: (column: string, value: string) => Promise<QueryResult<null>>;
+  };
+  insert: (rows: Record<string, unknown>[]) => Promise<QueryResult<null>>;
+};
+
+const LIST_COLUMNS =
+  'id, full_name, email, employer, hourly_rate_cents, services, status, created_at';
+const DETAIL_COLUMNS =
+  'id, full_name, email, employer, expertise, bio, hourly_rate_cents, services, video_requests_enabled, video_request_price_cents, video_request_sla_days, timezone, windows, status';
+const REVIEW_FAILED = 'Could not review application.';
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export type AdminExpertApplicationSummary = {
+  id: string;
+  fullName: string;
+  email: string;
+  employer: string;
+  hourlyRateCents: number;
+  services: string[];
+  status: string;
+  createdAt: string;
+};
+
+export type ReviewExpertApplicationResult =
+  | { ok: true; mentorId?: string }
+  | { ok: false; status: 404 | 409; error: string };
+
+type LoadedApplication = {
+  id: string;
+  full_name: string;
+  email: string;
+  employer: string;
+  expertise: string;
+  bio: string;
+  hourly_rate_cents: number;
+  services: string[];
+  video_requests_enabled: boolean;
+  video_request_price_cents: number;
+  video_request_sla_days: number;
+  timezone: string;
+  windows: unknown;
+  status: string;
+};
+
+type ListRow = {
+  id: string;
+  full_name: string;
+  email: string;
+  employer: string;
+  hourly_rate_cents: number;
+  services: string[] | null;
+  status: string;
+  created_at: string;
 };
 
 const SUBMIT_FAILED = 'Could not submit. Try again.';
@@ -48,6 +115,18 @@ function applications(): ApplicationsQuery {
     from: (table: 'expert_applications') => ApplicationsQuery;
   };
   return client.from('expert_applications');
+}
+
+function mentorWrite(table: 'mentors' | 'mentor_availability_windows'): MentorWrite {
+  // offered_services, timezone, and availability windows are not in database.types.ts yet.
+  const client = supabaseAdmin as unknown as {
+    from: (name: 'mentors' | 'mentor_availability_windows') => MentorWrite;
+  };
+  return client.from(table);
+}
+
+function rowId(data: Record<string, unknown> | null): string | null {
+  return typeof data?.id === 'string' ? data.id : null;
 }
 
 function normalizeEmail(email: string): string {
@@ -71,7 +150,7 @@ async function findSubmittedId(email: string): Promise<string | null> {
     .maybeSingle();
 
   if (existing.error) return null;
-  return existing.data?.id ?? null;
+  return rowId(existing.data);
 }
 
 function videoColumns(input: ExpertApplication): {
@@ -111,8 +190,9 @@ export async function submitExpertApplication(
     throw new Error(SUBMIT_FAILED);
   }
 
-  if (existing.data?.id) {
-    return { id: existing.data.id, created: false };
+  const existingId = rowId(existing.data);
+  if (existingId) {
+    return { id: existingId, created: false };
   }
 
   const inserted = await applications()
@@ -146,4 +226,160 @@ export async function submitExpertApplication(
   }
 
   return { id: inserted.data.id, created: true };
+}
+
+function assertWrite(result: QueryResult<unknown>): void {
+  if (result.error) throw new Error(REVIEW_FAILED);
+}
+
+function splitExpertise(expertise: string): string[] {
+  return expertise
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
+    .slice(0, 12);
+}
+
+function slugFromName(fullName: string): string {
+  const slug = fullName
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+  if (slug.length >= 2 && SLUG_PATTERN.test(slug)) return slug;
+  return 'expert';
+}
+
+function slugWithNumericSuffix(slug: string): string {
+  const base = slug.slice(0, 78).replace(/-+$/g, '');
+  return `${base.length >= 2 ? base : 'expert'}-2`;
+}
+
+function isSlugTakenError(error: unknown, slug: string): boolean {
+  return error instanceof Error && error.message === `Slug "${slug}" is already used by another mentor.`;
+}
+
+function windowsFromJson(value: unknown): Array<{ weekday: number; startMinute: number; endMinute: number }> {
+  if (!Array.isArray(value)) throw new Error(REVIEW_FAILED);
+  return value.map((item) => {
+    if (!item || typeof item !== 'object') throw new Error(REVIEW_FAILED);
+    const record = item as Record<string, unknown>;
+    const { weekday, startMinute, endMinute } = record;
+    if (
+      typeof weekday !== 'number' ||
+      typeof startMinute !== 'number' ||
+      typeof endMinute !== 'number'
+    ) {
+      throw new Error(REVIEW_FAILED);
+    }
+    return { weekday, startMinute, endMinute };
+  });
+}
+
+function mentorInput(row: LoadedApplication, slug: string): CreateMentorBody {
+  // complianceStatus stays unset so createOrUpdateMentor keeps its approved default.
+  return {
+    email: row.email.trim().toLowerCase(),
+    fullName: row.full_name.trim(),
+    slug,
+    employer: row.employer,
+    expertise: splitExpertise(row.expertise),
+    bio: row.bio,
+    liveSessionPriceCents: row.hourly_rate_cents,
+    isListed: false,
+  } as CreateMentorBody;
+}
+
+async function createUnlistedMentor(row: LoadedApplication) {
+  const slug = slugFromName(row.full_name);
+  try {
+    return await createOrUpdateMentor(mentorInput(row, slug));
+  } catch (error) {
+    if (!isSlugTakenError(error, slug)) throw error;
+    return await createOrUpdateMentor(mentorInput(row, slugWithNumericSuffix(slug)));
+  }
+}
+
+async function copyOfferOntoMentor(mentorId: string, row: LoadedApplication): Promise<void> {
+  // createOrUpdateMentor does not write offered_services. Set the offer columns on that row only.
+  const updated = await mentorWrite('mentors')
+    .update({
+      offered_services: row.services,
+      video_requests_enabled: row.video_requests_enabled,
+      video_request_price_cents: row.video_request_price_cents,
+      video_request_sla_days: row.video_request_sla_days,
+      timezone: row.timezone,
+    })
+    .eq('id', mentorId);
+  assertWrite(updated);
+
+  const windows = windowsFromJson(row.windows);
+  const deleted = await mentorWrite('mentor_availability_windows').delete().eq('mentor_id', mentorId);
+  assertWrite(deleted);
+  if (windows.length === 0) return;
+
+  const inserted = await mentorWrite('mentor_availability_windows').insert(
+    windows.map((window) => ({
+      mentor_id: mentorId,
+      weekday: window.weekday,
+      start_minute: window.startMinute,
+      end_minute: window.endMinute,
+    })),
+  );
+  assertWrite(inserted);
+}
+
+function asLoaded(data: Record<string, unknown> | null): LoadedApplication | null {
+  if (!data || typeof data.id !== 'string' || typeof data.status !== 'string') return null;
+  return data as unknown as LoadedApplication;
+}
+
+export async function listAdminExpertApplications(): Promise<AdminExpertApplicationSummary[]> {
+  const listed = await (applications()
+    .select(LIST_COLUMNS)
+    .order('created_at', { ascending: false })
+    .limit(50) as unknown as Promise<QueryResult<ListRow[] | null>>);
+
+  if (listed.error) throw new Error('Could not load applications.');
+
+  return (listed.data ?? []).map((row) => ({
+    id: row.id,
+    fullName: row.full_name,
+    email: row.email,
+    employer: row.employer,
+    hourlyRateCents: row.hourly_rate_cents,
+    services: row.services ?? [],
+    status: row.status,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function reviewExpertApplication(
+  id: string,
+  decision: 'approve' | 'decline',
+): Promise<ReviewExpertApplicationResult> {
+  const loaded = await applications().select(DETAIL_COLUMNS).eq('id', id).maybeSingle();
+  if (loaded.error) throw new Error(REVIEW_FAILED);
+
+  const application = asLoaded(loaded.data);
+  if (!application) {
+    return { ok: false, status: 404, error: 'Application not found.' };
+  }
+  if (application.status !== 'submitted') {
+    return { ok: false, status: 409, error: 'Already reviewed.' };
+  }
+
+  if (decision === 'decline') {
+    assertWrite(await applications().update({ status: 'declined' }).eq('id', id));
+    return { ok: true };
+  }
+
+  const mentor = await createUnlistedMentor(application);
+  await copyOfferOntoMentor(mentor.id, application);
+  assertWrite(
+    await applications().update({ status: 'approved', mentor_id: mentor.id }).eq('id', id),
+  );
+  return { ok: true, mentorId: mentor.id };
 }
