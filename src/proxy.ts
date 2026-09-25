@@ -72,6 +72,19 @@ function applyRoleGuards(
   return null;
 }
 
+/** Pending-mentor UX allow-list. Not a security boundary (mutations use requireActivatedMentor). */
+export function isPendingMentorPathAllowed(pathname: string): boolean {
+  if (pathname === '/api/mentor/offer' || pathname.startsWith('/api/mentor/offer')) {
+    return true;
+  }
+  return (
+    pathname.startsWith('/activate') ||
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/e2e')
+  );
+}
+
 /** UX redirect for claim wizard — not a security boundary (mutations use requireActivatedMentor). */
 function applyPendingActivationRedirect(
   request: NextRequest,
@@ -81,12 +94,7 @@ function applyPendingActivationRedirect(
   if (session.role !== 'mentor' || session.activationStatus !== 'pending') {
     return null;
   }
-  if (
-    pathname.startsWith('/activate') ||
-    pathname.startsWith('/auth') ||
-    pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/api/e2e')
-  ) {
+  if (isPendingMentorPathAllowed(pathname)) {
     return null;
   }
   return NextResponse.redirect(new URL('/activate/setup', request.url));

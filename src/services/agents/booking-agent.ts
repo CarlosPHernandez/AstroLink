@@ -31,6 +31,8 @@ import {
   ExpertMatchFailedError,
   matchListedMentor,
 } from '@/lib/expert-match';
+import { ExpertOfferBookingError, loadMentorWindows } from '@/lib/expert-offer/load-windows';
+import * as offerSchema from '@/lib/expert-offer/schema';
 import { confirmBookingWithoutPayment } from '@/lib/post-payment';
 import {
   assertChrisWindowFree,
@@ -174,10 +176,30 @@ export class BookingAgent {
       );
     }
 
-    const { data: mentor, error: mentorErr } = await supabaseAdmin
-      .from('mentors')
+    // offered_services and timezone are not in database.types.ts yet.
+    const { data: mentor, error: mentorErr } = await (
+      supabaseAdmin.from('mentors') as unknown as {
+        select: (columns: string) => {
+          eq: (column: string, value: string) => {
+            single: () => Promise<{
+              data: {
+                stripe_connect_account_id: string | null;
+                live_session_price_cents: number;
+                is_listed: boolean;
+                compliance_status: string;
+                slug: string | null;
+                full_name: string;
+                timezone: string | null;
+                offered_services: string[] | null;
+              } | null;
+              error: { message: string } | null;
+            }>;
+          };
+        };
+      }
+    )
       .select(
-        'stripe_connect_account_id, live_session_price_cents, is_listed, compliance_status, slug, full_name',
+        'stripe_connect_account_id, live_session_price_cents, is_listed, compliance_status, slug, full_name, timezone, offered_services',
       )
       .eq('id', finalMentorId)
       .single();
@@ -200,6 +222,34 @@ export class BookingAgent {
           params.durationMinutes ?? CHRIS_SESSION_DURATION_MINUTES,
         )
       : params.durationMinutes;
+    const storedDurationMinutes =
+      durationMinutes ?? (params.serviceType === 'session_1on1' ? 30 : 15);
+
+    // timezone is null until the offer wizard is saved. Those experts keep both services.
+    if (mentor.timezone != null) {
+      const offeredServices = Array.isArray(mentor.offered_services)
+        ? mentor.offered_services
+        : ['session_1on1'];
+      if (!offeredServices.includes(params.serviceType)) {
+        throw new ExpertOfferBookingError('This expert does not offer that service.');
+      }
+    }
+
+    const hours = await loadMentorWindows(finalMentorId);
+    if (hours.windows.length > 0) {
+      const mentorZone = typeof mentor.timezone === 'string' ? mentor.timezone.trim() : '';
+      const timezone = mentorZone || 'America/Chicago';
+      if (
+        !offerSchema.windowContains(
+          hours.windows,
+          timezone,
+          params.scheduledAt,
+          storedDurationMinutes,
+        )
+      ) {
+        throw new ExpertOfferBookingError("That time is outside this expert's hours.");
+      }
+    }
 
     if (params.guestInviteId) {
       if (!params.menteeEmail) {
@@ -345,8 +395,7 @@ export class BookingAgent {
       intake_background: params.menteeBackground || null,
       // Persist chosen duration for variable sessions (prorated price already used for PI).
       // Defaults via migration for legacy rows; new bookings always provide from slider.
-      duration_minutes:
-        durationMinutes ?? (params.serviceType === 'session_1on1' ? 30 : 15),
+      duration_minutes: storedDurationMinutes,
       ...(params.campaignId ? { campaign_id: params.campaignId } : {}),
       ...((guestInviteReferrer ?? params.marketingReferrer)
         ? { marketing_referrer: guestInviteReferrer ?? params.marketingReferrer }

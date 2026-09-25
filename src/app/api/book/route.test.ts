@@ -19,6 +19,7 @@ vi.mock('@/services/agents/booking-agent', () => ({
   },
 }));
 
+import { ExpertOfferBookingError } from '@/lib/expert-offer/load-windows';
 import { ExpertMatchFailedError, EXPERT_MATCH_INVALID } from '@/lib/expert-match';
 import { POST } from './route';
 
@@ -98,5 +99,20 @@ describe('POST /api/book (Gemini default match)', () => {
         menteeGoals: body.goals,
       }),
     );
+  });
+
+  it('returns 400 when booking is outside the expert hours', async () => {
+    mockBookSession.mockRejectedValue(
+      new ExpertOfferBookingError("That time is outside this expert's hours."),
+    );
+
+    const res = await POST(makeRequest());
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json).toEqual({
+      success: false,
+      error: "That time is outside this expert's hours.",
+    });
   });
 });

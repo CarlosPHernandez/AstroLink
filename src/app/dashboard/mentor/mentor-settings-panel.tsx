@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { MentorOfferEditor } from '@/components/activate/offer-steps';
 import { FieldError } from '@/components/forms/field-error';
 import { FormAlert } from '@/components/forms/form-alert';
 import { fieldErrorInputClass } from '@/lib/zod-field-errors';
@@ -11,7 +12,7 @@ import {
   type PayoutNavStatus,
 } from '@/lib/mentor-payouts-config';
 
-export type MentorSettingsSection = 'account' | 'password' | 'compliance';
+export type MentorSettingsSection = 'account' | 'password' | 'compliance' | 'offer';
 
 const SETTINGS_SECTIONS: {
   id: MentorSettingsSection;
@@ -37,11 +38,18 @@ const SETTINGS_SECTIONS: {
     title: 'Compliance',
     description: 'Civil servant disclosure and NF-1860 documentation.',
   },
+  {
+    id: 'offer',
+    label: 'Services',
+    title: 'Services',
+    description: 'What buyers can book and the hours you take calls.',
+  },
 ];
 
 export function MentorSettingsPanel({
   fullName,
   email,
+  hourlyRateDollars,
   payoutNavStatus,
   isCivilServant,
   onCivilServantChange,
@@ -56,6 +64,7 @@ export function MentorSettingsPanel({
 }: {
   fullName: string;
   email: string;
+  hourlyRateDollars: number;
   payoutNavStatus: PayoutNavStatus;
   isCivilServant: boolean;
   onCivilServantChange: (checked: boolean) => void;
@@ -380,6 +389,10 @@ export function MentorSettingsPanel({
                   <span className="md-settings-hint-em">Listing</span> in the sidebar.
                 </p>
               </div>
+            ) : null}
+
+            {section === 'offer' ? (
+              <MentorOfferEditor hourlyRateDollars={hourlyRateDollars} />
             ) : null}
           </div>
         </div>

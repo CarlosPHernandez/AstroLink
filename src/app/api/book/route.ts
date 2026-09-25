@@ -15,6 +15,7 @@ import { ChrisCampaignSoldOutError } from '@/lib/chris-campaign/chris-campaign-s
 import { resolveChrisCampaignForBooking } from '@/lib/chris-campaign/validate-chris-booking';
 import { getSession } from '@/lib/session';
 import { ExpertMatchFailedError } from '@/lib/expert-match';
+import { ExpertOfferBookingError } from '@/lib/expert-offer/load-windows';
 import { BookingAgent } from '@/services/agents/booking-agent';
 import {
   readClientIp,
@@ -149,6 +150,9 @@ export async function POST(request: Request) {
     }
     if (error instanceof ChrisCampaignSoldOutError) {
       return NextResponse.json({ success: false, error: error.message }, { status: 409 });
+    }
+    if (error instanceof ExpertOfferBookingError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
     if (isLlmRateLimitError(error)) {
       return NextResponse.json(
