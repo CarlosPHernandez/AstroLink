@@ -86,7 +86,7 @@ export default async function GuestInvitePage({ params }: PageProps) {
 
   return (
     <div className="chris-landing min-h-screen bg-primary-container px-6 py-10 text-white">
-      <main className="mx-auto flex w-full max-w-md flex-col gap-6">
+      <main className="chris-mobile-max mx-auto flex w-full flex-col gap-6">
         {mentor?.imageUrl ? (
           // Campaign portrait. Next/Image requires known hosts; a plain img matches other Chris surfaces that already allow this URL.
           // eslint-disable-next-line @next/next/no-img-element
@@ -152,7 +152,7 @@ function DeadState({ message }: { message: string }) {
   return (
     <div className="chris-landing flex min-h-screen flex-col items-center justify-center bg-primary-container px-6 text-center text-white">
       <h1 className="mb-3 text-2xl font-semibold">We couldn’t open this link</h1>
-      <p className="max-w-md text-sm leading-relaxed text-white/70">{message}</p>
+      <p className="chris-copy-max text-sm leading-relaxed text-white/70">{message}</p>
     </div>
   );
 }
