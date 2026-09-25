@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { ExpertInitials } from '@/components/experts/expert-initials';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { formatFifteenMinuteRate } from '@/lib/booking-pricing';
@@ -46,7 +47,7 @@ type PreviewExpert = {
   role: string;
   rateLabel: string;
   initials: string;
-  imageSrc: string;
+  imageSrc: string | null;
   question: string;
   answer: string;
   color: string;
@@ -63,7 +64,7 @@ function toPreviewExpert(expert: ListedExpert): PreviewExpert {
     role: publicExpertTitle(expert.slug, expert.role),
     rateLabel: formatFifteenMinuteRate(expert.liveSessionPriceCents),
     initials,
-    imageSrc: toOptimizedImageUrl(expert.imageUrl),
+    imageSrc: expert.imageUrl ? toOptimizedImageUrl(expert.imageUrl) : null,
     question: copy?.question ?? DEFAULT_PREVIEW.question,
     answer: copy?.answer ?? DEFAULT_PREVIEW.answer,
     color: PREVIEW_COLORS[expert.slug.toLowerCase()] ?? DEFAULT_PREVIEW.color,
@@ -113,14 +114,18 @@ export function LandingExpertChatPreview({ experts }: { experts: ListedExpert[] 
       <div className="max-w-[920px] mx-auto px-md sm:px-lg">
         <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(240px,320px)] gap-5 items-end">
           <div className="relative h-[280px] sm:h-auto sm:aspect-[5/6] overflow-hidden rounded-2xl bg-[var(--landing-surface-soft)]">
-            <Image
-              src={current.imageSrc}
-              alt={current.name}
-              fill
-              className="object-cover object-top transition-opacity"
-              style={{ opacity, transitionDuration: `${FADE_MS}ms` }}
-              sizes="(max-width: 640px) 90vw, 420px"
-            />
+            {current.imageSrc ? (
+              <Image
+                src={current.imageSrc}
+                alt={current.name}
+                fill
+                className="object-cover object-top transition-opacity"
+                style={{ opacity, transitionDuration: `${FADE_MS}ms` }}
+                sizes="(max-width: 640px) 90vw, 420px"
+              />
+            ) : (
+              <ExpertInitials name={current.name} className="absolute inset-0 text-5xl" />
+            )}
           </div>
 
           <div

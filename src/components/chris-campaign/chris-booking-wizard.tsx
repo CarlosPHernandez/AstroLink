@@ -175,7 +175,7 @@ function ChrisWizardHeader({ mentor }: { mentor: ListedExpert }) {
       </Link>
       <div className="mb-xs flex h-12 w-12 overflow-hidden rounded-full border border-white/20">
         <Image
-          src={toOptimizedImageUrl(mentor.imageUrl)}
+          src={toOptimizedImageUrl(mentor.imageUrl ?? '/chris_sembroski.webp')}
           alt={mentor.name}
           width={48}
           height={48}

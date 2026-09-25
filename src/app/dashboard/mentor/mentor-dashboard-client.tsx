@@ -68,6 +68,8 @@ interface MentorProfileState {
   expertise: string;
   rate: number;
   expertOffersEnabled: boolean;
+  imageUrl: string | null;
+  introVideoUrl: string | null;
 }
 
 function emptyProfileFromSession(session: SessionData): MentorProfileState {
@@ -85,6 +87,8 @@ function emptyProfileFromSession(session: SessionData): MentorProfileState {
     expertise: '',
     rate: 0,
     expertOffersEnabled: false,
+    imageUrl: null,
+    introVideoUrl: null,
   };
 }
 
@@ -567,6 +571,8 @@ export default function MentorDashboardClient({
               <MentorSettingsPanel
                 fullName={profile.fullName}
                 email={profile.email}
+                imageUrl={profile.imageUrl}
+                introVideoUrl={profile.introVideoUrl}
                 hourlyRateDollars={profile.rate}
                 payoutNavStatus={payoutNavStatus}
                 isCivilServant={profile.isCivilServant}

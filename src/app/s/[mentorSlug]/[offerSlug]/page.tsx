@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { loadPublicOffer } from '@/lib/expert-offers/load-public-offer';
 import { offerPublicPath } from '@/lib/expert-offers/path';
 import { formatMoney } from '@/lib/format';
+import { ExpertInitials } from '@/components/experts/expert-initials';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 import { OfferPublicClient } from './offer-public-client';
 
@@ -59,14 +60,18 @@ export default async function PublicOfferPage({ params }: PageProps) {
         <article className="rounded-xl border border-[var(--landing-border)] bg-[var(--landing-surface)] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] sm:p-8">
           <div className="flex items-center gap-4">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[12px] border border-[var(--landing-border)] bg-[var(--landing-surface-soft)]">
-              <Image
-                src={toOptimizedImageUrl(expert.imageUrl)}
-                alt={expert.name}
-                fill
-                className="object-cover"
-                sizes="64px"
-                priority
-              />
+              {expert.imageUrl ? (
+                <Image
+                  src={toOptimizedImageUrl(expert.imageUrl)}
+                  alt={expert.name}
+                  fill
+                  className="object-cover"
+                  sizes="64px"
+                  priority
+                />
+              ) : (
+                <ExpertInitials name={expert.name} />
+              )}
             </div>
             <div className="min-w-0">
               <p className="text-base font-semibold text-[var(--landing-text)]">{expert.name}</p>

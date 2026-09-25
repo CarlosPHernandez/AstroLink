@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { ExpertInitials } from '@/components/experts/expert-initials';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import { LandingScrollReveal } from '@/components/landing/landing-scroll-reveal';
@@ -79,15 +80,19 @@ export default function ExpertDirectory({
                       >
                         <article>
                           <div className="relative aspect-[3/4] w-full overflow-hidden bg-[var(--landing-surface-soft)]">
-                            <Image
-                              src={portrait.src}
-                              alt={portrait.alt}
-                              fill
-                              loading={index < 4 ? 'eager' : 'lazy'}
-                              fetchPriority={index === 0 ? 'high' : 'auto'}
-                              className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
-                              sizes="(max-width: 640px) 62vw, 230px"
-                            />
+                            {portrait.src ? (
+                              <Image
+                                src={portrait.src}
+                                alt={portrait.alt}
+                                fill
+                                loading={index < 4 ? 'eager' : 'lazy'}
+                                fetchPriority={index === 0 ? 'high' : 'auto'}
+                                className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+                                sizes="(max-width: 640px) 62vw, 230px"
+                              />
+                            ) : (
+                              <ExpertInitials name={expert.name} className="absolute inset-0 text-3xl" />
+                            )}
                             <div
                               className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[var(--landing-ink)]/55 to-transparent"
                               aria-hidden
@@ -188,15 +193,19 @@ export default function ExpertDirectory({
                   className="group w-[min(78vw,280px)] shrink-0 snap-start overflow-hidden rounded-[14px] border border-[var(--landing-border)] bg-[var(--landing-surface)] transition-[box-shadow,border-color] duration-200 hover:shadow-[0_12px_32px_-18px_rgba(14,20,32,0.18)] hover:border-[var(--landing-muted)] sm:w-auto"
                 >
                   <div className="relative aspect-[3/4] w-full overflow-hidden bg-[var(--landing-surface-soft)]">
-                    <Image
-                      src={portrait.src}
-                      alt={portrait.alt}
-                      fill
-                      loading={index < 6 ? 'eager' : 'lazy'}
-                      fetchPriority={index === 0 ? 'high' : 'auto'}
-                      className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
-                      sizes="(max-width: 768px) 78vw, 280px"
-                    />
+                    {portrait.src ? (
+                      <Image
+                        src={portrait.src}
+                        alt={portrait.alt}
+                        fill
+                        loading={index < 6 ? 'eager' : 'lazy'}
+                        fetchPriority={index === 0 ? 'high' : 'auto'}
+                        className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+                        sizes="(max-width: 768px) 78vw, 280px"
+                      />
+                    ) : (
+                      <ExpertInitials name={expert.name} className="absolute inset-0 text-3xl" />
+                    )}
                   </div>
                   <div className="p-3.5">
                     <span className="inline-block rounded-full bg-[var(--landing-accent-tint)] px-2 py-0.5 text-[9px] font-bold tracking-[0.06em] text-[var(--landing-accent)] mb-2">

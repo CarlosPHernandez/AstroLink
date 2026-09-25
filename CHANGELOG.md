@@ -2,7 +2,7 @@
 
 All notable changes to AstroLink are documented in this file.
 
-## [0.21.0.0] - 2026-09-25
+## [0.22.0.0] - 2026-09-25
 
 ### Added
 - Experts with packaged sessions turned on get a Services tab. They can draft a live session, set a price and length, and publish a share link.
@@ -11,6 +11,14 @@ All notable changes to AstroLink are documented in this file.
 
 ### Changed
 - A packaged session does not use the weekly hours menu, a guest invite, or a complimentary grant. Normal bookings still follow saved hours.
+
+## [0.21.0.0] - 2026-09-24
+
+### Added
+- Experts can save a portrait and an intro video from Settings → Photo & video. Buyers see those on the profile.
+
+### Changed
+- An expert with no photo shows their initials. Chris Sembroski’s picture stays on Chris’s own pages.
 
 ## [0.20.0.0] - 2026-09-24
 

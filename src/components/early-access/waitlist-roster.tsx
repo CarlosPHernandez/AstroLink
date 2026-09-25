@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { ExpertInitials } from '@/components/experts/expert-initials';
 import { ExpertIntroMedia } from '@/components/ExpertIntroMedia';
 import type { ListedExpert } from '@/lib/mentor-directory';
 import { WAITLIST_FEATURED_EXPERT_SLUG } from '@/lib/waitlist/waitlist-roster-order';
@@ -26,14 +27,18 @@ function RosterStripCard({
   return (
     <article>
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-surface-container-low">
-        <Image
-          src={toOptimizedImageUrl(expert.imageUrl)}
-          alt={expert.name}
-          fill
-          className="object-cover object-top"
-          sizes="140px"
-          priority={priority}
-        />
+        {expert.imageUrl ? (
+          <Image
+            src={toOptimizedImageUrl(expert.imageUrl)}
+            alt={expert.name}
+            fill
+            className="object-cover object-top"
+            sizes="140px"
+            priority={priority}
+          />
+        ) : (
+          <ExpertInitials name={expert.name} />
+        )}
       </div>
       <p className="mt-2 text-[13px] font-medium text-on-surface leading-tight line-clamp-2">
         {expert.name}

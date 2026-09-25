@@ -1,7 +1,6 @@
 import 'server-only';
 
 import { unstable_cache } from 'next/cache';
-import { DEFAULT_MENTOR_IMAGE } from '@/lib/public-images';
 import { supabase } from '@/lib/supabase';
 import { inferPublicExpertCategory } from '@/lib/expert-categories';
 import { publicExpertTitle } from '@/lib/experts/public-expert-copy';
@@ -19,7 +18,7 @@ export interface ListedExpert {
   category: ExpertCategory;
   expertise: string[];
   bio: string;
-  imageUrl: string;
+  imageUrl: string | null;
   introVideoUrl: string | null;
   availability: 'Available Now' | 'Book Session';
   liveSessionPriceCents: number;
@@ -55,7 +54,7 @@ export function mentorToListedExpert(mentor: Mentor): ListedExpert {
     }),
     expertise: mentor.expertise,
     bio: mentor.bio,
-    imageUrl: mentor.image_url ?? DEFAULT_MENTOR_IMAGE,
+    imageUrl: mentor.image_url,
     introVideoUrl: mentor.intro_video_url ?? null,
     availability: mentor.stripe_onboarding_completed ? 'Available Now' : 'Book Session',
     liveSessionPriceCents: mentor.live_session_price_cents,

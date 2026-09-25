@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import type { ListedExpert } from '@/lib/mentor-directory';
+import { ExpertInitials } from '@/components/experts/expert-initials';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 
 type BookingExpertPickerCardProps = {
@@ -30,14 +31,18 @@ export function BookingExpertPickerCard({
       }`}
     >
       <div className="relative aspect-square w-full overflow-hidden bg-surface-container-low">
-        <Image
-          src={toOptimizedImageUrl(expert.imageUrl)}
-          alt=""
-          fill
-          priority={priority}
-          className="object-cover"
-          sizes="144px"
-        />
+        {expert.imageUrl ? (
+          <Image
+            src={toOptimizedImageUrl(expert.imageUrl)}
+            alt=""
+            fill
+            priority={priority}
+            className="object-cover"
+            sizes="144px"
+          />
+        ) : (
+          <ExpertInitials name={expert.name} className="text-lg" />
+        )}
       </div>
       <div className="p-3 border-t border-outline-variant/50 min-w-0">
         <p className="text-sm font-bold text-on-surface truncate">{expert.name}</p>
