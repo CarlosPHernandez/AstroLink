@@ -1712,6 +1712,31 @@
   color: #f81225;
 }
 
+.mentor-dash .md-settings-portrait {
+  width: 160px;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid var(--md-border, #d7dde6);
+  border-radius: 12px;
+  background: var(--md-surface-soft, #eef1f4);
+}
+
+.mentor-dash .md-settings-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mentor-dash .md-settings-video {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  border-radius: 12px;
+  background: #111;
+}
+
 .mentor-dash .md-settings-btn {
   display: inline-flex;
   align-items: center;

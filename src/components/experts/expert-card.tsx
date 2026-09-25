@@ -5,6 +5,7 @@ import { MaterialIcon } from '@/components/ui/material-icon';
 import { formatFifteenMinuteRate } from '@/lib/booking-pricing';
 import type { DirectoryExpert } from '@/lib/directory-expert';
 import { publicExpertProof, publicExpertTitle } from '@/lib/experts/public-expert-copy';
+import { ExpertInitials } from '@/components/experts/expert-initials';
 import { landingFeaturedPortrait } from '@/lib/landing/featured-expert';
 
 type ExpertCardProps = {
@@ -41,15 +42,19 @@ export function ExpertCard({
       className={`experts-card group text-left w-full${isSelected ? ' is-selected' : ''}${expanded ? ' is-expanded' : ''}`}
     >
       <div className="experts-card__media">
-        <Image
-          src={portrait.src}
-          alt={portrait.alt}
-          fill
-          loading={priority ? 'eager' : 'lazy'}
-          fetchPriority={priority ? 'high' : 'auto'}
-          className="experts-card__img object-cover object-top"
-          sizes="(max-width: 640px) 70vw, 260px"
-        />
+        {portrait.src ? (
+          <Image
+            src={portrait.src}
+            alt={portrait.alt}
+            fill
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : 'auto'}
+            className="experts-card__img object-cover object-top"
+            sizes="(max-width: 640px) 70vw, 260px"
+          />
+        ) : (
+          <ExpertInitials name={expert.name} className="absolute inset-0 text-2xl" />
+        )}
       </div>
 
       <div className="experts-card__body">

@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import { ExpertInitials } from '@/components/experts/expert-initials';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BookingExpertPicker } from '@/components/booking/booking-expert-picker';
@@ -228,13 +229,17 @@ function CheckoutSummary({
           {mentor && isLive ? (
             <div className="flex gap-3 pb-4 border-b border-outline-variant/60">
               <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-outline-variant">
-                <Image
-                  src={toOptimizedImageUrl(mentor.imageUrl)}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes="40px"
-                />
+                {mentor.imageUrl ? (
+                  <Image
+                    src={toOptimizedImageUrl(mentor.imageUrl)}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="40px"
+                  />
+                ) : (
+                  <ExpertInitials name={mentor.name} className="text-[11px]" />
+                )}
               </div>
               <div className="min-w-0">
                 <p className="text-label-md font-semibold text-on-surface truncate">{mentor.name}</p>
@@ -681,13 +686,17 @@ export default function BookingClient({
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={expertAvatarClass}>
-                    <Image
-                      src={toOptimizedImageUrl(activeMentor.imageUrl)}
-                      alt=""
-                      fill
-                      className="object-cover"
-                      sizes="36px"
-                    />
+                    {activeMentor.imageUrl ? (
+                      <Image
+                        src={toOptimizedImageUrl(activeMentor.imageUrl)}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="36px"
+                      />
+                    ) : (
+                      <ExpertInitials name={activeMentor.name} className="text-[11px]" />
+                    )}
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] font-mono uppercase tracking-wider text-on-surface-variant leading-none mb-1">

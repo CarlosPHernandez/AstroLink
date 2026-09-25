@@ -3,11 +3,12 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MaterialIcon } from '@/components/ui/material-icon';
+import { ExpertInitials } from '@/components/experts/expert-initials';
 import { toOptimizedImageUrl } from '@/lib/public-images';
 
 type ExpertIntroMediaProps = {
   name: string;
-  imageUrl: string;
+  imageUrl: string | null;
   introVideoUrl: string | null;
   className?: string;
   priority?: boolean;
@@ -45,7 +46,10 @@ export function ExpertIntroMedia({
   const [muted, setMuted] = useState(autoPlayMuted);
   const videoRef = useRef<HTMLVideoElement>(null);
   const showVideo = Boolean(introVideoUrl) && !videoFailed;
-  const optimizedImageUrl = useMemo(() => toOptimizedImageUrl(imageUrl), [imageUrl]);
+  const optimizedImageUrl = useMemo(
+    () => (imageUrl ? toOptimizedImageUrl(imageUrl) : null),
+    [imageUrl],
+  );
 
   useEffect(() => {
     onPlayingChange?.(playing);
@@ -83,7 +87,7 @@ export function ExpertIntroMedia({
           <video
             ref={videoRef}
             src={introVideoUrl!}
-            poster={optimizedImageUrl}
+            poster={optimizedImageUrl ?? undefined}
             playsInline
             muted={muted}
             autoPlay={autoPlayMuted}
@@ -143,15 +147,19 @@ export function ExpertIntroMedia({
         </>
       ) : (
         <>
-          <Image
-            src={optimizedImageUrl}
-            alt={name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 480px"
-            loading={priority ? 'eager' : 'lazy'}
-            fetchPriority={priority ? 'high' : 'auto'}
-          />
+          {optimizedImageUrl ? (
+            <Image
+              src={optimizedImageUrl}
+              alt={name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 480px"
+              loading={priority ? 'eager' : 'lazy'}
+              fetchPriority={priority ? 'high' : 'auto'}
+            />
+          ) : (
+            <ExpertInitials name={name} className="absolute inset-0 text-3xl" />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10" />
           {!hideLabel ? (
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3 rounded-lg border border-white/20 bg-black/40 px-4 py-2 backdrop-blur-md">

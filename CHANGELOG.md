@@ -2,7 +2,15 @@
 
 All notable changes to AstroLink are documented in this file.
 
-## [0.20.0.0] - 2026-09-24
+## [0.21.0.0] - 2026-09-24
+
+### Added
+- Experts can save a portrait and an intro video from Settings → Photo & video. Buyers see those on the profile.
+
+### Changed
+- An expert with no photo shows their initials. Chris Sembroski’s picture stays on Chris’s own pages.
+
+
 
 ### Added
 - Experts can apply at `/for-experts` with an hourly rate, the services they offer, and the hours they can take calls. AstroLink reviews every application before that expert appears in the directory.

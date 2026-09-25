@@ -97,7 +97,7 @@ export function landingHeroPortrait(experts: ListedExpert[]): {
     return { src: CHRIS_PORTRAIT, alt: heroExpert.name, href };
   }
 
-  if (heroExpert) {
+  if (heroExpert?.imageUrl) {
     return {
       src: toOptimizedImageUrl(heroExpert.imageUrl),
       alt: heroExpert.name,
@@ -154,6 +154,7 @@ export function landingHeroRotationPortraits(
     const fromRoster = experts.find((e) => e.slug === slug);
     if (fromRoster) {
       const relay = listedExpertToRelay(fromRoster);
+      if (!relay.portraitSrc) continue;
       out.push({
         slug: fromRoster.slug,
         name: fromRoster.name,
@@ -219,20 +220,29 @@ export function landingHeroPortraitStrip(
     ];
   }
 
-  return ordered.slice(0, limit).map((expert) => {
+  return ordered.slice(0, limit).flatMap((expert) => {
     const relay = listedExpertToRelay(expert);
-    return {
-      slug: expert.slug,
-      name: expert.name,
-      src: relay.portraitSrc,
-      alt: expert.name,
-    };
+    if (!relay.portraitSrc) return [];
+    return [
+      {
+        slug: expert.slug,
+        name: expert.name,
+        src: relay.portraitSrc,
+        alt: expert.name,
+      },
+    ];
   });
 }
 
 /** Portrait for the featured expert — prefers Supabase/roster image_url. */
-export function landingFeaturedPortrait(expert: ListedExpert | null): { src: string; alt: string } {
+export function landingFeaturedPortrait(expert: ListedExpert | null): { src: string | null; alt: string } {
   if (expert) {
+    if (isChrisExpert(expert)) {
+      return { src: CHRIS_PORTRAIT, alt: expert.name };
+    }
+    if (!expert.imageUrl) {
+      return { src: null, alt: expert.name };
+    }
     return { src: toOptimizedImageUrl(expert.imageUrl), alt: expert.name };
   }
 
@@ -261,7 +271,9 @@ export function listedExpertToRelay(expert: ListedExpert): LandingRelayExpert {
   // Chris keeps a polished local hero crop; everyone else (including Eiman) uses roster media.
   const portraitSrc = isChrisExpert(expert)
     ? CHRIS_PORTRAIT
-    : toOptimizedImageUrl(expert.imageUrl);
+    : expert.imageUrl
+      ? toOptimizedImageUrl(expert.imageUrl)
+      : '';
 
   return {
     slug: expert.slug,
