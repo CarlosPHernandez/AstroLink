@@ -11,6 +11,7 @@ type ExpertApplicationSummary = {
   services: string[];
   status: string;
   createdAt: string;
+  isCivilServant: boolean;
 };
 
 function formatRate(cents: number): string {
@@ -130,6 +131,7 @@ export function ExpertApplicationsPanel() {
                 <span>{application.employer}</span>
                 <span>{formatRate(application.hourlyRateCents)}</span>
                 <span>{application.services.join(', ') || 'No live services'}</span>
+                <span>{application.isCivilServant ? 'Civil servant' : 'Not a civil servant'}</span>
                 <span>{application.status}</span>
                 <span>{formatSubmitted(application.createdAt)}</span>
               </div>

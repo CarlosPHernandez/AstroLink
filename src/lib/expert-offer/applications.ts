@@ -38,6 +38,15 @@ type ApplicationsInsert = {
 
 type ApplicationsUpdate = PromiseLike<QueryResult<null>> & {
   eq: (column: string, value: string) => ApplicationsUpdate;
+  select: (columns: string) => PromiseLike<QueryResult<Array<{ id: string }> | null>>;
+};
+
+type MentorEmailLookup = {
+  select: (columns: string) => {
+    eq: (column: string, value: string) => {
+      maybeSingle: () => Promise<QueryResult<{ id: string } | null>>;
+    };
+  };
 };
 
 type ApplicationsQuery = {
@@ -57,9 +66,9 @@ type MentorWrite = {
 };
 
 const LIST_COLUMNS =
-  'id, full_name, email, employer, hourly_rate_cents, services, status, created_at';
+  'id, full_name, email, employer, hourly_rate_cents, services, status, created_at, is_civil_servant';
 const DETAIL_COLUMNS =
-  'id, full_name, email, employer, expertise, bio, hourly_rate_cents, services, video_requests_enabled, video_request_price_cents, video_request_sla_days, timezone, windows, status';
+  'id, full_name, email, employer, expertise, bio, hourly_rate_cents, services, video_requests_enabled, video_request_price_cents, video_request_sla_days, timezone, windows, status, is_civil_servant';
 const REVIEW_FAILED = 'Could not review application.';
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -72,6 +81,7 @@ export type AdminExpertApplicationSummary = {
   services: string[];
   status: string;
   createdAt: string;
+  isCivilServant: boolean;
 };
 
 export type ReviewExpertApplicationResult =
@@ -93,6 +103,7 @@ type LoadedApplication = {
   timezone: string;
   windows: unknown;
   status: string;
+  is_civil_servant: boolean;
 };
 
 type ListRow = {
@@ -104,6 +115,7 @@ type ListRow = {
   services: string[] | null;
   status: string;
   created_at: string;
+  is_civil_servant: boolean | null;
 };
 
 const SUBMIT_FAILED = 'Could not submit. Try again.';
@@ -123,6 +135,13 @@ function mentorWrite(table: 'mentors' | 'mentor_availability_windows'): MentorWr
     from: (name: 'mentors' | 'mentor_availability_windows') => MentorWrite;
   };
   return client.from(table);
+}
+
+function mentorIdByEmail(email: string): Promise<QueryResult<{ id: string } | null>> {
+  const client = supabaseAdmin as unknown as {
+    from: (name: 'mentors') => MentorEmailLookup;
+  };
+  return client.from('mentors').select('id').eq('email', email).maybeSingle();
 }
 
 function rowId(data: Record<string, unknown> | null): string | null {
@@ -279,7 +298,8 @@ function windowsFromJson(value: unknown): Array<{ weekday: number; startMinute: 
 }
 
 function mentorInput(row: LoadedApplication, slug: string): CreateMentorBody {
-  // complianceStatus stays unset so createOrUpdateMentor keeps its approved default.
+  // complianceStatus stays unset so createOrUpdateMentor keeps its approved default,
+  // except civil servants, who need document review before they can be approved.
   return {
     email: row.email.trim().toLowerCase(),
     fullName: row.full_name.trim(),
@@ -289,6 +309,7 @@ function mentorInput(row: LoadedApplication, slug: string): CreateMentorBody {
     bio: row.bio,
     liveSessionPriceCents: row.hourly_rate_cents,
     isListed: false,
+    ...(row.is_civil_servant ? { complianceStatus: 'document_required' as const } : {}),
   } as CreateMentorBody;
 }
 
@@ -353,7 +374,20 @@ export async function listAdminExpertApplications(): Promise<AdminExpertApplicat
     services: row.services ?? [],
     status: row.status,
     createdAt: row.created_at,
+    isCivilServant: row.is_civil_servant === true,
   }));
+}
+
+function claimedIds(result: QueryResult<Array<{ id: string }> | null>): string[] {
+  if (!Array.isArray(result.data)) return [];
+  return result.data.map((row) => row.id).filter((id) => id.length > 0);
+}
+
+async function claimSubmitted(
+  id: string,
+  patch: Record<string, unknown>,
+): Promise<QueryResult<Array<{ id: string }> | null>> {
+  return applications().update(patch).eq('id', id).eq('status', 'submitted').select('id');
 }
 
 export async function reviewExpertApplication(
@@ -372,14 +406,48 @@ export async function reviewExpertApplication(
   }
 
   if (decision === 'decline') {
-    assertWrite(await applications().update({ status: 'declined' }).eq('id', id));
+    const declined = await claimSubmitted(id, { status: 'declined' });
+    assertWrite(declined);
+    if (claimedIds(declined).length === 0) {
+      return { ok: false, status: 409, error: 'Already reviewed.' };
+    }
     return { ok: true };
   }
 
-  const mentor = await createUnlistedMentor(application);
+  const email = normalizeEmail(application.email);
+  const existingMentor = await mentorIdByEmail(email);
+  if (existingMentor.error) throw new Error(REVIEW_FAILED);
+  if (existingMentor.data?.id) {
+    return { ok: false, status: 409, error: 'An expert with this email already exists.' };
+  }
+
+  // Claim before insert so a second approve cannot create or overwrite a mentor.
+  const claimed = await claimSubmitted(id, { status: 'approved' });
+  assertWrite(claimed);
+  if (claimedIds(claimed).length === 0) {
+    return { ok: false, status: 409, error: 'Already reviewed.' };
+  }
+
+  let mentor;
+  try {
+    mentor = await createUnlistedMentor(application);
+  } catch (error) {
+    const reverted = await applications()
+      .update({ status: 'submitted' })
+      .eq('id', id)
+      .eq('status', 'approved')
+      .select('id');
+    if (reverted.error) throw new Error(REVIEW_FAILED);
+    throw error;
+  }
+
   await copyOfferOntoMentor(mentor.id, application);
   assertWrite(
-    await applications().update({ status: 'approved', mentor_id: mentor.id }).eq('id', id),
+    await applications()
+      .update({ mentor_id: mentor.id })
+      .eq('id', id)
+      .eq('status', 'approved')
+      .select('id'),
   );
   return { ok: true, mentorId: mentor.id };
 }

@@ -52,6 +52,7 @@ function applicationRow(status: string) {
     timezone: 'America/Chicago',
     windows: [{ weekday: 2, startMinute: 540, endMinute: 720 }],
     status,
+    is_civil_servant: false,
     created_at: '2026-09-24T15:00:00.000Z',
   };
 }
@@ -67,6 +68,7 @@ function makeRequest(body: Record<string, unknown>) {
 describe('/api/admin/expert-applications', () => {
   let row = applicationRow('submitted');
   let calls: QueryCall[] = [];
+  let existingMentorEmail: string | null = null;
 
   function dispatch(call: QueryCall): QueryResult {
     if (call.table === 'expert_applications' && call.op === 'select') {
@@ -86,6 +88,7 @@ describe('/api/admin/expert-applications', () => {
             services: row.services,
             status: row.status,
             created_at: row.created_at,
+            is_civil_servant: row.is_civil_servant,
             bio: row.bio,
           },
         ],
@@ -94,7 +97,19 @@ describe('/api/admin/expert-applications', () => {
     }
 
     if (call.table === 'expert_applications' && call.op === 'update') {
+      const id = call.filters.find(([column]) => column === 'id')?.[1];
+      const requiredStatus = call.filters.find(([column]) => column === 'status')?.[1];
+      const matches = id === row.id && (requiredStatus === undefined || requiredStatus === row.status);
+      if (!matches) return { data: [], error: null };
       Object.assign(row, call.payload);
+      return { data: [{ id: row.id }], error: null };
+    }
+
+    if (call.table === 'mentors' && call.op === 'select') {
+      const email = call.filters.find(([column]) => column === 'email')?.[1];
+      if (existingMentorEmail && email === existingMentorEmail) {
+        return { data: { id: 'mentor-live' }, error: null };
+      }
       return { data: null, error: null };
     }
 
@@ -113,8 +128,8 @@ describe('/api/admin/expert-applications', () => {
     };
     const chain = {
       select: (columns: string) => {
-        call.op = 'select';
         call.columns = columns;
+        if (call.op !== 'update') call.op = 'select';
         return chain;
       },
       eq: (column: string, value: unknown) => {
@@ -156,6 +171,7 @@ describe('/api/admin/expert-applications', () => {
     vi.clearAllMocks();
     row = applicationRow('submitted');
     calls = [];
+    existingMentorEmail = null;
     mockRequireApiRole.mockResolvedValue({ userId: 'admin-1', role: 'admin' });
     mockFrom.mockImplementation((table: string) => builder(table));
     mockCreateOrUpdateMentor.mockImplementation(async (input: { slug: string; email: string; fullName: string; liveSessionPriceCents: number; isListed: boolean }) => ({
@@ -269,6 +285,47 @@ describe('/api/admin/expert-applications', () => {
     );
     expect(row.status).toBe('approved');
     expect(row).toMatchObject({ mentor_id: 'mentor-1' });
+    expect(calls).toContainEqual(
+      expect.objectContaining({
+        table: 'expert_applications',
+        op: 'update',
+        payload: { status: 'approved' },
+        filters: [
+          ['id', APP_ID],
+          ['status', 'submitted'],
+        ],
+      }),
+    );
+  });
+
+  it('returns 409 and does not write a mentor when the email already exists', async () => {
+    existingMentorEmail = 'avery@example.com';
+
+    const response = await POST(makeRequest({ id: APP_ID, decision: 'approve' }));
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({
+      success: false,
+      error: 'An expert with this email already exists.',
+    });
+    expect(mockCreateOrUpdateMentor).not.toHaveBeenCalled();
+    expect(calls.filter((call) => call.table === 'mentor_availability_windows')).toEqual([]);
+    expect(calls.filter((call) => call.table === 'mentors' && call.op !== 'select')).toEqual([]);
+    expect(row.status).toBe('submitted');
+  });
+
+  it('passes document_required when the applicant is a civil servant', async () => {
+    row = { ...applicationRow('submitted'), is_civil_servant: true };
+
+    const response = await POST(makeRequest({ id: APP_ID, decision: 'approve' }));
+
+    expect(response.status).toBe(200);
+    expect(mockCreateOrUpdateMentor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isListed: false,
+        complianceStatus: 'document_required',
+      }),
+    );
   });
 
   it('returns 409 when the application was already reviewed', async () => {
@@ -305,6 +362,7 @@ describe('/api/admin/expert-applications', () => {
           services: ['session_1on1'],
           status: 'submitted',
           createdAt: '2026-09-24T15:00:00.000Z',
+          isCivilServant: false,
         },
       ],
     });
@@ -312,7 +370,8 @@ describe('/api/admin/expert-applications', () => {
       expect.objectContaining({
         table: 'expert_applications',
         op: 'select',
-        columns: 'id, full_name, email, employer, hourly_rate_cents, services, status, created_at',
+        columns:
+          'id, full_name, email, employer, hourly_rate_cents, services, status, created_at, is_civil_servant',
         order: { column: 'created_at', ascending: false },
         limit: 50,
       }),

@@ -35,6 +35,9 @@ export default function ForExpertsPage() {
           Set your hourly rate, the hours you can take calls, and the services you offer. We review
           the application, then send a private invite to finish your profile.
         </p>
+        <p className="mt-3 text-base leading-relaxed text-[var(--landing-muted)]">
+          AstroLink reviews every application before an expert appears in the directory.
+        </p>
         <div className="mt-8">
           <ApplyForm />
         </div>

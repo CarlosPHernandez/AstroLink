@@ -212,11 +212,14 @@ export class BookingAgent {
     const storedDurationMinutes =
       durationMinutes ?? (params.serviceType === 'session_1on1' ? 30 : 15);
 
-    const offeredServices = Array.isArray(mentor.offered_services)
-      ? mentor.offered_services
-      : ['session_1on1'];
-    if (!offeredServices.includes(params.serviceType)) {
-      throw new ExpertOfferBookingError('This expert does not offer that service.');
+    // timezone is null until the offer wizard is saved. Those experts keep both services.
+    if (mentor.timezone != null) {
+      const offeredServices = Array.isArray(mentor.offered_services)
+        ? mentor.offered_services
+        : ['session_1on1'];
+      if (!offeredServices.includes(params.serviceType)) {
+        throw new ExpertOfferBookingError('This expert does not offer that service.');
+      }
     }
 
     const hours = await loadMentorWindows(finalMentorId);

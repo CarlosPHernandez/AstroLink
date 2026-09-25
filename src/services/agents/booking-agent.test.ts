@@ -523,9 +523,37 @@ describe('BookingAgent (immediate-capture payments, platform-only)', () => {
       expect(mockBookingInsert).not.toHaveBeenCalled();
     });
 
+    it('allows pre_call_brief when timezone is unset even if offered services omit it', async () => {
+      mockMentorSingle.mockResolvedValue({
+        data: {
+          ...approvedMentor,
+          timezone: null,
+          offered_services: ['session_1on1'],
+        },
+        error: null,
+      });
+      mockAvailabilityWindows.mockResolvedValue({ data: [], error: null });
+
+      const agent = new BookingAgent();
+      const result = await agent.bookSession({
+        menteeId: 'mentee-1',
+        mentorId: 'mentor-1',
+        serviceType: 'pre_call_brief',
+        scheduledAt: '2030-01-15T18:00:00.000Z',
+        menteeGoals: goals,
+        menteeBackground: background,
+      });
+
+      expect(result.bookingId).toBe('booking-1');
+    });
+
     it('rejects session_1on1 when offered services omit it', async () => {
       mockMentorSingle.mockResolvedValue({
-        data: { ...approvedMentor, offered_services: ['extended_session'] },
+        data: {
+          ...approvedMentor,
+          timezone: 'America/Chicago',
+          offered_services: ['extended_session'],
+        },
         error: null,
       });
 
