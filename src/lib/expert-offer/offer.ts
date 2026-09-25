@@ -44,14 +44,22 @@ type MentorQuery = {
 
 type WindowList = PromiseLike<QueryResult<WindowRow[] | null>>;
 
+type WindowIdRow = { id: string };
+
+type DeleteEq = Promise<QueryResult<null>> & {
+  not: (column: string, operator: string, value: string) => Promise<QueryResult<null>>;
+};
+
 type WindowQuery = {
   select: (columns: string) => {
     eq: (column: string, value: string) => WindowList;
   };
   delete: () => {
-    eq: (column: string, value: string) => Promise<QueryResult<null>>;
+    eq: (column: string, value: string) => DeleteEq;
   };
-  insert: (rows: Record<string, unknown>[]) => Promise<QueryResult<null>>;
+  insert: (rows: Record<string, unknown>[]) => {
+    select: (columns: string) => Promise<QueryResult<WindowIdRow[] | null>>;
+  };
 };
 
 const MENTOR_COLUMNS =
@@ -155,17 +163,29 @@ export async function saveMentorOffer(mentorId: string, offer: MentorOffer): Pro
     .eq('id', mentorId);
   assertWrite(updated);
 
-  const deleted = await availabilityWindows().delete().eq('mentor_id', mentorId);
-  assertWrite(deleted);
-  if (offer.windows.length === 0) return;
+  if (offer.windows.length === 0) {
+    const deleted = await availabilityWindows().delete().eq('mentor_id', mentorId);
+    assertWrite(deleted);
+    return;
+  }
 
-  const inserted = await availabilityWindows().insert(
-    offer.windows.map((window) => ({
-      mentor_id: mentorId,
-      weekday: window.weekday,
-      start_minute: window.startMinute,
-      end_minute: window.endMinute,
-    })),
-  );
+  const inserted = await availabilityWindows()
+    .insert(
+      offer.windows.map((window) => ({
+        mentor_id: mentorId,
+        weekday: window.weekday,
+        start_minute: window.startMinute,
+        end_minute: window.endMinute,
+      })),
+    )
+    .select('id');
   assertWrite(inserted);
+  const ids = (inserted.data ?? []).map((row) => row.id);
+  if (ids.length !== offer.windows.length) throw new Error(SAVE_FAILED);
+
+  const deleted = await availabilityWindows()
+    .delete()
+    .eq('mentor_id', mentorId)
+    .not('id', 'in', `(${ids.join(',')})`);
+  assertWrite(deleted);
 }

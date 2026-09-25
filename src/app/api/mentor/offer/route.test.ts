@@ -129,8 +129,29 @@ describe('PATCH /api/mentor/offer', () => {
 
     const mentorEq = vi.fn().mockResolvedValue({ data: null, error: null });
     const mentorUpdate = vi.fn(() => ({ eq: mentorEq }));
-    const windowDeleteEq = vi.fn().mockResolvedValue({ data: null, error: null });
-    const windowInsert = vi.fn().mockResolvedValue({ data: null, error: null });
+    const writes: string[] = [];
+    const insertedId = 'b0000002-0000-4000-8000-000000000099';
+    const windowNot = vi.fn(async (column: string, operator: string, value: string) => {
+      writes.push('delete');
+      expect(column).toBe('id');
+      expect(operator).toBe('in');
+      expect(value).toBe(`(${insertedId})`);
+      return { data: null, error: null };
+    });
+    const windowDeleteEq = vi.fn((column: string, value: string) => {
+      expect(column).toBe('mentor_id');
+      expect(value).toBe(mentorUserId);
+      return { not: windowNot };
+    });
+    const windowInsert = vi.fn(() => {
+      writes.push('insert');
+      return {
+        select: async (columns: string) => {
+          expect(columns).toBe('id');
+          return { data: [{ id: insertedId }], error: null };
+        },
+      };
+    });
 
     mockFrom.mockImplementation((table: string) => {
       if (table === 'mentors') {
@@ -164,5 +185,6 @@ describe('PATCH /api/mentor/offer', () => {
         end_minute: 720,
       },
     ]);
+    expect(writes).toEqual(['insert', 'delete']);
   });
 });
