@@ -63,7 +63,7 @@ Structured decision logs for judges: [T8 in D1 plan](docs/d1-implementation-plan
    supabase gen types typescript --linked -o src/lib/database.types.ts
    ```
 
-4. **Demo auth** (until Supabase Auth): with `ENABLE_DEMO_AUTH=true`, use seed emails in `src/lib/auth-presets.ts` — mentee `carlos@astrolink.ai`, mentor Chris `chris@astrolink.ai`, or demo mentor Carlos `carlosphernandez2020@gmail.com` (dual-device video: see `docs/how-to/demo-dual-device-video.md`).
+4. **Demo auth** (local and E2E): with `ENABLE_DEMO_AUTH=true`, use seed emails in `src/lib/auth-presets.ts` — mentee `carlos@astrolink.ai`, mentor Chris `chris@astrolink.ai`, or demo mentor Carlos `carlosphernandez2020@gmail.com` (dual-device video: see `docs/how-to/demo-dual-device-video.md`). Public Google sign-in is Clerk at `/sign-in` and `/sign-up` when the Clerk keys in `.env.example` are set. Demo presets stay on `/auth`.
 
 ## D1 local booking flow
 
