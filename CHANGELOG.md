@@ -2,6 +2,19 @@
 
 All notable changes to AstroLink are documented in this file.
 
+## [0.23.0.0] - 2026-10-08
+
+### Added
+- People can sign in or create an account with Google at /sign-in and /sign-up.
+- A Google account that matches an existing email opens that AstroLink account. A new email gets a learner account. An expert account still comes only from an expert claim, not from the email address alone.
+
+### Changed
+- Sign In, create-account, and book links send real visitors to those Google pages. Demo sign-in stays on /auth when demo auth is turned on.
+
+### Fixed
+- Signing out ends the Google session, so the header stays signed out.
+- The mentor dashboard reads that Google session directly, so a signed-in visit is no longer bounced through a blank sign-in loop.
+
 ## [0.22.0.0] - 2026-09-25
 
 ### Added
