@@ -144,7 +144,7 @@ export default function ExpertDirectory({
               <MaterialIcon name="arrow_forward" size={18} />
             </Link>
             <Link
-              href="/auth?mode=signup&redirect=%2Fbooking"
+              href="/sign-up?redirect_url=%2Fbooking"
               className="inline-flex min-h-11 touch-manipulation items-center justify-center sm:min-h-0 text-center sm:text-left text-sm text-[var(--landing-muted)] underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
             >
               Create a free account to book a session
@@ -236,7 +236,7 @@ export default function ExpertDirectory({
             <MaterialIcon name="arrow_forward" size={18} />
           </Link>
           <Link
-            href="/auth?mode=signup&redirect=%2Fbooking"
+            href="/sign-up?redirect_url=%2Fbooking"
             className="text-sm text-[var(--landing-muted)] underline-offset-2 hover:text-[var(--landing-text)] hover:underline"
           >
             Create a free account to book a session

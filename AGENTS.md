@@ -54,7 +54,7 @@ After `npm ci`, install Playwright browsers once if running E2E: `npx playwright
 
 ### Demo auth (local / E2E only)
 
-With `ENABLE_DEMO_AUTH=true`, sign in at `/auth` with seed emails (`carlos@astrolink.ai`, `chris@astrolink.ai`, `admin@astrolink.ai`) or call `POST /api/e2e/session` with `{ "role": "mentee" | "mentor" | "admin" }`. Seed UUIDs must exist in Supabase (`20260531140100_seed_d1_dev.sql`).
+With `ENABLE_DEMO_AUTH=true`, sign in at `/auth` with seed emails (`carlos@astrolink.ai`, `chris@astrolink.ai`, `admin@astrolink.ai`) or call `POST /api/e2e/session` with `{ "role": "mentee" | "mentor" | "admin" }`. Seed UUIDs must exist in Supabase (`20260531140100_seed_d1_dev.sql`). Public Google sign-in is Clerk at `/sign-in` and `/sign-up`; those sessions match `public.users` by email and never store a Clerk id as `users.id`.
 
 ### Repository layout
 

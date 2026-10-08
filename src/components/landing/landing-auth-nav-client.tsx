@@ -26,7 +26,7 @@ export function LandingAuthNavClient({
 }) {
   const isDark = theme === 'dark';
   const isPill = ctaStyle === 'pill' && !isDark;
-  const unlockHref = '/auth?mode=signup&redirect=%2Fexperts';
+  const unlockHref = '/sign-up?redirect_url=%2Fexperts';
   const muted = isDark
     ? 'text-slate-400 hover:text-white'
     : 'text-[var(--landing-muted)] hover:text-[var(--landing-text)]';
@@ -79,13 +79,13 @@ export function LandingAuthNavClient({
   return (
     <div className="flex items-center gap-1.5 sm:gap-lg">
       <Link
-        href="/auth"
+        href="/sign-in"
         className={`inline-flex min-h-10 touch-manipulation items-center px-1.5 font-label-md text-xs sm:min-h-0 sm:text-label-md transition-colors ${muted}`}
       >
         Sign In
       </Link>
       <Link
-        href={isPill ? unlockHref : '/auth'}
+        href={isPill ? unlockHref : '/sign-up'}
         className={`inline-flex min-h-10 touch-manipulation items-center px-3.5 py-2 sm:min-h-0 sm:px-5 sm:py-2.5 font-label-md text-xs sm:text-sm active:scale-95 transition-all ${isPill ? '' : 'shadow-sm'} ${cta}`}
       >
         {isPill ? 'Unlock access' : 'Launch Mission'}

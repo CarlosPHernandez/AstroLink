@@ -16,6 +16,6 @@ describe('resolveExpertCta', () => {
 
   it('returns auth redirect in full mode when signed out', () => {
     const cta = resolveExpertCta('chris-sembroski', false, false);
-    expect(cta.href).toContain('/auth?redirect=');
+    expect(cta.href).toContain('/sign-in?redirect_url=');
   });
 });

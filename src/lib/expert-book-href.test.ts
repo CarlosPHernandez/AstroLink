@@ -10,8 +10,8 @@ describe('getExpertBookHref', () => {
 
   it('returns auth redirect when signed out', () => {
     const href = getExpertBookHref('chris-sembroski', false);
-    expect(href).toMatch(/^\/auth\?redirect=/);
-    expect(decodeURIComponent(href.split('redirect=')[1] ?? '')).toBe(
+    expect(href).toMatch(/^\/sign-in\?redirect_url=/);
+    expect(decodeURIComponent(href.split('redirect_url=')[1] ?? '')).toBe(
       '/booking?mentor=chris-sembroski',
     );
   });

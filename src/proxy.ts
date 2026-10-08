@@ -1,3 +1,4 @@
+import { clerkMiddleware } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import {
@@ -8,6 +9,10 @@ import {
 } from './lib/app-mode';
 import { getDefaultPathAfterAuth } from './lib/auth-redirect';
 import { isChrisCampaignBookingEntry } from './lib/chris-campaign/chris-campaign-routes';
+import {
+  clerkHeaderSourceFromRequest,
+  resolveClerkAppSession,
+} from './lib/clerk-app-session';
 import { resolveAppSessionFromAuthUser } from './lib/resolve-app-session';
 import { decryptSessionString, type SessionData } from './lib/session';
 import { createProxyClient, withSupabaseCookies } from './lib/supabase/proxy-client';
@@ -15,8 +20,10 @@ import { WAITLIST_PUBLIC_LANDING_PATH } from './lib/waitlist/waitlist-landing';
 import { resolveWaitlistRoute } from './lib/waitlist/waitlist-routes';
 
 function redirectToAuth(request: NextRequest, returnPath: string) {
-  const authUrl = new URL('/auth', request.url);
-  authUrl.searchParams.set('redirect', returnPath);
+  const path = isDemoAuthEnabled() ? '/auth' : '/sign-in';
+  const param = path === '/sign-in' ? 'redirect_url' : 'redirect';
+  const authUrl = new URL(path, request.url);
+  authUrl.searchParams.set(param, returnPath);
   return NextResponse.redirect(authUrl);
 }
 
@@ -80,6 +87,8 @@ export function isPendingMentorPathAllowed(pathname: string): boolean {
   return (
     pathname.startsWith('/activate') ||
     pathname.startsWith('/auth') ||
+    pathname.startsWith('/sign-in') ||
+    pathname.startsWith('/sign-up') ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/api/e2e')
   );
@@ -109,8 +118,23 @@ async function resolveSessionForProxy(request: NextRequest): Promise<{
     const {
       data: { user },
     } = await client.supabase.auth.getUser();
-    const session = user ? await resolveAppSessionFromAuthUser(user) : null;
-    return { session, supabaseResponse: client.getResponse() };
+    if (user) {
+      const session = await resolveAppSessionFromAuthUser(user);
+      return { session, supabaseResponse: client.getResponse() };
+    }
+    const clerkSession = await resolveClerkAppSession(clerkHeaderSourceFromRequest(request));
+    return { session: clerkSession, supabaseResponse: client.getResponse() };
+  }
+
+  const clerkSession = await resolveClerkAppSession(clerkHeaderSourceFromRequest(request));
+  if (clerkSession) {
+    if (!isProtectedAppSurfaceEnabled()) {
+      if (isWaitlistMode() && clerkSession.role === 'admin') {
+        return { session: clerkSession, supabaseResponse: null };
+      }
+      return { session: null, supabaseResponse: null };
+    }
+    return { session: clerkSession, supabaseResponse: null };
   }
 
   if (isDemoAuthEnabled()) {
@@ -130,7 +154,7 @@ async function resolveSessionForProxy(request: NextRequest): Promise<{
   return { session: null, supabaseResponse: null };
 }
 
-export async function proxy(request: NextRequest) {
+async function astrolinkProxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const returnPath = `${pathname}${search}`;
 
@@ -152,7 +176,8 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/activate/setup') || pathname.startsWith('/activate/complete');
   const isProtectedRoute =
     isDashboard || isBooking || isSession || isOnboard || isActivateAuthed;
-  const isAuthEntry = pathname === '/auth';
+  const isAuthEntry =
+    pathname === '/auth' || pathname === '/sign-in' || pathname === '/sign-up';
 
   const finish = (response: NextResponse) => {
     if (supabaseResponse) {
@@ -224,6 +249,10 @@ export async function proxy(request: NextRequest) {
   );
 }
 
+export const proxy = clerkMiddleware(async (_auth, request) => {
+  return astrolinkProxy(request);
+});
+
 export const config = {
   matcher: [
     /*
@@ -231,5 +260,7 @@ export const config = {
      * and other public marketing pages — not only auth/booking/dashboard paths.
      */
     '/((?!_next/static|_next/image|favicon.ico|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/(api|trpc)(.*)',
+    '/__clerk/:path*',
   ],
 };

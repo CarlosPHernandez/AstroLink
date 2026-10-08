@@ -1,5 +1,5 @@
 import 'server-only';
-import { isProtectedAppSurfaceEnabled } from '@/lib/app-mode';
+import { isDemoAuthEnabled, isProtectedAppSurfaceEnabled } from '@/lib/app-mode';
 import type { SessionData } from '@/lib/session';
 import { WAITLIST_PUBLIC_LANDING_PATH } from '@/lib/waitlist/waitlist-landing';
 
@@ -76,7 +76,11 @@ export function getDefaultPathAfterAuth(params: {
 }
 
 export function getSignInPath(): string {
-  return isProtectedAppSurfaceEnabled() ? '/auth' : WAITLIST_PUBLIC_LANDING_PATH;
+  if (!isProtectedAppSurfaceEnabled()) {
+    return WAITLIST_PUBLIC_LANDING_PATH;
+  }
+  // Demo presets stay on /auth. Real sign-in is Clerk.
+  return isDemoAuthEnabled() ? '/auth' : '/sign-in';
 }
 
 export function toAuthWithRedirect(returnPath: string): string {
@@ -91,5 +95,6 @@ export function toAuthWithRedirect(returnPath: string): string {
   if (signInPath === WAITLIST_PUBLIC_LANDING_PATH) {
     return signInPath;
   }
-  return `/auth?redirect=${encodeURIComponent(safe)}`;
+  const param = signInPath === '/sign-in' ? 'redirect_url' : 'redirect';
+  return `${signInPath}?${param}=${encodeURIComponent(safe)}`;
 }

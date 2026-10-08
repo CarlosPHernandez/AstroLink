@@ -17,6 +17,7 @@ import {
   needsProfileCompletion,
   resolveAppSessionFromAuthUser,
 } from '@/lib/resolve-app-session';
+import { revokeClerkSession } from '@/lib/clerk-app-session';
 import { createSession, deleteSession, getSession } from '@/lib/session';
 import {
   mapSupabaseSignInError,
@@ -608,7 +609,11 @@ export async function onboardMentorAction(
 }
 
 export async function logoutAction() {
+  const hadClerkSession = await revokeClerkSession();
   await deleteSession();
+  if (hadClerkSession) {
+    redirect('/');
+  }
   redirect(
     isDemoAuthEnabled() || isSupabaseAuthEnabled() ? '/auth' : WAITLIST_PUBLIC_LANDING_PATH,
   );

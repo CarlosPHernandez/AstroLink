@@ -30,9 +30,9 @@ test.describe('Experts directory', () => {
     await expect(page.getByTestId('expert-detail-book')).toBeVisible();
 
     await page.getByTestId('expert-detail-book').click();
-    await expect(page).toHaveURL(/\/auth\?redirect=/);
+    await expect(page).toHaveURL(/\/sign-in\?redirect_url=/);
     const url = new URL(page.url());
-    const redirectTarget = decodeURIComponent(url.searchParams.get('redirect') ?? '');
+    const redirectTarget = decodeURIComponent(url.searchParams.get('redirect_url') ?? '');
     expect(redirectTarget).toContain('mentor=chris-sembroski');
   });
 });

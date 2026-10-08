@@ -7,5 +7,7 @@ describe('isPendingMentorPathAllowed', () => {
     expect(isPendingMentorPathAllowed('/activate/setup')).toBe(true);
     expect(isPendingMentorPathAllowed('/api/mentor/stripe-connect')).toBe(false);
     expect(isPendingMentorPathAllowed('/dashboard/mentor')).toBe(false);
+    expect(isPendingMentorPathAllowed('/sign-in')).toBe(true);
+    expect(isPendingMentorPathAllowed('/sign-up')).toBe(true);
   });
 });

@@ -1,6 +1,6 @@
 {
   "name": "astrolink",
-  "version": "0.22.0.0",
+  "version": "0.23.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -22,6 +22,7 @@
     "maintain:status": "simon status"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.9.7",
     "@daily-co/daily-js": "^0.83.1",
     "@google/genai": "^2.6.0",
     "@stripe/react-stripe-js": "^6.6.0",

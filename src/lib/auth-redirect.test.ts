@@ -22,6 +22,33 @@ describe('auth-redirect (Chris booking surface)', () => {
   });
 });
 
+describe('getSignInPath', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it('uses Clerk when the full app is on and demo auth is off', async () => {
+    vi.stubEnv('APP_MODE', 'full');
+    vi.stubEnv('ENABLE_DEMO_AUTH', 'false');
+    const { getSignInPath, toAuthWithRedirect } = await import('@/lib/auth-redirect');
+    expect(getSignInPath()).toBe('/sign-in');
+    expect(toAuthWithRedirect('/booking?mentor=chris')).toBe(
+      '/sign-in?redirect_url=%2Fbooking%3Fmentor%3Dchris',
+    );
+  });
+
+  it('keeps demo presets on /auth', async () => {
+    vi.stubEnv('APP_MODE', 'full');
+    vi.stubEnv('ENABLE_DEMO_AUTH', 'true');
+    const { getSignInPath, toAuthWithRedirect } = await import('@/lib/auth-redirect');
+    expect(getSignInPath()).toBe('/auth');
+    expect(toAuthWithRedirect('/dashboard/mentee')).toBe(
+      '/auth?redirect=%2Fdashboard%2Fmentee',
+    );
+  });
+});
+
 describe('getSafeRedirectPath', () => {
   afterEach(() => {
     vi.resetModules();
