@@ -13,5 +13,5 @@ export function getExpertBookHref(
   if (isSignedIn) {
     return bookingPath;
   }
-  return `/auth?redirect=${encodeURIComponent(bookingPath)}`;
+  return `/sign-in?redirect_url=${encodeURIComponent(bookingPath)}`;
 }

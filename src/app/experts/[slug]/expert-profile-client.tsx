@@ -173,7 +173,7 @@ export default function ExpertProfileClient({
                 Dashboard
               </Link>
             ) : (
-              <Link href="/auth" className="experts-pro-text-link">
+              <Link href="/sign-in" className="experts-pro-text-link">
                 Sign In
               </Link>
             )}
@@ -199,7 +199,7 @@ export default function ExpertProfileClient({
                 Dashboard
               </Link>
             ) : (
-              <Link href="/auth" onClick={() => setMenuOpen(false)}>
+              <Link href="/sign-in" onClick={() => setMenuOpen(false)}>
                 Sign In
               </Link>
             )}

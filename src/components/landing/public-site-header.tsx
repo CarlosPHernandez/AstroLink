@@ -12,7 +12,7 @@ type SessionData = {
   fullName: string;
 };
 
-const UNLOCK_HREF = '/auth?mode=signup&redirect=%2Fexperts';
+const UNLOCK_HREF = '/sign-up?redirect_url=%2Fexperts';
 
 const NAV_LINKS = [
   { href: '/experts', label: 'Experts' },
@@ -185,7 +185,7 @@ export function PublicSiteHeader({ variant = 'landing' }: PublicSiteHeaderProps)
               </div>
             ) : (
               <div className="flex items-center gap-5">
-                <Link href="/auth" className={`text-sm transition-colors ${mutedLink}`}>
+                <Link href="/sign-in" className={`text-sm transition-colors ${mutedLink}`}>
                   Sign In
                 </Link>
                 <Link
@@ -279,7 +279,7 @@ export function PublicSiteHeader({ variant = 'landing' }: PublicSiteHeaderProps)
             ) : (
               <>
                 <Link
-                  href="/auth"
+                  href="/sign-in"
                   onClick={closeMenu}
                   className={`inline-flex min-h-12 touch-manipulation items-center border-b text-base font-medium transition-colors ${panelLink}`}
                 >
