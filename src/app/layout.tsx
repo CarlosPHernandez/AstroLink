@@ -1,3 +1,4 @@
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter, JetBrains_Mono, Montserrat } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
@@ -92,9 +93,11 @@ export default function RootLayout({
         <link rel="stylesheet" href={MATERIAL_SYMBOLS_HREF} />
       </head>
       <body className="min-h-full flex flex-col">
-        {children}
-        <Analytics />
-        <MetaPixel />
+        <ClerkProvider>
+          {children}
+          <Analytics />
+          <MetaPixel />
+        </ClerkProvider>
       </body>
     </html>
   );
