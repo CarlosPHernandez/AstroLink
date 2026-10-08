@@ -6,6 +6,7 @@ import {
   isSupabaseAuthEnabled,
   isWaitlistMode,
 } from '@/lib/app-mode';
+import { resolveClerkAppSession } from '@/lib/clerk-app-session';
 import { resolveAppSessionFromAuthUser } from '@/lib/resolve-app-session';
 import { createClient } from '@/lib/supabase/server';
 import { encrypt, decrypt } from './crypto';
@@ -35,16 +36,34 @@ export async function createSession(data: Omit<SessionData, 'expiresAt'>) {
   });
 }
 
+function sessionAllowedInCurrentMode(session: SessionData): SessionData | null {
+  if (!isProtectedAppSurfaceEnabled()) {
+    if (isWaitlistMode() && session.role === 'admin') {
+      return session;
+    }
+    return null;
+  }
+  return session;
+}
+
 export async function getSession(): Promise<SessionData | null> {
   if (isSupabaseAuthEnabled()) {
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) {
-      return null;
+    if (user) {
+      return resolveAppSessionFromAuthUser(user);
     }
-    return resolveAppSessionFromAuthUser(user);
+  }
+
+  const clerkSession = await resolveClerkAppSession();
+  if (clerkSession) {
+    return sessionAllowedInCurrentMode(clerkSession);
+  }
+
+  if (isSupabaseAuthEnabled()) {
+    return null;
   }
 
   const cookieStore = await cookies();
@@ -54,15 +73,7 @@ export async function getSession(): Promise<SessionData | null> {
   const session = decryptSessionString(encrypted);
   if (!session) return null;
 
-  if (!isProtectedAppSurfaceEnabled()) {
-    // Waitlist kill-switch: honor admin sessions for ops dashboard only.
-    if (isWaitlistMode() && session.role === 'admin') {
-      return session;
-    }
-    return null;
-  }
-
-  return session;
+  return sessionAllowedInCurrentMode(session);
 }
 
 export function decryptSessionString(encrypted: string): SessionData | null {
